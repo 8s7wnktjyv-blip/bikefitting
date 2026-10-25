@@ -191,6 +191,14 @@ td.r,th.r{text-align:right}
 .cmp .li{padding:10px 0;gap:10px}
 .cmp .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}
 .wiz{display:flex;flex-direction:column;gap:16px}
+.effects{margin:6px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.effects li{display:flex;flex-direction:column;gap:1px;font-size:14px;padding-left:12px;border-left:3px solid var(--line)}
+.effects li.comp{border-left-color:var(--accent)}
+.effects li span{color:var(--muted);font-size:13.5px}
+.checks .li{flex-wrap:wrap;justify-content:space-between}.checks .li .grow{flex-basis:100%;order:3}
+.effbox{background:var(--surface-2);border-radius:12px;padding:12px 14px}
+.plan-steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:12px}
+.plan-steps>li::marker{font-weight:700;color:var(--accent-strong)}
 .card.plan .t{margin-bottom:6px}
 .planrow{display:flex;flex-direction:column;gap:4px;margin-top:8px;align-items:flex-start}
 .planrow ul{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px}
@@ -568,7 +576,7 @@ function measureRange(k,c,b){
   const t=b?b.type:'';
   switch(k){
     case 'saddleHeight': return ins?{lo:Math.round(ins*10*0.85),hi:Math.round(ins*10*0.92),unit:'mm',basis:`etwa 85–92 % der Schrittlänge (${fmtNum(ins)} cm${c.body.inseam?'':', geschätzt'})`}:{need:'Schrittlänge'};
-    case 'saddleSetback': return t==='Triathlon'?{lo:-60,hi:40,unit:'mm',basis:'üblicher Bereich Triathlon'}:{lo:0,hi:110,unit:'mm',basis:'üblicher Bereich'};
+    case 'saddleSetback': return t==='Triathlon'?{lo:-60,hi:40,unit:'mm',basis:'üblicher Bereich Triathlon'}:{lo:20,hi:110,unit:'mm',basis:'üblicher Bereich (Lot Tretlagermitte bis Sattelspitze)'};
     case 'saddleTilt': return {lo:-8,hi:4,unit:'°',basis:'üblicher Bereich'};
     case 'reach': { const tor=c.body.torso?Number(c.body.torso):null, arm=c.body.arm?Number(c.body.arm):null; if(tor&&arm) return {lo:Math.round((tor+arm)*10*0.36),hi:Math.round((tor+arm)*10*0.54),unit:'mm',basis:'aus Rumpf- und Armlänge'}; return {lo:350,hi:700,unit:'mm',basis:'üblicher Bereich'}; }
     case 'drop': return t==='Triathlon'?{lo:0,hi:180,unit:'mm',basis:'üblicher Bereich Triathlon'}:t==='E-Bike'||t==='Trekking'?{lo:-150,hi:40,unit:'mm',basis:'üblicher Bereich'}:{lo:-60,hi:150,unit:'mm',basis:'üblicher Bereich'};
@@ -576,7 +584,7 @@ function measureRange(k,c,b){
     case 'spacer': return {lo:0,hi:60,unit:'mm',basis:'üblicher Bereich'};
     case 'barWidth': return t==='MTB'||t==='E-Bike'||t==='Trekking'?{lo:580,hi:820,unit:'mm',basis:'übliche Lenker'}:{lo:340,hi:500,unit:'mm',basis:'übliche Rennlenker'};
     case 'crankLength': return {lo:150,hi:180,unit:'mm',basis:'erhältliche Kurbellängen'};
-    case 'cleatFore': return {lo:-10,hi:25,unit:'mm',basis:'üblicher Bereich'};
+    case 'cleatFore': return {lo:-3,hi:12,unit:'mm',basis:'üblicher Bereich (+ = Pedalachse hinter Großzehengrundgelenk)'};
     case 'cleatRotL': case 'cleatRotR': return {lo:-10,hi:10,unit:'°',basis:'üblicher Bereich'};
     case 'kneeBDC': return {lo:125,hi:165,unit:'°',basis:'plausibler Bereich; häufig genannt: 140–150°'};
     case 'hipAngle': return {lo:30,hi:90,unit:'°',basis:'plausibler Bereich'};
@@ -748,7 +756,7 @@ function targetFit(s){
   const rows=Object.keys(TGT).map(k=>{ const t=fit[k]; const v=cur[k]?Number(cur[k].value):null; return {key:k,target:t,cur:v,diff:v==null?null:Math.round((t-v)*10)/10,tol:TGT[k].tol,how:TGT[k].how}; });
   return {rows,insSrc:ins.src,ins:ins.v,type:b.type};
 }
-function fitSuggestions(s){
+function fitSuggestions(s,noTargets){
   const out=[]; const t=(s.anamnesis.complaints||'').toLowerCase(); const add=(key,title,why,how,v,reason)=>out.push({key,title,why,how,v,reason});
   if(/hand|händ|taub|finger/.test(t)) add('reach','Hände entlasten','Taube Hände kommen oft von zu viel Gewicht auf dem Lenker.','Sattel–Lenker kürzer oder Lenker höher prüfen. Sattelnase nicht zu tief.');
   if(/nacken|schulter/.test(t)) add('drop','Nacken entlasten','Ein tiefer, weiter Lenker zwingt den Kopf in den Nacken.','Überhöhung verringern oder Lenker näher holen.');
@@ -764,7 +772,7 @@ function fitSuggestions(s){
     add('saddleSetback',`Knielot ${d>0?'+':''}${d} mm`,`Das Knie steht bei waagerechter Kurbel ${Math.abs(d)} mm ${d>0?'vor':'hinter'} der Pedalachse. Viele Fitter beginnen mit dem Knie etwa über der Achse. Das ist eine Faustregel, keine feste Vorgabe.`,`Sattel etwa ${Math.abs(d)} mm nach ${d>0?'hinten':'vorn'}, wenn Beschwerden dazu passen. Danach Sattelhöhe prüfen, weil sie sich mitverändert.`,sb!=null?sb+d:null,`Knielot ${d>0?'+':''}${d} mm`); }
   if(/hüfte/.test(t)) add('saddleHeight','Hüfte','Hüftbeschwerden passen oft zu einem zu hohen Sattel (Becken kippt seitlich) oder zu wenig Platz vorn.','Prüfen, ob das Becken beim Treten seitlich kippt. Wenn ja, Sattel in Schritten von 2–3 mm senken.');
   const tg=targetFit(s); const measuredKnee=!!(s.after.kneeBDC||s.before.kneeBDC);
-  tg.rows.filter(r=>r.diff!=null&&Math.abs(r.diff)>r.tol&&!(r.key==='saddleHeight'&&measuredKnee)&&!out.some(o=>o.key===r.key)).forEach(r=>{ const m=MK[r.key], up=r.diff>0;
+  if(!noTargets) tg.rows.filter(r=>r.diff!=null&&Math.abs(r.diff)>r.tol&&!(r.key==='saddleHeight'&&measuredKnee)&&!out.some(o=>o.key===r.key)).forEach(r=>{ const m=MK[r.key], up=r.diff>0;
     const verb={saddleHeight:up?'höher':'tiefer',saddleSetback:up?'weiter nach hinten':'weiter nach vorn',reach:up?'länger':'kürzer',drop:up?'mehr Überhöhung (Lenker tiefer)':'weniger Überhöhung (Lenker höher)',crankLength:up?'länger':'kürzer',cleatFore:up?'weiter nach hinten':'weiter nach vorn'}[r.key];
     add(r.key,`${m.label}: ${up?'+':''}${fmtNum(r.diff)} ${m.unit} zum Startwert`,`Aus deinen Körpermaßen ergibt sich als Startwert ${fmtNum(r.target)} ${m.unit} (${r.how}). Eingestellt sind ${fmtNum(r.cur)} ${m.unit}.${tg.insSrc!=='eingetragen'&&['saddleHeight','saddleSetback','crankLength'].includes(r.key)?' Achtung: Die Schrittlänge ist nicht gemessen, sondern geschätzt.':''} Faustregeln sind ein Ausgangspunkt. Wenn die Person beschwerdefrei fährt, nicht allein deswegen umbauen.`,
       `${r.key==='saddleHeight'?`Sattel ${fmtNum(Math.abs(r.diff))} mm ${verb}, in Schritten von 2–3 mm, dann Kniewinkel messen.`:r.key==='reach'?`Sattel–Lenker ${fmtNum(Math.abs(r.diff))} mm ${verb}, meist über die Vorbaulänge.`:r.key==='drop'?`${verb}: ${fmtNum(Math.abs(r.diff))} mm, über Spacer oder Vorbauwinkel.`:r.key==='crankLength'?`Kurbel ${verb} (${fmtNum(r.target)} mm) – nur bei Beschwerden oder Neukauf sinnvoll.`:`${m.label} ${fmtNum(Math.abs(r.diff))} ${m.unit} ${verb}.`}`,r.target,`Startwert aus Körpermaßen: ${fmtNum(r.target)} ${m.unit}`); });
@@ -1026,7 +1034,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-26.4';
+const APP_VER = '2026-10-26.5';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1485,6 +1493,7 @@ SESSTAB.ausgang = s => {
   <p class="onlyline">Miss das Rad so, wie die Person es mitgebracht hat. ${MEASURE_NOW.length} Punkte, je mit Skizze und Anleitung.</p>
   <div class="statusbox ${done===MEASURE_NOW.length?'ok':''}"><div style="flex:1;min-width:0"><b>${done===MEASURE_NOW.length?'Alle Pflichtwerte erfasst':'Noch '+(MEASURE_NOW.length-done)+' Werte offen'}</b>${mk&&fromMaker.length?`<span class="muted" style="font-size:14px">${fromMaker.length} Serienwerte vom Hersteller übernommen</span>`:''}</div><span class="num" style="font-weight:700">${done}/${MEASURE_NOW.length}</span></div>
   ${startBtn(first,done,first>=0?MK[MEASURE_NOW[first]].label:'')}
+  ${done?checksHtml(s,true):''}
   <div class="ovl">${MEASURE_NOW.map((k,i)=>{const v=s.before[k], rg=measureRange(k,c,b), out=v&&rg&&rg.lo!=null&&(v.value<rg.lo||v.value>rg.hi);return ovItem(i,MK[k].label,v?`${fmtNum(v.value)} ${MK[k].unit}`:'',v?(out?'warn':'done'):'open');}).join('')}</div>
   ${mk?(fromMaker.length?`<details class="more"><summary>Vom Hersteller: ${esc(mk.g.brand+' '+mk.g.model)}, ${esc(mk.r.size)}</summary><table style="margin-top:6px"><tbody>${fromMaker.map(k=>`<tr><td>${MK[k].label}</td><td class="r num">${fmtNum(s.before[k].value)} ${MK[k].unit}</td><td class="r"><button class="btn sm ghost" data-act="editMaker" data-k="${k}">Ändern</button></td></tr>`).join('')}</tbody></table><p class="faint" style="font-size:12.5px">Serienausstattung. Wurde etwas getauscht, tippe auf „Ändern“.</p></details>`:`<button class="btn" data-act="applyMaker" data-id="${s.id}">Serienwerte vom Hersteller übernehmen</button>`)
     :`<div class="statusbox"><div style="flex:1;min-width:0"><b>Kein Modell zugeordnet</b><span class="muted" style="font-size:14px">Dann übernimmt die App Vorbau, Lenker und Kurbel automatisch.</span></div><button class="btn sm" data-act="bikeGeo" data-id="${b.id}">Zuordnen</button></div>`}
@@ -1498,6 +1507,127 @@ function targetHtml(s){ const tg=targetFit(s); if(!tg.rows.length) return '';
   return `<details class="more" ${Object.keys(s.before).length?'':'open'}><summary>Startwerte aus den Körpermaßen</summary><div class="stack" style="margin-top:8px">
   <div class="cmp">${tg.rows.map(r=>{ const m=MK[r.key], off=r.diff!=null&&Math.abs(r.diff)>r.tol; return `<div class="li"><div class="grow"><div class="t">${m.label}</div><div class="sub">${r.cur==null?'noch nicht gemessen':`eingestellt ${fmtNum(r.cur)} ${m.unit}`}${r.diff!=null&&Math.abs(r.diff)>0.05?` · Abstand ${r.diff>0?'+':''}${fmtNum(r.diff)}`:''}</div></div><span class="v" style="${off?'color:var(--warn);font-weight:600':''}">${fmtNum(r.target)} ${m.unit}</span><button class="btn sm ${off||r.cur==null?'primary':''}" data-act="prepChange" data-key="${r.key}" data-v="${r.target}" data-reason="Startwert aus Körpermaßen">Übernehmen</button></div>`; }).join('')}</div>
   <p class="faint" style="font-size:12.5px">Berechnet aus Schrittlänge ${fmtNum(tg.ins)} cm (${esc(tg.insSrc)}), Rumpf, Arm und Fuß sowie dem Radtyp ${esc(tg.type)}. Faustregeln, nicht validiert. Kniewinkel per Kamera ist genauer als die Sattelhöhen-Formel.</p></div></details>`; }
+/* ---------- Zusammenhänge: Was passiert mit den anderen Werten, wenn ich eine Sache ändere? ---------- */
+function bikeAngles(s){ const b=bike(s.bikeId); const g=b&&b.geo&&geoById(b.geo.id); const r=g&&geoRow(g,b.geo.size);
+  const sa=r&&r.seatAngle?r.seatAngle:(b&&b.type==='Triathlon'?78:73.5), ha=r&&r.headAngle?r.headAngle:(b&&b.type==='MTB'?65:72);
+  return {sa,ha,cs:Math.cos(sa*Math.PI/180),ss:Math.sin(sa*Math.PI/180),ch:Math.cos(ha*Math.PI/180),known:!!(r&&r.seatAngle)}; }
+const r1=v=>Math.round(v*10)/10;
+/* Folgen einer Änderung: Liste {key,delta,text,comp} – comp=true heißt: das ist ein Ausgleich, den man bewusst einstellen sollte */
+function sideEffects(s,key,d){
+  if(!d) return []; const A=bikeAngles(s), out=[], up=d>0; const sa=fmtNum(A.sa);
+  const P=(k,delta,text,comp)=>{ if(Math.abs(delta)>=0.5||delta===null) out.push({key:k,delta:delta==null?null:r1(delta),text,comp:!!comp}); };
+  switch(key){
+    case 'saddleHeight': {
+      P('saddleSetback',d*A.cs,`Der Sattel fährt schräg (Sitzwinkel ${sa}°) und wandert dabei ${up?'nach hinten':'nach vorn'}.`);
+      P('reach',d*A.cs,`Sattelspitze wandert ${up?'nach hinten':'nach vorn'}, der Abstand zum Lenker wird ${up?'größer':'kleiner'}.`);
+      P('drop',d*A.ss,`Sattel ${up?'höher':'tiefer'}, Lenker bleibt: Überhöhung ${up?'steigt':'sinkt'}.`);
+      const a=saddleAdvice(s,145); if(a) P('kneeBDC',d*a.slope,`Kniewinkel unten ${up?'öffnet':'schließt'} sich (Rechenmodell).`);
+      P('kneeOverPedal',-d*A.cs,`Knie steht danach etwas ${up?'weiter hinten':'weiter vorn'} zur Pedalachse.`);
+      break; }
+    case 'saddleSetback': {
+      P('saddleHeight',d*A.cs,`Sattel ${up?'weiter hinten':'weiter vorn'} heißt: weiter ${up?'weg vom':'näher am'} Tretlager. Das Bein wird ${up?'mehr':'weniger'} gestreckt.`);
+      P('saddleHeight',-d*A.cs,`Ausgleich: Sattel um ${fmtNum(Math.abs(r1(d*A.cs)))} mm ${up?'senken':'anheben'}, damit die Beinstreckung gleich bleibt.`,true);
+      P('reach',d,`Sattel–Lenker wird um denselben Betrag ${up?'länger':'kürzer'}.`);
+      P('reach',-d,`Ausgleich, wenn die Oberkörperlänge bleiben soll: Vorbau ${up?'kürzer':'länger'} um etwa ${fmtNum(Math.abs(r1(d)))} mm.`,true);
+      P('kneeOverPedal',-d,`Knie wandert ${up?'nach hinten':'nach vorn'} zur Pedalachse.`);
+      break; }
+    case 'reach': case 'stemLength': {
+      P('torsoAngle',null,`Oberkörper wird ${up?'flacher, mehr Gewicht auf Händen und Schultern':'aufrechter, weniger Druck auf Händen'}.`);
+      P('drop',null,'Bei gewinkeltem Vorbau ändert sich die Lenkerhöhe um wenige Millimeter. Überhöhung kurz nachmessen.');
+      P('steering',null,`Lenkung wird ${up?'ruhiger, aber träger':'direkter und nervöser'}.`);
+      break; }
+    case 'drop': {
+      P('reach',d*A.ch,`Spacer ${up?'nach oben gesetzt':'nach unten gesetzt'}: Der Lenker wandert am schrägen Steuerrohr (Lenkwinkel ${fmtNum(A.ha)}°) auch ${up?'nach vorn':'nach hinten'}.`);
+      P('hipAngle',-d*0.12,`Hüftwinkel oben wird ${up?'enger':'offener'}. Bei eingeschränkter Beweglichkeit vorsichtig.`);
+      P('torsoAngle',-d*0.1,`Oberkörper wird ${up?'flacher':'aufrechter'}.`);
+      break; }
+    case 'crankLength': {
+      P('saddleHeight',-d,`Kurbel ${up?'länger':'kürzer'}: Pedal unten ${up?'tiefer':'höher'}. Ausgleich: Sattel um ${fmtNum(Math.abs(d))} mm ${up?'senken':'anheben'}.`,true);
+      P('hipAngle',-d*0.6,`Hüftwinkel oben wird ${up?'enger':'offener'} (oben ist das Pedal ${up?'höher':'tiefer'}).`);
+      P('drop',-d*A.ss,'Mit dem Sattel-Ausgleich ändert sich auch die Überhöhung.');
+      break; }
+    case 'cleatFore': {
+      P('saddleHeight',-d*0.5,`Cleat ${up?'weiter hinten':'weiter vorn'} verkürzt bzw. verlängert das wirksame Bein. Ausgleich: Sattel etwa ${fmtNum(Math.abs(r1(d*0.5)))} mm ${up?'senken':'anheben'} (Faustregel: halbe Cleat-Verschiebung).`,true);
+      P('calf',null,`Wade wird ${up?'entlastet':'stärker belastet'}.`);
+      break; }
+    case 'saddleTilt': {
+      P('reach',null,d<0?'Nase tiefer: Man rutscht nach vorn, mehr Druck auf die Hände.':'Nase höher: mehr Druck im Dammbereich, man schiebt sich nach hinten.');
+      break; }
+    case 'spacer': {
+      P('drop',-d,`${fmtNum(Math.abs(d))} mm Spacer ${up?'mehr':'weniger'} unter dem Vorbau: Lenker ${up?'höher':'tiefer'}, Überhöhung ${up?'kleiner':'größer'}.`);
+      P('reach',-d*A.ch,`Lenker wandert am Steuerrohr auch ${up?'nach hinten':'nach vorn'}.`);
+      break; }
+  }
+  return out;
+}
+const EFF_LABEL={steering:'Lenkverhalten',calf:'Wadenbelastung'};
+function effectsHtml(s,key,d){
+  const ef=sideEffects(s,key,d); if(!ef.length) return '<p class="faint" style="font-size:13px">Keine Auswirkung auf andere Werte bekannt.</p>';
+  const A=bikeAngles(s);
+  return `<ul class="effects">${ef.map(e=>{ const m=MK[e.key]; const lab=m?m.label:EFF_LABEL[e.key]||e.key; return `<li class="${e.comp?'comp':''}"><b>${e.comp?'Ausgleich – ':''}${lab}${e.delta!=null&&m?`: ${e.delta>0?'+':''}${fmtNum(e.delta)} ${m.unit}`:''}</b><span>${esc(e.text)}</span></li>`; }).join('')}</ul>${A.known?'':'<p class="faint" style="font-size:12.5px">Winkel geschätzt (73,5° Sitzwinkel, 72° Lenkwinkel). Mit Modell aus der Geometrie-Bibliothek wird es genauer.</p>'}`;
+}
+
+/* Plan in fester Reihenfolge. Jede Änderung verschiebt die folgenden Werte mit. */
+const PLAN_ORDER=[['cleatFore','Cleats zuerst: Sie bestimmen, wo der Fuß steht. Alles andere baut darauf auf.'],['saddleHeight','Dann die Sattelhöhe, sie ist der wichtigste Wert.'],['saddleSetback','Dann der Versatz. Er verändert die wirksame Sattelhöhe.'],['drop','Dann die Lenkerhöhe. Spacer verschieben den Lenker auch nach vorn oder hinten.'],['reach','Zum Schluss Sattel–Lenker. Er wird erst ganz am Ende über den Vorbau passend gemacht.']];
+function computePlan(s){
+  const tg=targetFit(s); if(!tg.rows.length) return {steps:[],tg};
+  const R=Object.fromEntries(tg.rows.map(r=>[r.key,r])); const A=bikeAngles(s); const measuredKnee=s.after.kneeBDC||s.before.kneeBDC;
+  const cur={}; ['saddleHeight','saddleSetback','reach','drop','cleatFore','crankLength'].forEach(k=>cur[k]=R[k]?R[k].cur:null);
+  // Ziel Sattelhöhe: gemessener Kniewinkel schlägt Formel
+  const tgt={...Object.fromEntries(tg.rows.map(r=>[r.key,r.target]))};
+  if(measuredKnee&&cur.saddleHeight!=null){ const a=saddleAdvice(s,Number(measuredKnee.value)); tgt.saddleHeight=cur.saddleHeight+a.delta; }
+  const steps=[]; let hOffset=0;
+  PLAN_ORDER.forEach(([k,why])=>{ if(cur[k]==null||tgt[k]==null) return;
+    let d=tgt[k]-cur[k]; if(k==='saddleHeight') d+=hOffset; const tol=R[k]?R[k].tol:5;
+    if(Math.abs(d)<=tol){ if(k==='saddleHeight'&&Math.abs(hOffset)>=2) steps.push({key:k,d:r1(hOffset),from:cur[k],to:r1(cur[k]+hOffset),why:'Nur Ausgleich für die Cleat-Änderung.',effects:[],comp:true}); return; }
+    const ef=sideEffects(s,k,d).filter(e=>e.delta!=null&&MK[e.key]);
+    steps.push({key:k,d:r1(d),from:cur[k],to:r1(cur[k]+d),why,effects:sideEffects(s,k,d)});
+    cur[k]+=d;
+    ef.forEach(e=>{ if(e.comp){ if(e.key==='saddleHeight'&&k==='cleatFore') hOffset+=e.delta; return; } if(cur[e.key]!=null) cur[e.key]+=e.delta; });
+    if(k==='saddleSetback'){ const comp=-d*A.cs; steps.push({key:'saddleHeight',d:r1(comp),from:r1(cur.saddleHeight),to:r1(cur.saddleHeight+comp),why:`Ausgleich zum Versatz: Die Beinstreckung soll gleich bleiben.`,effects:[],comp:true}); cur.saddleHeight+=comp; cur.drop+=comp*A.ss; }
+  });
+  return {steps,tg,A,final:cur};
+}
+function planHtml(s){
+  const P=computePlan(s); if(!P.steps.length) return '';
+  return `<div class="stack"><h3>Empfohlene Reihenfolge</h3><p class="muted" style="font-size:14px">FitFrame rechnet jede Änderung nacheinander durch. Was ein Schritt bei den anderen Werten verschiebt, ist in den nächsten Schritten schon eingerechnet.</p>
+  <ol class="plan-steps">${P.steps.map(x=>{ const m=MK[x.key]; return `<li><div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start;gap:10px"><div class="grow" style="min-width:0"><b>${m.label}: ${fmtNum(x.from)} → ${fmtNum(x.to)} ${m.unit}</b> <span class="chip nodot ${x.d>0?'c-acc':'c-info'}">${x.d>0?'+':''}${fmtNum(x.d)}</span>${x.comp?' <span class="chip nodot">Ausgleich</span>':''}${Math.abs(x.d)>25&&!x.comp?' <span class="chip c-warn nodot">großer Schritt</span>':''}<div class="sub" style="white-space:normal;margin-top:2px">${esc(x.why)}</div></div><button class="btn sm" data-act="prepChange" data-key="${x.key}" data-v="${x.to}" data-reason="${esc(x.comp?'Ausgleich: '+x.why:'Plan Schritt: '+m.label)}">Eintragen</button></div>
+    ${x.effects.length?`<details class="more" style="margin-top:4px"><summary style="font-size:13px">Was sich dadurch noch ändert</summary>${effectsHtml(s,x.key,x.d)}</details>`:''}</li>`; }).join('')}</ol>
+  ${P.steps.some(x=>Math.abs(x.d)>25&&!x.comp)?'<div class="notice warn">'+ic('warn')+'<div>Schritte über 25 mm sind ungewöhnlich groß. Meist steckt ein Messfehler oder ein fehlendes Körpermaß dahinter: erst „Messwerte prüfen“ abarbeiten. Große Änderungen in mehreren Terminen umsetzen, damit sich der Körper gewöhnen kann.</div></div>':''}<p class="faint" style="font-size:12.5px">Nach jedem Schritt kurz fahren lassen und nachfragen. Zielwerte sind Faustregeln, die Zusammenhänge sind Geometrie (Sitz- und Lenkwinkel).</p></div>`;
+}
+
+/* ---------- Messwerte prüfen: Tippfehler und Unstimmigkeiten finden ---------- */
+function measureChecks(s){
+  const c=cust(s.customerId), b=bike(s.bikeId), A=bikeAngles(s); const e={...s.before,...s.after}; const v=k=>e[k]?Number(e[k].value):null; const out=[];
+  const add=(lvl,title,text,go)=>out.push({lvl,title,text,go});
+  const H=Number(c.body.height)||null, I=Number(c.body.inseam)||null;
+  if(H&&I){ const q=I/H; if(q<0.40||q>0.52) add('warn','Schrittlänge passt nicht zur Körpergröße',`Schrittlänge ${fmtNum(I)} cm ist ${Math.round(q*100)} % der Körpergröße. Üblich sind 43–49 %. Nachmessen: Buch fest in den Schritt drücken, Boden bis Buchkante.`,'koerper'); }
+  if(!c.body.torso||(c.est||[]).includes('torso')||!c.body.arm||(c.est||[]).includes('arm')) add('info','Rumpf- oder Armlänge fehlt','Ohne diese Maße schätzt FitFrame die Länge Sattel–Lenker nur aus der Körpergröße. Eintragen unter Körper → Grundmaße.','koerper');
+  const sb=(s.check&&s.check.sitBone)||c.body.sitBone; if(sb){ const x=Number(sb); if(x<30) add('bad','Sitzknochenabstand: Tippfehler?',`${fmtNum(x)} mm ist zu klein. Vermutlich in cm eingegeben: ${fmtNum(x*10)} mm?`,'koerper'); else if(x<80||x>180) add('warn','Sitzknochenabstand ungewöhnlich',`${fmtNum(x)} mm. Üblich sind 90–160 mm.`,'koerper'); }
+  const h=v('saddleHeight'); if(h&&I){ const q=h/(I*10); if(q<0.83||q>0.93) add('warn','Sattelhöhe passt nicht zur Schrittlänge',`${fmtNum(h)} mm sind ${Math.round(q*1000)/10} % der Schrittlänge. Üblich sind 85–90 %. Entweder Messfehler (Tretlagermitte bis Satteloberfläche entlang dem Sitzrohr) oder Sattel deutlich zu ${q<0.85?'tief':'hoch'}.`,'ausgang'); }
+  const st=v('saddleSetback'); if(st!=null&&h&&b.type!=='Triathlon'){ const base=h*A.cs; const lo=Math.round(base-170), hi=Math.round(base-80); if(st<lo||st>hi) add('warn','Sattelversatz passt nicht zum Rahmen',`Bei ${fmtNum(h)} mm Sattelhöhe und ${fmtNum(A.sa)}° Sitzwinkel liegt der Versatz meist zwischen ${lo} und ${hi} mm. Gemessen: ${fmtNum(st)} mm. Messung prüfen: Lot durch die Tretlagermitte, waagerecht bis zur Sattelspitze.`,'ausgang'); }
+  const cf=v('cleatFore'); if(cf!=null&&(cf<-3||cf>12)) add('warn','Cleat-Position ungewöhnlich',`${fmtNum(cf)} mm ${cf>0?'hinter':'vor'} dem Großzehengrundgelenk. Üblich sind 0–10 mm dahinter. Messung prüfen.`,'ausgang');
+  const d=v('drop'), ham=Number((s.check&&s.check.hamstring)||0); if(d!=null&&ham>=20&&d>60) add('warn','Hohe Überhöhung trotz eingeschränkter Beweglichkeit',`Finger-Boden-Abstand ${fmtNum(ham)} cm, Überhöhung ${fmtNum(d)} mm. Das passt oft nicht zusammen: Rücken und Nacken werden belastet.`,'anpassung');
+  if(s.check&&s.check.legLenL&&s.check.legLenR&&I){ const avg=(Number(s.check.legLenL)+Number(s.check.legLenR))/2; if(avg<I*0.95||avg>I*1.2) add('info','Beinlänge und Schrittlänge weichen ab',`Beinlänge im Körpercheck ${fmtNum(avg)} cm, Schrittlänge ${fmtNum(I)} cm. Beinlänge wird meist vom Hüftknochen gemessen und ist etwas länger – bei großer Abweichung beide Messungen prüfen.`,'koerper'); }
+  const stem=v('stemLength'); if(stem&&(stem<50&&!['MTB','E-Bike'].includes(b.type))) add('info','Sehr kurzer Vorbau','Unter 50 mm lenkt ein Rennrad oder Gravelbike sehr nervös. Rahmen eventuell zu groß.','ergebnis');
+  const crank=v('crankLength'); if(crank&&I){ const t=I<78?165:I<84?170:I<90?172.5:175; if(Math.abs(crank-t)>=5) add('info','Kurbellänge',`${fmtNum(crank)} mm. Nach Schrittlänge wären etwa ${fmtNum(t)} mm üblich. Nur bei Beschwerden (Knie, Hüfte) ändern.`,'ergebnis'); }
+  return out;
+}
+function checksHtml(s,compact){
+  const ch=measureChecks(s); if(!ch.length) return compact?'':'<div class="notice acc">'+ic('check')+'Keine Unstimmigkeiten in den Messwerten gefunden.</div>';
+  const bad=ch.filter(x=>x.lvl!=='info').length;
+  return `<details class="more checks" ${bad?'open':''}><summary>Messwerte prüfen: ${bad?`${bad} Auffälligkeit${bad>1?'en':''}`:''}${bad&&ch.length>bad?', ':''}${ch.length>bad?`${ch.length-bad} Hinweis${ch.length-bad>1?'e':''}`:''}</summary><div class="list" style="margin-top:6px">${ch.map(x=>`<div class="li" style="align-items:flex-start;padding:10px 0"><span class="chip ${x.lvl==='bad'?'c-bad':x.lvl==='warn'?'c-warn':'c-info'}">${x.lvl==='bad'?'Fehler?':x.lvl==='warn'?'prüfen':'Hinweis'}</span><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal">${esc(x.text)}</div></div>${x.go&&x.go!==ui.sessTab?`<button class="btn sm ghost" data-act="sessTab" data-v="${x.go}">Öffnen</button>`:''}</div>`).join('')}</div></details>`;
+}
+/* Live-Vorschau im Formular „Änderung eintragen“ */
+function changePreview(){
+  const box=document.getElementById('chgEffects'); const k=document.getElementById('m_key_after'), v=document.getElementById('m_val_after'); if(!box||!k||!v) return;
+  const s=sess(ui.sess); const cur={...s.before,...s.after}[k.value]; const nv=parseFloat(String(v.value).replace(',','.'));
+  if(!cur||isNaN(nv)){ box.innerHTML=cur?'':`<p class="faint" style="font-size:13px">Für ${esc(MK[k.value].label)} gibt es noch keinen Ausgangswert. Folgen werden berechnet, sobald einer gemessen ist.</p>`; return; }
+  const d=nv-Number(cur.value); if(Math.abs(d)<0.05){ box.innerHTML=''; return; }
+  const ef=sideEffects(s,k.value,d); const auto=ef.filter(e=>e.delta!=null&&MK[e.key]&&!e.comp&&cur&&({...s.before,...s.after})[e.key]&&['saddleSetback','reach','drop','saddleHeight'].includes(e.key));
+  box.innerHTML=`<div class="effbox"><b>Was sich dadurch noch ändert (${d>0?'+':''}${fmtNum(r1(d))} ${MK[k.value].unit})</b>${effectsHtml(s,k.value,d)}${auto.length?`<label class="row" style="font-size:14px;margin-top:6px;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" name="follow" checked style="margin-top:3px"> <span>${auto.map(e=>MK[e.key].label).join(', ')} rechnerisch mitändern (als „berechnet“ markiert, bitte später nachmessen)</span></label>`:''}</div>`;
+}
+
 /* Teileplan: was mit neuen Teilen ginge und was ohne neue Teile möglich ist */
 function partsPlan(s){
   const tg=targetFit(s); if(!tg.rows.length) return [];
@@ -1546,17 +1676,20 @@ function partsPlanHtml(s){
   <p class="faint" style="font-size:12.5px">Startwerte sind Faustregeln, nicht validiert. Richtwerte: Bremsgriffe und Lenkerdrehung je etwa 10 mm, Sattelgestell etwa ±15 mm, Vorbau umdrehen ±6° ergibt je nach Länge 15–30 mm Höhe.</p></div>`;
 }
 
-SESSTAB.anpassung = s => { const sg=fitSuggestions(s); const top=sg.slice(0,3), rest=sg.slice(3); const pp=partsPlan(s);
+SESSTAB.anpassung = s => { const sg=fitSuggestions(s,true); const top=sg.slice(0,3), rest=sg.slice(3); const pp=partsPlan(s);
   const card=x=>`<div class="card"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal;font-size:14px">${esc(x.how)}</div><details class="more" style="margin-top:4px"><summary style="font-size:13px">Warum?</summary><p class="muted" style="font-size:13.5px">${esc(x.why)}</p></details>${(()=>{ const q=pp.find(y=>y.key===x.key); return q?`<details class="more" style="margin-top:2px"><summary style="font-size:13px">Kunde will keine neuen Teile?</summary><ul class="muted" style="font-size:13.5px;margin:4px 0 0;padding-left:18px">${q.noParts.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>${q.parts.length?`<p class="muted" style="font-size:13.5px;margin-top:4px"><b>Mit Teilen:</b> ${q.parts.map(esc).join(' ')}</p>`:''}</details>`:''; })()}</div>${x.key?`<button class="btn sm primary" data-act="prepChange" data-key="${x.key}" data-v="${x.v??''}" data-reason="${esc(x.reason||x.title)}">Ändern</button>`:''}</div>`;
   return `<div class="stack">
   <p class="onlyline">Stell das Rad in kleinen Schritten um. Nach jeder Änderung kurz fahren lassen und nachfragen.</p>
-  ${top.length?`<div><div class="label" style="margin-bottom:8px">Vorschläge ${st('s')}</div><div class="sugg">${top.map(card).join('')}</div>${rest.length?`<details class="more" style="margin-top:8px"><summary>${rest.length} weitere Vorschläge</summary><div class="sugg" style="margin-top:8px">${rest.map(card).join('')}</div></details>`:''}</div>`:'<div class="statusbox"><div><b>Keine Vorschläge</b><span class="muted" style="font-size:14px">Trag Beschwerden im Schritt „Ziel“ ein oder miss den Kniewinkel.</span></div></div>'}
+  ${checksHtml(s,true)}
+  ${top.length?`<div><div class="label" style="margin-bottom:8px">Aus Beschwerden und Messungen ${st('s')}</div><div class="sugg">${top.map(card).join('')}</div>${rest.length?`<details class="more" style="margin-top:8px"><summary>${rest.length} weitere Vorschläge</summary><div class="sugg" style="margin-top:8px">${rest.map(card).join('')}</div></details>`:''}</div>`:computePlan(s).steps.length?'':'<div class="statusbox"><div><b>Keine Vorschläge</b><span class="muted" style="font-size:14px">Trag Beschwerden im Schritt „Ziel“ ein oder miss den Kniewinkel.</span></div></div>'}
+  ${planHtml(s)}
   ${targetHtml(s)}
   <section class="panel" style="box-shadow:none" id="changeHead"><div class="panel-b stack">
     <h3>Änderung eintragen</h3>
     <form class="stack" data-form="change" data-id="${s.id}" data-side="after">
       <div class="field"><label for="m_key_after">Was hast du geändert?</label><select class="input" id="m_key_after" name="key">${Object.entries(MK).filter(([,m])=>m.group!=='Bewegung').map(([k,m])=>`<option value="${k}" ${ui.prepKey===k?'selected':''}>${m.label}</option>`).join('')}</select></div>
       <div class="row" style="flex-wrap:nowrap;align-items:flex-start"><div class="field" style="flex:1"><label for="m_val_after">Neuer Wert</label><input class="input num" id="m_val_after" name="value" type="number" step="0.1" inputmode="decimal" required value="${esc(ui.prepVal||'')}"></div></div>
+      <div id="chgEffects"></div>
       <div class="field"><label for="m_reason">Warum?</label><input class="input" id="m_reason" name="reason" required placeholder="z. B. Knie unten stark gebeugt" value="${esc(ui.prepReason||'')}"></div>
       <details class="more"><summary>Methode und Genauigkeit</summary><div class="form" style="margin-top:8px"><div class="field"><label for="m_meth_after">Methode</label><select class="input" id="m_meth_after" name="method">${opts(METHODS,'Maßband')}</select></div><div class="field"><label for="m_src_after">Quelle</label><select class="input" id="m_src_after" name="source">${opts(SOURCES,'gemessen')}</select></div><div class="field"><label for="m_unc_after">± Genauigkeit</label><input class="input num" id="m_unc_after" name="unc" type="number" step="0.1" min="0" inputmode="decimal" placeholder="optional"></div></div></details>
       <div><button class="btn primary" type="submit">Änderung speichern</button></div>
@@ -1623,7 +1756,7 @@ SESSTAB.bericht = s => `<div class="stack"><div class="row" style="justify-conte
 SESSTAB.ergebnis = s => {
   const q=quality(s), crit=q.filter(x=>x[0]!=='info').length; const t=ui.resTab||'vergleich';
   const tabs=[['vergleich','Vorher / Nachher'],['teile','Teile & Alternativen'],['groesse','Größe & Sattel'],['qualitaet',`Datenqualität${crit?` (${crit})`:''}`],['bericht','Bericht']];
-  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,teile:()=>partsPlanHtml(s),groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
+  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,teile:()=>checksHtml(s,false)+planHtml(s)+'<hr>'+partsPlanHtml(s),groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
   return `<div class="stack">
   <p class="onlyline">Prüfe das Ergebnis, erstelle den Bericht und schließ das Fitting ab.</p>
   <div class="tabsbar" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${t===k}" data-act="resTab" data-v="${k}">${l}</button>`).join('')}</div>
@@ -2324,7 +2457,7 @@ function afterRender(){
   labelTables(document.getElementById('view'));
   cancelAnimationFrame(motion.raf); motion.playing=false; motion.last=0;
   if(ui.route==='motion'){ const cv=document.getElementById('motionCanvas'); if(cv){ drawMotion(cv); } wireVid(); }
-  if(ui.route==='sitzung') wireVid();
+  if(ui.route==='sitzung'){ wireVid(); changePreview(); }
   if(ui.focus){ const el=document.getElementById(ui.focus); if(el){ el.focus(); const v=el.value; try{el.setSelectionRange(v.length,v.length);}catch(e){} } ui.focus=null; }
 }
 
@@ -2556,6 +2689,7 @@ const FORMS = {
     const from=s.after[k]?s.after[k].value:(s.before[k]?s.before[k].value:null);
     const unc=data.get('unc'); s.after[k]={key:k,value:v,method:data.get('method'),source:data.get('source'),unc:unc===''?null:Number(unc),time:nowStamp()};
     s.changes.push({key:k,from,to:v,reason,time:nowStamp()}); if(s.status!=='abgeschlossen') s.status='in Arbeit'; else s.version++;
+    if(data.get('follow')&&from!=null){ const end={...s.before}; Object.assign(end,s.after); sideEffects(s,k,v-from).filter(e=>e.delta!=null&&MK[e.key]&&!e.comp&&['saddleSetback','reach','drop','saddleHeight'].includes(e.key)&&e.key!==k).forEach(e=>{ const base=s.after[e.key]||s.before[e.key]; if(!base) return; const nv=Math.round((Number(base.value)+e.delta)*10)/10; s.after[e.key]={key:e.key,value:nv,method:'Berechnet',source:'berechnet',unc:3,time:nowStamp()}; s.changes.push({key:e.key,from:Number(base.value),to:nv,reason:`Folge von ${MK[k].label} ${v-from>0?'+':''}${fmtNum(Math.round((v-from)*10)/10)} ${MK[k].unit} (berechnet)`,time:nowStamp()}); }); }
     audit(`${MK[k].label}: ${fmtNum(from)} → ${fmtNum(v)} ${MK[k].unit}${s.status==='abgeschlossen'?` (neue Version ${s.version})`:''}`,s.id); save(); render(); toast(from==null?'Änderung dokumentiert – kein Ausgangswert vorhanden':'Änderung dokumentiert'); },
   newSession(f,data){ const id=createSession({cid:data.get('cid'),bid:data.get('bid'),date:data.get('date'),time:data.get('time'),type:data.get('type'),fitter:data.get('fitter'),copy:data.get('copy')==='on'}); save(); closeDrawer(); ui.sess=id; ui.sessTab='anamnese'; go('sitzung'); toast('Sitzung angelegt'); },
   followup(f,data){ const s=sess(data.get('sid')); const days=Number(data.get('days')); const due=new Date(s.date+'T12:00'); due.setDate(due.getDate()+days); s.followUps.push({days,due:iso(due),status:'offen'}); audit(`Nachkontrolle (${days} Tage) angelegt`,s.id); save(); render(); toast(`Nachkontrolle für ${fmtDate(iso(due))} angelegt`); },
@@ -2613,8 +2747,8 @@ document.addEventListener('submit',e=>{
   if(f.dataset.form==='newSession' && !new FormData(f).get('bid')){ toast('Bitte zuerst ein Fahrrad für diesen Kunden anlegen',true); return; }
   try{ FORMS[f.dataset.form](f,new FormData(f)); }catch(err){ console.error(err); toast('Speichern fehlgeschlagen: '+err.message,true); }
 });
-document.addEventListener('change',e=>{ const el=e.target.closest('[data-change]'); if(el&&CHG[el.dataset.change]){ try{ CHG[el.dataset.change](el); }catch(err){ console.error(err); toast('Fehler: '+err.message,true);} } });
-document.addEventListener('input',e=>{ if(e.target&&e.target.dataset&&e.target.dataset.lo!==undefined) liveRange(e.target); const el=e.target.closest('[data-input]'); if(!el) return; ui[el.dataset.input]=el.value; ui.focus=el.id; render(); });
+document.addEventListener('change',e=>{ if(e.target&&e.target.id==='m_key_after') changePreview(); const el=e.target.closest('[data-change]'); if(el&&CHG[el.dataset.change]){ try{ CHG[el.dataset.change](el); }catch(err){ console.error(err); toast('Fehler: '+err.message,true);} } });
+document.addEventListener('input',e=>{ if(e.target&&(e.target.id==='m_val_after')) changePreview(); if(e.target&&e.target.dataset&&e.target.dataset.lo!==undefined) liveRange(e.target); const el=e.target.closest('[data-input]'); if(!el) return; ui[el.dataset.input]=el.value; ui.focus=el.id; render(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); closeMenu(); } });
 
 applyTheme();
