@@ -354,9 +354,9 @@ const MK = {
   hipAngle:{label:'Hüftwinkel oben',unit:'°',group:'Bewegung',def:'Minimaler Hüftwinkel am oberen Totpunkt'},
   torsoAngle:{label:'Oberkörperwinkel',unit:'°',group:'Bewegung',def:'Rumpf zur Waagerechten, Griff Bremsgriffe'}
 };
-const REQUIRED = ['saddleHeight','saddleSetback','reach','drop','crankLength','cleatFore'];
+const REQUIRED = ['saddleHeight','saddleSetback','reach','drop','crankLength','cleatFore']; // Kurbel meist vom Hersteller
 const METHODS = ['Maßband','Laser-Wasserwaage','Digitaler Winkelmesser','Goniometer','2D-Video (unkalibriert)','2D-Video (kalibriert)','Herstellerangabe','Berechnet','CleatLab (Prototyp, nicht validiert)'];
-const SOURCES = ['gemessen','manuell eingegeben','berechnet','geschätzt'];
+const SOURCES = ['gemessen','vom Hersteller','manuell eingegeben','berechnet','geschätzt'];
 const mv = (key,value,method,source,unc) => ({key,value,method,source:source||'gemessen',unc:unc??null,time:''});
 
 const BODY = [
@@ -893,7 +893,7 @@ function panel(title,body,right,cls){ return `<section class="panel ${cls||''}">
 function panelFlush(title,body,right){ return `<section class="panel">${title?`<div class="panel-h"><h3>${title}</h3>${right?`<div class="row">${right}</div>`:''}</div>`:''}${body}</section>`; }
 const sessChip = s => { const m={'abgeschlossen':'c-ok','in Arbeit':'c-acc','geplant':'c-info','abgesagt':'c-bad','eingetroffen':'c-warn'}; return `<span class="chip ${m[s]||''}">${esc(s)}</span>`; };
 const woChip = s => { const m={'Angenommen':'c-info','Kostenvoranschlag':'c-info','Freigabe ausstehend':'c-warn','In Arbeit':'c-acc','Abholbereit':'c-ok','Übergeben':''}; return `<span class="chip ${m[s]||''}">${esc(s)}</span>`; };
-const srcChip = src => { const m={'gemessen':'c-ok','manuell eingegeben':'c-info','berechnet':'','geschätzt':'c-warn'}; return `<span class="chip nodot ${m[src]||''}">${esc(src)}</span>`; };
+const srcChip = src => { const m={'vom Hersteller':'c-info','gemessen':'c-ok','manuell eingegeben':'c-info','berechnet':'','geschätzt':'c-warn'}; return `<span class="chip nodot ${m[src]||''}">${esc(src)}</span>`; };
 const opts = (arr,sel) => arr.map(a=>{const [v,l]=Array.isArray(a)?a:[a,a]; return `<option value="${esc(v)}" ${String(v)===String(sel)?'selected':''}>${esc(l)}</option>`;}).join('');
 
 /* ---------- Quality (FitQuality) ---------- */
@@ -1160,25 +1160,40 @@ function measureForm(s,side,isChange){
     <div class="wide row"><button class="btn primary" type="submit">${isChange?'Änderung dokumentieren':'Wert hinzufügen'}</button>${!isChange?`<button class="btn" type="button" data-act="simCapture" data-id="${s.id}">Aus Körpermaßen simulieren</button>${st('s')}`:''}</div>
   </form>`;
 }
-function measureCards(s,side){
-  const c=cust(s.customerId), b=bike(s.bikeId);
-  const groups=[...new Set(Object.values(MK).map(m=>m.group))];
-  return groups.map(g=>`<div class="stack"><h3>${g}</h3>${Object.entries(MK).filter(([,m])=>m.group===g).map(([k,m])=>{const cur=s[side][k], h=HOW[k]||{m:'Maßband',steps:[],tool:''};
-    return `<section class="panel" style="box-shadow:none"><div class="panel-b stack">
-      <div class="row" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0;flex:1"><div class="t" style="font-weight:650">${m.label}${REQUIRED.includes(k)?' <span class="chip nodot c-acc" style="font-size:11px">wichtig</span>':''}</div><div class="muted" style="font-size:13.5px">${esc(m.def||'')}</div></div>
-      ${cur?`<div style="text-align:right"><div class="num" style="font-size:18px;font-weight:600">${fmtNum(cur.value)} ${m.unit}</div><div class="src">${esc(cur.method)} · ${esc(cur.source)}</div></div>`:'<span class="chip">fehlt</span>'}</div>
-      <details class="more"><summary>So misst du · ${esc(h.tool)}</summary>${IL(k)}<ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">${h.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>${h.tip?`<p class="faint" style="margin-top:6px;font-size:13px">Tipp: ${esc(h.tip)}</p>`:''}</details>
-      <form class="form" data-form="measure" data-id="${s.id}" data-side="${side}"><input type="hidden" name="key" value="${k}"><input type="hidden" name="source" value="gemessen">
-        <div class="field"><label for="mc_${k}">Wert (${m.unit})</label><input class="input num" id="mc_${k}" name="value" type="number" step="0.1" inputmode="decimal" value="${cur?cur.value:''}" required ${rangeAttr(measureRange(k,c,b),'mc_'+k)}>${rangeHint(measureRange(k,c,b),'mc_'+k,cur?cur.value:'')}</div>
-        <div class="field"><label for="mm_${k}">Methode</label><select class="input" id="mm_${k}" name="method">${opts(METHODS,cur?cur.method:h.m)}</select></div>
-        <div class="field"><label for="mu_${k}">± Genauigkeit (${m.unit})</label><input class="input num" id="mu_${k}" name="unc" type="number" step="0.1" min="0" inputmode="decimal" value="${cur&&cur.unc!=null?cur.unc:''}" placeholder="optional"></div>
-        <div class="field" style="justify-content:flex-end"><button class="btn" type="submit">${cur?'Ändern':'Speichern'}</button></div></form>
-    </div></section>`;}).join('')}</div>`).join('');
+const MAKER={stemLength:'stem',barWidth:'bar',crankLength:'crank'};
+const MEASURE_NOW=['saddleHeight','saddleSetback','reach','drop','cleatFore'];
+function makerValues(s){ const b=bike(s.bikeId); const g=b&&b.geo&&geoById(b.geo.id); const r=g&&geoRow(g,b.geo.size); if(!r) return null; const vals={}; Object.entries(MAKER).forEach(([k,c])=>{ if(r[c]!=null) vals[k]=r[c]; }); return {vals,g,r}; }
+function applyMaker(s){ const m=makerValues(s); if(!m) return 0; let n=0; Object.entries(m.vals).forEach(([k,v])=>{ if(!s.before[k]){ s.before[k]={...mv(k,v,'Herstellerangabe','vom Hersteller',null),time:nowStamp()}; n++; } }); if(n) audit(`${n} Serienwerte vom Hersteller übernommen (${m.g.brand} ${m.g.model}, ${m.r.size})`,s.id); return n; }
+function measureCard(s,side,k,c,b){
+  const m=MK[k], cur=s[side][k], h=HOW[k]||{m:'Maßband',steps:[],tool:''}; const rg=measureRange(k,c,b);
+  return `<section class="panel" style="box-shadow:none"><div class="panel-b stack" style="gap:10px">
+    <div class="row" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0;flex:1"><div class="t" style="font-weight:650">${m.label}</div><div class="muted" style="font-size:13.5px">${esc(m.def||'')}</div></div>
+    ${cur?`<div style="text-align:right"><div class="num" style="font-size:18px;font-weight:600">${fmtNum(cur.value)} ${m.unit}</div><div class="src">${esc(cur.method)}</div></div>`:'<span class="chip">fehlt</span>'}</div>
+    <details class="more"><summary>So misst du · ${esc(h.tool)}</summary>${IL(k)}<ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">${h.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>${h.tip?`<p class="faint" style="margin-top:6px;font-size:13px">Tipp: ${esc(h.tip)}</p>`:''}</details>
+    <form class="stack" style="gap:8px" data-form="measure" data-id="${s.id}" data-side="${side}"><input type="hidden" name="key" value="${k}"><input type="hidden" name="source" value="gemessen">
+      <div class="row" style="flex-wrap:nowrap;align-items:flex-start"><div class="field" style="flex:1"><label for="mc_${k}">Wert (${m.unit})</label><input class="input num" id="mc_${k}" name="value" type="number" step="0.1" inputmode="decimal" value="${cur?cur.value:''}" required ${rangeAttr(rg,'mc_'+k)}>${rangeHint(rg,'mc_'+k,cur?cur.value:'')}</div>
+      <button class="btn" type="submit" style="margin-top:23px">${cur?'Ändern':'Speichern'}</button></div>
+      <details class="more"><summary>Methode und Genauigkeit</summary><div class="form" style="margin-top:8px"><div class="field"><label for="mm_${k}">Methode</label><select class="input" id="mm_${k}" name="method">${opts(METHODS,cur?cur.method:h.m)}</select></div>
+      <div class="field"><label for="mu_${k}">± Genauigkeit (${m.unit})</label><input class="input num" id="mu_${k}" name="unc" type="number" step="0.1" min="0" inputmode="decimal" value="${cur&&cur.unc!=null?cur.unc:''}" placeholder="optional"></div></div></details>
+    </form></div></section>`;
 }
-SESSTAB.ausgang = s => { const miss=REQUIRED.filter(k=>!s.before[k]).length; return `<div class="stack">
-  <div class="notice acc">${ic('info')}<div><b>So startest du:</b> Miss das Rad so, wie der Kunde es mitgebracht hat. Fang mit den Punkten „wichtig“ an. Bei jedem Punkt steht, wie du misst. ${miss?`Es fehlen noch ${miss} wichtige Werte.`:'Alle wichtigen Werte sind da.'}</div></div>
-  <div class="row"><button class="btn" type="button" data-act="simCapture" data-id="${s.id}">Fehlende Werte aus Körpermaßen simulieren</button>${st('s')}</div>
-  ${measureCards(s,'before')}</div>`; };
+SESSTAB.ausgang = s => {
+  const c=cust(s.customerId), b=bike(s.bikeId), mk=makerValues(s);
+  const fromMaker=Object.keys(MAKER).filter(k=>s.before[k]&&s.before[k].source==='vom Hersteller');
+  const now=MEASURE_NOW, done=now.filter(k=>s.before[k]).length;
+  const optional=Object.keys(MK).filter(k=>!now.includes(k)&&!fromMaker.includes(k));
+  return `<div class="stack">
+  <div class="notice acc">${ic('info')}<div><b>Nur ${now.length} Punkte messen.</b> Miss das Rad so, wie der Kunde es mitgebracht hat. ${done===now.length?'Alle Pflichtwerte sind da.':`Noch ${now.length-done} von ${now.length} offen.`}</div></div>
+  ${mk?(fromMaker.length?`<section class="panel" style="box-shadow:none"><div class="panel-h"><h3>Vom Hersteller übernommen</h3><span class="src">${esc(mk.g.brand+' '+mk.g.model)} · ${esc(mk.r.size)}</span></div><div class="panel-b"><table><tbody>${fromMaker.map(k=>`<tr><td>${MK[k].label}</td><td class="r num">${fmtNum(s.before[k].value)} ${MK[k].unit}</td><td class="r"><button class="btn sm ghost" data-act="editMaker" data-k="${k}">Ändern</button></td></tr>`).join('')}</tbody></table><p class="faint" style="font-size:12.5px;margin-top:8px">Serienausstattung laut Hersteller. Wurde etwas getauscht, tippe auf „Ändern“.</p></div></section>`:`<div class="row"><button class="btn" data-act="applyMaker" data-id="${s.id}">Serienwerte vom Hersteller übernehmen</button></div>`)
+    :`<div class="notice">${ic('info')}<div>Ordne dem Fahrrad ein Modell aus der Geometrie-Bibliothek zu. Dann übernimmt die App Vorbau, Lenker und Kurbel automatisch. <button class="btn sm" data-act="bikeGeo" data-id="${b.id}">Modell zuordnen</button></div></div>`}
+  <h2>Jetzt messen</h2>
+  ${now.map(k=>measureCard(s,'before',k,c,b)).join('')}
+  <details class="more" ${ui.editMaker?'open':''}><summary>Weitere Messpunkte (optional, ${optional.length+fromMaker.length})</summary><div class="stack" style="margin-top:10px">
+    <p class="muted" style="font-size:13.5px">Gelenkwinkel misst du am einfachsten unter Mehr → Bewegung & Video. <button class="btn sm" data-nav="motion">Zur Videoauswertung</button></p>
+    ${[...(ui.editMaker?[ui.editMaker]:[]),...optional,...fromMaker.filter(k=>k!==ui.editMaker)].map(k=>measureCard(s,'before',k,c,b)).join('')}
+    <div class="row"><button class="btn sm" type="button" data-act="simCapture" data-id="${s.id}">Fehlende Werte aus Körpermaßen simulieren</button>${st('s')}</div>
+  </div></details></div>`;
+};
 SESSTAB.anpassung = s => { const sg=fitSuggestions(s); return `<div class="stack">
   <section class="panel" style="box-shadow:none"><div class="panel-h"><h3>Vorschläge</h3>${st('s')}</div><div class="panel-b">${sg.length?`<div class="list">${sg.map(x=>`<div class="li" style="padding:10px 0;align-items:flex-start"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal">${esc(x.why)} <b>So gehst du vor:</b> ${esc(x.how)}</div></div>${x.key?`<button class="btn sm" data-act="prepChange" data-key="${x.key}">${MK[x.key].label} ändern</button>`:''}</div>`).join('')}</div><p class="faint" style="font-size:12.5px;margin-top:8px">Faustregeln aus Beschwerden, Körpercheck und Kniewinkel. Immer in kleinen Schritten ändern, neu messen und den Kunden fragen.</p>`:'<p class="faint">Keine Vorschläge. Trag Beschwerden im Schritt Ziel ein oder miss den Kniewinkel.</p>'}</div></section>
   <p class="muted">Trag jede Änderung mit kurzem Grund ein. Alte Werte bleiben erhalten.</p>
@@ -1761,6 +1776,7 @@ function createSession(d){
   const prev=S.sessions.filter(s=>s.bikeId===d.bid&&(Object.keys(s.after).length||Object.keys(s.before).length)).sort((a,b)=>b.date.localeCompare(a.date))[0];
   const before={}; if(d.copy&&prev){ const end={...prev.before,...prev.after}; Object.entries(end).forEach(([k,m])=>before[k]={...m,source:m.source,method:m.method}); }
   S.sessions.push({id,customerId:d.cid,bikeId:d.bid,date:d.date,time:d.time||'',type:d.type,status:'geplant',fitter:d.fitter,version:1,anamnesis:{goal:'',complaints:'',training:'',experience:'',previous:prev?`${prev.type} vom ${fmtDate(prev.date)}`:'',limits:'',comfort:''},before,after:{},changes:[],notes:'',feedback:[],followUps:[],check:{},comp:[]});
+  applyMaker(S.sessions[S.sessions.length-1]);
   audit(`Sitzung angelegt: ${cust(d.cid).name}, ${d.type} am ${fmtDate(d.date)}${prev&&d.copy?' (Ausgangswerte übernommen)':''}`,id);
   return id;
 }
@@ -1793,7 +1809,9 @@ const ACT = {
   stInfo(el){ const k=STATUS[el.dataset.k]; toast(`${k[1]}: ${k[2]}`); },
   theme(){ theme=theme==='dark'?'light':'dark'; try{localStorage.setItem('fitframe-theme',theme);}catch(e){} applyTheme(); if(ui.route==='mehr') render(); },
   setTheme(el){ theme=el.dataset.v; try{localStorage.setItem('fitframe-theme',theme);}catch(e){} applyTheme(); render(); },
-  sessTab(el){ ui.sessTab=el.dataset.v; render(); },
+  sessTab(el){ ui.sessTab=el.dataset.v; ui.editMaker=null; if(el.dataset.v==='ausgang'){ const s=sess(ui.sess); const n=s?applyMaker(s):0; if(n){ save(); setTimeout(()=>toast(`${n} Serienwerte vom Hersteller übernommen – bitte kurz prüfen`),60); } } render(); },
+  applyMaker(el){ const s=sess(el.dataset.id); const n=applyMaker(s); save(); render(); toast(n?`${n} Serienwerte übernommen`:'Keine Herstellerwerte vorhanden'); },
+  editMaker(el){ ui.editMaker=el.dataset.k; render(); const f=document.getElementById('mc_'+el.dataset.k); if(f){ f.scrollIntoView({behavior:'smooth',block:'center'}); f.focus({preventScroll:true}); } },
   openCustomer(el){ customerDrawer(el.dataset.id); },
   openBike(el){ bikeDrawer(el.dataset.id); },
   openWO(el){ woDrawer(el.dataset.id); },
@@ -1876,7 +1894,7 @@ function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopi
 const FORMS = {
   consent(f,data){ const c=cust(f.dataset.id); if(String(data.get('name')).trim().toLowerCase()!==c.name.trim().toLowerCase()){ toast(`Bitte den Namen „${c.name}“ genau eintragen`,true); return; }
     c.consent=true; c.consentInfo={date:nowStamp(),health:data.get('health')==='on',version:'Muster 1'}; audit(`Einwilligung erfasst: ${c.name}${c.consentInfo.health?' inkl. Gesundheitsangaben':''}`); save(); closeDrawer(); render(); toast('Einwilligung gespeichert'); },
-  bikeGeo(f,data){ const b=bike(f.dataset.id); const g=geoById(data.get('geo')); if(!g||!data.get('geoSize')){ toast('Bitte Modell und Größe wählen',true); return; } b.geo={id:g.id,size:data.get('geoSize')}; b.size=b.geo.size; audit(`Geometrie zugeordnet: ${b.brand} ${b.model} → ${g.brand} ${g.model} ${b.geo.size}`); save(); bikeDrawer(b.id); render(); toast('Geometrie zugeordnet'); },
+  bikeGeo(f,data){ const b=bike(f.dataset.id); const g=geoById(data.get('geo')); if(!g||!data.get('geoSize')){ toast('Bitte Modell und Größe wählen',true); return; } b.geo={id:g.id,size:data.get('geoSize')}; b.size=b.geo.size; S.sessions.filter(x=>x.bikeId===b.id&&x.status!=='abgeschlossen').forEach(applyMaker); audit(`Geometrie zugeordnet: ${b.brand} ${b.model} → ${g.brand} ${g.model} ${b.geo.size}`); save(); bikeDrawer(b.id); render(); toast('Geometrie zugeordnet'); },
   newGeo(f,data){ const id=uid('g'); S.geoCustom.push({id,brand:data.get('brand').trim(),model:data.get('model').trim(),year:data.get('year')?Number(data.get('year')):null,type:data.get('type'),src:data.get('src')||'',rows:[]}); audit(`Geometrie-Modell angelegt: ${data.get('brand')} ${data.get('model')}`); save(); render(); geoDrawer(id); },
   geoRow(f,data){ const g=S.geoCustom.find(x=>x.id===f.dataset.id); const row=GCOLS.map(c=>{ if(c==='size') return data.get('size').trim(); const v=data.get(c); return v===null||v===''?null:Number(v); }); g.rows=g.rows.filter(r=>String(r[0])!==row[0]); g.rows.push(row); save(); geoDrawer(g.id); render(); toast(`Größe ${row[0]} gespeichert`); },
   check(f,data){ const s=sess(f.dataset.id); const c=cust(s.customerId); const ch={};
@@ -1891,7 +1909,7 @@ const FORMS = {
   body(f,data){ const c=cust(f.dataset.id); c.est=c.est||[]; BODY.forEach(([k])=>{ const v=data.get(k); const nv=v===''?null:Number(v); if(nv!==c.body[k]) c.est=c.est.filter(x=>x!==k); c.body[k]=nv; }); ['hamstring','hip','ankle'].forEach(k=>c.flex[k]=data.get(k)); audit(`Körpermaße aktualisiert: ${c.name}`); save(); toast('Körpermaße gespeichert'); if(f.dataset.ctx!=='session') customerDrawer(c.id); render(); },
   anamnesis(f,data){ const s=sess(f.dataset.id); Object.keys(s.anamnesis).forEach(k=>{ if(data.has(k)) s.anamnesis[k]=data.get(k).trim(); }); s.notes=data.get('notes'); audit('Anamnese gespeichert',s.id); save(); render(); toast('Anamnese gespeichert'); },
   measure(f,data){ const s=sess(f.dataset.id); const k=data.get('key'); const v=parseFloat(String(data.get('value')).replace(',','.')); if(isNaN(v)){toast('Bitte einen Zahlenwert eingeben',true);return;}
-    const old=s.before[k]; const unc=data.get('unc'); s.before[k]={key:k,value:v,method:data.get('method'),source:data.get('source'),unc:unc===''?null:Number(unc),time:nowStamp()};
+    const old=s.before[k]; const unc=data.get('unc'); ui.editMaker=null; s.before[k]={key:k,value:v,method:data.get('method'),source:(old&&old.source==='vom Hersteller'&&Number(old.value)===v)?'vom Hersteller':data.get('method')==='Herstellerangabe'?'manuell eingegeben':data.get('source'),unc:unc===''?null:Number(unc),time:nowStamp()};
     if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit';
     { const rg=measureRange(k,cust(s.customerId),bike(s.bikeId)); if(rg&&rg.lo!=null&&(v<rg.lo||v>rg.hi)) setTimeout(()=>toast(`${MK[k].label} liegt außerhalb von ${fmtNum(rg.lo)}–${fmtNum(rg.hi)} ${rg.unit} – bitte nachmessen`,true),50); }
     audit(old?`Ausgangswert korrigiert: ${MK[k].label} ${fmtNum(old.value)} → ${fmtNum(v)} ${MK[k].unit}`:`Ausgangswert erfasst: ${MK[k].label} ${fmtNum(v)} ${MK[k].unit}`,s.id); save(); render(); toast(`${MK[k].label} gespeichert`); },
