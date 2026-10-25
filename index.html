@@ -11,24 +11,27 @@
 <style>
 /* Layout: freundliche Werkbank – helle Karten auf warmem Grund, 5 Hauptbereiche, Fitting als geführter Ablauf in Schritten */
 :root{
-  --bg:#f5f4f1; --surface:#ffffff; --surface-2:#f0eee9; --line:#e3e0d9; --fg:#1e2124; --muted:#5f656d; --faint:#8a8f96;
-  --accent:#ee6a14; --accent-ink:#ffffff; --accent-strong:#c9550a; --accent-soft:#fdeee3; --accent-line:#f6c29d;
-  --ok:#1d8f5a; --ok-soft:#e3f4ea; --warn:#a87308; --warn-soft:#fbf1d9; --bad:#c83c3c; --bad-soft:#fbe6e6; --info:#2a6fb8; --info-soft:#e4eefa;
-  --glass:rgba(255,255,255,.9); --shadow:0 1px 2px rgba(30,33,36,.05),0 4px 14px rgba(30,33,36,.05);
+  --bg:#f6f5f2; --surface:#ffffff; --surface-2:#f2f0eb; --line:#e7e3dc; --fg:#1c1f22; --muted:#5c626a; --faint:#8b9097;
+  --accent:#e8620f; --accent-ink:#ffffff; --accent-strong:#b54a08; --accent-soft:#fdf0e6; --accent-line:#f5c7a4;
+  --ok:#1a8754; --ok-soft:#e5f4ec; --warn:#9a6a05; --warn-soft:#fcf3dc; --bad:#c23b3b; --bad-soft:#fbe8e8; --info:#2665a8; --info-soft:#e6eef9;
+  --il-bg:#f4f2ee; --il-grid:rgba(28,31,34,.045); --il-frame:#4a5058; --il-tire:#2b2f34; --il-body:#2c3136; --il-soft:#d8d3ca;
+  --glass:rgba(255,255,255,.88); --shadow:0 1px 2px rgba(28,31,34,.04),0 6px 20px rgba(28,31,34,.06); --shadow-lg:0 12px 40px rgba(28,31,34,.14);
   --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
-  --r:14px; --side:248px;
+  --r:14px; --side:248px; --ease:cubic-bezier(.2,.8,.2,1);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#131416; --surface:#1b1d21; --surface-2:#24272d; --line:#30343c; --fg:#eceae6; --muted:#a3a8b1; --faint:#737983;
-  --accent:#ff8030; --accent-ink:#1c0d02; --accent-strong:#ff9a55; --accent-soft:rgba(255,128,48,.14); --accent-line:rgba(255,128,48,.45);
-  --ok:#4cc790; --ok-soft:rgba(76,199,144,.13); --warn:#e8bd45; --warn-soft:rgba(232,189,69,.13); --bad:#f07070; --bad-soft:rgba(240,112,112,.13); --info:#6cb0ef; --info-soft:rgba(108,176,239,.13);
-  --glass:rgba(27,29,33,.92); --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
+  --bg:#111214; --surface:#1a1c1f; --surface-2:#232629; --line:#2e3236; --fg:#eeece8; --muted:#a6abb2; --faint:#757b83;
+  --accent:#ff7d2e; --accent-ink:#1a0c02; --accent-strong:#ff9d5c; --accent-soft:rgba(255,125,46,.13); --accent-line:rgba(255,125,46,.42);
+  --ok:#4fca93; --ok-soft:rgba(79,202,147,.13); --warn:#ebc14d; --warn-soft:rgba(235,193,77,.13); --bad:#f27777; --bad-soft:rgba(242,119,119,.13); --info:#70b3f0; --info-soft:rgba(112,179,240,.13);
+  --il-bg:#1d2023; --il-grid:rgba(255,255,255,.04); --il-frame:#9aa1aa; --il-tire:#cfd3d8; --il-body:#e6e4df; --il-soft:#3a3f45;
+  --glass:rgba(26,28,31,.9); --shadow:0 1px 2px rgba(0,0,0,.35); --shadow-lg:0 12px 40px rgba(0,0,0,.5); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#131416; --surface:#1b1d21; --surface-2:#24272d; --line:#30343c; --fg:#eceae6; --muted:#a3a8b1; --faint:#737983;
-  --accent:#ff8030; --accent-ink:#1c0d02; --accent-strong:#ff9a55; --accent-soft:rgba(255,128,48,.14); --accent-line:rgba(255,128,48,.45);
-  --ok:#4cc790; --ok-soft:rgba(76,199,144,.13); --warn:#e8bd45; --warn-soft:rgba(232,189,69,.13); --bad:#f07070; --bad-soft:rgba(240,112,112,.13); --info:#6cb0ef; --info-soft:rgba(108,176,239,.13);
-  --glass:rgba(27,29,33,.92); --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
+  --bg:#111214; --surface:#1a1c1f; --surface-2:#232629; --line:#2e3236; --fg:#eeece8; --muted:#a6abb2; --faint:#757b83;
+  --accent:#ff7d2e; --accent-ink:#1a0c02; --accent-strong:#ff9d5c; --accent-soft:rgba(255,125,46,.13); --accent-line:rgba(255,125,46,.42);
+  --ok:#4fca93; --ok-soft:rgba(79,202,147,.13); --warn:#ebc14d; --warn-soft:rgba(235,193,77,.13); --bad:#f27777; --bad-soft:rgba(242,119,119,.13); --info:#70b3f0; --info-soft:rgba(112,179,240,.13);
+  --il-bg:#1d2023; --il-grid:rgba(255,255,255,.04); --il-frame:#9aa1aa; --il-tire:#cfd3d8; --il-body:#e6e4df; --il-soft:#3a3f45;
+  --glass:rgba(26,28,31,.9); --shadow:0 1px 2px rgba(0,0,0,.35); --shadow-lg:0 12px 40px rgba(0,0,0,.5); color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--f-body);-webkit-font-smoothing:antialiased}
@@ -168,17 +171,68 @@ td.r,th.r{text-align:right}
 .st-i::before{background:var(--ok)} .st-s::before{background:var(--info)} .st-k::before{background:var(--faint)} .st-x::before{background:var(--warn)}
 .src{font-size:12px;color:var(--faint)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
+@media (max-width:640px){#today .li,.list .li.appt{flex-wrap:wrap}#today .li .grow{flex:1 0 calc(100% - 120px)}#today .li .avatar{display:none}#today .li .sub{white-space:normal}}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.camcard{display:flex;gap:14px;align-items:center;padding:14px 16px;border-radius:14px;border:1px dashed var(--accent-line);background:var(--accent-soft)}
+.camcard .ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--surface);color:var(--accent-strong);flex:none}
+.camcard .ico svg{width:22px;height:22px}
+.camcard b{display:block;font-size:15.5px}
+.sesshead{display:flex;align-items:center;gap:12px}
+.sesshead h1{font-size:22px}
+.sesshead p{color:var(--muted);font-size:14px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stepnav{flex-wrap:nowrap!important;align-items:center}
+.step{padding:5px 10px 5px 5px;font-size:13.5px}
+.step i{width:24px;height:24px}
+.steps{justify-content:space-between}
+@media (max-width:480px){.step:not([aria-current]) .lbl{display:none}.step:not([aria-current]){padding:4px}.hide-sm{display:none}.step{gap:5px;padding:4px 8px 4px 4px;font-size:12.5px}.step i{width:22px;height:22px;font-size:12px}.steps{gap:2px}.panel-h.stepbar{padding:8px 6px!important}}
+.wiz .illus{max-width:340px}
+.wiz .illus svg{max-height:170px}
+.cmp{display:flex;flex-direction:column}
+.cmp .li{padding:10px 0;gap:10px}
+.cmp .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}
+.wiz{display:flex;flex-direction:column;gap:16px}
+.wiz-top{display:flex;align-items:center;gap:12px}
+.wiz-bar{flex:1;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}
+.wiz-bar i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .25s}
+.wiz-count{font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap}
+.wiz h2{font-size:24px}
+.wiz .lead{font-size:15.5px;color:var(--muted);max-width:52ch;margin-top:4px}
+.wiz .illus{max-width:440px;margin:0}
+ol.how{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:15px}
+.wiz .wside{display:flex;flex-direction:column;gap:6px}
+.bigchips{display:flex;flex-wrap:wrap;gap:8px}
+.bigchips .chipbtn{min-height:44px;padding:9px 16px;font-size:15px}
+.wiz .input.num{font-size:20px;min-height:50px;max-width:220px}
+.ovl{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.ovl .li{padding:12px 4px;gap:12px}
+.st-ico{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:13px;font-weight:700}
+.st-ico.done{background:var(--ok-soft);color:var(--ok)} .st-ico.open{background:var(--surface-2);color:var(--faint)} .st-ico.warn{background:var(--warn-soft);color:var(--warn)}
+.ovl .t{hyphens:auto;-webkit-hyphens:auto;overflow-wrap:anywhere}
+.ovl .val{font-size:13.5px;color:var(--muted);text-align:right;max-width:40%;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.onlyline{font-size:15px;color:var(--muted)}
+.statusbox{display:flex;gap:12px;align-items:center;padding:14px 16px;border-radius:12px;background:var(--surface-2)}
+.statusbox.ok{background:var(--ok-soft)} .statusbox.warn{background:var(--warn-soft)} .statusbox.bad{background:var(--bad-soft)}
+.statusbox b{display:block;font-size:16px}
+.btn.big{min-height:52px;font-size:16px;width:100%}
+.sugg{display:flex;flex-direction:column;gap:10px}
+.sugg .card{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+.sugg .card .grow{flex:1;min-width:0}
+.tabsbar{display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:12px;overflow-x:auto;scrollbar-width:none}
+.tabsbar button{flex:1;border:0;background:none;padding:9px 12px;border-radius:9px;font-weight:600;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabsbar button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+.chg{display:flex;flex-direction:column}
+.chg .li{padding:10px 0}
 .hint{font-size:12.5px;color:var(--muted);line-height:1.4}
 .hint.out{color:var(--bad);font-weight:600}
-.illus{background:var(--surface-2);border-radius:10px;padding:8px;margin:10px 0 6px;max-width:380px}
+.illus{background-color:var(--il-bg);background-image:linear-gradient(var(--il-grid) 1px,transparent 1px),linear-gradient(90deg,var(--il-grid) 1px,transparent 1px);background-size:16px 16px;border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0 6px;max-width:400px}
 .illus svg{width:100%;height:auto;display:block;overflow:visible}
 .illus line,.illus path{stroke-linecap:round;stroke-linejoin:round}
 .illus circle,.illus ellipse{fill:none}
-.il-b{stroke:var(--muted);fill:none} .il-f{stroke:var(--line);fill:none;stroke-width:2} rect.il-f{fill:var(--surface);stroke:var(--line)}
-.il-p{stroke:var(--fg);fill:none} .il-h{stroke:var(--accent);fill:none} .il-d{stroke:var(--faint);stroke-dasharray:4 4;stroke-width:1.5}
+.il-b{stroke:var(--il-frame);fill:none} .il-f{stroke:var(--il-soft);fill:none;stroke-width:2} rect.il-f{fill:var(--surface);stroke:var(--il-soft)} .il-tire{stroke:var(--il-tire);fill:none;stroke-width:5} .il-shadow{fill:var(--il-soft);opacity:.55;stroke:none}
+.il-p{stroke:var(--il-body);fill:none} .il-h{stroke:var(--accent);fill:none} .il-d{stroke:var(--faint);stroke-dasharray:4 4;stroke-width:1.5}
 .il-head{fill:var(--accent);stroke:none}
-.illus circle.il-fill.il-b{fill:var(--muted)} .illus circle.il-fill.il-p{fill:var(--fg)} .illus circle.il-fill.il-h{fill:var(--accent)}
-.il-t{fill:var(--fg);font:600 12px var(--f-body)} .il-s{fill:var(--muted);font:11px var(--f-body)}
+.illus circle.il-fill.il-b{fill:var(--il-frame)} .illus circle.il-fill.il-p{fill:var(--il-body)} .illus circle.il-fill.il-h{fill:var(--accent)}
+.il-t{fill:var(--fg);font:650 12px var(--f-body)} .il-s{fill:var(--muted);font:500 11px var(--f-body)} .il-t,.il-s{paint-order:stroke;stroke:var(--il-bg);stroke-width:4px;stroke-linejoin:round}
 .chipbtn{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--fg);min-height:34px}
 .chipbtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-strong);font-weight:600}
 tr.best td{background:var(--ok-soft)}
@@ -252,6 +306,29 @@ details.more[open] summary::before{content:"▾ "}
   .report{position:absolute;left:0;top:0;width:100%;border:0!important;padding:0!important}
   .drawer,.drawer-b{position:static!important;overflow:visible!important;box-shadow:none!important}
 }
+@keyframes ffIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes ffNext{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes ffPrev{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+@keyframes ffPop{0%{transform:scale(.85)}60%{transform:scale(1.06)}100%{transform:scale(1)}}
+@keyframes ffUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes ffSlide{from{transform:translateX(40px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes ffFade{from{opacity:0}to{opacity:1}}
+@keyframes ffDraw{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:no-preference){
+  .anim-in{animation:ffIn .26s var(--ease)}
+  .anim-next{animation:ffNext .28s var(--ease)}
+  .anim-prev{animation:ffPrev .28s var(--ease)}
+  .anim-next .illus .il-h,.anim-prev .illus .il-h{stroke-dasharray:420;stroke-dashoffset:420;animation:ffDraw .8s .15s var(--ease) forwards}
+  .anim-next .illus .il-head,.anim-prev .illus .il-head{opacity:0;animation:ffFade .3s .7s forwards}
+  .toast{animation:ffUp .22s var(--ease)}
+  .drawer{animation:ffSlide .26s var(--ease)}
+  .scrim{animation:ffFade .2s}
+  .chipbtn.pop{animation:ffPop .26s var(--ease)}
+  .btn,.chipbtn,.tile,.step,.navbtn,.li.click{transition:transform .12s,background-color .15s,border-color .15s,box-shadow .2s,color .15s}
+  .btn:active,.chipbtn:active{transform:scale(.97)}
+  .tile:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+  .wiz-bar i{transition:width .45s var(--ease)}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 canvas{max-width:100%;display:block}
 .svgwrap svg{width:100%;height:auto;display:block}
@@ -313,6 +390,7 @@ const I = {
   check:'<path d="M5 12l5 5 9-10"/>',
   arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
   back:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  camera:'<path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="4"/>',
   copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>'
 };
 const ic = (n,extra='') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${I[n]||''}</svg>`;
@@ -399,24 +477,28 @@ const IL = (()=>{
   // Fahrrad Seitenansicht, Fahrtrichtung rechts
   const BB=[150,122], ST=[124,50], SAD=[92,40,138,40], HT=[214,52,222,80], BAR=[240,52];
   const bike=(opt={})=>[
-    ci(72,112,46,'f'), ci(250,112,46,'f'), ci(72,112,3,'b',1), ci(250,112,3,'b',1),
-    ln(BB[0],BB[1],ST[0],ST[1],'b',3), ln(ST[0],ST[1],HT[0],HT[1]+4,'b',3), ln(BB[0],BB[1],HT[2],HT[3],'b',3), ln(HT[0],HT[1],HT[2],HT[3],'b',4),
-    ln(BB[0],BB[1],72,112,'b',2.5), ln(ST[0],ST[1]+4,72,112,'b',2.5), ln(HT[2],HT[3],250,112,'b',2.5),
-    ln(ST[0],ST[1],120,42,'b',3), `<path d="M${SAD[0]},${SAD[1]} Q115,35 ${SAD[2]},${SAD[3]}" class="il-b" style="stroke-width:4;fill:none"/>`,
-    ln(HT[0],HT[1],HT[0]-2,HT[1]-6,opt.spacer?'h':'b',opt.spacer?5:4),
-    ln(HT[0]-2,HT[1]-7,BAR[0]-4,BAR[1]-10,opt.stem?'h':'b',opt.stem?4:3),
-    `<path d="M${BAR[0]-4},${BAR[1]-10} q10,0 10,10 q0,10 -8,12" class="il-b" style="fill:none;stroke-width:3"/>`,
-    ln(BB[0],BB[1],opt.crankDown?150:132,opt.crankDown?160:150,opt.crank?'h':'b',opt.crank?4:3), ci(opt.crankDown?150:132,opt.crankDown?160:150,3,'b',1), ci(BB[0],BB[1],4,'b',1)
+    `<ellipse cx="161" cy="161" rx="132" ry="5" class="il-shadow"/>`,
+    ...[72,250].map(x=>ci(x,112,46,'tire')+ci(x,112,39,'f')+ci(x,112,3.5,'b',1)),
+    ci(BB[0],BB[1],12,'f'),
+    ln(BB[0],BB[1],72,112,'b',3.5), ln(ST[0],ST[1]+4,72,112,'b',3.5), ln(HT[2],HT[3],250,112,'b',4),
+    ln(BB[0],BB[1],ST[0],ST[1],'b',5.5), ln(ST[0],ST[1],HT[0],HT[1]+4,'b',5), ln(BB[0],BB[1],HT[2],HT[3],'b',6.5), ln(HT[0],HT[1],HT[2],HT[3],'b',7),
+    ln(ST[0],ST[1],120,42,'b',4), `<path d="M${SAD[0]},${SAD[1]} Q115,34 ${SAD[2]},${SAD[3]}" class="il-b" style="stroke-width:6;fill:none"/>`,
+    ln(HT[0],HT[1],HT[0]-2,HT[1]-6,opt.spacer?'h':'b',opt.spacer?7:6),
+    ln(HT[0]-2,HT[1]-7,BAR[0]-4,BAR[1]-10,opt.stem?'h':'b',opt.stem?5:4.5),
+    `<path d="M${BAR[0]-4},${BAR[1]-10} q11,0 11,10 q0,11 -9,13" class="il-b" style="fill:none;stroke-width:4.5"/>`,
+    ln(BB[0],BB[1],opt.crankDown?150:132,opt.crankDown?160:150,opt.crank?'h':'b',opt.crank?5.5:5), `<rect x="${(opt.crankDown?150:132)-8}" y="${(opt.crankDown?160:150)-2.5}" width="16" height="5" rx="2" class="il-b" style="fill:var(--il-frame);stroke:none"/>`, ci(BB[0],BB[1],4,'b',1)
   ].join('');
-  // Fahrerin als Strichfigur
   const rider=(hip,knee,ankle,sh,hand,hi)=>[
-    ln(...hip,...knee,hi==='leg'?'h':'p',5), ln(...knee,...ankle,hi==='leg'?'h':'p',5), ln(...hip,...sh,hi==='torso'?'h':'p',6), ln(...sh,...hand,'p',4), ci(sh[0]+12,sh[1]-12,10,'p',1), ci(...knee,3,'b',1), ci(...hip,3,'b',1)
+    ln(...sh,...hand,'p',6.5), ln(...hip,...sh,hi==='torso'?'h':'p',10), ln(...hip,...knee,hi==='leg'?'h':'p',9), ln(...knee,...ankle,hi==='leg'?'h':'p',8),
+    `<path d="M${ankle[0]-4},${ankle[1]} l14,4" class="il-p" style="stroke-width:6"/>`,
+    ci(sh[0]+12,sh[1]-14,11,'p',1), ci(...knee,3,'b',1), ci(...hip,3,'b',1)
   ].join('');
   const floor=(y=170)=>ln(10,y,310,y,'f',2);
   const person=(x,y,sc=1,opt={})=>{ // stehend, von vorn
-    const s=v=>v*sc; return [ci(x,y+s(12),s(11),'p',1), ln(x,y+s(24),x,y+s(80),'p',6), ln(x-s(24),y+s(32),x+s(24),y+s(32),opt.shoulder?'h':'p',opt.shoulder?4:5),
-      ln(x-s(24),y+s(32),x-s(30),y+s(74),'p',4), ln(x+s(24),y+s(32),x+s(30),y+s(74),'p',4), ln(x-s(14),y+s(80),x+s(14),y+s(80),opt.pelvis?'h':'p',opt.pelvis?4:5),
-      ln(x-s(12),y+s(80),x-s(14),y+s(140),'p',5), ln(x+s(12),y+s(80),x+s(14),y+s(140),'p',5)].join(''); };
+    const s=v=>v*sc; return [`<ellipse cx="${x}" cy="${y+s(142)}" rx="${s(30)}" ry="${s(4)}" class="il-shadow"/>`, ci(x,y+s(12),s(11),'p',1), ln(x,y+s(26),x,y+s(78),'p',9),
+      ln(x-s(24),y+s(32),x+s(24),y+s(32),opt.shoulder?'h':'p',opt.shoulder?5:7),
+      ln(x-s(24),y+s(32),x-s(30),y+s(74),'p',6), ln(x+s(24),y+s(32),x+s(30),y+s(74),'p',6), ln(x-s(14),y+s(80),x+s(14),y+s(80),opt.pelvis?'h':'p',opt.pelvis?5:8),
+      ln(x-s(12),y+s(80),x-s(14),y+s(140),'p',7), ln(x+s(12),y+s(80),x+s(14),y+s(140),'p',7)].join(''); };
   const D={
     saddleHeight:()=>svg(bike({crank:1})+arw(148,118,121,44)+tx(86,58,'Sattelhöhe','end')+tx(86,72,'Tretlager → Sattel','end','s'),'Sattelhöhe messen'),
     saddleSetback:()=>svg(bike()+dash(150,18,150,126)+arw(138,30,150,30)+tx(150,13,'Lot durch Tretlager')+tx(108,26,'Versatz','end'),'Sattelversatz messen'),
@@ -504,6 +586,104 @@ function liveRange(el){
   const basis=h.querySelector('.faint'); const b=basis?basis.outerHTML:'';
   h.innerHTML=(out?`Liegt außerhalb von ${fmtNum(lo)}–${fmtNum(hi)}. Bitte nachmessen.`:h.dataset.base)+' '+b;
 }
+
+/* ---------- Kamera: Körper-Scan und automatische Punkterkennung (optional) ---------- */
+let posePromise=null;
+function loadPose(){
+  if(posePromise) return posePromise;
+  const V='0.10.14';
+  posePromise=(async()=>{
+    const m=await import(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${V}/vision_bundle.mjs`);
+    const fs=await m.FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${V}/wasm`);
+    return await m.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task'},runningMode:'IMAGE',numPoses:1});
+  })();
+  posePromise.catch(()=>{ posePromise=null; });
+  return posePromise;
+}
+async function detectPose(el){ const lm=await loadPose(); const r=lm.detect(el); return r&&r.landmarks&&r.landmarks[0]?r.landmarks[0]:null; }
+const POSE_FAIL='Automatische Erkennung hat nicht geklappt. Sie braucht eine Internetverbindung und funktioniert nur über den GitHub-Link, nicht in der Claude-Vorschau. Tippe die Punkte einfach selbst an.';
+
+const SCAN={
+  front:{label:'Von vorn',tip:'Person steht barfuß, Füße hüftbreit, Arme leicht vom Körper weg. Kamera auf Hüfthöhe, 3 m Abstand, ganze Person im Bild. „Links“ heißt: linke Körperseite der Person, im Bild also rechts.',
+    pts:[['top','Scheitel'],['floor','Boden zwischen den Füßen'],['shL','Schulter links'],['shR','Schulter rechts'],['hipL','Hüfte links'],['hipR','Hüfte rechts'],['knL','Knie links'],['knR','Knie rechts'],['anL','Knöchel links'],['anR','Knöchel rechts']],
+    map:{shL:11,shR:12,hipL:23,hipR:24,knL:25,knR:26,anL:27,anR:28}},
+  side:{label:'Von der Seite',tip:'Person steht seitlich zur Kamera, Arme hängen locker. Kamera auf Hüfthöhe, 3 m Abstand, ganze Person im Bild.',
+    pts:[['top','Scheitel'],['floor','Boden unter der Ferse'],['sh','Schulter'],['hip','Hüfte (großer Knochen)'],['kn','Knie'],['an','Knöchel'],['wr','Handgelenk']],
+    map:{sh:[11,12],hip:[23,24],kn:[25,26],an:[27,28],wr:[15,16]}}
+};
+const scan={view:'front',src:{},pts:{front:{},side:{}},busy:false};
+let scanImg={};
+function scanCalc(){
+  const c=cust(sess(ui.sess).customerId); const H=Number(c.body.height); const out={};
+  const d=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+  const F=scan.pts.front, S2=scan.pts.side;
+  const mmF=H&&F.top&&F.floor?H*10/Math.abs(F.floor[1]-F.top[1]):null;
+  const mmS=H&&S2.top&&S2.floor?H*10/Math.abs(S2.floor[1]-S2.top[1]):null;
+  if(mmF){
+    if(F.shL&&F.shR) out.shDiff=Math.round((F.shL[1]-F.shR[1])*mmF);   // + = links tiefer
+    if(F.hipL&&F.hipR) out.pelDiff=Math.round((F.hipR[1]-F.hipL[1])*mmF); // + = links höher
+    if(F.hipL&&F.anL&&F.hipR&&F.anR){ out.legL=Math.round(d(F.hipL,F.anL)*mmF)/10; out.legR=Math.round(d(F.hipR,F.anR)*mmF)/10; }
+    const knee=(hip,kn,an,side)=>{ if(!hip||!kn||!an) return null; const v1=[hip[0]-kn[0],hip[1]-kn[1]], v2=[an[0]-kn[0],an[1]-kn[1]];
+      const ang=Math.acos(Math.max(-1,Math.min(1,(v1[0]*v2[0]+v1[1]*v2[1])/(Math.hypot(...v1)*Math.hypot(...v2)))))*180/Math.PI; const dev=Math.round(180-ang);
+      const t=(kn[1]-hip[1])/((an[1]-hip[1])||1), xLine=hip[0]+(an[0]-hip[0])*t; const mid=F.hipL&&F.hipR?(F.hipL[0]+F.hipR[0])/2:xLine;
+      const inward=Math.abs(kn[0]-mid)<Math.abs(xLine-mid); return {dev,dir:dev<3?'gerade':inward?'nach innen (X-Bein)':'nach außen (O-Bein)'}; };
+    out.kneeL=knee(F.hipL,F.knL,F.anL); out.kneeR=knee(F.hipR,F.knR,F.anR);
+  }
+  if(mmS){ if(S2.sh&&S2.hip) out.torso=Math.round(d(S2.sh,S2.hip)*mmS)/10; if(S2.sh&&S2.wr) out.arm=Math.round(d(S2.sh,S2.wr)*mmS)/10; if(S2.hip&&S2.an&&S2.floor) out.leg=Math.round((d(S2.hip,S2.an)+Math.abs(S2.floor[1]-S2.an[1]))*mmS)/10; }
+  return {out,H,mmF,mmS};
+}
+function scanResultsHtml(){
+  const {out,H}=scanCalc(); if(!H) return '<div class="statusbox warn"><div><b>Körpergröße fehlt</b><span class="muted" style="font-size:14px">Ohne Körpergröße kann die App keine Millimeter berechnen. Trag sie unter Grundmaße ein.</span></div></div>';
+  const rows=[];
+  if(out.shDiff!=null) rows.push(['Schultern',Math.abs(out.shDiff)<8?'gerade':`${out.shDiff>0?'links':'rechts'} ${Math.abs(out.shDiff)} mm tiefer`,Math.abs(out.shDiff)>=8]);
+  if(out.pelDiff!=null) rows.push(['Becken',Math.abs(out.pelDiff)<6?'gerade':`${out.pelDiff>0?'links':'rechts'} ${Math.abs(out.pelDiff)} mm höher`,Math.abs(out.pelDiff)>=6]);
+  if(out.legL!=null) rows.push(['Bein Hüfte–Knöchel',`L ${fmtNum(out.legL)} · R ${fmtNum(out.legR)} cm`,Math.abs(out.legL-out.legR)>=1]);
+  if(out.kneeL) rows.push(['Beinachse links',out.kneeL.dir+(out.kneeL.dev>=3?` (${out.kneeL.dev}°)`:''),out.kneeL.dev>=5]);
+  if(out.kneeR) rows.push(['Beinachse rechts',out.kneeR.dir+(out.kneeR.dev>=3?` (${out.kneeR.dev}°)`:''),out.kneeR.dev>=5]);
+  if(out.torso!=null) rows.push(['Rumpf (Schulter–Hüfte)',`${fmtNum(out.torso)} cm`,false]);
+  if(out.arm!=null) rows.push(['Arm (Schulter–Handgelenk)',`${fmtNum(out.arm)} cm`,false]);
+  if(out.leg!=null) rows.push(['Bein (Hüfte–Boden)',`${fmtNum(out.leg)} cm`,false]);
+  if(!rows.length) return '<p class="muted">Setze zuerst Scheitel, Boden und die Gelenkpunkte.</p>';
+  return `<div class="cmp">${rows.map(([l,v,w])=>`<div class="li"><div class="grow"><div class="t">${l}</div></div><span class="v" style="${w?'color:var(--warn);font-weight:600':''}">${v}</span></div>`).join('')}</div>
+  <p class="faint" style="font-size:12.5px">Schätzung aus einem Foto. Kamerawinkel, Kleidung und ungenaues Antippen verfälschen die Werte. Keine Diagnose. Wichtige Werte mit Maßband prüfen.</p>`;
+}
+function scanDrawer(){
+  const s=sess(ui.sess); const v=SCAN[scan.view]; const P=scan.pts[scan.view]; const next=v.pts.find(([k])=>!P[k]);
+  openDrawer('Körper-Scan',`<div class="stack">
+    <p class="onlyline">Optional: Foto machen, Punkte antippen oder automatisch erkennen lassen. Die App schätzt daraus Schief­stände und Längen. Das Foto bleibt auf dem Gerät.</p>
+    <div class="tabsbar">${Object.entries(SCAN).map(([k,x])=>`<button aria-selected="${scan.view===k}" data-act="scanView" data-v="${k}">${x.label}${Object.keys(scan.pts[k]).length>=x.pts.length?' ✓':''}</button>`).join('')}</div>
+    <p class="muted" style="font-size:14px">${v.tip}</p>
+    <div class="row"><label class="btn primary" for="scanCam">${ic('camera')}Foto aufnehmen</label><input class="vh" type="file" id="scanCam" accept="image/*" capture="environment" data-change="scanFile"><label class="btn" for="scanPick">Aus Mediathek</label><input class="vh" type="file" id="scanPick" accept="image/*" data-change="scanFile"></div>
+    <div ${scan.src[scan.view]?'':'hidden'} class="stack">
+      <canvas id="scanCanvas" style="width:100%;border-radius:12px;background:#000;touch-action:none;cursor:crosshair" aria-label="Foto zum Antippen der Körperpunkte"></canvas>
+      <div class="statusbox"><div style="flex:1;min-width:0"><b>${next?`Tippe: ${next[1]}`:'Alle Punkte gesetzt'}</b><span class="muted" style="font-size:14px">${Object.keys(P).length} von ${v.pts.length} Punkten</span></div></div>
+      <div class="row"><button class="btn" data-act="scanAuto" ${scan.busy?'disabled':''}>${scan.busy?'Erkenne …':'Gelenke automatisch erkennen'}</button><button class="btn ghost" data-act="scanUndo">Letzten Punkt löschen</button><button class="btn ghost" data-act="scanReset">Neu</button></div>
+      <p class="faint" style="font-size:12.5px">Automatisch: Setze zuerst Scheitel und Boden, dann erkennt die App die Gelenke. Beta, braucht Internet.</p>
+    </div>
+    <h3>Ergebnis</h3>${scanResultsHtml()}
+    <div class="row"><button class="btn primary" data-act="scanApply" data-id="${s.id}">In Körpercheck übernehmen</button><button class="btn" data-act="close">Schließen</button></div>
+  </div>`);
+  setTimeout(wireScan,20);
+}
+function drawScan(){
+  const cv=document.getElementById('scanCanvas'); const img=scanImg[scan.view]; if(!cv||!img||!img.naturalWidth) return;
+  const sc=Math.min(1,900/img.naturalWidth); cv.width=Math.round(img.naturalWidth*sc); cv.height=Math.round(img.naturalHeight*sc);
+  const ctx=cv.getContext('2d'); ctx.drawImage(img,0,0,cv.width,cv.height);
+  const P=scan.pts[scan.view], r=Math.max(6,cv.width/110); ctx.lineWidth=Math.max(3,cv.width/260); ctx.strokeStyle='#ff7d2e'; ctx.font=`600 ${Math.round(r*2.2)}px Figtree, sans-serif`;
+  const L=(a,b)=>{ if(P[a]&&P[b]){ ctx.beginPath(); ctx.moveTo(...P[a]); ctx.lineTo(...P[b]); ctx.stroke(); } };
+  if(scan.view==='front'){ L('shL','shR'); L('hipL','hipR'); L('hipL','knL'); L('knL','anL'); L('hipR','knR'); L('knR','anR'); L('shL','hipL'); L('shR','hipR'); }
+  else { L('sh','hip'); L('hip','kn'); L('kn','an'); L('sh','wr'); }
+  if(P.top&&P.floor){ ctx.setLineDash([8,8]); ctx.strokeStyle='rgba(255,255,255,.8)'; ctx.beginPath(); ctx.moveTo(P.top[0],P.top[1]); ctx.lineTo(P.top[0],P.floor[1]); ctx.stroke(); ctx.setLineDash([]); ctx.strokeStyle='#ff7d2e'; }
+  SCAN[scan.view].pts.forEach(([k,l])=>{ const p=P[k]; if(!p) return; ctx.fillStyle='#ff7d2e'; ctx.beginPath(); ctx.arc(p[0],p[1],r,0,Math.PI*2); ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle='#fff'; ctx.stroke(); ctx.lineWidth=Math.max(3,cv.width/260); ctx.strokeStyle='#ff7d2e';
+    ctx.fillStyle='#fff'; ctx.strokeStyle='rgba(0,0,0,.65)'; ctx.lineWidth=4; ctx.strokeText(l,p[0]+r*1.6,p[1]+r*.6); ctx.fillText(l,p[0]+r*1.6,p[1]+r*.6); ctx.strokeStyle='#ff7d2e'; ctx.lineWidth=Math.max(3,cv.width/260); });
+}
+function wireScan(){
+  const cv=document.getElementById('scanCanvas'); if(!cv) return; drawScan();
+  cv.addEventListener('pointerdown',e=>{ const rc=cv.getBoundingClientRect(); const x=(e.clientX-rc.left)*cv.width/rc.width, y=(e.clientY-rc.top)*cv.height/rc.height;
+    const P=scan.pts[scan.view]; const next=SCAN[scan.view].pts.find(([k])=>!P[k]); if(!next) return; P[next[0]]=[x,y]; scanDrawer(); });
+}
+
+/* ---------- Kamera: Körper-Scan und automatische Punkterkennung (Ende) ---------- */
 
 /* ---------- Körpercheck ---------- */
 const CHECKS = [
@@ -601,7 +781,29 @@ const GEO=[
  {id:'cube-kathmandu-hybrid-slt-800',brand:'Cube',model:'Kathmandu Hybrid SLT 800',year:null,type:'E-Bike',src:'https://www.cube.eu/cube-kathmandu-hybrid-slt-800-mysticgraphite-n-reflex/1112900',note:'Rahmenform auf der Seite nicht angegeben.',rows:[
   ['50',638,401,590,460,73.5,68,110,499,1173,_,_,65,720,175],['54',654,410,610,510,73,68.5,125,499,1182,_,_,80,720,175],['58',668,426,630,560,73,68.5,140,499,1203,_,_,80,720,175],['62',692,439,650,600,73,68.5,165,499,1226,_,_,80,720,175],['64',715,452,670,640,73,68.5,190,499,1248,_,_,90,720,175]]},
  {id:'rose-backroad',brand:'Rose',model:'Backroad (Rahmen FF)',year:null,type:'Gravel',src:'https://www.rosebikes.de/document/Backroad_FF_Frame_Details_V202405.pdf?sf=1',note:'Rahmendatenblatt Stand 05/2024. Gilt nicht für Backroad AL.',rows:[
-  ['XS',523,377,505,450,76.25,71.25,100,420,993,75,751,_,_,_],['S',542,387,527,482,75.5,71.75,118,420,1005,75,777,_,_,_],['M',558,396,546,505,75,72,134,420,1016,75,796,_,_,_],['ML',574,405,564,525,74.5,72.25,153,420,1030,72,817,_,_,_],['L',592,418,582,550,74.5,72.5,171,420,1046,72,837,_,_,_],['XL',616,432,603,585,74.5,72.5,195,420,1067,72,868,_,_,_]]}
+  ['XS',523,377,505,450,76.25,71.25,100,420,993,75,751,_,_,_],['S',542,387,527,482,75.5,71.75,118,420,1005,75,777,_,_,_],['M',558,396,546,505,75,72,134,420,1016,75,796,_,_,_],['ML',574,405,564,525,74.5,72.25,153,420,1030,72,817,_,_,_],['L',592,418,582,550,74.5,72.5,171,420,1046,72,837,_,_,_],['XL',616,432,603,585,74.5,72.5,195,420,1067,72,868,_,_,_]]},
+ {id:"cube-agree-c62",brand:'Cube',model:"Agree C:62",year:null,type:"Rennrad",src:"https://www.cube.eu/de-en/cube-agree-c-62-race-chromeblue-n-liquidblue/1132300",note:"Aktuelles Modell, Stand 25.10.2026.",rows:[["47",513,376,517,410,74.6,71,112,412,986,_,_,90,380,165],["50",523,378,522,440,74.6,71.5,120,412,987,_,_,90,380,165],["53",544,383,539,470,74,72,140,412,994,_,_,100,400,165],["56",572,391,560,500,73.5,72.5,170,412,1007,_,_,100,400,170],["58",591,394,575,520,73,72.5,190,412,1017,_,_,110,420,170],["60",606,399,590,540,72.5,72.5,208,412,1027,_,_,110,420,172.5],["62",628,402,600,560,72.5,72.5,231,412,1037,_,_,120,420,172.5]]},
+ {id:"cube-attain-alu",brand:'Cube',model:"Attain (Aluminium)",year:null,type:"Rennrad",src:"https://www.cube.eu/de-en/cube-attain-race-glacier-n-black/1130300",note:"Werte von Attain Race, gelten für Attain, Pro, Race und SLX. Aktuelles Modell, Stand 25.10.2026.",rows:[["47",525,375,510,410,74.6,70.6,120,420,1000,_,_,70,380,165],["50",538,378,517,440,74.6,71.5,130,420,1000,_,_,80,400,165],["53",561,384,537,470,74,72,152,420,1008,_,_,90,400,170],["56",591,391,560,500,73.5,72.5,182,420,1020,_,_,100,420,170],["58",610,394,575,520,73,72.5,202,420,1020,_,_,100,420,172.5],["60",630,396,590,540,72.5,72.5,222,420,1028,_,_,100,440,172.5],["62",648,393,595,560,72.5,72.5,242,420,1036,_,_,110,440,172.5]]},
+ {id:"cube-litening-aero-c68x",brand:'Cube',model:"Litening Aero C:68X",year:null,type:"Rennrad",src:"https://www.cube.eu/de-en/cube-litening-aero-c-68x-race-carbon-n-chrome/1133300",note:"Lenkwinkel Größe 52 auf der Herstellerseite unplausibel (gleich Sitzwinkel), daher leer gelassen. Aktuelles Modell, Stand 25.10.2026.",rows:[["50",514,389,527,460,75,72.2,110,410,981,72,_,90,380,165],["52",524,389,537,480,74.2,_,120,410,981,72,_,90,380,165],["54",542,389,550,500,73.5,73,140,410,984,69,_,100,380,165],["56",563,398,565,520,73.5,73.5,160,410,995,69,_,100,400,170],["58",580,403,580,540,73,73.5,180,410,1005,67,_,110,400,170],["60",594,405,592,560,72.5,73.5,195,410,1011,67,_,120,420,172.5],["62",609,412,604,580,72.5,73.5,210,410,1023,67,_,120,420,172.5]]},
+ {id:"cube-litening-air-c68x",brand:'Cube',model:"Litening Air C:68X",year:null,type:"Rennrad",src:"https://www.cube.eu/de-en/cube-litening-air-c-68x-race-blackpearl-n-black/1134300",note:"Aktuelles Modell, Stand 25.10.2026.",rows:[["50",514,389,527,440,75,72.2,107,410,981,_,_,90,380,165],["52",524,389,537,460,74.2,72.5,117,410,981,_,_,90,380,165],["54",542,390,550,480,73.5,73,137,410,984,_,_,100,400,170],["56",563,398,565,500,73.5,73.5,157,410,995,_,_,100,400,170],["58",580,403,580,520,73,73.5,177,410,1005,_,_,110,420,172.5],["60",594,405,592,540,72.5,73.5,192,410,1011,_,_,120,420,172.5]]},
+ {id:"cube-aerium",brand:'Cube',model:"Aerium (Triathlon)",year:null,type:"Triathlon",src:"https://www.cube.eu/bikes/road/triathlon-time-trial/aerium/geometry",note:"Lenkwinkel auf der Herstellerseite nicht eindeutig beschriftet, daher leer. Aktuelles Modell, Stand 25.10.2026.",rows:[["XS",487,395,499,535,78,_,74,410,979,78,788,_,_,_],["S",497,405,511,545,78,_,85,410,992,78,801,_,_,_],["M",517,421,531,566,78,_,106,410,1015,78,822,_,_,_],["L",539,442,557,588,78,_,129,410,1043,78,843,_,_,_]]},
+ {id:"cube-cross-race-c62",brand:'Cube',model:"Cross Race C:62",year:null,type:"Gravel",src:"https://www.cube.eu/hu/cube-cross-race-c-62-race-carbon-n-crisscross/1139300",note:"Cyclocross. Aktuelles Modell, Stand 25.10.2026.",rows:[["50",520,381,525,468,74.5,71.5,93,423,1001,_,_,90,380,165],["53",544,383,541,498,73.8,71.7,117,423,1009,_,_,90,380,170],["56",570,390,560,528,73.4,72,144,425,1024,_,_,100,400,170],["58",589,396,574,548,73.2,72,164,425,1036,_,_,110,400,172.5],["61",613,406,593,578,73,72.5,187,425,1048,_,_,120,420,172.5]]},
+ {id:"cube-nuroad-c62",brand:'Cube',model:"Nuroad C:62",year:null,type:"Gravel",src:"https://www.cube.eu/de-en/cube-nuroad-c-62-race-jungali-n-black/1136500",note:"Aktuelles Modell, Stand 25.10.2026.",rows:[["XS",520,388,522,430,75.5,69,102,440,1043,_,_,90,400,165],["S",544,388,537,460,74.7,70,124,440,1044,_,_,90,400,165],["M",579,393,560,490,73.9,71.5,155,440,1046,_,_,100,400,170],["L",599,392,575,510,73,72,174,442,1048,_,_,100,420,170],["XL",623,402,592,540,73,72.5,197,442,1060,_,_,110,420,172.5]]},
+ {id:"cube-nuroad-alu",brand:'Cube',model:"Nuroad (Aluminium)",year:null,type:"Gravel",src:"https://www.cube.eu/de-en/cube-nuroad-race-inkgrey-n-grey/1135500",note:"Werte von Nuroad Race. Aktuelles Modell, Stand 25.10.2026.",rows:[["XS",527,385,519,430,75.7,69,110,440,1043,_,_,80,400,165],["S",555,385,537,460,74.7,70,135,440,1045,_,_,80,400,165],["M",589,390,560,490,73.9,71.5,165,440,1046,_,_,90,420,170],["L",610,389,575,510,73,72,185,442,1048,_,_,100,440,170],["XL",631,397,590,540,73,72.5,205,442,1058,_,_,100,440,172.5],["XXL",652,406,605,560,73,73,225,442,1068,_,_,110,440,172.5]]},
+ {id:"cube-stereo-c62",brand:'Cube',model:"Stereo C:62 (150/146 mm)",year:null,type:"MTB",src:"https://www.cube.eu/de-en/cube-stereo-c-62-slt-artichoke-n-black/1172900",note:"Aktuelles Modell, Stand 25.10.2026.",rows:[["S",619,430,565,370,76.7,64.2,100,439,1198,36,_,50,780,165],["M",625,455,592,405,77.6,64.2,106,439,1225,36,_,50,780,165],["L",634,480,620,420,77.5,64.2,116,439,1255,36,_,50,780,170],["XL",652,505,652,470,77.3,64.2,136,439,1288,36,_,50,780,170]]},
+ {id:"cube-stereo-hpc",brand:'Cube',model:"Stereo HPC (150/145 mm)",year:null,type:"MTB",src:"https://www.cube.eu/de-en/cube-stereo-hpc-race-carbon-n-black/1172200",note:"Stack Größe L auf der Herstellerseite fehlerhaft (366 mm), daher leer. Aktuelles Modell, Stand 25.10.2026.",rows:[["S",621,430,565,370,76.7,64.2,100,439,1198,_,_,50,800,165],["M",627,455,592,405,77.6,64.2,106,439,1225,_,_,50,800,165],["L",_,480,620,420,77.5,64.2,116,439,1255,_,_,50,800,170],["XL",654,505,652,470,77.3,64.2,136,439,1288,_,_,50,800,170]]},
+ {id:"cube-fritzz-c62",brand:'Cube',model:"Fritzz C:62 TM (175 mm)",year:null,type:"MTB",src:"https://www.cube.eu/de-en/cube-fritzz-c-62-tm-hintofmint-n-grey/1173700",note:"Aktuelles Modell, Stand 25.10.2026.",rows:[["S",628,426,567,370,76.9,63.8,103,435,1206,_,_,50,800,165],["M",628,452,592,405,76.9,63.8,103,435,1231,_,_,50,800,165],["L",629,476,617,420,76.9,63.8,105,435,1256,_,_,50,800,165],["XL",647,496,653,420,76.9,63.8,125,435,1295,_,_,50,800,165]]},
+ {id:"cube-reaction-c68x",brand:'Cube',model:"Reaction C:68X",year:null,type:"MTB",src:"https://www.cube.eu/de-en/cube-reaction-c-68x-slx-mediterreneansea-n-prizm/1143600",note:"Hardtail. Aktuelles Modell, Stand 25.10.2026.",rows:[["S",607,412,574,370,74.9,68.4,94,425,1091,_,_,60,760,170],["M",610,436,604,420,74.5,68.4,97,425,1117,_,_,70,760,170],["L",622,457,629,450,74.5,68.4,110,425,1143,_,_,70,760,175],["XL",637,483,659,510,74.5,68.4,126,425,1174,_,_,70,760,175]]},
+ {id:"cube-reaction-c62",brand:'Cube',model:"Reaction C:62",year:null,type:"MTB",src:"https://www.cube.eu/de-en/cube-reaction-c-62-race-seagrey-n-black/1143300",note:"Hardtail. Aktuelles Modell, Stand 25.10.2026.",rows:[["S",612,405,578,370,74,68.5,97,426,1088,_,_,60,760,170],["M",621,422,598,420,74,68.5,107,426,1109,_,_,70,760,170],["L",630,439,618,450,74,68.5,117,426,1130,_,_,70,760,175],["XL",639,456,638,510,74,68.5,127,426,1151,_,_,70,760,175],["XXL",653,472,658,560,74,68.5,142,426,1173,_,_,70,760,175]]},
+ {id:"cube-reaction-alu",brand:'Cube',model:"Reaction (Aluminium)",year:null,type:"MTB",src:"https://www.cube.eu/de-en/cube-reaction-pro-platinum-n-black/1141200",note:"Hardtail, Werte von Reaction Pro. Aktuelles Modell, Stand 25.10.2026.",rows:[["XS",601,383,555,340,74,68.2,112,437,1076,_,_,50,680,165],["S",616,400,576,375,74,68.2,128,437,1090,_,_,50,680,170],["M",630,417,598,430,74,68.2,112,452,1136,_,_,60,720,170],["L",644,434,619,485,74,68.2,127,452,1158,_,_,60,720,175],["XL",658,452,640,535,74,68.2,142,452,1181,_,_,70,720,175]]},
+ {id:"cube-reaction-tm",brand:'Cube',model:"Reaction TM",year:null,type:"MTB",src:"https://www.cube.eu/de-en/cube-reaction-tm-pro-raw-n-black/1142200",note:"Trail-Hardtail. Aktuelles Modell, Stand 25.10.2026.",rows:[["XS",605,404,570,320,73.5,65,100,408,1111,46,_,40,760,165],["S",605,424,590,370,73.5,65,100,408,1131,46,_,40,760,165],["M",635,442,610,405,73.5,65,100,427,1181,60,_,50,810,165],["L",635,462,630,420,73.5,65,100,427,1201,60,_,50,810,170],["XL",644,482,653,470,73.5,65,110,427,1226,60,_,50,810,170]]},
+ {id:"cube-aim",brand:'Cube',model:"Aim",year:null,type:"MTB",src:"https://www.cube.eu/de-en/cube-aim-pro-grey-n-black/1140200",note:"Hardtail. XS und S mit 27,5\", M bis XL mit 29\". Aktuelles Modell, Stand 25.10.2026.",rows:[["XS",602,384,555,340,74,68.2,111,437,1082,_,_,50,680,165],["S",619,398,576,375,74,68.2,130,437,1096,_,_,50,680,170],["M",641,414,598,430,74,68.2,119,452,1141,_,_,60,720,170],["L",655,431,619,485,74,68.2,134,452,1164,_,_,60,720,175],["XL",678,446,619,535,74,68.2,159,452,1188,_,_,70,720,175]]},
+ {id:"cube-stereo-hybrid-one44-hpc",brand:'Cube',model:"Stereo Hybrid ONE44 HPC",year:null,type:"E-Bike",src:"https://www.cube.eu/uk-en/cube-stereo-hybrid-one44-hpc-slx-800-blackline/1103600",note:"E-MTB, 150/140 mm. S mit 27,5\", M bis XL mit 29\". Aktuelles Modell, Stand 25.10.2026.",rows:[["S",604,427,566,370,76.2,64.8,128,450,1204,12,_,50,790,165],["M",620,452,596,405,76.2,64.8,106,457,1233,30,_,50,790,165],["L",632,477,626,420,76.2,64.8,120,457,1264,30,_,50,790,165],["XL",658,512,669,480,76.2,64.8,148,457,1311,30,_,50,790,165]]},
+ {id:"cube-reaction-hybrid",brand:'Cube',model:"Reaction Hybrid",year:null,type:"E-Bike",src:"https://www.cube.eu/es-en/cube-reaction-hybrid-slx-800-artline/1107620",note:"E-MTB Hardtail. Aktuelles Modell, Stand 25.10.2026.",rows:[["S",646,409,587,370,74.5,67.5,159,456,1157,_,_,60,740,165],["M",653,420,607,405,74,67.5,110,470,1176,_,_,60,740,175],["L",662,437,627,450,74,67.5,120,470,1198,_,_,60,740,175],["XL",674,455,647,495,74,67.5,130,470,1218,_,_,60,740,175],["XXL",685,471,667,545,74,67.5,145,470,1240,_,_,60,740,175]]},
+ {id:"cube-kathmandu",brand:'Cube',model:"Kathmandu",year:null,type:"Trekking",src:"https://www.cube.eu/de-en/cube-kathmandu-pro-slabgrey-n-chrome/1165200",note:"Werte von Kathmandu Pro. Aktuelles Modell, Stand 25.10.2026.",rows:[["46",600,394,578,460,73,70,108,450,1086,_,_,70,680,170],["50",619,400,589,500,73,70,134,450,1098,_,_,70,680,170],["54",638,408,603,540,73,70,148,450,1113,_,_,90,680,175],["58",658,417,618,580,73,70,169,450,1129,_,_,90,680,175],["62",676,426,633,620,73,70,188,450,1145,_,_,90,680,175]]},
+ {id:"cube-touring",brand:'Cube',model:"Touring",year:null,type:"Trekking",src:"https://www.cube.eu/de-en/cube-touring-one-flashstone-n-coalchrome/1164100",note:"Tretlager 70 mm unter Nabenhöhe. Aktuelles Modell, Stand 25.10.2026.",rows:[["46",610,397,566,420,74.5,70,110,455,1088,70,_,_,_,_],["50",631,379,572,460,73,70.5,130,455,1072,70,_,_,_,_],["54",652,387,586,510,73,71,150,455,1081,70,_,_,_,_],["58",671,396,601,560,73,71,170,455,1097,70,_,_,_,_],["62",690,405,616,600,73,71,190,455,1113,70,_,_,_,_]]},
+ {id:"cube-nature",brand:'Cube',model:"Nature",year:null,type:"Trekking",src:"https://www.cube.eu/de-en/cube-nature-pro-fe-metallicwhite-n-reflex/1163250",note:"Trekking-Cross-Rahmen. Aktuelles Modell, Stand 25.10.2026.",rows:[["46",595,405,570,440,74.5,70.5,105,470,1105,_,_,70,680,170],["50",611,404,585,480,73.5,71,120,470,1104,_,_,70,680,170],["54",630,407,600,520,73,71,140,470,1114,_,_,90,680,175],["58",645,418,615,560,73,71,155,470,1130,_,_,90,680,175],["62",659,421,622,600,73,71,170,470,1137,_,_,90,680,175]]},
+ {id:"cube-nulane",brand:'Cube',model:"Nulane",year:null,type:"Trekking",src:"https://www.cube.eu/cube-nulane-pro-aloegreen-n-black/1162210",note:"Fitness- und Stadtrad. Aktuelles Modell, Stand 25.10.2026.",rows:[["XS",537,382,519,470,75.7,69,120,440,1045,_,_,70,660,170],["S",564,383,537,500,74.7,70,145,440,1045,_,_,70,660,170],["M",598,387,560,530,73.9,71,177,440,1052,_,_,90,660,175],["L",619,386,575,550,73,71.5,197,442,1054,_,_,90,660,175],["XL",643,396,592,580,73,72,220,442,1066,_,_,90,660,175]]}
 ];
 const geoAll=()=>[...GEO.map(g=>({...g,own:false})),...(S.geoCustom||[]).map(g=>({...g,own:true}))];
 const geoById=id=>geoAll().find(g=>g.id===id);
@@ -777,7 +979,7 @@ function seed(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-25.6';
+const APP_VER = '2026-10-25.7';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -811,7 +1013,7 @@ function audit(what,ref){ S.audit.unshift({time:nowStamp(),who:'Demo-Nutzer',wha
 S = load(); try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){} S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; }); S.geoCustom=S.geoCustom||[]; S.bikes.forEach(b=>{ if(!b.geo&&b.brand==='Canyon'&&b.model==='Endurace CF 7'&&b.size==='M') b.geo={id:'canyon-endurace-cf-7',size:'M'}; }); (function(){ const sd=seed(); sd.sessions.forEach(d=>{ const x=S.sessions.find(y=>y.id===d.id); if(x&&!Object.keys(x.check).length&&Object.keys(d.check||{}).length&&x.customerId===d.customerId){ x.check=d.check; x.comp=d.comp; } }); })();
 
 snapshotBeforeUpdate();
-const ui = {route:'dashboard', sess:'s4', sessTab:'anamnese', cust:null, search:'', bikeSearch:'', woFilter:'alle', invSearch:'', invCat:'alle', aiSess:'s1', aiOut:null, portalCust:'c1', motionSess:'s1', motionSide:'after', cmpA:'s1', cmpB:'s2', cmpChanged:false, fitView:'after', hwSel:'cleatlab', cleatSys:'SPD-SL', apptFilter:'heute', fuFilter:'offen'};
+const ui = {route:'dashboard', sess:'s4', sessTab:'anamnese', cust:null, search:'', bikeSearch:'', woFilter:'alle', invSearch:'', invCat:'alle', aiSess:'s1', aiOut:null, portalCust:'c1', motionSess:'s1', motionSide:'after', cmpA:'s1', cmpB:'s2', cmpChanged:true, fitView:'after', hwSel:'cleatlab', cleatSys:'SPD-SL', apptFilter:'heute', fuFilter:'offen'};
 
 const cust = id => S.customers.find(c=>c.id===id);
 const bike = id => S.bikes.find(b=>b.id===id);
@@ -862,10 +1064,15 @@ function go(r){
   try{ if(location.hash.slice(1)!==r) history.replaceState(null,'','#'+r); }catch(e){}
   closeMenu(); render(); window.scrollTo(0,0);
 }
+let lastNav={route:null,tab:null,w:null,sess:null};
 function render(){
   renderNav();
   const v = document.getElementById('view'); const y=window.scrollY;
-  try{ v.innerHTML = VIEWS[ui.route](); window.scrollTo(0,y); }
+  const nav={route:ui.route,tab:ui.sessTab,w:ui.wIdx,sess:ui.sess}; let anim=null;
+  if(nav.route!==lastNav.route||(nav.route==='sitzung'&&(nav.tab!==lastNav.tab||nav.sess!==lastNav.sess))) anim='anim-in';
+  else if(nav.route==='sitzung'&&nav.w!==lastNav.w) anim=(nav.w??-1)>(lastNav.w??-1)?'anim-next':'anim-prev';
+  lastNav=nav;
+  try{ v.innerHTML = VIEWS[ui.route](); window.scrollTo(0,y); if(anim){ const t=(anim==='anim-in'?null:v.querySelector('.panel-b'))||v; t.classList.add(anim); setTimeout(()=>t.classList.remove(anim),900); } }
   catch(e){ console.error(e); v.innerHTML = `<div class="notice warn">${ic('warn')}<div><b>Diese Ansicht konnte nicht geladen werden.</b><br>Fehler: ${esc(e.message)}. Setze die Demo unter „Mehr“ zurück, falls der Fehler bleibt.</div></div>`; }
   afterRender();
 }
@@ -970,7 +1177,7 @@ VIEWS.dashboard = () => {
 VIEWS.geometrie = () => {
   const q=(ui.geoSearch||'').toLowerCase(); const list=geoAll().filter(g=>!q||(g.brand+' '+g.model+' '+g.type).toLowerCase().includes(q));
   return `${head('Geometrie-Bibliothek','Rahmenmaße aus Herstellerangaben. Tippe ein Modell an, um alle Größen zu sehen.',`<button class="btn primary" data-act="newGeo">${ic('plus')}Modell eintragen</button>`)}
-  <div class="notice">${ic('info')}<div>${GEO.length} Modelle von Canyon, Giant, Cube und Rose, am 25.10.2026 von den Herstellerseiten übernommen, jeweils mit Quelle. Hersteller ändern Geometrien zwischen Modelljahren: vor einer Kaufberatung kurz auf der Herstellerseite prüfen. Fehlt ein Modell, trag es selbst ein. Es ist dann bei jedem Fahrrad auswählbar.</div></div>
+  <div class="notice">${ic('info')}<div>${GEO.length} Modelle von Canyon, Giant, Cube und Rose, am 25.10.2026 von den Herstellerseiten übernommen (Cube: alle aktuellen Rahmenplattformen), jeweils mit Quelle. Hersteller ändern Geometrien zwischen Modelljahren: vor einer Kaufberatung kurz auf der Herstellerseite prüfen. Fehlt ein Modell, trag es selbst ein. Es ist dann bei jedem Fahrrad auswählbar.</div></div>
   <section class="panel"><div class="panel-h"><input class="input search" type="search" id="geoSearch" placeholder="Marke oder Modell suchen" value="${esc(ui.geoSearch||'')}" data-input="geoSearch"><span class="muted" style="font-size:13px">${list.length} Modelle</span></div>
   ${list.length?`<div class="tw"><table><thead><tr><th>Modell</th><th>Typ</th><th>Größen</th><th>Quelle</th></tr></thead><tbody>${list.map(g=>`<tr class="click" data-act="openGeo" data-id="${g.id}"><td><b>${esc(g.brand)}</b> ${esc(g.model)}${g.year?` <span class="faint">(${g.year})</span>`:''}</td><td>${esc(g.type)}</td><td>${g.rows.map(r=>esc(r[0])).join(', ')||'–'}</td><td>${g.own?'<span class="chip c-acc nodot">eigener Eintrag</span>':'<span class="chip nodot">Hersteller</span>'}</td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">${ic('grid')}<span>Kein Modell gefunden.</span><button class="btn sm primary" data-act="newGeo">Modell eintragen</button></div>`}</section>`;
 };
@@ -1076,7 +1283,7 @@ function bikeDrawer(id){
 }
 
 /* --- Fitting session workspace --- */
-const STEPS=[['anamnese','Ziel'],['koerper','Körpercheck'],['ausgang','Ausgangsposition'],['anpassung','Anpassen'],['ergebnis','Ergebnis & Bericht']];
+const STEPS=[['anamnese','Ziel'],['koerper','Körper'],['ausgang','Messen'],['anpassung','Anpassen'],['ergebnis','Ergebnis']];
 function stepDone(s,c,k){
   if(k==='anamnese') return !!s.anamnesis.goal;
   if(k==='koerper') return Object.keys(s.check||{}).length>=5 && c.body.inseam!=null && c.body.inseam!=='';
@@ -1089,17 +1296,21 @@ VIEWS.sitzung = () => {
   const c=cust(s.customerId), b=bike(s.bikeId); const sc=qScore(s);
   const idx=STEPS.findIndex(x=>x[0]===ui.sessTab); const prev=STEPS[idx-1], next=STEPS[idx+1];
   return `
-  <div class="pagehead"><div><div class="row" style="margin-bottom:6px">${sessChip(s.status)}<span class="faint" style="font-size:13px">${fmtDate(s.date)}${s.time?' · '+esc(s.time):''} · ${esc(s.fitter)}</span>${sc!==null?`<span class="chip nodot ${sc>=80?'c-ok':sc>=60?'c-warn':'c-bad'}">Daten ${sc} %</span>`:''}</div>
-    <h1>${esc(c.name)}</h1><p>${esc(s.type)} · ${esc(b.brand+' '+b.model)} (${esc(b.type)}, Größe ${esc(b.size)})</p></div>
-    <div class="row"><select class="input" style="width:auto;max-width:100%" data-change="pickSession" aria-label="Anderes Fitting öffnen">${S.sessions.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<option value="${x.id}" ${x.id===s.id?'selected':''}>${fmtDate(x.date)} · ${esc(cust(x.customerId).name)}</option>`).join('')}</select>
-    <button class="btn" data-act="newSession">${ic('plus')}Neues Fitting</button></div></div>
-  <section class="panel"><div class="panel-h stepbar" style="padding:10px"><nav class="steps" aria-label="Schritte">${STEPS.map(([k,l],i)=>`<button class="step ${stepDone(s,c,k)?'done':''}" data-act="sessTab" data-v="${k}" ${k===ui.sessTab?'aria-current="step"':''}><i>${stepDone(s,c,k)&&k!==ui.sessTab?ic('check','width="14" height="14"'):i+1}</i>${l}</button>`).join('')}</nav></div>
+  <div class="sesshead"><div style="min-width:0;flex:1"><h1>${esc(c.name)}</h1><p>${esc(s.type)} · ${esc(b.brand+' '+b.model)}, ${esc(b.size)} · ${fmtDate(s.date)}</p></div>
+    <button class="btn sm" data-act="sessMenu" data-id="${s.id}" aria-label="Fitting wechseln oder neu anlegen">${ic('more')}<span class="hide-sm">Fitting wechseln</span></button></div>
+  <section class="panel"><div class="panel-h stepbar" style="padding:10px"><nav class="steps" aria-label="Schritte">${STEPS.map(([k,l],i)=>`<button class="step ${stepDone(s,c,k)?'done':''}" data-act="sessTab" data-v="${k}" ${k===ui.sessTab?'aria-current="step"':''}><i>${stepDone(s,c,k)&&k!==ui.sessTab?ic('check','width="14" height="14"'):i+1}</i><span class="lbl">${l}</span></button>`).join('')}</nav></div>
   <div class="panel-b stack">${SESSTAB[ui.sessTab](s,c,b)}
-    <div class="stepnav">${prev?`<button class="btn" data-act="sessTab" data-v="${prev[0]}">${ic('back')}${prev[1]}</button>`:'<span></span>'}
-    ${next?`<button class="btn primary" data-act="sessTab" data-v="${next[0]}">Weiter: ${next[1]}${ic('arrow')}</button>`:s.status!=='abgeschlossen'?`<button class="btn primary" data-act="finishSession" data-id="${s.id}">${ic('check')}Fitting abschließen</button>`:`<span class="chip c-ok">abgeschlossen</span>`}</div>
+    ${ui.wIdx!=null&&WIZ_N[ui.sessTab]?`<div class="stepnav"><button class="btn" data-act="wGo" data-i="${ui.wIdx>0?ui.wIdx-1:''}" aria-label="Zurück">${ic('back')}<span class="hide-sm">Zurück</span></button><div class="row" style="flex-wrap:nowrap"><button class="btn ghost" data-act="wSkip">Überspringen</button><button class="btn primary" type="submit" form="wizForm">${ui.wIdx>=WIZ_N[ui.sessTab]()-1?'Fertig':'Weiter'}${ic('arrow')}</button></div></div>`:`<div class="stepnav">${prev?`<button class="btn" data-act="sessTab" data-v="${prev[0]}" aria-label="Zurück: ${prev[1]}">${ic('back')}<span class="hide-sm">${prev[1]}</span></button>`:'<span></span>'}
+    ${next?`<button class="btn primary" data-act="sessTab" data-v="${next[0]}">Weiter: ${next[1]}${ic('arrow')}</button>`:s.status!=='abgeschlossen'?`<button class="btn primary" data-act="finishSession" data-id="${s.id}">${ic('check')}Fitting abschließen</button>`:`<span class="chip c-ok">abgeschlossen</span>`}</div>`}
   </div></section>`;
 };
 const SESSTAB = {};
+function wizFrame(i,n,title,lead,body){ const pct=Math.round((i+1)/n*100);
+  return `<div class="wiz"><div class="wiz-top"><button class="btn sm ghost" data-act="wGo" data-i="">${ic('back')}Übersicht</button><div class="wiz-bar"><i style="width:${pct}%"></i></div><span class="wiz-count">${i+1} von ${n}</span></div>
+  <div><h2>${title}</h2>${lead?`<p class="lead">${lead}</p>`:''}</div>${body}</div>`; }
+function ovItem(i,label,val,state){ return `<div class="li click" data-act="wGo" data-i="${i}"><span class="st-ico ${state}">${state==='done'?ic('check','width="14" height="14"'):state==='warn'?'!':i+1}</span><div class="grow"><div class="t">${esc(label)}</div></div><span class="val">${esc(val||'offen')}</span>${ic('arrow','width="16" height="16" style="color:var(--faint);flex:none"')}</div>`; }
+function startBtn(first,done,label){ return first>=0?`<button class="btn primary big" data-act="wGo" data-i="${first}">${done?`Weiter mit: ${esc(label)}`:'Starten'}${ic('arrow')}</button>`:''; }
+const WIZ_N={anamnese:()=>ANA_Q.length,koerper:()=>CK_ITEMS().length,ausgang:()=>MEASURE_NOW.length};
 const PRESET={
   goal:{m:'multi',o:['Beschwerden loswerden','Längere Touren','Mehr Leistung','Aerodynamik / Triathlon','Neues Rad richtig einstellen','Größe für Radkauf finden','Rennen fahren']},
   complaints:{m:'multi',o:['Keine','Hände taub','Handgelenke','Nacken','Schultern','Rücken','Sitzbereich','Knie vorn','Knie innen','Knie außen','Kniekehle','Hüfte','Füße / Zehen','Waden']},
@@ -1110,41 +1321,65 @@ const PRESET={
   comfort:{m:'set',o:['Komfort zuerst','Ausgewogen','Leistung / Aero zuerst']}
 };
 const splitVals=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean);
+const ANA_Q=[['goal','Was ist das Ziel des Fittings?','Mehrere Antworten möglich.'],['complaints','Gibt es Beschwerden beim Fahren?','Mehrere möglich. Wo genau und seit wann, kannst du unten ergänzen.'],['training','Wie viel fährt die Person pro Woche?',''],['experience','Seit wann fährt die Person Rad?',''],['previous','Gab es schon ein Fitting?',''],['limits','Gibt es körperliche Einschränkungen?','Mehrere möglich.'],['comfort','Was ist wichtiger?','']];
 SESSTAB.anamnese = (s,c) => {
-  const a=s.anamnesis; const F=[['goal','Was ist das Ziel des Fittings?'],['complaints','Welche Beschwerden gibt es beim Fahren?'],['training','Wie viel fährst du pro Woche?'],['experience','Seit wann fährst du Rad?'],['previous','Gab es schon ein Fitting?'],['limits','Gibt es Einschränkungen?'],['comfort','Was ist wichtiger?']];
-  const field=([k,l])=>{ const p=PRESET[k]; const cur=a[k]||''; const vals=splitVals(cur); const multi=p&&p.m==='multi';
-    return `<div class="field wide"><label for="a_${k}">${l}</label>${p?`<div class="chips" data-group="a_${k}">${p.o.map(o=>`<button type="button" class="chipbtn" data-act="chip" data-t="a_${k}" data-m="${p.m}" data-v="${esc(o)}" aria-pressed="${multi?vals.includes(o):cur===o}">${esc(o)}</button>`).join('')}</div>`:''}
-    ${multi?`<textarea class="input" id="a_${k}" name="${k}" placeholder="Antippen oder selbst schreiben, z. B. wo genau und seit wann" style="min-height:60px">${esc(cur)}</textarea>`:`<input class="input" id="a_${k}" name="${k}" value="${esc(cur)}" placeholder="Antippen oder selbst schreiben">`}</div>`; };
+  const a=s.anamnesis;
+  if(ui.wIdx!=null&&ANA_Q[ui.wIdx]){ const i=ui.wIdx, [k,l,hint]=ANA_Q[i], p=PRESET[k], cur=a[k]||'', vals=splitVals(cur), multi=p.m==='multi';
+    return wizFrame(i,ANA_Q.length,esc(l),esc(hint||(multi?'':'Antippen genügt, es geht automatisch weiter.')),`
+      <form id="wizForm" class="stack" data-form="anaOne" data-id="${s.id}" data-i="${i}" ${multi?'':'data-auto="1"'}>
+        <div class="bigchips" data-group="a_${k}">${p.o.map(o=>`<button type="button" class="chipbtn" data-act="chip" data-t="a_${k}" data-m="${p.m}" data-v="${esc(o)}" aria-pressed="${multi?vals.includes(o):cur===o}">${esc(o)}</button>`).join('')}</div>
+        ${multi?`<textarea class="input" id="a_${k}" name="${k}" placeholder="Oder selbst schreiben" style="min-height:60px">${esc(cur)}</textarea>`:`<input class="input" id="a_${k}" name="${k}" value="${esc(cur)}" placeholder="Oder selbst schreiben">`}
+      </form>`); }
+  const done=ANA_Q.filter(([k])=>a[k]).length, first=ANA_Q.findIndex(([k])=>!a[k]);
   return `<div class="stack">
-  ${!c.consent?`<div class="notice warn">${ic('warn')}<div>Für diese Person ist keine Einwilligung erfasst. Gesundheitsbezogene Angaben erst nach Einwilligung speichern. <button class="btn sm" data-act="consent" data-id="${c.id}">Einwilligung erfassen</button></div></div>`:''}
-  <p class="muted">Tippe die passende Antwort an. Bei Zielen, Beschwerden und Einschränkungen gehen mehrere. Du kannst alles auch selbst ergänzen.</p>
-  <form class="form" data-form="anamnesis" data-id="${s.id}">
-    ${F.map(field).join('')}
-    <div class="field wide"><label for="a_notes">Notizen</label><textarea class="input" id="a_notes" name="notes">${esc(s.notes)}</textarea></div>
-    <div class="wide row"><button class="btn primary" type="submit">Antworten speichern</button><span class="faint" style="font-size:12.5px">Nur für das Fitting nötige Angaben erfassen. FitFrame stellt keine Diagnosen.</span></div>
-  </form></div>`;
-};
-SESSTAB.koerper = (s,c) => {
-  const f=checkFindings(s), r=readiness(f,s);
-  const inp=(t,sd)=>{ const id=`ck_${t.k}${sd||''}`, val=chkVal(s,t.k,sd)??''; const lab=sd?(sd==='L'?'Links':'Rechts'):'Ergebnis';
-    return `<div class="field"><label for="${id}">${lab}${t.unit?` (${t.unit})`:''}</label>${t.type==='num'?`<input class="input num" id="${id}" name="${t.k}${sd||''}" type="number" step="${t.step||0.5}" inputmode="decimal" value="${esc(val)}" ${rangeAttr(rangeFor(CHECK_RANGE[t.k],c),id)}>${rangeHint(rangeFor(CHECK_RANGE[t.k],c),id,val)}`:`<select class="input" id="${id}" name="${t.k}${sd||''}"><option value="">nicht geprüft</option>${opts(t.opts,val)}</select>`}</div>`; };
-  return `<div class="stack">
-  <div class="notice acc">${ic('info')}<div><b>Warum zuerst der Körpercheck?</b> Das Rad wird an den Körper angepasst. Wenn ein Bein kürzer ist oder ein Fuß schräg steht, gleichst du das zuerst aus. Sonst stellst du das Rad auf eine schiefe Haltung ein. FitFrame stellt keine Diagnosen. Bei Schmerzen oder großen Unterschieden: Fachleute hinzuziehen.</div></div>
-  <section class="panel" style="box-shadow:none"><div class="panel-h"><h3>Ergebnis</h3><span class="chip ${r[0]}">${r[1]}</span></div><div class="panel-b stack"><p class="muted">${r[2]}</p>
-  ${f.length?`<div class="list">${f.map(x=>{const taken=(s.comp||[]).some(cp=>cp.t.startsWith(x.title));return `<div class="li" style="padding:10px 0;align-items:flex-start"><span class="chip ${x.lvl==='bad'?'c-bad':x.lvl==='warn'?'c-warn':x.lvl==='ok'?'c-ok':'c-info'}">${x.cat==='arzt'?'Fachperson':x.cat==='ausgleich'?'Ausgleich':'Fürs Fitting'}</span><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal">${esc(x.text)}</div></div>${x.cat==='ausgleich'?(taken?'<span class="chip c-ok">eingeplant</span>':`<button class="btn sm" data-act="addComp" data-id="${s.id}" data-t="${esc(x.title)}">Einplanen</button>`):''}</div>`;}).join('')}</div>`:'<p class="faint">Noch keine Auffälligkeiten. Trag unten die Testergebnisse ein.</p>'}
-  ${(s.comp||[]).length?`<div><div class="label" style="margin-bottom:6px">Ausgleich vor dem Fitting</div>${s.comp.map((cp,i)=>`<label class="li" style="padding:8px 0;cursor:pointer"><input type="checkbox" data-change="compDone" data-id="${s.id}" data-i="${i}" ${cp.status==='umgesetzt'?'checked':''}><span class="grow">${esc(cp.t)}</span><span class="chip ${cp.status==='umgesetzt'?'c-ok':'c-warn'}">${cp.status}</span></label>`).join('')}</div>`:''}
-  </div></section>
-  <h2>Tests</h2><p class="muted">Jeder Test dauert 1–2 Minuten. Tippe auf „So geht's“ für die Anleitung. Nicht jeder Test ist bei jedem Fitting nötig.</p>
-  <form class="stack" data-form="check" data-id="${s.id}">
-  ${CHECKS.map(t=>`<section class="panel" style="box-shadow:none"><div class="panel-b stack">
-    <div><h3>${t.label}</h3><p class="muted" style="font-size:14px">${t.why}</p></div>
-    <details class="more"><summary>So geht's · ${esc(t.tool)}</summary>${IL(t.k)}<ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">${t.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></details>
-    <div class="form">${t.side?inp(t,'L')+inp(t,'R'):inp(t)}</div></div></section>`).join('')}
-  <div class="row"><button class="btn primary" type="submit">Körpercheck speichern und auswerten</button></div></form>
-  <h2>Körpermaße</h2><p class="muted">Die Maße gehören zum Kunden und gelten für alle seine Fittings. Sie füttern auch die Simulation.</p>
-  ${bodyFormHtml(c,'session')}
+  <p class="onlyline">Kläre, was die Person erreichen will und was sie stört. ${ANA_Q.length} kurze Fragen zum Antippen.</p>
+  ${!c.consent?`<div class="statusbox warn"><div style="flex:1;min-width:0"><b>Einwilligung fehlt</b><span class="muted" style="font-size:14px">Vor Gesundheitsangaben einholen.</span></div><button class="btn sm" data-act="consent" data-id="${c.id}">Erfassen</button></div>`:''}
+  ${startBtn(first,done,first>=0?ANA_Q[first][1]:'')}
+  <div class="ovl">${ANA_Q.map(([k,l],i)=>ovItem(i,l,a[k],a[k]?'done':'open')).join('')}</div>
+  <details class="more"><summary>Notizen</summary><form class="stack" style="margin-top:8px" data-form="anaNotes" data-id="${s.id}"><textarea class="input" id="a_notes" name="notes">${esc(s.notes)}</textarea><div><button class="btn" type="submit">Notizen speichern</button></div></form></details>
   </div>`;
 };
+const CK_ITEMS=()=>[{k:'grund',label:'Grundmaße',why:'Körpergröße und Schrittlänge braucht die App für Erwartungswerte und die Simulation.',tool:'Maßband, Buch'},...CHECKS];
+function ckDone(s,c,it){ if(it.k==='grund') return c.body.height!=null&&c.body.height!==''&&c.body.inseam!=null&&c.body.inseam!==''; return (it.side?['L','R']:['']).some(sd=>chkVal(s,it.k,sd)!==undefined&&chkVal(s,it.k,sd)!==''); }
+function ckSummary(s,c,it){
+  if(it.k==='grund') return ckDone(s,c,it)?`${fmtNum(c.body.height)} cm · Schritt ${fmtNum(c.body.inseam)} cm`:'';
+  const f=v=>v===undefined||v===''?'–':(typeof v==='number'?fmtNum(v)+(it.unit?' '+it.unit:''):v);
+  return ckDone(s,c,it)?(it.side?`L ${f(chkVal(s,it.k,'L'))} · R ${f(chkVal(s,it.k,'R'))}`:f(chkVal(s,it.k,''))):'';
+}
+function ckFlag(s,it){ const w=it.label.split(' ')[0].toLowerCase(); return checkFindings(s).some(x=>x.lvl!=='ok'&&x.title.toLowerCase().includes(w)); }
+SESSTAB.koerper = (s,c) => {
+  const items=CK_ITEMS();
+  if(ui.wIdx!=null&&items[ui.wIdx]) return ckWizard(s,c,items,ui.wIdx);
+  const f=checkFindings(s).filter(x=>x.lvl!=='ok'), r=readiness(checkFindings(s),s);
+  const done=items.filter(it=>ckDone(s,c,it)).length, first=items.findIndex(it=>!ckDone(s,c,it));
+  const cls=r[0]==='c-ok'?'ok':r[0]==='c-bad'?'bad':r[0]==='c-warn'?'warn':'';
+  return `<div class="stack">
+  <p class="onlyline">Prüfe den Körper, bevor du das Rad einstellst. Ein Test pro Bildschirm, je 1–2 Minuten. Nicht jeder Test ist immer nötig.</p>
+  <div class="camcard"><span class="ico">${ic('camera')}</span><div style="flex:1;min-width:0"><b>Körper-Scan mit Kamera</b><span class="muted" style="font-size:13.5px">${s.scan?`Gescannt am ${fmtDate(s.scan.date)}`:'Optional · Foto von vorn und von der Seite'}</span></div><button class="btn sm ${s.scan?'':'primary'}" data-act="scanOpen">${s.scan?'Ansehen':'Starten'}</button></div>
+  <div class="statusbox ${cls}"><div style="flex:1;min-width:0"><b>${r[1]}</b><span class="muted" style="font-size:14px">${r[2]}</span></div><span class="num" style="font-weight:700">${done}/${items.length}</span></div>
+  ${f.length?`<div class="list">${f.slice(0,3).map(x=>{const taken=(s.comp||[]).some(cp=>cp.t.startsWith(x.title));return `<div class="li" style="padding:10px 0;align-items:flex-start"><div class="grow"><span class="chip ${x.lvl==='bad'?'c-bad':x.lvl==='warn'?'c-warn':'c-info'}" style="margin-bottom:4px">${x.cat==='arzt'?'Fachperson':x.cat==='ausgleich'?'Ausgleich':'Fitting'}</span><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal">${esc(x.text)}</div></div>${x.cat==='ausgleich'?(taken?'<span class="chip c-ok">eingeplant</span>':`<button class="btn sm" data-act="addComp" data-id="${s.id}" data-t="${esc(x.title)}">Einplanen</button>`):''}</div>`;}).join('')}</div>${f.length>3?`<details class="more"><summary>${f.length-3} weitere Hinweise</summary><div class="list">${f.slice(3).map(x=>`<div class="li" style="padding:10px 0;align-items:flex-start"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal">${esc(x.text)}</div></div></div>`).join('')}</div></details>`:''}`:''}
+  ${(s.comp||[]).length?`<details class="more"><summary>Ausgleich vor dem Fitting (${s.comp.filter(x=>x.status==='umgesetzt').length}/${s.comp.length} erledigt)</summary>${s.comp.map((cp,i)=>`<label class="li" style="padding:8px 0;cursor:pointer"><input type="checkbox" data-change="compDone" data-id="${s.id}" data-i="${i}" ${cp.status==='umgesetzt'?'checked':''}><span class="grow">${esc(cp.t)}</span></label>`).join('')}</details>`:''}
+  ${startBtn(first,done,first>=0?items[first].label:'')}
+  <div class="ovl">${items.map((it,i)=>{const d=ckDone(s,c,it);return ovItem(i,it.label,ckSummary(s,c,it),d?(ckFlag(s,it)?'warn':'done'):'open');}).join('')}</div>
+  <details class="more"><summary>Warum zuerst der Körpercheck?</summary><p class="muted" style="margin-top:6px">Das Rad wird an den Körper angepasst. Ist ein Bein kürzer oder steht ein Fuß schräg, gleichst du das zuerst aus. Sonst stellst du das Rad auf eine schiefe Haltung ein. FitFrame stellt keine Diagnosen. Bei Schmerzen oder großen Unterschieden: Fachleute hinzuziehen.</p></details>
+  <button class="btn ghost" data-act="openCustomer" data-id="${c.id}" style="align-self:flex-start">Alle Körpermaße bearbeiten</button>
+  </div>`;
+};
+function ckWizard(s,c,items,i){
+  const it=items[i]; let fields='', auto=false;
+  if(it.k==='grund'){
+    fields=[['height','Körpergröße','cm',1],['inseam','Schrittlänge','cm',1],['torso','Rumpflänge (optional)','cm',0],['arm','Armlänge (optional)','cm',0]].map(([k,l,u,req])=>{ const id='g_'+k, rg=rangeFor(BODY_RANGE[k],c);
+      return `<div class="field"><label for="${id}">${l} in ${u}</label><input class="input num" id="${id}" name="${k}" type="number" step="0.5" inputmode="decimal" value="${c.body[k]??''}" ${req?'required':''} ${rangeAttr(rg,id)}>${rangeHint(rg,id,c.body[k])}</div>`; }).join('');
+  } else {
+    auto=it.type!=='num'&&!it.side;
+    const one=sd=>{ const id=`ck_${it.k}${sd||''}`, val=chkVal(s,it.k,sd)??''; const lab=sd?(sd==='L'?'Links':'Rechts'):'';
+      if(it.type==='num'){ const rg=rangeFor(CHECK_RANGE[it.k],c); return `<div class="field wside"><label for="${id}">${lab?`<b>${lab}</b> · `:''}Wert${it.unit?` in ${it.unit}`:''}</label><input class="input num" id="${id}" name="${it.k}${sd||''}" type="number" step="${it.step||0.5}" inputmode="decimal" value="${esc(val)}" ${rangeAttr(rg,id)}>${rangeHint(rg,id,val)}</div>`; }
+      return `<div class="wside">${lab?`<span class="label">${lab}</span>`:''}<input type="hidden" id="${id}" name="${it.k}${sd||''}" value="${esc(val)}"><div class="bigchips" data-group="${id}">${it.opts.map(o=>`<button type="button" class="chipbtn" data-act="chip" data-t="${id}" data-m="set" data-v="${esc(o)}" aria-pressed="${val===o}">${esc(o)}</button>`).join('')}</div></div>`; };
+    fields=it.side?one('L')+one('R'):one('');
+  }
+  const how=it.steps?`<details class="more" open><summary>So geht's · ${esc(it.tool)}</summary><ol class="how">${it.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></details>`:`<details class="more" open><summary>So geht's · ${esc(it.tool)}</summary><ol class="how"><li>Körpergröße barfuß an der Wand messen.</li><li>Schrittlänge: barfuß an die Wand, ein Buch waagerecht fest in den Schritt drücken.</li><li>Vom Boden bis zur Buchoberkante messen.</li></ol></details>`;
+  return wizFrame(i,items.length,esc(it.label),esc(it.why),`${it.k!=='grund'?IL(it.k):''}<form id="wizForm" class="stack" data-form="checkOne" data-id="${s.id}" data-i="${i}" ${auto?'data-auto="1"':''}>${fields}</form>${how}`);
+}
 function measureTable(s,side){
   const recs=Object.keys(MK).filter(k=>s[side][k]).map(k=>s[side][k]);
   if(!recs.length) return `<div class="empty">Noch keine Werte. Trag sie unten ein oder lass sie aus den Körpermaßen simulieren.</div>`;
@@ -1182,29 +1417,46 @@ function measureCard(s,side,k,c,b){
 }
 SESSTAB.ausgang = s => {
   const c=cust(s.customerId), b=bike(s.bikeId), mk=makerValues(s);
+  if(ui.wIdx!=null&&MEASURE_NOW[ui.wIdx]){ const i=ui.wIdx, k=MEASURE_NOW[i], m=MK[k], cur=s.before[k], h=HOW[k]||{m:'Maßband',steps:[],tool:''}, rg=measureRange(k,c,b);
+    return wizFrame(i,MEASURE_NOW.length,m.label,esc(m.def||''),`${IL(k)}<form id="wizForm" class="stack" data-form="measure" data-wiz="1" data-id="${s.id}" data-side="before" data-i="${i}"><input type="hidden" name="key" value="${k}"><input type="hidden" name="source" value="gemessen">
+        <div class="field"><label for="mc_${k}">Wert in ${m.unit}</label><input class="input num" id="mc_${k}" name="value" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" value="${cur?cur.value:''}" required ${rangeAttr(rg,'mc_'+k)}>${rangeHint(rg,'mc_'+k,cur?cur.value:'')}</div>
+        <details class="more"><summary>Methode und Genauigkeit</summary><div class="form" style="margin-top:8px"><div class="field"><label for="mm_${k}">Methode</label><select class="input" id="mm_${k}" name="method">${opts(METHODS,cur?cur.method:h.m)}</select></div><div class="field"><label for="mu_${k}">± Genauigkeit (${m.unit})</label><input class="input num" id="mu_${k}" name="unc" type="number" step="0.1" min="0" inputmode="decimal" value="${cur&&cur.unc!=null?cur.unc:''}" placeholder="optional"></div></div></details>
+      </form>
+      <details class="more" open><summary>So misst du · ${esc(h.tool)}</summary><ol class="how">${h.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>${h.tip?`<p class="faint" style="margin-top:6px;font-size:13.5px">Tipp: ${esc(h.tip)}</p>`:''}</details>`); }
   const fromMaker=Object.keys(MAKER).filter(k=>s.before[k]&&s.before[k].source==='vom Hersteller');
-  const now=MEASURE_NOW, done=now.filter(k=>s.before[k]).length;
-  const optional=Object.keys(MK).filter(k=>!now.includes(k)&&!fromMaker.includes(k));
+  const done=MEASURE_NOW.filter(k=>s.before[k]).length, first=MEASURE_NOW.findIndex(k=>!s.before[k]);
+  const optional=Object.keys(MK).filter(k=>!MEASURE_NOW.includes(k)&&!fromMaker.includes(k));
   return `<div class="stack">
-  <div class="notice acc">${ic('info')}<div><b>Nur ${now.length} Punkte messen.</b> Miss das Rad so, wie der Kunde es mitgebracht hat. ${done===now.length?'Alle Pflichtwerte sind da.':`Noch ${now.length-done} von ${now.length} offen.`}</div></div>
-  ${mk?(fromMaker.length?`<section class="panel" style="box-shadow:none"><div class="panel-h"><h3>Vom Hersteller übernommen</h3><span class="src">${esc(mk.g.brand+' '+mk.g.model)} · ${esc(mk.r.size)}</span></div><div class="panel-b"><table><tbody>${fromMaker.map(k=>`<tr><td>${MK[k].label}</td><td class="r num">${fmtNum(s.before[k].value)} ${MK[k].unit}</td><td class="r"><button class="btn sm ghost" data-act="editMaker" data-k="${k}">Ändern</button></td></tr>`).join('')}</tbody></table><p class="faint" style="font-size:12.5px;margin-top:8px">Serienausstattung laut Hersteller. Wurde etwas getauscht, tippe auf „Ändern“.</p></div></section>`:`<div class="row"><button class="btn" data-act="applyMaker" data-id="${s.id}">Serienwerte vom Hersteller übernehmen</button></div>`)
-    :`<div class="notice">${ic('info')}<div>Ordne dem Fahrrad ein Modell aus der Geometrie-Bibliothek zu. Dann übernimmt die App Vorbau, Lenker und Kurbel automatisch. <button class="btn sm" data-act="bikeGeo" data-id="${b.id}">Modell zuordnen</button></div></div>`}
-  <h2>Jetzt messen</h2>
-  ${now.map(k=>measureCard(s,'before',k,c,b)).join('')}
-  <details class="more" ${vid.src?'open':''}><summary>Kniewinkel und Hüftwinkel per Video messen (empfohlen)</summary><div style="margin-top:10px">${vidPanel(s,'before')}</div></details>
-  <details class="more" ${ui.editMaker?'open':''}><summary>Weitere Messpunkte (optional, ${optional.length+fromMaker.length})</summary><div class="stack" style="margin-top:10px">
-    <p class="muted" style="font-size:13.5px">Gelenkwinkel misst du am einfachsten unter Mehr → Bewegung & Video. <button class="btn sm" data-nav="motion">Zur Videoauswertung</button></p>
+  <p class="onlyline">Miss das Rad so, wie die Person es mitgebracht hat. ${MEASURE_NOW.length} Punkte, je mit Skizze und Anleitung.</p>
+  <div class="statusbox ${done===MEASURE_NOW.length?'ok':''}"><div style="flex:1;min-width:0"><b>${done===MEASURE_NOW.length?'Alle Pflichtwerte erfasst':'Noch '+(MEASURE_NOW.length-done)+' Werte offen'}</b>${mk&&fromMaker.length?`<span class="muted" style="font-size:14px">${fromMaker.length} Serienwerte vom Hersteller übernommen</span>`:''}</div><span class="num" style="font-weight:700">${done}/${MEASURE_NOW.length}</span></div>
+  ${startBtn(first,done,first>=0?MK[MEASURE_NOW[first]].label:'')}
+  <div class="ovl">${MEASURE_NOW.map((k,i)=>{const v=s.before[k], rg=measureRange(k,c,b), out=v&&rg&&rg.lo!=null&&(v.value<rg.lo||v.value>rg.hi);return ovItem(i,MK[k].label,v?`${fmtNum(v.value)} ${MK[k].unit}`:'',v?(out?'warn':'done'):'open');}).join('')}</div>
+  ${mk?(fromMaker.length?`<details class="more"><summary>Vom Hersteller: ${esc(mk.g.brand+' '+mk.g.model)}, ${esc(mk.r.size)}</summary><table style="margin-top:6px"><tbody>${fromMaker.map(k=>`<tr><td>${MK[k].label}</td><td class="r num">${fmtNum(s.before[k].value)} ${MK[k].unit}</td><td class="r"><button class="btn sm ghost" data-act="editMaker" data-k="${k}">Ändern</button></td></tr>`).join('')}</tbody></table><p class="faint" style="font-size:12.5px">Serienausstattung. Wurde etwas getauscht, tippe auf „Ändern“.</p></details>`:`<button class="btn" data-act="applyMaker" data-id="${s.id}">Serienwerte vom Hersteller übernehmen</button>`)
+    :`<div class="statusbox"><div style="flex:1;min-width:0"><b>Kein Modell zugeordnet</b><span class="muted" style="font-size:14px">Dann übernimmt die App Vorbau, Lenker und Kurbel automatisch.</span></div><button class="btn sm" data-act="bikeGeo" data-id="${b.id}">Zuordnen</button></div>`}
+  <details class="more" ${vid.src?'open':''}><summary>Kniewinkel und Hüftwinkel per Video messen</summary><div style="margin-top:10px">${vidPanel(s,'before')}</div></details>
+  <details class="more" ${ui.editMaker?'open':''}><summary>Weitere Messpunkte (optional)</summary><div class="stack" style="margin-top:10px">
     ${[...(ui.editMaker?[ui.editMaker]:[]),...optional,...fromMaker.filter(k=>k!==ui.editMaker)].map(k=>measureCard(s,'before',k,c,b)).join('')}
     <div class="row"><button class="btn sm" type="button" data-act="simCapture" data-id="${s.id}">Fehlende Werte aus Körpermaßen simulieren</button>${st('s')}</div>
   </div></details></div>`;
 };
-SESSTAB.anpassung = s => { const sg=fitSuggestions(s); return `<div class="stack">
-  <section class="panel" style="box-shadow:none"><div class="panel-h"><h3>Vorschläge</h3>${st('s')}</div><div class="panel-b">${sg.length?`<div class="list">${sg.map(x=>`<div class="li" style="padding:10px 0;align-items:flex-start"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal">${esc(x.why)} <b>So gehst du vor:</b> ${esc(x.how)}</div></div>${x.key?`<button class="btn sm" data-act="prepChange" data-key="${x.key}">${MK[x.key].label} ändern</button>`:''}</div>`).join('')}</div><p class="faint" style="font-size:12.5px;margin-top:8px">Faustregeln aus Beschwerden, Körpercheck und Kniewinkel. Immer in kleinen Schritten ändern, neu messen und den Kunden fragen.</p>`:'<p class="faint">Keine Vorschläge. Trag Beschwerden im Schritt Ziel ein oder miss den Kniewinkel.</p>'}</div></section>
-  <p class="muted">Trag jede Änderung mit kurzem Grund ein. Alte Werte bleiben erhalten.</p>
-  ${s.changes.length?`<div class="tw"><table><thead><tr><th>Zeit</th><th>Einstellung</th><th class="r">Vorher</th><th class="r">Nachher</th><th class="r">Δ</th><th>Begründung</th></tr></thead><tbody>${s.changes.map(ch=>{const m=MK[ch.key];const d=(ch.from!=null&&ch.to!=null)?ch.to-ch.from:null;return `<tr><td class="mono faint" style="font-size:12px;white-space:nowrap">${esc(ch.time.slice(11)||ch.time)}</td><td>${m.label}</td><td class="r num">${fmtNum(ch.from)}</td><td class="r num">${fmtNum(ch.to)} ${m.unit}</td><td class="r num ${d>0?'up':d<0?'down':''}">${d===null?'–':(d>0?'+':'')+fmtNum(d)}</td><td>${esc(ch.reason)}</td></tr>`;}).join('')}</tbody></table></div>`:'<div class="empty">Noch nichts geändert. Trag unten die erste Anpassung ein.</div>'}
-  <hr><h3 id="changeHead">Einstellung ändern</h3>${measureForm(s,'after',true)}
-  <hr><details class="more" ${vid.src?'open':''}><summary>Neue Position per Video prüfen</summary><div style="margin-top:10px">${vidPanel(s,'after')}</div></details>
-  <hr><h3>Aktuelle Endwerte</h3>${measureTable(s,'after')}</div>`; };
+SESSTAB.anpassung = s => { const sg=fitSuggestions(s); const top=sg.slice(0,3), rest=sg.slice(3);
+  const card=x=>`<div class="card"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal;font-size:14px">${esc(x.how)}</div><details class="more" style="margin-top:4px"><summary style="font-size:13px">Warum?</summary><p class="muted" style="font-size:13.5px">${esc(x.why)}</p></details></div>${x.key?`<button class="btn sm primary" data-act="prepChange" data-key="${x.key}">Ändern</button>`:''}</div>`;
+  return `<div class="stack">
+  <p class="onlyline">Stell das Rad in kleinen Schritten um. Nach jeder Änderung kurz fahren lassen und nachfragen.</p>
+  ${top.length?`<div><div class="label" style="margin-bottom:8px">Vorschläge ${st('s')}</div><div class="sugg">${top.map(card).join('')}</div>${rest.length?`<details class="more" style="margin-top:8px"><summary>${rest.length} weitere Vorschläge</summary><div class="sugg" style="margin-top:8px">${rest.map(card).join('')}</div></details>`:''}</div>`:'<div class="statusbox"><div><b>Keine Vorschläge</b><span class="muted" style="font-size:14px">Trag Beschwerden im Schritt „Ziel“ ein oder miss den Kniewinkel.</span></div></div>'}
+  <section class="panel" style="box-shadow:none" id="changeHead"><div class="panel-b stack">
+    <h3>Änderung eintragen</h3>
+    <form class="stack" data-form="change" data-id="${s.id}" data-side="after">
+      <div class="field"><label for="m_key_after">Was hast du geändert?</label><select class="input" id="m_key_after" name="key">${Object.entries(MK).filter(([,m])=>m.group!=='Bewegung').map(([k,m])=>`<option value="${k}" ${ui.prepKey===k?'selected':''}>${m.label}</option>`).join('')}</select></div>
+      <div class="row" style="flex-wrap:nowrap;align-items:flex-start"><div class="field" style="flex:1"><label for="m_val_after">Neuer Wert</label><input class="input num" id="m_val_after" name="value" type="number" step="0.1" inputmode="decimal" required></div></div>
+      <div class="field"><label for="m_reason">Warum?</label><input class="input" id="m_reason" name="reason" required placeholder="z. B. Knie unten stark gebeugt"></div>
+      <details class="more"><summary>Methode und Genauigkeit</summary><div class="form" style="margin-top:8px"><div class="field"><label for="m_meth_after">Methode</label><select class="input" id="m_meth_after" name="method">${opts(METHODS,'Maßband')}</select></div><div class="field"><label for="m_src_after">Quelle</label><select class="input" id="m_src_after" name="source">${opts(SOURCES,'gemessen')}</select></div><div class="field"><label for="m_unc_after">± Genauigkeit</label><input class="input num" id="m_unc_after" name="unc" type="number" step="0.1" min="0" inputmode="decimal" placeholder="optional"></div></div></details>
+      <div><button class="btn primary" type="submit">Änderung speichern</button></div>
+    </form></div></section>
+  ${s.changes.length?`<div><div class="label" style="margin-bottom:4px">Bisher geändert (${s.changes.length})</div><div class="chg">${s.changes.slice().reverse().map(ch=>{const m=MK[ch.key], d=(ch.from!=null&&ch.to!=null)?ch.to-ch.from:null;return `<div class="li"><div class="grow"><div class="t">${m.label}: ${fmtNum(ch.from)} → ${fmtNum(ch.to)} ${m.unit} <span class="${d>0?'up':d<0?'down':''} num" style="font-size:13px">${d===null?'':(d>0?'+':'')+fmtNum(d)}</span></div><div class="sub" style="white-space:normal">${esc(ch.reason)}</div></div></div>`;}).join('')}</div></div>`:''}
+  <div class="camcard"><span class="ico">${ic('camera')}</span><div style="flex:1;min-width:0"><b>Fahr-Analyse mit Kamera</b><span class="muted" style="font-size:13.5px">Optional · neue Position beim Fahren filmen und Winkel messen</span></div></div>
+  <details class="more" ${vid.src?'open':''}><summary>Fahr-Analyse öffnen</summary><div style="margin-top:10px">${vidPanel(s,'after')}</div></details>
+  </div>`; };
 function bikeSvg(s,view){
   const pos = side => { const g=k=> val(s[side][k]) ?? val(s.before[k]); const h=g('saddleHeight'), sb=g('saddleSetback'), r=g('reach'), d=g('drop'); if(h==null) return null; const sbx=sb??60; const sy=Math.sqrt(Math.max(h*h-sbx*sbx,0)); return {sx:-sbx, sy, bx:-sbx+(r??540)*0.98, by:sy-(d??60)}; };
   const B=pos('before'), A=Object.keys(s.after).length?pos('after'):null;
@@ -1236,13 +1488,17 @@ function compareTable(rows,onlyChanged,la,lb){
   <td>${!r.b||!r.a?'<span class="chip c-info">nur ein Wert</span>':r.methodDiff?`<span class="chip c-warn" title="${esc(r.b.method+' → '+r.a.method)}">Methode abweichend</span>`:(r.a.source==='geschätzt'||r.b.source==='geschätzt')?'<span class="chip c-warn">geschätzt</span>':'<span class="chip c-ok">vergleichbar</span>'}</td></tr>`).join('')}
   </tbody></table></div>`;
 }
+function compactCompare(rows,only){
+  rows=rows.filter(r=>!only||(r.d!==null&&Math.abs(r.d)>0.001)); if(!rows.length) return '<p class="muted">Noch keine geänderten Werte.</p>';
+  return `<div class="cmp">${rows.map(r=>`<div class="li"><div class="grow"><div class="t">${r.m.label}</div>${!r.b||!r.a?'':r.methodDiff?'<div class="sub" style="color:var(--warn)">Methode abweichend – nur eingeschränkt vergleichbar</div>':(r.a.source==='geschätzt'||r.b.source==='geschätzt')?'<div class="sub" style="color:var(--warn)">geschätzt</div>':''}</div><span class="v">${r.b?fmtNum(r.b.value):'–'} → <b>${r.a?fmtNum(r.a.value):'–'}</b> ${r.m.unit}</span>${r.d!==null&&Math.abs(r.d)>0.001?`<span class="chip nodot ${r.d>0?'c-acc':'c-info'}">${r.d>0?'+':''}${fmtNum(r.d)}</span>`:''}</div>`).join('')}</div>`;
+}
 SESSTAB.vergleich = s => {
   const rows=compareRows(s.before,s.after);
   return `<div class="stack">
   <div class="row" style="justify-content:space-between"><div class="seg">${[['before','Vorher'],['both','Beide'],['after','Nachher']].map(([v,l])=>`<button data-act="fitView" data-v="${v}" aria-pressed="${ui.fitView===v}">${l}</button>`).join('')}</div>
   <label class="row" style="font-size:13px"><input type="checkbox" id="onlyChanged" data-change="onlyChanged" ${ui.cmpChanged?'checked':''}> nur geänderte Werte</label></div>
   ${bikeSvg(s,ui.fitView)}
-  ${compareTable(rows,ui.cmpChanged)}
+  ${compactCompare(rows,ui.cmpChanged)}
   ${s.feedback.length?`<div><h3>Kundenfeedback (subjektiv)</h3><div class="list">${s.feedback.map(f=>`<div class="li" style="padding:8px 0"><span class="mono faint" style="font-size:12px">${fmtDate(f.date)}</span><div class="grow">${esc(f.text)}</div><span class="chip nodot">Komfort ${f.score}/10</span></div>`).join('')}</div></div>`:''}
   <p class="faint" style="font-size:12px">Vergleiche zeigen Veränderungen der Einstellung. Ob eine Änderung eine Verbesserung verursacht hat, ist damit nicht belegt.</p></div>`;
 };
@@ -1257,12 +1513,15 @@ SESSTAB.bericht = s => `<div class="stack"><div class="row" style="justify-conte
   <div class="row"><label class="row" style="font-size:13px"><input type="checkbox" data-change="share" data-id="${s.id}" ${S.shared[s.id]?'checked':''}> Im Kundenportal freigeben</label></div>
   <div id="reportBox">${ui.reportFor===s.id?reportHtml(s):'<div class="empty">Noch kein Bericht erzeugt.</div>'}</div></div>`;
 SESSTAB.ergebnis = s => {
-  const q=quality(s); const crit=q.filter(x=>x[0]!=='info').length;
-  return `<div class="stack"><h2>Vorher und nachher</h2>${SESSTAB.vergleich(s)}</div>
-  <hr><details class="more" ${crit?'open':''}><summary>Datenqualität prüfen ${crit?`<span class="chip c-warn">${crit} offen</span>`:`<span class="chip c-ok">in Ordnung</span>`}</summary><div style="margin-top:12px">${SESSTAB.qualitaet(s)}</div></details>
-  <hr><div class="stack"><h2>Passt die Position auf dieses Rad?</h2>${adviceHtml(s)}</div>
-  <hr><div class="stack"><h2>Bericht</h2>${SESSTAB.bericht(s)}</div>
-  <div class="row"><span class="label">Status</span><select class="input" style="width:auto" data-change="sessStatus" data-id="${s.id}" aria-label="Status">${opts(['geplant','eingetroffen','in Arbeit','abgeschlossen','abgesagt'],s.status)}</select></div>`;
+  const q=quality(s), crit=q.filter(x=>x[0]!=='info').length; const t=ui.resTab||'vergleich';
+  const tabs=[['vergleich','Vorher / Nachher'],['groesse','Rahmengröße'],['qualitaet',`Datenqualität${crit?` (${crit})`:''}`],['bericht','Bericht']];
+  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,groesse:()=>adviceHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
+  return `<div class="stack">
+  <p class="onlyline">Prüfe das Ergebnis, erstelle den Bericht und schließ das Fitting ab.</p>
+  <div class="tabsbar" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${t===k}" data-act="resTab" data-v="${k}">${l}</button>`).join('')}</div>
+  <div class="stack">${body}</div>
+  <div class="row"><span class="label">Status</span><select class="input" style="width:auto" data-change="sessStatus" data-id="${s.id}" aria-label="Status">${opts(['geplant','eingetroffen','in Arbeit','abgeschlossen','abgesagt'],s.status)}</select></div>
+  </div>`;
 };
 function adviceHtml(s){
   const b=bike(s.bikeId); const sel=ui.advGeo||(b.geo&&b.geo.id)||''; const g=sel?geoById(sel):null;
@@ -1279,7 +1538,7 @@ function reportHtml(s){
   const q=quality(s).filter(x=>x[0]!=='info');
   return `<article class="report"><div class="rh"><div><h2 style="font-size:24px">Fitting-Bericht</h2><div>${esc(c.name)} · ${esc(b.brand+' '+b.model)}</div></div><div style="text-align:right"><b>FitFrame</b><div class="fine">${fmtDate(s.date)} · ${esc(s.type)} · Version ${s.version}<br>Fitter: ${esc(s.fitter)}</div></div></div>
   <div class="sec"><h3>Ziel und Ausgangslage</h3><p>${esc(s.anamnesis.goal||'Nicht dokumentiert.')}</p>${s.anamnesis.complaints?`<p><b>Angaben der Kundin/des Kunden:</b> ${esc(s.anamnesis.complaints)}</p>`:''}</div>
-  ${Object.keys(s.check||{}).length?`<div class="sec"><h3>Körpercheck</h3>${checkFindings(s).filter(x=>x.lvl!=='ok').map(x=>`<p><b>${esc(x.title)}.</b> ${esc(x.text)}</p>`).join('')||'<p>Keine Auffälligkeiten.</p>'}${(s.comp||[]).length?`<p><b>Ausgleich:</b> ${s.comp.map(cp=>esc(cp.t)+' ('+cp.status+')').join('; ')}</p>`:''}</div>`:''}
+  ${Object.keys(s.check||{}).length?`${s.scan?`<div class="sec"><h3>Körper-Scan (Kamera, Schätzung)</h3><p>${[s.scan.shDiff!=null?`Schultern: ${Math.abs(s.scan.shDiff)<8?'gerade':(s.scan.shDiff>0?'links':'rechts')+' '+Math.abs(s.scan.shDiff)+' mm tiefer'}`:'',s.scan.pelDiff!=null?`Becken: ${Math.abs(s.scan.pelDiff)<6?'gerade':(s.scan.pelDiff>0?'links':'rechts')+' '+Math.abs(s.scan.pelDiff)+' mm höher'}`:'',s.scan.kneeL?`Beinachse links: ${s.scan.kneeL.dir}`:'',s.scan.kneeR?`Beinachse rechts: ${s.scan.kneeR.dir}`:''].filter(Boolean).join(' · ')}</p></div>`:''}<div class="sec"><h3>Körpercheck</h3>${checkFindings(s).filter(x=>x.lvl!=='ok').map(x=>`<p><b>${esc(x.title)}.</b> ${esc(x.text)}</p>`).join('')||'<p>Keine Auffälligkeiten.</p>'}${(s.comp||[]).length?`<p><b>Ausgleich:</b> ${s.comp.map(cp=>esc(cp.t)+' ('+cp.status+')').join('; ')}</p>`:''}</div>`:''}
   <div class="sec"><h3>Vorgenommene Änderungen</h3>${s.changes.length?`<table><thead><tr><th>Einstellung</th><th style="text-align:right">Vorher</th><th style="text-align:right">Nachher</th><th>Grund</th></tr></thead><tbody>${s.changes.map(ch=>`<tr><td>${MK[ch.key].label}</td><td style="text-align:right">${fmtNum(ch.from)} ${MK[ch.key].unit}</td><td style="text-align:right">${fmtNum(ch.to)} ${MK[ch.key].unit}</td><td>${esc(ch.reason)}</td></tr>`).join('')}</tbody></table>`:'<p>Keine Änderungen.</p>'}</div>
   <div class="sec"><h3>Endposition</h3><table><tbody>${rows.filter(r=>r.a||r.b).map(r=>`<tr><td>${r.m.label}</td><td style="text-align:right">${fmtNum((r.a||r.b).value)} ${r.m.unit}</td><td class="fine">${esc((r.a||r.b).method)}${(r.a||r.b).source==='geschätzt'?' · geschätzt':''}</td></tr>`).join('')}</tbody></table></div>
   ${s.notes?`<div class="sec"><h3>Beobachtungen</h3><p>${esc(s.notes)}</p></div>`:''}
@@ -1465,13 +1724,13 @@ function vidPanel(s,side){
   return panel('Video oder Foto auswerten',`<div class="stack">
     <details class="more" ${vid.src?'':'open'}><summary>So nimmst du richtig auf</summary><ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">
       <li>iPhone quer halten oder auf ein Stativ, auf Hüfthöhe, genau seitlich zum Rad, etwa 2–3 m Abstand.</li><li>Rad steht gerade im Rollentrainer. Kunde trägt enge Kleidung.</li><li>Tipp: Klebepunkte auf Hüfte, Knie und Außenknöchel machen das Antippen genauer.</li><li>5–10 Sekunden locker fahren lassen und filmen.</li></ol></details>
-    <div class="field"><label for="vidFile">Video oder Foto wählen (am iPhone auch direkt aufnehmen)</label><input type="file" id="vidFile" accept="video/*,image/*" class="input" data-change="vidFile"></div>
+    <div class="row"><label class="btn primary" for="vidCam">${ic('camera')}Mit Kamera filmen</label><input class="vh" type="file" id="vidCam" accept="video/*" capture="environment" data-change="vidFile"><label class="btn" for="vidFile">Aus Mediathek</label><input class="vh" type="file" id="vidFile" accept="video/*,image/*" data-change="vidFile"></div>
     <div class="seg" role="group" aria-label="Was messen">${Object.entries(VMODES).map(([k,v])=>`<button data-act="vidMode" data-v="${k}" aria-pressed="${vid.mode===k}">${v.label}</button>`).join('')}</div>
     <p class="muted" style="font-size:14px">${m.tip}</p>
     <div class="stack" ${vid.src?'':'hidden'}>
       <canvas id="vidCanvas" style="width:100%;max-width:100%;border-radius:10px;background:#000;touch-action:none;cursor:crosshair" aria-label="Bild zum Antippen der Gelenkpunkte"></canvas>
       ${vid.kind==='video'?`<div class="row" style="flex-wrap:nowrap"><button class="btn sm" data-act="vidStep" data-d="-1" aria-label="Ein Bild zurück">◀</button><input type="range" id="vidSeek" min="0" max="1000" value="${vidEl&&vidEl.duration?Math.round(vid.t/vidEl.duration*1000):0}" style="flex:1;min-width:0" aria-label="Position im Video"><button class="btn sm" data-act="vidStep" data-d="1" aria-label="Ein Bild vor">▶</button></div>`:''}
-      <div class="row"><b id="vidResult" class="num" style="font-size:18px">–</b><button class="btn sm" data-act="vidReset">Punkte neu setzen</button></div>
+      <div class="row"><b id="vidResult" class="num" style="font-size:18px">–</b><button class="btn sm" data-act="vidReset">Punkte neu setzen</button><button class="btn sm" data-act="vidAuto">Automatisch erkennen (Beta)</button></div>
       <div class="row"><select class="input" style="width:auto" id="vidSide" aria-label="Speichern als"><option value="before">als Ausgangswert</option><option value="after" ${(side||ui.motionSide)==='after'?'selected':''}>als Endwert</option></select><button class="btn primary" data-act="vidSave" data-id="${s.id}">In Sitzung speichern</button></div>
       <p class="faint" style="font-size:12.5px">Gespeichert wird nur der Winkel, als „2D-Video (unkalibriert)“. Das Video bleibt auf diesem Gerät und wird nicht hochgeladen. Kamerawinkel und ungenaues Antippen verfälschen das Ergebnis um einige Grad.</p>
     </div></div>`,st('i'));
@@ -1795,7 +2054,7 @@ const ACT = {
   apptFilter(el){ ui.apptFilter=el.dataset.v; render(); },
   fuFilter(el){ ui.fuFilter=el.dataset.v; render(); },
   newSession(el){ newSessionDrawer(el.dataset.cust||S.customers[0].id); },
-  openSession(el){ ui.sess=el.dataset.id; ui.sessTab=TABALIAS[el.dataset.tab]||el.dataset.tab||'anamnese'; closeDrawer(); go('sitzung'); },
+  openSession(el){ ui.wIdx=null; ui.sess=el.dataset.id; ui.sessTab=TABALIAS[el.dataset.tab]||el.dataset.tab||'anamnese'; closeDrawer(); go('sitzung'); },
   startSession(el){ const s=sess(el.dataset.id); s.status='in Arbeit'; audit(`Fitting gestartet: ${cust(s.customerId).name}`,s.id); save(); ui.sess=s.id; ui.sessTab='anamnese'; go('sitzung'); toast('Fitting gestartet'); },
   finishSession(el){ const s=sess(el.dataset.id); const sel={value:'abgeschlossen',dataset:{id:s.id}}; CHG.sessStatus(sel); },
   addComp(el){ const s=sess(el.dataset.id); const f=checkFindings(s).find(x=>x.title===el.dataset.t); s.comp.push({t:`${f.title} – ${f.text.split('.')[0]}`,status:'geplant'}); audit(`Ausgleich eingeplant: ${f.title}`,s.id); save(); render(); toast('Ausgleich eingeplant'); },
@@ -1810,12 +2069,44 @@ const ACT = {
   vidSave(el){ const ang=vidAngle(); if(ang==null){ toast(`Bitte erst alle Punkte antippen: ${VMODES[vid.mode].pts.join(', ')}`,true); return; } const s=sess(el.dataset.id); const side=document.getElementById('vidSide').value; const key=VMODES[vid.mode].key;
     s[side][key]={...mv(key,ang,'2D-Video (unkalibriert)','gemessen',null),time:nowStamp()}; if(s.status==='geplant') s.status='in Arbeit';
     audit(`${MK[key].label} aus Video gemessen: ${ang}° (${side==='before'?'Ausgangswert':'Endwert'})`,s.id); save(); render(); toast(`${MK[key].label} ${ang}° in der Sitzung gespeichert`); },
+  wGo(el){ ui.wIdx=el.dataset.i===''?null:Number(el.dataset.i); render(); window.scrollTo({top:0}); if(ui.wIdx!=null) setTimeout(()=>{ const f=document.querySelector('#wizForm input.num:not([type=hidden])'); if(f&&!f.value) f.focus({preventScroll:true}); },50); },
+  wSkip(){ const n=WIZ_N[ui.sessTab](); ui.wIdx=ui.wIdx+1>=n?null:ui.wIdx+1; render(); window.scrollTo({top:0}); },
+  resTab(el){ ui.resTab=el.dataset.v; render(); },
+  sessMenu(el){ const s=sess(el.dataset.id); const list=S.sessions.slice().sort((a,b)=>b.date.localeCompare(a.date));
+    openDrawer('Fitting',`<div class="stack"><button class="btn primary big" data-act="newSession">${ic('plus')}Neues Fitting anlegen</button>
+    <div class="row"><span class="label">Status dieses Fittings</span><select class="input" style="width:auto" data-change="sessStatus" data-id="${s.id}">${opts(['geplant','eingetroffen','in Arbeit','abgeschlossen','abgesagt'],s.status)}</select></div>
+    <h3>Anderes Fitting öffnen</h3><div class="list">${list.map(x=>`<div class="li click" data-act="openSession" data-id="${x.id}"><span class="mono faint" style="font-size:12px">${fmtDate(x.date)}</span><div class="grow"><div class="t">${esc(cust(x.customerId).name)}</div><div class="sub">${esc(x.type)} · ${esc(bike(x.bikeId).model)}</div></div>${sessChip(x.status)}</div>`).join('')}</div></div>`); },
+  scanOpen(){ scanDrawer(); },
+  scanView(el){ scan.view=el.dataset.v; scanDrawer(); },
+  scanUndo(){ const P=scan.pts[scan.view]; const ks=SCAN[scan.view].pts.map(p=>p[0]).filter(k=>P[k]); if(ks.length) delete P[ks[ks.length-1]]; scanDrawer(); },
+  scanReset(){ scan.pts[scan.view]={}; scanDrawer(); },
+  async scanAuto(){ const img=scanImg[scan.view]; if(!img){ toast('Bitte zuerst ein Foto aufnehmen',true); return; } const cv=document.getElementById('scanCanvas');
+    scan.busy=true; scanDrawer(); try{ const lm=await detectPose(document.getElementById('scanCanvas')||cv); if(!lm) throw new Error('keine Person');
+      const W=document.getElementById('scanCanvas').width, Hh=document.getElementById('scanCanvas').height, P=scan.pts[scan.view];
+      Object.entries(SCAN[scan.view].map).forEach(([k,idx])=>{ let i=idx; if(Array.isArray(idx)) i=(lm[idx[0]].visibility||0)>=(lm[idx[1]].visibility||0)?idx[0]:idx[1]; P[k]=[lm[i].x*W,lm[i].y*Hh]; });
+      if(!P.floor){ const fy=Math.max(lm[29].y,lm[30].y,lm[31].y,lm[32].y)*Hh; P.floor=[(lm[29].x+lm[30].x)/2*W,fy]; }
+      toast('Gelenke erkannt – bitte kurz prüfen'); }
+    catch(e){ console.warn(e); toast(POSE_FAIL,true); } scan.busy=false; scanDrawer(); },
+  scanApply(el){ const s=sess(el.dataset.id); const c=cust(s.customerId); const {out,H}=scanCalc(); if(!H){ toast('Bitte zuerst die Körpergröße eintragen',true); return; }
+    s.check=s.check||{}; let n=0;
+    if(out.shDiff!=null){ s.check.shoulder=Math.abs(out.shDiff)<8?'gerade':out.shDiff>0?'links tiefer':'rechts tiefer'; n++; }
+    if(out.pelDiff!=null){ s.check.pelvis=Math.abs(out.pelDiff)<6?'gerade':out.pelDiff>0?'links höher':'rechts höher'; n++; }
+    c.est=c.est||[]; if(out.torso!=null&&(c.body.torso==null||c.body.torso===''||c.est.includes('torso'))){ c.body.torso=out.torso; if(!c.est.includes('torso')) c.est.push('torso'); n++; }
+    if(out.arm!=null&&(c.body.arm==null||c.body.arm===''||c.est.includes('arm'))){ c.body.arm=out.arm; if(!c.est.includes('arm')) c.est.push('arm'); n++; }
+    s.scan={date:today(),...out}; if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit';
+    audit(`Körper-Scan übernommen (${n} Werte, Schätzung)`,s.id); save(); closeDrawer(); render(); toast(n?`${n} Werte aus dem Scan übernommen`:'Scan gespeichert'); },
+  async vidAuto(){ const cv=document.getElementById('vidCanvas'); if(!cv||!vid.src){ toast('Bitte zuerst ein Video oder Foto laden',true); return; }
+    toast('Erkenne Körperpunkte …'); try{ drawVid(); vid.pts=[]; drawVid(); const lm=await detectPose(cv); if(!lm) throw new Error('keine Person');
+      const vis=a=>a.reduce((x,i)=>x+(lm[i].visibility||0),0); const L=vis([11,23,25,27])>=vis([12,24,26,28]);
+      const ix={sh:L?11:12,hip:L?23:24,kn:L?25:26,an:L?27:28}; const order=vid.mode==='knee'?['hip','kn','an']:vid.mode==='hip'?['sh','hip','kn']:['hip','sh'];
+      vid.pts=order.map(k=>[lm[ix[k]].x*cv.width,lm[ix[k]].y*cv.height]); drawVid(); toast('Punkte gesetzt – bitte prüfen, dann speichern'); }
+    catch(e){ console.warn(e); toast(POSE_FAIL,true); } },
   findCustomer(){ ui.focus='custSearch'; go('kunden'); },
   scrollToday(){ const t=document.getElementById('today'); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); },
   stInfo(el){ const k=STATUS[el.dataset.k]; toast(`${k[1]}: ${k[2]}`); },
   theme(){ theme=theme==='dark'?'light':'dark'; try{localStorage.setItem('fitframe-theme',theme);}catch(e){} applyTheme(); if(ui.route==='mehr') render(); },
   setTheme(el){ theme=el.dataset.v; try{localStorage.setItem('fitframe-theme',theme);}catch(e){} applyTheme(); render(); },
-  sessTab(el){ ui.sessTab=el.dataset.v; ui.editMaker=null; if(el.dataset.v==='ausgang'){ const s=sess(ui.sess); const n=s?applyMaker(s):0; if(n){ save(); setTimeout(()=>toast(`${n} Serienwerte vom Hersteller übernommen – bitte kurz prüfen`),60); } } render(); },
+  sessTab(el){ ui.sessTab=el.dataset.v; ui.editMaker=null; ui.wIdx=null; if(el.dataset.v==='ausgang'){ const s=sess(ui.sess); const n=s?applyMaker(s):0; if(n){ save(); setTimeout(()=>toast(`${n} Serienwerte vom Hersteller übernommen – bitte kurz prüfen`),60); } } render(); },
   applyMaker(el){ const s=sess(el.dataset.id); const n=applyMaker(s); save(); render(); toast(n?`${n} Serienwerte übernommen`:'Keine Herstellerwerte vorhanden'); },
   editMaker(el){ ui.editMaker=el.dataset.k; render(); const f=document.getElementById('mc_'+el.dataset.k); if(f){ f.scrollIntoView({behavior:'smooth',block:'center'}); f.focus({preventScroll:true}); } },
   openCustomer(el){ customerDrawer(el.dataset.id); },
@@ -1849,6 +2140,8 @@ const ACT = {
   chip(el){ const inp=document.getElementById(el.dataset.t); if(!inp) return; const v=el.dataset.v;
     if(el.dataset.m==='set'){ inp.value=inp.value===v?'':v; }
     else { let p=splitVals(inp.value); if(p.includes(v)) p=p.filter(x=>x!==v); else { p.push(v); if(v==='Keine') p=['Keine']; else p=p.filter(x=>x!=='Keine'); } inp.value=p.join(', '); }
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    const fm=el.closest('form'); if(fm&&fm.dataset.auto==='1'&&el.dataset.m==='set'&&inp.value){ setTimeout(()=>fm.requestSubmit(),180); }
     const vals=splitVals(inp.value); document.querySelectorAll(`[data-group="${el.dataset.t}"] .chipbtn`).forEach(b=>b.setAttribute('aria-pressed',el.dataset.m==='set'?String(inp.value===b.dataset.v):String(vals.includes(b.dataset.v)))); },
   saveKm(el){ const b=bike(el.dataset.id); const v=Number(document.getElementById('kmInput').value); if(!(v>=0)){toast('Bitte einen gültigen Kilometerstand eingeben',true);return;} audit(`Kilometerstand ${b.model}: ${b.km} → ${v}`); b.km=v; save(); toast('Kilometerstand gespeichert'); bikeDrawer(b.id); render(); },
   delMeasure(el){ const s=sess(el.dataset.id); const k=el.dataset.key; const side=el.dataset.side; const m=s[side][k]; delete s[side][k]; audit(`Wert entfernt (${side==='before'?'vorher':'nachher'}): ${MK[k].label} ${fmtNum(m.value)} ${MK[k].unit}`,s.id); save(); render(); toast('Wert entfernt, im Audit-Log protokolliert'); },
@@ -1898,6 +2191,21 @@ function importJson(t){
 function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
 
 const FORMS = {
+  anaOne(f,data){ const s=sess(f.dataset.id); const i=Number(f.dataset.i); const k=ANA_Q[i][0]; s.anamnesis[k]=String(data.get(k)||'').trim(); if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit'; audit(`Ziel/Anamnese: ${ANA_Q[i][1]}`,s.id); save();
+    ui.wIdx=i+1<ANA_Q.length?i+1:null; render(); window.scrollTo({top:0}); if(ui.wIdx==null) toast('Alle Fragen beantwortet'); },
+  anaNotes(f,data){ const s=sess(f.dataset.id); s.notes=data.get('notes'); save(); toast('Notizen gespeichert'); },
+  checkOne(f,data){ const s=sess(f.dataset.id); const c=cust(s.customerId); const items=CK_ITEMS(); const i=Number(f.dataset.i); const it=items[i];
+    if(it.k==='grund'){ c.est=c.est||[]; ['height','inseam','torso','arm'].forEach(k=>{ const v=data.get(k); const nv=v===''||v===null?null:Number(v); if(nv!==c.body[k]) c.est=c.est.filter(x=>x!==k); c.body[k]=nv; }); audit(`Grundmaße gespeichert: ${c.name}`); }
+    else { s.check=s.check||{}; (it.side?['L','R']:['']).forEach(sd=>{ const v=data.get(it.k+sd); if(v===null||v==='') delete s.check[it.k+sd]; else s.check[it.k+sd]=it.type==='num'?Number(v):v; });
+      const ch=s.check;
+      if(it.k==='hamstring'&&ch.hamstring!==undefined) c.flex.hamstring=ch.hamstring>10?`eingeschränkt (Finger-Boden ${ch.hamstring} cm)`:`unauffällig (Finger-Boden ${ch.hamstring} cm)`;
+      if(it.k==='hipFlex') c.flex.hip=[ch.hipFlexL&&'links '+ch.hipFlexL,ch.hipFlexR&&'rechts '+ch.hipFlexR].filter(Boolean).join(', ');
+      if(it.k==='ankle') c.flex.ankle=`Knie-zur-Wand L ${ch.ankleL??'–'} cm, R ${ch.ankleR??'–'} cm`;
+      if(it.k==='sitBone'&&ch.sitBone){ c.body.sitBone=ch.sitBone; c.est=(c.est||[]).filter(x=>x!=='sitBone'); }
+      audit(`Körpercheck: ${it.label} gespeichert`,s.id); }
+    if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit';
+    save(); ui.wIdx=i+1<items.length?i+1:null; render(); window.scrollTo({top:0});
+    if(ui.wIdx==null){ const n=checkFindings(s).filter(x=>x.lvl!=='ok').length; toast(n?`Körpercheck fertig – ${n} Punkte zum Beachten`:'Körpercheck fertig – keine Auffälligkeiten'); } },
   consent(f,data){ const c=cust(f.dataset.id); if(String(data.get('name')).trim().toLowerCase()!==c.name.trim().toLowerCase()){ toast(`Bitte den Namen „${c.name}“ genau eintragen`,true); return; }
     c.consent=true; c.consentInfo={date:nowStamp(),health:data.get('health')==='on',version:'Muster 1'}; audit(`Einwilligung erfasst: ${c.name}${c.consentInfo.health?' inkl. Gesundheitsangaben':''}`); save(); closeDrawer(); render(); toast('Einwilligung gespeichert'); },
   bikeGeo(f,data){ const b=bike(f.dataset.id); const g=geoById(data.get('geo')); if(!g||!data.get('geoSize')){ toast('Bitte Modell und Größe wählen',true); return; } b.geo={id:g.id,size:data.get('geoSize')}; b.size=b.geo.size; S.sessions.filter(x=>x.bikeId===b.id&&x.status!=='abgeschlossen').forEach(applyMaker); audit(`Geometrie zugeordnet: ${b.brand} ${b.model} → ${g.brand} ${g.model} ${b.geo.size}`); save(); bikeDrawer(b.id); render(); toast('Geometrie zugeordnet'); },
@@ -1918,7 +2226,9 @@ const FORMS = {
     const old=s.before[k]; const unc=data.get('unc'); ui.editMaker=null; s.before[k]={key:k,value:v,method:data.get('method'),source:(old&&old.source==='vom Hersteller'&&Number(old.value)===v)?'vom Hersteller':data.get('method')==='Herstellerangabe'?'manuell eingegeben':data.get('source'),unc:unc===''?null:Number(unc),time:nowStamp()};
     if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit';
     { const rg=measureRange(k,cust(s.customerId),bike(s.bikeId)); if(rg&&rg.lo!=null&&(v<rg.lo||v>rg.hi)) setTimeout(()=>toast(`${MK[k].label} liegt außerhalb von ${fmtNum(rg.lo)}–${fmtNum(rg.hi)} ${rg.unit} – bitte nachmessen`,true),50); }
-    audit(old?`Ausgangswert korrigiert: ${MK[k].label} ${fmtNum(old.value)} → ${fmtNum(v)} ${MK[k].unit}`:`Ausgangswert erfasst: ${MK[k].label} ${fmtNum(v)} ${MK[k].unit}`,s.id); save(); render();
+    audit(old?`Ausgangswert korrigiert: ${MK[k].label} ${fmtNum(old.value)} → ${fmtNum(v)} ${MK[k].unit}`:`Ausgangswert erfasst: ${MK[k].label} ${fmtNum(v)} ${MK[k].unit}`,s.id); save();
+    if(f.dataset.wiz){ const j=Number(f.dataset.i); ui.wIdx=j+1<MEASURE_NOW.length?j+1:null; render(); window.scrollTo({top:0}); if(ui.wIdx==null) toast('Alle Pflichtwerte erfasst'); else setTimeout(()=>{ const nx=document.querySelector('#wizForm input.num'); if(nx&&!nx.value) nx.focus({preventScroll:true}); },50); return; }
+    render();
     const nextK=MEASURE_NOW.find(x=>!s.before[x]); const nx=nextK&&document.getElementById('mc_'+nextK);
     if(nx){ nx.closest('section').scrollIntoView({behavior:'smooth',block:'start'}); setTimeout(()=>nx.focus({preventScroll:true}),350); toast(`${MK[k].label} gespeichert – weiter mit ${MK[nextK].label}`); }
     else if(!old&&MEASURE_NOW.includes(k)){ const sn=document.querySelector('.stepnav'); if(sn) sn.scrollIntoView({behavior:'smooth',block:'end'}); toast('Alle 5 Pflichtwerte erfasst – weiter mit „Anpassen“'); }
@@ -1949,6 +2259,7 @@ const FORMS = {
 };
 
 const CHG = {
+  scanFile(el){ const f=el.files&&el.files[0]; if(!f) return; const url=URL.createObjectURL(f); const img=new Image(); img.onload=()=>{ scanImg[scan.view]=img; scan.src[scan.view]=url; scan.pts[scan.view]={}; scanDrawer(); toast('Foto geladen – tippe zuerst den Scheitel an'); }; img.onerror=()=>toast('Foto konnte nicht geladen werden',true); img.src=url; },
   vidFile(el){ const f=el.files&&el.files[0]; if(!f) return; vidMedia(); if(vid.src) try{ URL.revokeObjectURL(vid.src); }catch(e){}
     vid.src=URL.createObjectURL(f); vid.kind=f.type.startsWith('image')?'image':'video'; vid.pts=[]; vid.t=0;
     if(vid.kind==='image') imgEl.src=vid.src; else { vidEl.src=vid.src; vidEl.load(); } render(); toast(vid.kind==='image'?'Foto geladen – jetzt Punkte antippen':'Video geladen – an die richtige Stelle schieben, dann Punkte antippen'); },
@@ -1960,7 +2271,7 @@ const CHG = {
   advGeo(el){ ui.advGeo=el.value; render(); },
   compDone(el){ const s=sess(el.dataset.id); const cp=s.comp[Number(el.dataset.i)]; cp.status=el.checked?'umgesetzt':'geplant'; audit(`Ausgleich ${cp.status}: ${cp.t}`,s.id); save(); render(); },
   sessStatus(el){ const s=sess(el.dataset.id); const old=s.status; s.status=el.value; if(el.value==='abgeschlossen'&&!s.followUps.length){ const due=new Date(s.date+'T12:00'); due.setDate(due.getDate()+30); s.followUps.push({days:30,due:iso(due),status:'offen'}); toast('Abgeschlossen – Nachkontrolle in 30 Tagen angelegt'); } else toast(`Status: ${el.value}`); audit(`Status ${cust(s.customerId).name}: ${old} → ${el.value}`,s.id); save(); render(); },
-  pickSession(el){ ui.sess=el.value; ui.advGeo=null; vid.pts=[]; render(); },
+  pickSession(el){ ui.wIdx=null; ui.sess=el.value; ui.advGeo=null; vid.pts=[]; render(); },
   onlyChanged(el){ ui.cmpChanged=el.checked; render(); },
   share(el){ S.shared[el.dataset.id]=el.checked; audit(`Bericht ${el.checked?'im Portal freigegeben':'Freigabe entzogen'}`,el.dataset.id); save(); toast(el.checked?'Im Kundenportal sichtbar':'Nicht mehr im Kundenportal sichtbar'); },
   cmpA(el){ ui.cmpA=el.value; render(); }, cmpB(el){ ui.cmpB=el.value; render(); },
@@ -1989,7 +2300,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); cl
 applyTheme();
 const start=(location.hash||'').slice(1);
 go(VIEWS[start]?start:'dashboard');
-window.__fitframe={IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>

@@ -10,15 +10,17 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 
 ## Ablauf eines Fittings
 
-1. **Ziel** – Fragen mit vorgefertigten Antworten zum Antippen (Training, Erfahrung, Beschwerden …)
-2. **Körpercheck** – 11 Tests mit Anleitung (Beinlänge, Becken, Kniespur, Fußgewölbe, Vorfuß, Beweglichkeit, Sitzknochen …). Die App wertet die Ergebnisse nach festen Regeln aus und schlägt einen Ausgleich vor dem Fitting vor (z. B. Shim, Einlage, Keil) oder empfiehlt eine Fachperson.
-3. **Ausgangsposition** – jeder Messpunkt mit „So misst du“-Anleitung, Methode und Genauigkeit
-4. **Anpassen** – Vorschläge aus Beschwerden, Körpercheck und Kniewinkel; jede Änderung mit Begründung
-5. **Ergebnis & Bericht** – Vorher/Nachher, Datenqualität, Größenberatung, Bericht, Freigabe im Kundenportal
+Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.
+
+1. **Ziel** – 7 Fragen mit vorgefertigten Antworten zum Antippen
+2. **Körper** – optionaler Körper-Scan mit Kamera (Foto von vorn/Seite, Punkte antippen oder automatisch erkennen lassen) und 12 Tests mit Anleitung (Beinlänge, Becken, Kniespur, Fußgewölbe, Vorfuß, Beweglichkeit, Sitzknochen …). Die App wertet die Ergebnisse nach festen Regeln aus und schlägt einen Ausgleich vor dem Fitting vor (z. B. Shim, Einlage, Keil) oder empfiehlt eine Fachperson.
+3. **Messen** – 5 Pflichtpunkte mit Skizze und Anleitung, Serienwerte (Vorbau, Lenker, Kurbel) automatisch vom Hersteller
+4. **Anpassen** – bis zu 3 Vorschläge, Änderungen mit Begründung, optionale Fahr-Analyse mit Kamera
+5. **Ergebnis** – Reiter für Vorher/Nachher, Rahmengröße, Datenqualität und Bericht (Drucken/PDF)
 
 ## Geometrie-Bibliothek
 
-12 Modelle (Canyon, Giant, Cube, Rose) mit allen Größen, am 25.10.2026 von den Herstellerseiten übernommen, jeweils mit Quellenlink. Beim Anlegen eines Fahrrads Modell und Größe wählen, die Geometrie wird übernommen. Eigene Modelle lassen sich ergänzen. Die Größenberatung berechnet näherungsweise (±10 mm) Vorbau und Spacer je Rahmengröße aus der gefitteten Position.
+34 Modelle (Canyon, Giant, Rose und 24 Cube-Rahmenplattformen) mit allen Größen, am 25.10.2026 von den Herstellerseiten übernommen, jeweils mit Quellenlink. Beim Anlegen eines Fahrrads Modell und Größe wählen, die Geometrie wird übernommen. Eigene Modelle lassen sich ergänzen. Die Größenberatung berechnet näherungsweise (±10 mm) Vorbau und Spacer je Rahmengröße aus der gefitteten Position.
 
 ## Stand
 
@@ -26,7 +28,8 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 |---|---|
 | Kunden, Fahrräder, Fitting, Körpercheck, Verlauf, Nachkontrollen, Werkstatt, Lager | funktioniert, lokal gespeichert |
 | Auswertung Körpercheck, Vorschläge, Datenqualität | regelbasiert (Faustregeln, nicht validiert) |
-| Bewegungsanalyse | simuliert aus eingetragenen Körpermaßen, keine Kamera |
+| Kamera (Körper-Scan, Fahr-Analyse) | Punkte antippen funktioniert; automatische Erkennung mit Google MediaPipe (Beta, braucht Internet, nicht getestet) |
+| Bewegungssimulation | simuliert aus eingetragenen Körpermaßen |
 | Schreibhilfe („KI“) | Textvorlagen, kein Sprachmodell |
 | Kundenportal, Kapazität, Kennzahlen | Vorschau mit Demo-Daten |
 | Hardware Lab, Team, Flotten, Anbindungen | Konzept |
