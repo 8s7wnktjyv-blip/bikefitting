@@ -1191,6 +1191,7 @@ SESSTAB.ausgang = s => {
     :`<div class="notice">${ic('info')}<div>Ordne dem Fahrrad ein Modell aus der Geometrie-Bibliothek zu. Dann übernimmt die App Vorbau, Lenker und Kurbel automatisch. <button class="btn sm" data-act="bikeGeo" data-id="${b.id}">Modell zuordnen</button></div></div>`}
   <h2>Jetzt messen</h2>
   ${now.map(k=>measureCard(s,'before',k,c,b)).join('')}
+  <details class="more" ${vid.src?'open':''}><summary>Kniewinkel und Hüftwinkel per Video messen (empfohlen)</summary><div style="margin-top:10px">${vidPanel(s,'before')}</div></details>
   <details class="more" ${ui.editMaker?'open':''}><summary>Weitere Messpunkte (optional, ${optional.length+fromMaker.length})</summary><div class="stack" style="margin-top:10px">
     <p class="muted" style="font-size:13.5px">Gelenkwinkel misst du am einfachsten unter Mehr → Bewegung & Video. <button class="btn sm" data-nav="motion">Zur Videoauswertung</button></p>
     ${[...(ui.editMaker?[ui.editMaker]:[]),...optional,...fromMaker.filter(k=>k!==ui.editMaker)].map(k=>measureCard(s,'before',k,c,b)).join('')}
@@ -1202,6 +1203,7 @@ SESSTAB.anpassung = s => { const sg=fitSuggestions(s); return `<div class="stack
   <p class="muted">Trag jede Änderung mit kurzem Grund ein. Alte Werte bleiben erhalten.</p>
   ${s.changes.length?`<div class="tw"><table><thead><tr><th>Zeit</th><th>Einstellung</th><th class="r">Vorher</th><th class="r">Nachher</th><th class="r">Δ</th><th>Begründung</th></tr></thead><tbody>${s.changes.map(ch=>{const m=MK[ch.key];const d=(ch.from!=null&&ch.to!=null)?ch.to-ch.from:null;return `<tr><td class="mono faint" style="font-size:12px;white-space:nowrap">${esc(ch.time.slice(11)||ch.time)}</td><td>${m.label}</td><td class="r num">${fmtNum(ch.from)}</td><td class="r num">${fmtNum(ch.to)} ${m.unit}</td><td class="r num ${d>0?'up':d<0?'down':''}">${d===null?'–':(d>0?'+':'')+fmtNum(d)}</td><td>${esc(ch.reason)}</td></tr>`;}).join('')}</tbody></table></div>`:'<div class="empty">Noch nichts geändert. Trag unten die erste Anpassung ein.</div>'}
   <hr><h3 id="changeHead">Einstellung ändern</h3>${measureForm(s,'after',true)}
+  <hr><details class="more" ${vid.src?'open':''}><summary>Neue Position per Video prüfen</summary><div style="margin-top:10px">${vidPanel(s,'after')}</div></details>
   <hr><h3>Aktuelle Endwerte</h3>${measureTable(s,'after')}</div>`; };
 function bikeSvg(s,view){
   const pos = side => { const g=k=> val(s[side][k]) ?? val(s.before[k]); const h=g('saddleHeight'), sb=g('saddleSetback'), r=g('reach'), d=g('drop'); if(h==null) return null; const sbx=sb??60; const sy=Math.sqrt(Math.max(h*h-sbx*sbx,0)); return {sx:-sbx, sy, bx:-sbx+(r??540)*0.98, by:sy-(d??60)}; };
@@ -1458,7 +1460,7 @@ function wireVid(){
   const sk=document.getElementById('vidSeek'); if(sk) sk.addEventListener('input',()=>{ if(vidEl&&vidEl.duration){ vid.t=vidEl.duration*Number(sk.value)/1000; vidEl.currentTime=vid.t; } });
   if(vid.src) setTimeout(drawVid,30);
 }
-function vidPanel(s){
+function vidPanel(s,side){
   const m=VMODES[vid.mode];
   return panel('Video oder Foto auswerten',`<div class="stack">
     <details class="more" ${vid.src?'':'open'}><summary>So nimmst du richtig auf</summary><ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">
@@ -1470,7 +1472,7 @@ function vidPanel(s){
       <canvas id="vidCanvas" style="width:100%;max-width:100%;border-radius:10px;background:#000;touch-action:none;cursor:crosshair" aria-label="Bild zum Antippen der Gelenkpunkte"></canvas>
       ${vid.kind==='video'?`<div class="row" style="flex-wrap:nowrap"><button class="btn sm" data-act="vidStep" data-d="-1" aria-label="Ein Bild zurück">◀</button><input type="range" id="vidSeek" min="0" max="1000" value="${vidEl&&vidEl.duration?Math.round(vid.t/vidEl.duration*1000):0}" style="flex:1;min-width:0" aria-label="Position im Video"><button class="btn sm" data-act="vidStep" data-d="1" aria-label="Ein Bild vor">▶</button></div>`:''}
       <div class="row"><b id="vidResult" class="num" style="font-size:18px">–</b><button class="btn sm" data-act="vidReset">Punkte neu setzen</button></div>
-      <div class="row"><select class="input" style="width:auto" id="vidSide" aria-label="Speichern als"><option value="before">als Ausgangswert</option><option value="after" ${ui.motionSide==='after'?'selected':''}>als Endwert</option></select><button class="btn primary" data-act="vidSave" data-id="${s.id}">In Sitzung speichern</button></div>
+      <div class="row"><select class="input" style="width:auto" id="vidSide" aria-label="Speichern als"><option value="before">als Ausgangswert</option><option value="after" ${(side||ui.motionSide)==='after'?'selected':''}>als Endwert</option></select><button class="btn primary" data-act="vidSave" data-id="${s.id}">In Sitzung speichern</button></div>
       <p class="faint" style="font-size:12.5px">Gespeichert wird nur der Winkel, als „2D-Video (unkalibriert)“. Das Video bleibt auf diesem Gerät und wird nicht hochgeladen. Kamerawinkel und ungenaues Antippen verfälschen das Ergebnis um einige Grad.</p>
     </div></div>`,st('i'));
 }
@@ -1759,6 +1761,7 @@ function afterRender(){
   labelTables(document.getElementById('view'));
   cancelAnimationFrame(motion.raf); motion.playing=false; motion.last=0;
   if(ui.route==='motion'){ const cv=document.getElementById('motionCanvas'); if(cv){ drawMotion(cv); } wireVid(); }
+  if(ui.route==='sitzung') wireVid();
   if(ui.focus){ const el=document.getElementById(ui.focus); if(el){ el.focus(); const v=el.value; try{el.setSelectionRange(v.length,v.length);}catch(e){} } ui.focus=null; }
 }
 
@@ -1806,7 +1809,7 @@ const ACT = {
   vidStep(el){ if(!vidEl||!vidEl.duration) return; vid.t=Math.max(0,Math.min(vidEl.duration,vidEl.currentTime+Number(el.dataset.d)/30)); vidEl.currentTime=vid.t; const sk=document.getElementById('vidSeek'); if(sk) sk.value=Math.round(vid.t/vidEl.duration*1000); },
   vidSave(el){ const ang=vidAngle(); if(ang==null){ toast(`Bitte erst alle Punkte antippen: ${VMODES[vid.mode].pts.join(', ')}`,true); return; } const s=sess(el.dataset.id); const side=document.getElementById('vidSide').value; const key=VMODES[vid.mode].key;
     s[side][key]={...mv(key,ang,'2D-Video (unkalibriert)','gemessen',null),time:nowStamp()}; if(s.status==='geplant') s.status='in Arbeit';
-    audit(`${MK[key].label} aus Video gemessen: ${ang}° (${side==='before'?'Ausgangswert':'Endwert'})`,s.id); save(); toast(`${MK[key].label} ${ang}° in der Sitzung gespeichert`); },
+    audit(`${MK[key].label} aus Video gemessen: ${ang}° (${side==='before'?'Ausgangswert':'Endwert'})`,s.id); save(); render(); toast(`${MK[key].label} ${ang}° in der Sitzung gespeichert`); },
   findCustomer(){ ui.focus='custSearch'; go('kunden'); },
   scrollToday(){ const t=document.getElementById('today'); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); },
   stInfo(el){ const k=STATUS[el.dataset.k]; toast(`${k[1]}: ${k[2]}`); },
@@ -1957,7 +1960,7 @@ const CHG = {
   advGeo(el){ ui.advGeo=el.value; render(); },
   compDone(el){ const s=sess(el.dataset.id); const cp=s.comp[Number(el.dataset.i)]; cp.status=el.checked?'umgesetzt':'geplant'; audit(`Ausgleich ${cp.status}: ${cp.t}`,s.id); save(); render(); },
   sessStatus(el){ const s=sess(el.dataset.id); const old=s.status; s.status=el.value; if(el.value==='abgeschlossen'&&!s.followUps.length){ const due=new Date(s.date+'T12:00'); due.setDate(due.getDate()+30); s.followUps.push({days:30,due:iso(due),status:'offen'}); toast('Abgeschlossen – Nachkontrolle in 30 Tagen angelegt'); } else toast(`Status: ${el.value}`); audit(`Status ${cust(s.customerId).name}: ${old} → ${el.value}`,s.id); save(); render(); },
-  pickSession(el){ ui.sess=el.value; ui.advGeo=null; render(); },
+  pickSession(el){ ui.sess=el.value; ui.advGeo=null; vid.pts=[]; render(); },
   onlyChanged(el){ ui.cmpChanged=el.checked; render(); },
   share(el){ S.shared[el.dataset.id]=el.checked; audit(`Bericht ${el.checked?'im Portal freigegeben':'Freigabe entzogen'}`,el.dataset.id); save(); toast(el.checked?'Im Kundenportal sichtbar':'Nicht mehr im Kundenportal sichtbar'); },
   cmpA(el){ ui.cmpA=el.value; render(); }, cmpB(el){ ui.cmpB=el.value; render(); },
