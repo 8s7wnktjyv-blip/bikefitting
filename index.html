@@ -1000,11 +1000,33 @@ function seed(){
   return S;
 }
 
+/* ---------- Feste Kunden: werden ergänzt, wenn sie fehlen (nie überschrieben) ---------- */
+// Übernommen von Fotos am 26.10.2026. Ohne Beschwerden und Körpercheck (Gesundheitsdaten).
+function permanentData(){
+  const t='2026-10-26 00:30', m=(k,v,meth,src)=>({...mv(k,v,meth,src,null),time:t});
+  return {
+    customers:[{id:'p-dominik-boehm',name:'Dominik Böhm',email:'',phone:'',since:'2026-10-26',discipline:'Gravel',consent:true,body:{height:180,inseam:88,torso:null,arm:null,shoulder:null,footL:null,footR:null,sitBone:null},flex:{hamstring:'',hip:'',ankle:''},tags:['Fest gespeichert'],est:[]}],
+    bikes:[{id:'p-bike-grizl',customerId:'p-dominik-boehm',name:'Gravel',brand:'Canyon',model:'Grizl CF SL 7',size:'M',year:null,type:'Gravel',frameNo:'',geo:{id:'canyon-grizl-cf-sl-7',size:'M'},pedal:'',saddle:'',km:null}],
+    sessions:[{id:'p-sess-dominik-1',customerId:'p-dominik-boehm',bikeId:'p-bike-grizl',date:'2026-10-26',time:'',type:'Erstfitting',status:'in Arbeit',fitter:'Dominik Böhm',version:1,
+      anamnesis:{goal:'Beschwerden loswerden, Längere Touren, Neues Rad richtig einstellen',complaints:'',training:'unter 2 h pro Woche',experience:'1–3 Jahre',previous:'Fitting bei anderem Anbieter',limits:'Keine',comfort:'Ausgewogen'},
+      before:{saddleHeight:m('saddleHeight',750,'Maßband','gemessen'),saddleSetback:m('saddleSetback',13,'Maßband','gemessen'),reach:m('reach',545,'Maßband','gemessen'),drop:m('drop',100,'Maßband','gemessen'),cleatFore:m('cleatFore',15,'Maßband','gemessen'),
+        stemLength:m('stemLength',80,'Herstellerangabe','vom Hersteller'),barWidth:m('barWidth',440,'Herstellerangabe','vom Hersteller'),crankLength:m('crankLength',172.5,'Herstellerangabe','vom Hersteller')},
+      after:{},changes:[],notes:'',feedback:[],followUps:[],check:{},comp:[]}]
+  };
+}
+function ensurePermanent(){
+  const P=permanentData(); let n=0;
+  P.customers.forEach(c=>{ if(S.customers.some(x=>x.id===c.id||x.name.trim().toLowerCase()===c.name.toLowerCase())) return;
+    S.customers.push(c); P.bikes.filter(b=>b.customerId===c.id&&!S.bikes.some(x=>x.id===b.id)).forEach(b=>S.bikes.push(b));
+    P.sessions.filter(x=>x.customerId===c.id&&!S.sessions.some(y=>y.id===x.id)).forEach(x=>S.sessions.push(x)); n++; });
+  if(n) save(); return n;
+}
+
 /* ---------- State ---------- */
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-26.3';
+const APP_VER = '2026-10-26.4';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1037,7 +1059,7 @@ function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ s
 function audit(what,ref){ S.audit.unshift({time:nowStamp(),who:'Demo-Nutzer',what,ref:ref||''}); }
 S = load(); try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){} S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; }); S.geoCustom=S.geoCustom||[]; S.bikes.forEach(b=>{ if(!b.geo&&b.brand==='Canyon'&&b.model==='Endurace CF 7'&&b.size==='M') b.geo={id:'canyon-endurace-cf-7',size:'M'}; }); (function(){ const sd=seed(); sd.sessions.forEach(d=>{ const x=S.sessions.find(y=>y.id===d.id); if(x&&!Object.keys(x.check).length&&Object.keys(d.check||{}).length&&x.customerId===d.customerId){ x.check=d.check; x.comp=d.comp; } }); })();
 
-snapshotBeforeUpdate();
+snapshotBeforeUpdate(); ensurePermanent();
 const ui = {route:'dashboard', sess:'s4', sessTab:'anamnese', cust:null, search:'', bikeSearch:'', woFilter:'alle', invSearch:'', invCat:'alle', aiSess:'s1', aiOut:null, portalCust:'c1', motionSess:'s1', motionSide:'after', cmpA:'s1', cmpB:'s2', cmpChanged:true, fitView:'after', hwSel:'cleatlab', cleatSys:'SPD-SL', apptFilter:'heute', fuFilter:'offen'};
 
 const cust = id => S.customers.find(c=>c.id===id);
@@ -2345,7 +2367,7 @@ const ACT = {
   menu(){ document.getElementById('side').classList.toggle('open'); },
   close(){ closeDrawer(); closeMenu(); },
   reset(){ const own=S.customers.filter(c=>!['c1','c2','c3','c4'].includes(c.id)).length; openDrawer('Demo zurücksetzen',`<div class="notice warn">${ic('warn')}<div>Dabei werden <b>alle deine Einträge gelöscht</b>${own?`, auch ${own} selbst angelegte Kunden`:''}. Lade vorher eine Sicherung herunter.</div></div><div class="row"><button class="btn" data-act="exportData">Erst sichern</button><button class="btn danger" data-act="resetConfirm">Trotzdem alles löschen</button><button class="btn" data-act="close">Abbrechen</button></div>`); },
-  resetConfirm(){ try{ localStorage.setItem('fitframe-rescue-'+Date.now(), JSON.stringify(S)); }catch(e){} S=seed(); S.appVer=APP_VER; save(); closeDrawer(); ui.reportFor=null; ui.aiOut=null; render(); toast('Demo-Daten wiederhergestellt'); },
+  resetConfirm(){ try{ localStorage.setItem('fitframe-rescue-'+Date.now(), JSON.stringify(S)); }catch(e){} S=seed(); S.appVer=APP_VER; ensurePermanent(); save(); closeDrawer(); ui.reportFor=null; ui.aiOut=null; render(); toast('Demo-Daten wiederhergestellt'); },
   apptFilter(el){ ui.apptFilter=el.dataset.v; render(); },
   fuFilter(el){ ui.fuFilter=el.dataset.v; render(); },
   newSession(el){ newSessionDrawer(el.dataset.cust||S.customers[0].id); },
