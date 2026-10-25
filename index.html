@@ -737,6 +737,14 @@ function readiness(f,s){
   if(open) return ['c-warn','Ausgleich vorbereiten',`${open} Ausgleich${open>1?'e':''} vor dem Fitting einplanen.`];
   return ['c-ok','Bereit fürs Fitting','Keine Punkte, die vorher ausgeglichen werden müssen.'];
 }
+/* Startwerte aus Körpermaßen (Faustregeln) und Abstand zur aktuellen Einstellung */
+const TGT={saddleHeight:{tol:8,how:'Schrittlänge × 0,883 (verbreitete Faustregel, LeMond)'},saddleSetback:{tol:15,how:'Richtwert je Radtyp, angepasst an die Schrittlänge'},reach:{tol:20,how:'Rumpf- plus Armlänge, Anteil je Radtyp'},drop:{tol:20,how:'Richtwert je Radtyp, weniger bei eingeschränkter Beweglichkeit'},crankLength:{tol:4.9,how:'Kurbel nach Schrittlänge'},cleatFore:{tol:4,how:'nach Fußlänge'}};
+function targetFit(s){
+  const c=cust(s.customerId), b=bike(s.bikeId); if(!c||!b) return {rows:[],src:''}; const fit=simFit(c,b); const ins=bodyVal(c,'inseam');
+  const cur={...s.before,...s.after};
+  const rows=Object.keys(TGT).map(k=>{ const t=fit[k]; const v=cur[k]?Number(cur[k].value):null; return {key:k,target:t,cur:v,diff:v==null?null:Math.round((t-v)*10)/10,tol:TGT[k].tol,how:TGT[k].how}; });
+  return {rows,insSrc:ins.src,ins:ins.v,type:b.type};
+}
 function fitSuggestions(s){
   const out=[]; const t=(s.anamnesis.complaints||'').toLowerCase(); const add=(key,title,why,how,v,reason)=>out.push({key,title,why,how,v,reason});
   if(/hand|händ|taub|finger/.test(t)) add('reach','Hände entlasten','Taube Hände kommen oft von zu viel Gewicht auf dem Lenker.','Sattel–Lenker kürzer oder Lenker höher prüfen. Sattelnase nicht zu tief.');
@@ -751,6 +759,12 @@ function fitSuggestions(s){
     add('saddleHeight',`Kniewinkel unten ${fmtNum(k.value)}°: Sattel ${a.delta>0?'+':''}${a.delta} mm`,`${up?'Unter':'Über'} dem häufig genannten Bereich von etwa 140–150°. Der Sattel ist vermutlich zu ${up?'tief':'hoch'}. Die Millimeter rechnet FitFrame mit einem Körpermodell aus Schritt- und Kurbellänge (etwa ${fmtNum(Math.round(1/a.slope*10)/10)} mm pro Grad). Das ist eine Schätzung, deshalb neu messen.`,`Sattel auf etwa ${a.newH} mm (${a.delta>0?'+':''}${a.delta} mm), in Schritten von 2–3 mm. Danach den Kniewinkel neu messen.`,a.newH,`Kniewinkel unten ${fmtNum(k.value)}°`); }
   const kp=(s.after.kneeOverPedal||s.before.kneeOverPedal); if(kp&&Math.abs(kp.value)>15){ const sb=val(s.after.saddleSetback)??val(s.before.saddleSetback); const d=Math.round(Number(kp.value));
     add('saddleSetback',`Knielot ${d>0?'+':''}${d} mm`,`Das Knie steht bei waagerechter Kurbel ${Math.abs(d)} mm ${d>0?'vor':'hinter'} der Pedalachse. Viele Fitter beginnen mit dem Knie etwa über der Achse. Das ist eine Faustregel, keine feste Vorgabe.`,`Sattel etwa ${Math.abs(d)} mm nach ${d>0?'hinten':'vorn'}, wenn Beschwerden dazu passen. Danach Sattelhöhe prüfen, weil sie sich mitverändert.`,sb!=null?sb+d:null,`Knielot ${d>0?'+':''}${d} mm`); }
+  if(/hüfte/.test(t)) add('saddleHeight','Hüfte','Hüftbeschwerden passen oft zu einem zu hohen Sattel (Becken kippt seitlich) oder zu wenig Platz vorn.','Prüfen, ob das Becken beim Treten seitlich kippt. Wenn ja, Sattel in Schritten von 2–3 mm senken.');
+  const tg=targetFit(s); const measuredKnee=!!(s.after.kneeBDC||s.before.kneeBDC);
+  tg.rows.filter(r=>r.diff!=null&&Math.abs(r.diff)>r.tol&&!(r.key==='saddleHeight'&&measuredKnee)&&!out.some(o=>o.key===r.key)).forEach(r=>{ const m=MK[r.key], up=r.diff>0;
+    const verb={saddleHeight:up?'höher':'tiefer',saddleSetback:up?'weiter nach hinten':'weiter nach vorn',reach:up?'länger':'kürzer',drop:up?'mehr Überhöhung (Lenker tiefer)':'weniger Überhöhung (Lenker höher)',crankLength:up?'länger':'kürzer',cleatFore:up?'weiter nach hinten':'weiter nach vorn'}[r.key];
+    add(r.key,`${m.label}: ${up?'+':''}${fmtNum(r.diff)} ${m.unit} zum Startwert`,`Aus deinen Körpermaßen ergibt sich als Startwert ${fmtNum(r.target)} ${m.unit} (${r.how}). Eingestellt sind ${fmtNum(r.cur)} ${m.unit}.${tg.insSrc!=='eingetragen'&&['saddleHeight','saddleSetback','crankLength'].includes(r.key)?' Achtung: Die Schrittlänge ist nicht gemessen, sondern geschätzt.':''} Faustregeln sind ein Ausgangspunkt. Wenn die Person beschwerdefrei fährt, nicht allein deswegen umbauen.`,
+      `${r.key==='saddleHeight'?`Sattel ${fmtNum(Math.abs(r.diff))} mm ${verb}, in Schritten von 2–3 mm, dann Kniewinkel messen.`:r.key==='reach'?`Sattel–Lenker ${fmtNum(Math.abs(r.diff))} mm ${verb}, meist über die Vorbaulänge.`:r.key==='drop'?`${verb}: ${fmtNum(Math.abs(r.diff))} mm, über Spacer oder Vorbauwinkel.`:r.key==='crankLength'?`Kurbel ${verb} (${fmtNum(r.target)} mm) – nur bei Beschwerden oder Neukauf sinnvoll.`:`${m.label} ${fmtNum(Math.abs(r.diff))} ${m.unit} ${verb}.`}`,r.target,`Startwert aus Körpermaßen: ${fmtNum(r.target)} ${m.unit}`); });
   checkFindings(s).filter(f=>f.cat==='fitting'&&f.lvl!=='ok').forEach(f=>add(null,f.title,'Aus dem Körpercheck.',f.text));
   return out;
 }
@@ -987,7 +1001,7 @@ function seed(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-26.1';
+const APP_VER = '2026-10-26.2';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1455,11 +1469,16 @@ SESSTAB.ausgang = s => {
     <div class="row"><button class="btn sm" type="button" data-act="simCapture" data-id="${s.id}">Fehlende Werte aus Körpermaßen simulieren</button>${st('s')}</div>
   </div></details></div>`;
 };
+function targetHtml(s){ const tg=targetFit(s); if(!tg.rows.length) return '';
+  return `<details class="more" ${Object.keys(s.before).length?'':'open'}><summary>Startwerte aus den Körpermaßen</summary><div class="stack" style="margin-top:8px">
+  <div class="cmp">${tg.rows.map(r=>{ const m=MK[r.key], off=r.diff!=null&&Math.abs(r.diff)>r.tol; return `<div class="li"><div class="grow"><div class="t">${m.label}</div><div class="sub">${r.cur==null?'noch nicht gemessen':`eingestellt ${fmtNum(r.cur)} ${m.unit}`}${r.diff!=null&&Math.abs(r.diff)>0.05?` · Abstand ${r.diff>0?'+':''}${fmtNum(r.diff)}`:''}</div></div><span class="v" style="${off?'color:var(--warn);font-weight:600':''}">${fmtNum(r.target)} ${m.unit}</span><button class="btn sm ${off||r.cur==null?'primary':''}" data-act="prepChange" data-key="${r.key}" data-v="${r.target}" data-reason="Startwert aus Körpermaßen">Übernehmen</button></div>`; }).join('')}</div>
+  <p class="faint" style="font-size:12.5px">Berechnet aus Schrittlänge ${fmtNum(tg.ins)} cm (${esc(tg.insSrc)}), Rumpf, Arm und Fuß sowie dem Radtyp ${esc(tg.type)}. Faustregeln, nicht validiert. Kniewinkel per Kamera ist genauer als die Sattelhöhen-Formel.</p></div></details>`; }
 SESSTAB.anpassung = s => { const sg=fitSuggestions(s); const top=sg.slice(0,3), rest=sg.slice(3);
   const card=x=>`<div class="card"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal;font-size:14px">${esc(x.how)}</div><details class="more" style="margin-top:4px"><summary style="font-size:13px">Warum?</summary><p class="muted" style="font-size:13.5px">${esc(x.why)}</p></details></div>${x.key?`<button class="btn sm primary" data-act="prepChange" data-key="${x.key}" data-v="${x.v??''}" data-reason="${esc(x.reason||x.title)}">Ändern</button>`:''}</div>`;
   return `<div class="stack">
   <p class="onlyline">Stell das Rad in kleinen Schritten um. Nach jeder Änderung kurz fahren lassen und nachfragen.</p>
   ${top.length?`<div><div class="label" style="margin-bottom:8px">Vorschläge ${st('s')}</div><div class="sugg">${top.map(card).join('')}</div>${rest.length?`<details class="more" style="margin-top:8px"><summary>${rest.length} weitere Vorschläge</summary><div class="sugg" style="margin-top:8px">${rest.map(card).join('')}</div></details>`:''}</div>`:'<div class="statusbox"><div><b>Keine Vorschläge</b><span class="muted" style="font-size:14px">Trag Beschwerden im Schritt „Ziel“ ein oder miss den Kniewinkel.</span></div></div>'}
+  ${targetHtml(s)}
   <section class="panel" style="box-shadow:none" id="changeHead"><div class="panel-b stack">
     <h3>Änderung eintragen</h3>
     <form class="stack" data-form="change" data-id="${s.id}" data-side="after">
