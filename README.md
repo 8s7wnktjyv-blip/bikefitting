@@ -15,8 +15,18 @@ Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro
 1. **Ziel** – 7 Fragen mit vorgefertigten Antworten zum Antippen
 2. **Körper** – optionaler Körper-Scan mit Kamera (Foto von vorn/Seite, Punkte antippen oder automatisch erkennen lassen) und 12 Tests mit Anleitung (Beinlänge, Becken, Kniespur, Fußgewölbe, Vorfuß, Beweglichkeit, Sitzknochen …). Die App wertet die Ergebnisse nach festen Regeln aus und schlägt einen Ausgleich vor dem Fitting vor (z. B. Shim, Einlage, Keil) oder empfiehlt eine Fachperson.
 3. **Messen** – 5 Pflichtpunkte mit Skizze und Anleitung, Serienwerte (Vorbau, Lenker, Kurbel) automatisch vom Hersteller
-4. **Anpassen** – bis zu 3 Vorschläge, Änderungen mit Begründung, optionale Fahr-Analyse mit Kamera
-5. **Ergebnis** – Reiter für Vorher/Nachher, Rahmengröße, Datenqualität und Bericht (Drucken/PDF)
+4. **Anpassen** – bis zu 3 Vorschläge mit Millimeter-Empfehlung (Wert wird vorausgefüllt), Änderungen mit Begründung, optionale Fahr-Analyse mit Kamera
+5. **Ergebnis** – Reiter für Vorher/Nachher, Größe & Teile (Rahmengröße, Rahmen-Finder über die ganze Bibliothek, Sattelbreite, Schuhgröße), Datenqualität und Bericht (Drucken/PDF, Teilen, mit Logo und Ladendaten)
+
+## Live-Analyse (Beta)
+
+Kamera seitlich aufs Rad richten: Google MediaPipe erkennt Schulter, Hüfte, Knie, Knöchel und Fuß, zählt die Kurbelumdrehungen und bildet den Mittelwert über 30 Umdrehungen für Kniewinkel unten, Hüftwinkel, Oberkörperwinkel und Knielot. Das Knielot wird über die Kurbellänge in Millimeter umgerechnet (etwa ±10 mm). Aus dem Kniewinkel berechnet ein Körpermodell die empfohlene Änderung der Sattelhöhe in mm. Geht auch mit einem aufgenommenen Video („Ganzes Video auswerten“).
+
+## Weitere Funktionen
+
+- Mehr → Dein Laden: Name, Adresse, Logo für Bericht und Einwilligung
+- Mehr → Zahlen: Fittings pro Monat, häufigste Beschwerden, CSV-Export aller Fittings
+- Mehr → Einstellungen: Werkstatt, Lager, Kundenportal, Team und Hardware Lab ein- oder ausblenden (Standard: ausgeblendet); Beispielkunden entfernen, ohne eigene Einträge zu löschen
 
 ## Geometrie-Bibliothek
 
@@ -28,7 +38,8 @@ Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro
 |---|---|
 | Kunden, Fahrräder, Fitting, Körpercheck, Verlauf, Nachkontrollen, Werkstatt, Lager | funktioniert, lokal gespeichert |
 | Auswertung Körpercheck, Vorschläge, Datenqualität | regelbasiert (Faustregeln, nicht validiert) |
-| Kamera (Körper-Scan, Fahr-Analyse) | Punkte antippen funktioniert; automatische Erkennung mit Google MediaPipe (Beta, braucht Internet, nicht getestet) |
+| Kamera (Körper-Scan, Fahr-Analyse) | Punkte antippen funktioniert; automatische Erkennung und Live-Analyse mit Google MediaPipe (Beta, braucht Internet, mit echter Kamera nicht getestet; Rechenweg mit simulierter Bewegung getestet) |
+| mm-Empfehlung Sattelhöhe, Sattelbreite, Schuhgröße | Faustregeln und Körpermodell, nicht validiert |
 | Bewegungssimulation | simuliert aus eingetragenen Körpermaßen |
 | Schreibhilfe („KI“) | Textvorlagen, kein Sprachmodell |
 | Kundenportal, Kapazität, Kennzahlen | Vorschau mit Demo-Daten |
@@ -40,7 +51,7 @@ FitFrame stellt keine Diagnosen. Alle Zahlen und Faustregeln sind Demonstrations
 
 - Backend mit Anmeldung, Rollen, Trennung zwischen Betrieben
 - EU-Hosting, Verschlüsselung, Backup, Export und Löschung (DSGVO)
-- PDF-Bericht, E-Mail/SMS
+- E-Mail/SMS-Versand
 - Echte Videoanalyse mit Kalibrierung
 - Gedruckte und getestete Hardware
 - Prüfung der Abläufe und Faustregeln mit erfahrenen Bikefittern

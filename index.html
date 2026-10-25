@@ -191,6 +191,10 @@ td.r,th.r{text-align:right}
 .cmp .li{padding:10px 0;gap:10px}
 .cmp .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}
 .wiz{display:flex;flex-direction:column;gap:16px}
+.livewrap{position:relative;border-radius:12px;overflow:hidden;background:#000;min-height:120px}
+.livewrap video{display:block;width:100%;height:auto}
+.livewrap canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.livecta{display:flex;flex-direction:column;gap:6px;align-items:flex-start;padding:14px;border-radius:12px;background:var(--accent-soft)}
 .wiz-top{display:flex;align-items:center;gap:12px}
 .wiz-bar{flex:1;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}
 .wiz-bar i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .25s}
@@ -433,10 +437,11 @@ const MK = {
   cleatRotR:{label:'Cleat-Rotation R',unit:'°',group:'Cleats',def:'+ = Ferse nach innen'},
   kneeBDC:{label:'Kniewinkel unten',unit:'°',group:'Bewegung',def:'Kniewinkel am unteren Totpunkt'},
   hipAngle:{label:'Hüftwinkel oben',unit:'°',group:'Bewegung',def:'Minimaler Hüftwinkel am oberen Totpunkt'},
-  torsoAngle:{label:'Oberkörperwinkel',unit:'°',group:'Bewegung',def:'Rumpf zur Waagerechten, Griff Bremsgriffe'}
+  torsoAngle:{label:'Oberkörperwinkel',unit:'°',group:'Bewegung',def:'Rumpf zur Waagerechten, Griff Bremsgriffe'},
+  kneeOverPedal:{label:'Knielot',unit:'mm',group:'Bewegung',def:'Knie vor (+) oder hinter (−) der Pedalachse bei waagerechter Kurbel vorn'}
 };
 const REQUIRED = ['saddleHeight','saddleSetback','reach','drop','crankLength','cleatFore']; // Kurbel meist vom Hersteller
-const METHODS = ['Maßband','Laser-Wasserwaage','Digitaler Winkelmesser','Goniometer','2D-Video (unkalibriert)','2D-Video (kalibriert)','Herstellerangabe','Berechnet','CleatLab (Prototyp, nicht validiert)'];
+const METHODS = ['Maßband','Laser-Wasserwaage','Digitaler Winkelmesser','Goniometer','2D-Video (unkalibriert)','2D-Video (kalibriert)','2D-Video live (automatisch)','Herstellerangabe','Berechnet','CleatLab (Prototyp, nicht validiert)'];
 const SOURCES = ['gemessen','vom Hersteller','manuell eingegeben','berechnet','geschätzt'];
 const mv = (key,value,method,source,unc) => ({key,value,method,source:source||'gemessen',unc:unc??null,time:''});
 
@@ -733,7 +738,7 @@ function readiness(f,s){
   return ['c-ok','Bereit fürs Fitting','Keine Punkte, die vorher ausgeglichen werden müssen.'];
 }
 function fitSuggestions(s){
-  const out=[]; const t=(s.anamnesis.complaints||'').toLowerCase(); const add=(key,title,why,how)=>out.push({key,title,why,how});
+  const out=[]; const t=(s.anamnesis.complaints||'').toLowerCase(); const add=(key,title,why,how,v,reason)=>out.push({key,title,why,how,v,reason});
   if(/hand|händ|taub|finger/.test(t)) add('reach','Hände entlasten','Taube Hände kommen oft von zu viel Gewicht auf dem Lenker.','Sattel–Lenker kürzer oder Lenker höher prüfen. Sattelnase nicht zu tief.');
   if(/nacken|schulter/.test(t)) add('drop','Nacken entlasten','Ein tiefer, weiter Lenker zwingt den Kopf in den Nacken.','Überhöhung verringern oder Lenker näher holen.');
   if(/knie.*vorn|vorne.*knie|kniescheibe/.test(t)) add('saddleHeight','Knie vorn','Druck vorn am Knie passt oft zu einem zu tiefen oder zu weit vorn stehenden Sattel.','Sattelhöhe in Schritten von 2–3 mm erhöhen, Versatz prüfen, neu messen.');
@@ -742,7 +747,10 @@ function fitSuggestions(s){
   if(/sitz|gesäß|druck|damm|sattel/.test(t)) add('saddleTilt','Sitzbeschwerden','Druck im Sitzbereich hängt an Neigung, Breite und Höhe des Sattels.','Sattelneigung in kleinen Schritten anpassen, Sattelbreite mit Sitzknochenabstand prüfen.');
   if(/rücken|lenden/.test(t)) add('drop','Rücken','Eine sehr gestreckte Haltung belastet den unteren Rücken.','Überhöhung und Sattel–Lenker-Abstand prüfen.');
   if(/wade|zeh|fuß|brennen/.test(t)) add('cleatFore','Füße und Waden','Weit vorn sitzende Cleats belasten Waden und Vorfuß.','Cleat weiter nach hinten setzen, Einlage und Schuhgröße prüfen.');
-  const k=(s.after.kneeBDC||s.before.kneeBDC); if(k){ if(k.value<140) add('saddleHeight',`Kniewinkel unten ${fmtNum(k.value)}°`,'Unter dem häufig genannten Bereich von etwa 140–150°. Der Sattel könnte zu tief sein.','Sattel in Schritten von 2–3 mm erhöhen und den Winkel neu messen.'); else if(k.value>150) add('saddleHeight',`Kniewinkel unten ${fmtNum(k.value)}°`,'Über dem häufig genannten Bereich von etwa 140–150°. Der Sattel könnte zu hoch sein.','Sattel in Schritten von 2–3 mm senken und den Winkel neu messen.'); }
+  const k=(s.after.kneeBDC||s.before.kneeBDC); if(k&&(k.value<140||k.value>150)){ const a=saddleAdvice(s,Number(k.value)); const up=k.value<140;
+    add('saddleHeight',`Kniewinkel unten ${fmtNum(k.value)}°: Sattel ${a.delta>0?'+':''}${a.delta} mm`,`${up?'Unter':'Über'} dem häufig genannten Bereich von etwa 140–150°. Der Sattel ist vermutlich zu ${up?'tief':'hoch'}. Die Millimeter rechnet FitFrame mit einem Körpermodell aus Schritt- und Kurbellänge (etwa ${fmtNum(Math.round(1/a.slope*10)/10)} mm pro Grad). Das ist eine Schätzung, deshalb neu messen.`,`Sattel auf etwa ${a.newH} mm (${a.delta>0?'+':''}${a.delta} mm), in Schritten von 2–3 mm. Danach den Kniewinkel neu messen.`,a.newH,`Kniewinkel unten ${fmtNum(k.value)}°`); }
+  const kp=(s.after.kneeOverPedal||s.before.kneeOverPedal); if(kp&&Math.abs(kp.value)>15){ const sb=val(s.after.saddleSetback)??val(s.before.saddleSetback); const d=Math.round(Number(kp.value));
+    add('saddleSetback',`Knielot ${d>0?'+':''}${d} mm`,`Das Knie steht bei waagerechter Kurbel ${Math.abs(d)} mm ${d>0?'vor':'hinter'} der Pedalachse. Viele Fitter beginnen mit dem Knie etwa über der Achse. Das ist eine Faustregel, keine feste Vorgabe.`,`Sattel etwa ${Math.abs(d)} mm nach ${d>0?'hinten':'vorn'}, wenn Beschwerden dazu passen. Danach Sattelhöhe prüfen, weil sie sich mitverändert.`,sb!=null?sb+d:null,`Knielot ${d>0?'+':''}${d} mm`); }
   checkFindings(s).filter(f=>f.cat==='fitting'&&f.lvl!=='ok').forEach(f=>add(null,f.title,'Aus dem Körpercheck.',f.text));
   return out;
 }
@@ -835,7 +843,7 @@ function sizeAdvice(s,g){
 const geoRowObj=row=>{ const o={}; GCOLS.forEach((c,i)=>o[c]=row[i]); return o; };
 
 const CONSENT_TEXT=`<h3>Einwilligung zur Datenverarbeitung beim Bikefitting</h3>
-<p><b>Wer:</b> [Name und Anschrift deines Ladens]</p>
+<p><b>Wer:</b> %%SHOP%%</p>
 <p><b>Wofür:</b> Wir speichern deine Angaben, um dein Rad an dich anzupassen, das Ergebnis zu dokumentieren und bei Nachkontrollen vergleichen zu können.</p>
 <p><b>Welche Daten:</b> Name, Kontaktdaten, Körpermaße, Fahrrad- und Einstellungsdaten. Nur wenn du zusätzlich zustimmst: Beschwerden und Ergebnisse des Körperchecks (Gesundheitsdaten nach Art. 9 DSGVO).</p>
 <p><b>Wie lange:</b> bis du die Löschung verlangst, längstens [Frist eintragen] nach dem letzten Termin.</p>
@@ -979,7 +987,7 @@ function seed(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-25.7';
+const APP_VER = '2026-10-26.1';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1023,7 +1031,10 @@ const sessOf = cid => S.sessions.filter(s=>s.customerId===cid).sort((a,b)=>a.dat
 const val = (rec) => rec ? rec.value : null;
 
 /* ---------- Navigation ---------- */
-const MAIN=[['dashboard','Start','dash'],['kunden','Kunden','users'],['sitzung','Fitting','fit'],['werkstatt','Werkstatt','wrench'],['mehr','Mehr','more']];
+const MAIN_ALL=[['dashboard','Start','dash'],['kunden','Kunden','users'],['sitzung','Fitting','fit'],['werkstatt','Werkstatt','wrench'],['mehr','Mehr','more']];
+const MAIN=MAIN_ALL;
+const mainNav=()=>showExtra()?MAIN_ALL:MAIN_ALL.map(m=>m[0]==='werkstatt'?['geometrie','Geometrie','grid']:m);
+const moreNav=()=>MORE.map(([g,items])=>[g,items.filter(m=>showExtra()||!EXTRA_ROUTES.includes(m[0]))]).filter(([,items])=>items.length);
 const MORE=[
   ['Fitting-Werkzeuge',[['fahrraeder','Fahrräder','bike','Alle Räder mit Einstellungen und Historie'],['geometrie','Geometrie-Bibliothek','grid','Rahmenmaße nach Hersteller, Größenberatung'],['verlauf','Verlauf & Vergleich','history','Sitzungen nebeneinander und über die Zeit'],['followup','Nachkontrollen','loop','Wer ist wann wieder dran?'],['motion','Bewegung & Video','motion','Winkel aus Video messen oder simulieren'],['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht, Datenlücken']]],
   ['Laden & Kunden',[['portal','Kundenportal','portal','So sehen Kunden ihre Berichte'],['lager','Lager & Verkauf','box','Bestand, Verkäufe, Garantie'],['betrieb','Team & Zahlen','ops','Auslastung, Rollen, Kennzahlen']]],
@@ -1042,20 +1053,20 @@ function counts(){
   };
 }
 function renderNav(){
-  const c = counts();
+  const c = counts(); const pill=document.querySelector('.demo-pill'); if(pill) pill.hidden=!!S.demoRemoved;
   const btn=(r,l,i,cls)=>`<button class="navbtn ${cls||''}" data-nav="${r}" ${ui.route===r?'aria-current="page"':''}>${ic(i)}<span>${l}</span>${c[r]?`<span class="cnt">${c[r]}</span>`:''}</button>`;
   document.getElementById('side').innerHTML = `
     <div class="brand">
       <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" style="fill:var(--accent)"/><path d="M10 23l6-14h7M13 16h7" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <div><b>FitFrame</b><small>Bikefitting für deinen Laden</small></div>
     </div>
-    <div class="navgroup">${MAIN.filter(m=>m[0]!=='mehr').map(([r,l,i])=>btn(r,l,i)).join('')}</div>
-    ${MORE.map(([g,items])=>`<div class="navgroup"><div class="label">${g}</div>${items.map(([r,l,i])=>btn(r,l,i,'small')).join('')}</div>`).join('')}
+    <div class="navgroup">${mainNav().filter(m=>m[0]!=='mehr').map(([r,l,i])=>btn(r,l,i)).join('')}</div>
+    ${moreNav().map(([g,items])=>`<div class="navgroup"><div class="label">${g}</div>${items.map(([r,l,i])=>btn(r,l,i,'small')).join('')}</div>`).join('')}
     <div class="demo-note">
-      <span>Demo mit erfundenen Beispielkunden. Deine Einträge bleiben nur in diesem Browser.</span>
-      <button class="btn sm" data-act="reset">Demo zurücksetzen</button>
+      <span>${S.demoRemoved?'Deine Einträge bleiben nur in diesem Browser. Regelmäßig sichern (Mehr).':'Demo mit erfundenen Beispielkunden. Deine Einträge bleiben nur in diesem Browser.'}</span>
+      ${S.demoRemoved?'<button class="btn sm" data-nav="mehr">Daten sichern</button>':'<button class="btn sm" data-act="removeDemo">Beispielkunden entfernen</button>'}
     </div>`;
-  document.getElementById('bottomnav').innerHTML = MAIN.map(([r,l,i])=>`<button data-nav="${r}" ${(ui.route===r||(r==='mehr'&&isMore(ui.route)))?'aria-current="page"':''}>${ic(i)}<span>${l}</span></button>`).join('');
+  document.getElementById('bottomnav').innerHTML = mainNav().map(([r,l,i])=>`<button data-nav="${r}" ${(ui.route===r||(r==='mehr'&&isMore(ui.route)))?'aria-current="page"':''}>${ic(i)}<span>${l}</span></button>`).join('');
   document.getElementById('crumb').textContent = isMore(ui.route)?`Mehr / ${TITLES[ui.route]}`:(TITLES[ui.route]||'');
 }
 function go(r){
@@ -1072,7 +1083,8 @@ function render(){
   if(nav.route!==lastNav.route||(nav.route==='sitzung'&&(nav.tab!==lastNav.tab||nav.sess!==lastNav.sess))) anim='anim-in';
   else if(nav.route==='sitzung'&&nav.w!==lastNav.w) anim=(nav.w??-1)>(lastNav.w??-1)?'anim-next':'anim-prev';
   lastNav=nav;
-  try{ v.innerHTML = VIEWS[ui.route](); window.scrollTo(0,y); if(anim){ const t=(anim==='anim-in'?null:v.querySelector('.panel-b'))||v; t.classList.add(anim); setTimeout(()=>t.classList.remove(anim),900); } }
+  const needS=['sitzung','motion','ki','verlauf'].includes(ui.route)&&!S.sessions.length, needC=['portal'].includes(ui.route)&&!S.customers.length;
+  try{ v.innerHTML = needS||needC?`${head(TITLES[ui.route]||'',' ')}<div class="empty">${ic('fit')}<span>${needC?'Noch keine Kunden.':'Noch kein Fitting angelegt.'}</span><button class="btn sm primary" data-act="${needC?'newCustomer':'newSession'}">${needC?'Kunde anlegen':'Fitting anlegen'}</button></div>`:VIEWS[ui.route](); window.scrollTo(0,y); if(anim){ const t=(anim==='anim-in'?null:v.querySelector('.panel-b'))||v; t.classList.add(anim); setTimeout(()=>t.classList.remove(anim),900); } }
   catch(e){ console.error(e); v.innerHTML = `<div class="notice warn">${ic('warn')}<div><b>Diese Ansicht konnte nicht geladen werden.</b><br>Fehler: ${esc(e.message)}. Setze die Demo unter „Mehr“ zurück, falls der Fehler bleibt.</div></div>`; }
   afterRender();
 }
@@ -1094,7 +1106,7 @@ function openDrawer(title,body,actions){
   document.getElementById('overlay').innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="drawer-h"><h2>${esc(title)}</h2>${actions||''}<button class="iconbtn" data-act="close" aria-label="Schließen">${ic('x')}</button></div><div class="drawer-b" id="drawerBody">${body}</div></aside>`;
   labelTables(document.getElementById('overlay')); const d=document.querySelector('.drawer'); d && d.querySelector('.iconbtn').focus();
 }
-function closeDrawer(){ document.getElementById('overlay').innerHTML=''; drawerCtx=null; }
+function closeDrawer(){ if(typeof liveStop==='function') liveStop(); document.getElementById('overlay').innerHTML=''; drawerCtx=null; }
 let drawerCtx = null;
 function closeMenu(){ document.getElementById('side').classList.remove('open'); }
 
@@ -1150,9 +1162,9 @@ VIEWS.dashboard = () => {
   const att=[];
   S.sessions.forEach(s=>s.followUps.forEach(f=>{ if(f.status==='offen'&&f.due<=td) att.push({icon:'loop',t:`${cust(s.customerId).name}: Nachkontrolle fällig`,sub:`seit ${fmtDate(f.due)}`,a:'data-nav="followup"',chip:'<span class="chip c-bad">fällig</span>'}); }));
   S.sessions.filter(s=>s.status==='in Arbeit').forEach(s=>{ const q=quality(s).filter(x=>x[0]!=='info'); if(q.length) att.push({icon:'quality',t:`${cust(s.customerId).name}: ${q.length} offene Punkte im Fitting`,sub:q[0][1],a:`data-act="openSession" data-id="${s.id}" data-tab="ergebnis"`,chip:'<span class="chip c-warn">prüfen</span>'}); });
-  openWO.filter(w=>w.status==='Freigabe ausstehend').forEach(w=>att.push({icon:'wrench',t:`${w.title}`,sub:`${cust(w.customerId).name} muss den Kostenvoranschlag freigeben`,a:`data-act="openWO" data-id="${w.id}"`,chip:'<span class="chip c-warn">wartet</span>'}));
+  if(showExtra()){ openWO.filter(w=>w.status==='Freigabe ausstehend').forEach(w=>att.push({icon:'wrench',t:`${w.title}`,sub:`${cust(w.customerId).name} muss den Kostenvoranschlag freigeben`,a:`data-act="openWO" data-id="${w.id}"`,chip:'<span class="chip c-warn">wartet</span>'}));
   openWO.filter(w=>w.status==='Abholbereit').forEach(w=>att.push({icon:'wrench',t:`${w.title} ist fertig`,sub:`${cust(w.customerId).name} kann abholen`,a:`data-act="openWO" data-id="${w.id}"`,chip:'<span class="chip c-ok">abholbereit</span>'}));
-  S.inventory.filter(x=>x.stock<x.min).forEach(x=>att.push({icon:'box',t:`${x.name} nachbestellen`,sub:`noch ${x.stock}, Minimum ${x.min}`,a:'data-nav="lager"',chip:'<span class="chip c-warn">knapp</span>'}));
+  S.inventory.filter(x=>x.stock<x.min).forEach(x=>att.push({icon:'box',t:`${x.name} nachbestellen`,sub:`noch ${x.stock}, Minimum ${x.min}`,a:'data-nav="lager"',chip:'<span class="chip c-warn">knapp</span>'})); }
   const appt=s=>{const c=cust(s.customerId),b=bike(s.bikeId);return `<div class="li"><span class="time">${esc(s.time)}</span><div class="avatar">${initials(c.name)}</div><div class="grow"><div class="t">${esc(c.name)}</div><div class="sub">${esc(s.type)} · ${esc(b.brand+' '+b.model)}</div></div>${sessChip(s.status)}${s.status==='geplant'||s.status==='eingetroffen'?`<button class="btn sm primary" data-act="startSession" data-id="${s.id}">Starten</button>`:`<button class="btn sm" data-act="openSession" data-id="${s.id}">Öffnen</button>`}</div>`;};
   return `
   ${loadIssue?`<div class="notice warn">${ic('warn')}<div><b>${esc(loadIssue)}</b> Eine Kopie wurde gesichert. Unter Mehr → Deine Daten sichern kannst du sie wiederherstellen.</div></div>`:''}
@@ -1161,7 +1173,7 @@ VIEWS.dashboard = () => {
     <button class="tile main" data-act="newSession"><span class="ti">${ic('plus')}</span><b>Neues Fitting</b><span>Kunde wählen und loslegen</span></button>
     <button class="tile" data-act="findCustomer"><span class="ti">${ic('users')}</span><b>Kunde suchen</b><span>${S.customers.length} Kunden gespeichert</span></button>
     <button class="tile" data-act="scrollToday"><span class="ti">${ic('fit')}</span><b>Heutige Termine</b><span>${todays.length} heute, ${upcoming.length} demnächst</span></button>
-    <button class="tile" data-nav="werkstatt"><span class="ti">${ic('wrench')}</span><b>Werkstatt</b><span>${openWO.length} offene Aufträge</span></button>
+    ${showExtra()?`<button class="tile" data-nav="werkstatt"><span class="ti">${ic('wrench')}</span><b>Werkstatt</b><span>${openWO.length} offene Aufträge</span></button>`:`<button class="tile" data-nav="followup"><span class="ti">${ic('loop')}</span><b>Nachkontrollen</b><span>${S.sessions.flatMap(s=>s.followUps).filter(f=>f.status==='offen').length} offen</span></button>`}
   </div>
   <div class="grid g-main">
     <div class="stack">
@@ -1197,7 +1209,7 @@ function geoDrawer(id){
 function geoOptions(sel){ const by={}; geoAll().forEach(g=>(by[g.brand]=by[g.brand]||[]).push(g)); return Object.entries(by).map(([b,list])=>`<optgroup label="${esc(b)}">${list.map(g=>`<option value="${g.id}" ${g.id===sel?'selected':''}>${esc(g.brand+' '+g.model)}</option>`).join('')}</optgroup>`).join(''); }
 function geoSizeOptions(id,sel){ const g=id?geoById(id):null; return g?g.rows.map(r=>`<option value="${esc(r[0])}" ${String(r[0])===String(sel)?'selected':''}>${esc(r[0])}</option>`).join(''):''; }
 function dataPanel(){
-  const bk=backupKeys(); const own=S.customers.filter(c=>!['c1','c2','c3','c4'].includes(c.id)).length;
+  const bk=backupKeys(); const own=S.customers.filter(c=>!isDemoCust(c.id)).length;
   return panel('Deine Daten sichern',`<div class="stack">
   <div class="notice warn">${ic('warn')}<div><b>Wo deine Einträge liegen:</b> nur in diesem Browser auf diesem Gerät, unter dieser Adresse (<span class="mono">${esc(location.host||'lokale Datei')}</span>). Ein anderer Link, ein anderes Gerät oder der private Modus haben eigene, leere Daten. Safari kann Daten von Webseiten löschen, die du länger als 7 Tage nicht geöffnet hast. Sichere deshalb regelmäßig.</div></div>
   <p>${S.customers.length} Kunden gespeichert, davon ${own} selbst angelegt.</p>
@@ -1210,10 +1222,14 @@ function dataPanel(){
 }
 VIEWS.mehr = () => `
   ${head('Mehr','Alle weiteren Bereiche von FitFrame.')}
-  ${MORE.map(([g,items])=>`<div class="stack"><h2>${g}</h2><div class="tiles">${items.map(([r,l,i,d])=>`<button class="tile" data-nav="${r}"><span class="ti">${ic(i)}</span><b>${l}</b><span>${d}</span></button>`).join('')}</div></div>`).join('')}
+  ${moreNav().map(([g,items])=>`<div class="stack"><h2>${g}</h2><div class="tiles">${items.map(([r,l,i,d])=>`<button class="tile" data-nav="${r}"><span class="ti">${ic(i)}</span><b>${l}</b><span>${d}</span></button>`).join('')}</div></div>`).join('')}
+  ${shopHtml()}
   ${dataPanel()}
+  ${statsHtml()}
   ${panel('Einstellungen',`<div class="stack"><div class="row" style="justify-content:space-between"><span>Darstellung</span><div class="seg"><button data-act="setTheme" data-v="light" aria-pressed="${theme==='light'}">Hell</button><button data-act="setTheme" data-v="dark" aria-pressed="${theme==='dark'}">Dunkel</button></div></div>
-  <hr><div class="row" style="justify-content:space-between"><span class="muted" style="max-width:52ch">Deine Einträge liegen nur in diesem Browser. Zurücksetzen lädt die Beispielkunden neu und löscht deine Einträge.</span><button class="btn" data-act="reset">Demo zurücksetzen</button></div></div>`)}
+  <hr><div class="row" style="justify-content:space-between"><span style="max-width:52ch">Werkstatt, Lager, Kundenportal, Team und Hardware Lab<br><span class="muted" style="font-size:13.5px">Zusatzbereiche, teils nur Vorschau. Ausgeblendet bleibt FitFrame aufs Fitting konzentriert.</span></span><div class="seg"><button data-act="setExtra" data-v="1" aria-pressed="${showExtra()}">Zeigen</button><button data-act="setExtra" data-v="0" aria-pressed="${!showExtra()}">Ausblenden</button></div></div>
+  ${S.demoRemoved?'':`<hr><div class="row" style="justify-content:space-between"><span style="max-width:52ch">Beispielkunden entfernen<br><span class="muted" style="font-size:13.5px">Löscht nur die 4 erfundenen Kunden mit ihren Rädern und Fittings. Deine eigenen Einträge bleiben.</span></span><button class="btn" data-act="removeDemo">Entfernen</button></div>`}
+  <hr><div class="row" style="justify-content:space-between"><span class="muted" style="max-width:52ch">Zurücksetzen lädt die Beispielkunden neu und löscht deine Einträge.</span><button class="btn" data-act="reset">Demo zurücksetzen</button></div></div>`)}
 `;
 
 VIEWS.kunden = () => {
@@ -1433,14 +1449,14 @@ SESSTAB.ausgang = s => {
   <div class="ovl">${MEASURE_NOW.map((k,i)=>{const v=s.before[k], rg=measureRange(k,c,b), out=v&&rg&&rg.lo!=null&&(v.value<rg.lo||v.value>rg.hi);return ovItem(i,MK[k].label,v?`${fmtNum(v.value)} ${MK[k].unit}`:'',v?(out?'warn':'done'):'open');}).join('')}</div>
   ${mk?(fromMaker.length?`<details class="more"><summary>Vom Hersteller: ${esc(mk.g.brand+' '+mk.g.model)}, ${esc(mk.r.size)}</summary><table style="margin-top:6px"><tbody>${fromMaker.map(k=>`<tr><td>${MK[k].label}</td><td class="r num">${fmtNum(s.before[k].value)} ${MK[k].unit}</td><td class="r"><button class="btn sm ghost" data-act="editMaker" data-k="${k}">Ändern</button></td></tr>`).join('')}</tbody></table><p class="faint" style="font-size:12.5px">Serienausstattung. Wurde etwas getauscht, tippe auf „Ändern“.</p></details>`:`<button class="btn" data-act="applyMaker" data-id="${s.id}">Serienwerte vom Hersteller übernehmen</button>`)
     :`<div class="statusbox"><div style="flex:1;min-width:0"><b>Kein Modell zugeordnet</b><span class="muted" style="font-size:14px">Dann übernimmt die App Vorbau, Lenker und Kurbel automatisch.</span></div><button class="btn sm" data-act="bikeGeo" data-id="${b.id}">Zuordnen</button></div>`}
-  <details class="more" ${vid.src?'open':''}><summary>Kniewinkel und Hüftwinkel per Video messen</summary><div style="margin-top:10px">${vidPanel(s,'before')}</div></details>
+  <details class="more" ${vid.src?'open':''}><summary>Kniewinkel, Hüftwinkel und Knielot per Kamera messen</summary><div style="margin-top:10px">${vidPanel(s,'before')}</div></details>
   <details class="more" ${ui.editMaker?'open':''}><summary>Weitere Messpunkte (optional)</summary><div class="stack" style="margin-top:10px">
     ${[...(ui.editMaker?[ui.editMaker]:[]),...optional,...fromMaker.filter(k=>k!==ui.editMaker)].map(k=>measureCard(s,'before',k,c,b)).join('')}
     <div class="row"><button class="btn sm" type="button" data-act="simCapture" data-id="${s.id}">Fehlende Werte aus Körpermaßen simulieren</button>${st('s')}</div>
   </div></details></div>`;
 };
 SESSTAB.anpassung = s => { const sg=fitSuggestions(s); const top=sg.slice(0,3), rest=sg.slice(3);
-  const card=x=>`<div class="card"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal;font-size:14px">${esc(x.how)}</div><details class="more" style="margin-top:4px"><summary style="font-size:13px">Warum?</summary><p class="muted" style="font-size:13.5px">${esc(x.why)}</p></details></div>${x.key?`<button class="btn sm primary" data-act="prepChange" data-key="${x.key}">Ändern</button>`:''}</div>`;
+  const card=x=>`<div class="card"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal;font-size:14px">${esc(x.how)}</div><details class="more" style="margin-top:4px"><summary style="font-size:13px">Warum?</summary><p class="muted" style="font-size:13.5px">${esc(x.why)}</p></details></div>${x.key?`<button class="btn sm primary" data-act="prepChange" data-key="${x.key}" data-v="${x.v??''}" data-reason="${esc(x.reason||x.title)}">Ändern</button>`:''}</div>`;
   return `<div class="stack">
   <p class="onlyline">Stell das Rad in kleinen Schritten um. Nach jeder Änderung kurz fahren lassen und nachfragen.</p>
   ${top.length?`<div><div class="label" style="margin-bottom:8px">Vorschläge ${st('s')}</div><div class="sugg">${top.map(card).join('')}</div>${rest.length?`<details class="more" style="margin-top:8px"><summary>${rest.length} weitere Vorschläge</summary><div class="sugg" style="margin-top:8px">${rest.map(card).join('')}</div></details>`:''}</div>`:'<div class="statusbox"><div><b>Keine Vorschläge</b><span class="muted" style="font-size:14px">Trag Beschwerden im Schritt „Ziel“ ein oder miss den Kniewinkel.</span></div></div>'}
@@ -1448,8 +1464,8 @@ SESSTAB.anpassung = s => { const sg=fitSuggestions(s); const top=sg.slice(0,3), 
     <h3>Änderung eintragen</h3>
     <form class="stack" data-form="change" data-id="${s.id}" data-side="after">
       <div class="field"><label for="m_key_after">Was hast du geändert?</label><select class="input" id="m_key_after" name="key">${Object.entries(MK).filter(([,m])=>m.group!=='Bewegung').map(([k,m])=>`<option value="${k}" ${ui.prepKey===k?'selected':''}>${m.label}</option>`).join('')}</select></div>
-      <div class="row" style="flex-wrap:nowrap;align-items:flex-start"><div class="field" style="flex:1"><label for="m_val_after">Neuer Wert</label><input class="input num" id="m_val_after" name="value" type="number" step="0.1" inputmode="decimal" required></div></div>
-      <div class="field"><label for="m_reason">Warum?</label><input class="input" id="m_reason" name="reason" required placeholder="z. B. Knie unten stark gebeugt"></div>
+      <div class="row" style="flex-wrap:nowrap;align-items:flex-start"><div class="field" style="flex:1"><label for="m_val_after">Neuer Wert</label><input class="input num" id="m_val_after" name="value" type="number" step="0.1" inputmode="decimal" required value="${esc(ui.prepVal||'')}"></div></div>
+      <div class="field"><label for="m_reason">Warum?</label><input class="input" id="m_reason" name="reason" required placeholder="z. B. Knie unten stark gebeugt" value="${esc(ui.prepReason||'')}"></div>
       <details class="more"><summary>Methode und Genauigkeit</summary><div class="form" style="margin-top:8px"><div class="field"><label for="m_meth_after">Methode</label><select class="input" id="m_meth_after" name="method">${opts(METHODS,'Maßband')}</select></div><div class="field"><label for="m_src_after">Quelle</label><select class="input" id="m_src_after" name="source">${opts(SOURCES,'gemessen')}</select></div><div class="field"><label for="m_unc_after">± Genauigkeit</label><input class="input num" id="m_unc_after" name="unc" type="number" step="0.1" min="0" inputmode="decimal" placeholder="optional"></div></div></details>
       <div><button class="btn primary" type="submit">Änderung speichern</button></div>
     </form></div></section>
@@ -1514,8 +1530,8 @@ SESSTAB.bericht = s => `<div class="stack"><div class="row" style="justify-conte
   <div id="reportBox">${ui.reportFor===s.id?reportHtml(s):'<div class="empty">Noch kein Bericht erzeugt.</div>'}</div></div>`;
 SESSTAB.ergebnis = s => {
   const q=quality(s), crit=q.filter(x=>x[0]!=='info').length; const t=ui.resTab||'vergleich';
-  const tabs=[['vergleich','Vorher / Nachher'],['groesse','Rahmengröße'],['qualitaet',`Datenqualität${crit?` (${crit})`:''}`],['bericht','Bericht']];
-  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,groesse:()=>adviceHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
+  const tabs=[['vergleich','Vorher / Nachher'],['groesse','Größe & Teile'],['qualitaet',`Datenqualität${crit?` (${crit})`:''}`],['bericht','Bericht']];
+  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
   return `<div class="stack">
   <p class="onlyline">Prüfe das Ergebnis, erstelle den Bericht und schließ das Fitting ab.</p>
   <div class="tabsbar" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${t===k}" data-act="resTab" data-v="${k}">${l}</button>`).join('')}</div>
@@ -1536,27 +1552,30 @@ function adviceHtml(s){
 function reportHtml(s){
   const c=cust(s.customerId),b=bike(s.bikeId);const rows=compareRows(s.before,s.after);const fu=s.followUps.filter(f=>f.status==='offen');
   const q=quality(s).filter(x=>x[0]!=='info');
-  return `<article class="report"><div class="rh"><div><h2 style="font-size:24px">Fitting-Bericht</h2><div>${esc(c.name)} · ${esc(b.brand+' '+b.model)}</div></div><div style="text-align:right"><b>FitFrame</b><div class="fine">${fmtDate(s.date)} · ${esc(s.type)} · Version ${s.version}<br>Fitter: ${esc(s.fitter)}</div></div></div>
+  return `<article class="report"><div class="rh"><div><h2 style="font-size:24px">Fitting-Bericht</h2><div>${esc(c.name)} · ${esc(b.brand+' '+b.model)}</div></div><div style="text-align:right">${S.shop&&S.shop.logo?`<img src="${S.shop.logo}" alt="" style="max-height:44px;max-width:150px;display:block;margin-left:auto;margin-bottom:4px">`:''}<b>${esc(shopName()||'FitFrame')}</b>${S.shop&&(S.shop.addr||S.shop.phone)?`<div class="fine">${esc([S.shop.addr,S.shop.phone,S.shop.email,S.shop.web].filter(Boolean).join(' · '))}</div>`:''}<div class="fine">${fmtDate(s.date)} · ${esc(s.type)} · Version ${s.version}<br>Fitter: ${esc(s.fitter)}</div></div></div>
   <div class="sec"><h3>Ziel und Ausgangslage</h3><p>${esc(s.anamnesis.goal||'Nicht dokumentiert.')}</p>${s.anamnesis.complaints?`<p><b>Angaben der Kundin/des Kunden:</b> ${esc(s.anamnesis.complaints)}</p>`:''}</div>
   ${Object.keys(s.check||{}).length?`${s.scan?`<div class="sec"><h3>Körper-Scan (Kamera, Schätzung)</h3><p>${[s.scan.shDiff!=null?`Schultern: ${Math.abs(s.scan.shDiff)<8?'gerade':(s.scan.shDiff>0?'links':'rechts')+' '+Math.abs(s.scan.shDiff)+' mm tiefer'}`:'',s.scan.pelDiff!=null?`Becken: ${Math.abs(s.scan.pelDiff)<6?'gerade':(s.scan.pelDiff>0?'links':'rechts')+' '+Math.abs(s.scan.pelDiff)+' mm höher'}`:'',s.scan.kneeL?`Beinachse links: ${s.scan.kneeL.dir}`:'',s.scan.kneeR?`Beinachse rechts: ${s.scan.kneeR.dir}`:''].filter(Boolean).join(' · ')}</p></div>`:''}<div class="sec"><h3>Körpercheck</h3>${checkFindings(s).filter(x=>x.lvl!=='ok').map(x=>`<p><b>${esc(x.title)}.</b> ${esc(x.text)}</p>`).join('')||'<p>Keine Auffälligkeiten.</p>'}${(s.comp||[]).length?`<p><b>Ausgleich:</b> ${s.comp.map(cp=>esc(cp.t)+' ('+cp.status+')').join('; ')}</p>`:''}</div>`:''}
   <div class="sec"><h3>Vorgenommene Änderungen</h3>${s.changes.length?`<table><thead><tr><th>Einstellung</th><th style="text-align:right">Vorher</th><th style="text-align:right">Nachher</th><th>Grund</th></tr></thead><tbody>${s.changes.map(ch=>`<tr><td>${MK[ch.key].label}</td><td style="text-align:right">${fmtNum(ch.from)} ${MK[ch.key].unit}</td><td style="text-align:right">${fmtNum(ch.to)} ${MK[ch.key].unit}</td><td>${esc(ch.reason)}</td></tr>`).join('')}</tbody></table>`:'<p>Keine Änderungen.</p>'}</div>
   <div class="sec"><h3>Endposition</h3><table><tbody>${rows.filter(r=>r.a||r.b).map(r=>`<tr><td>${r.m.label}</td><td style="text-align:right">${fmtNum((r.a||r.b).value)} ${r.m.unit}</td><td class="fine">${esc((r.a||r.b).method)}${(r.a||r.b).source==='geschätzt'?' · geschätzt':''}</td></tr>`).join('')}</tbody></table></div>
+  ${(()=>{ const p=partsAdvice(s); const kp=s.after.kneeOverPedal||s.before.kneeOverPedal; const l=[]; if(p.saddle) l.push(`Sattelbreite etwa ${p.saddle.lo}–${p.saddle.hi} mm (Sitzknochenabstand ${p.saddle.sb} mm)`); if(p.shoe) l.push(`Schuhgröße etwa EU ${fmtNum(p.shoe.lo)}–${fmtNum(p.shoe.hi)} (Herstellertabelle prüfen)`); if(kp) l.push(kopsText(Math.round(kp.value))+' (Kamera, Schätzung)'); return l.length?`<div class="sec"><h3>Empfehlungen</h3><ul style="margin:0;padding-left:18px">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''; })()}
   ${s.notes?`<div class="sec"><h3>Beobachtungen</h3><p>${esc(s.notes)}</p></div>`:''}
   <div class="sec"><h3>Nächste Schritte</h3><p>${fu.length?fu.map(f=>`Nachkontrolle am ${fmtDate(f.due)} (${f.days} Tage).`).join(' '):'Nachkontrolle nach 4–6 Wochen empfohlen.'} Bitte melden Sie neue Beschwerden früher.</p></div>
   ${q.length?`<div class="sec"><h3>Offene Punkte zur Datenqualität</h3><ul style="margin:0;padding-left:18px">${q.map(x=>`<li>${esc(x[1])}</li>`).join('')}</ul></div>`:''}
-  <p class="fine" style="margin-top:18px">Demo-Bericht mit fiktiven Daten. Kein medizinischer Befund. Winkel aus unkalibriertem Video sind Orientierungswerte. Erstellt mit FitFrame.</p></article>
-  <div class="row"><button class="btn primary" data-act="printReport">${ic('doc')}Drucken oder als PDF sichern</button><button class="btn" data-act="copyReport" data-id="${s.id}">${ic('copy')}Berichtstext kopieren</button></div>
+  <p class="fine" style="margin-top:18px">${isDemoCust(s.customerId)?'Demo-Bericht mit fiktiven Daten. ':''}Kein medizinischer Befund. Winkel aus Videoaufnahmen sind Orientierungswerte. Erstellt mit FitFrame.</p></article>
+  <div class="row"><button class="btn primary" data-act="printReport">${ic('doc')}Drucken oder als PDF sichern</button><button class="btn" data-act="shareReport" data-id="${s.id}">Teilen</button><button class="btn" data-act="copyReport" data-id="${s.id}">${ic('copy')}Berichtstext kopieren</button></div>${shopName()?'':'<p class="faint" style="font-size:12.5px">Tipp: Unter Mehr → Dein Laden Name und Logo eintragen. Sie erscheinen dann oben im Bericht.</p>'}
   <p class="faint" style="font-size:12.5px">Am iPhone: Drucken → oben auf Teilen → „In Dateien sichern“ ergibt ein PDF. Funktioniert über den GitHub-Link, nicht in der Claude-Vorschau.</p>`;
 }
 function reportText(s){
   const c=cust(s.customerId),b=bike(s.bikeId);
-  return [`Fitting-Bericht – ${c.name} – ${b.brand} ${b.model} – ${fmtDate(s.date)}`,'',`Ziel: ${s.anamnesis.goal||'–'}`,'','Änderungen:',...s.changes.map(ch=>`- ${MK[ch.key].label}: ${fmtNum(ch.from)} → ${fmtNum(ch.to)} ${MK[ch.key].unit} (${ch.reason})`),'',s.notes?`Beobachtungen: ${s.notes}`:'','(Demo-Daten, kein medizinischer Befund)'].join('\n');
+  const end={...s.before,...s.after};
+  return [`Fitting-Bericht – ${c.name} – ${b.brand} ${b.model} – ${fmtDate(s.date)}`,shopName()?shopName():'','',`Ziel: ${s.anamnesis.goal||'–'}`,'','Änderungen:',...(s.changes.length?s.changes.map(ch=>`- ${MK[ch.key].label}: ${fmtNum(ch.from)} → ${fmtNum(ch.to)} ${MK[ch.key].unit} (${ch.reason})`):['- keine']),'','Endposition:',...Object.keys(MK).filter(k=>end[k]).map(k=>`- ${MK[k].label}: ${fmtNum(end[k].value)} ${MK[k].unit}`),'',s.notes?`Beobachtungen: ${s.notes}`:'',isDemoCust(s.customerId)?'(Demo-Daten, kein medizinischer Befund)':'(Kein medizinischer Befund)'].filter((x,i,a)=>!(x===''&&a[i-1]==='')).join('\n');
 }
 
 VIEWS.verlauf = () => {
   const withMulti=S.customers.filter(c=>sessOf(c.id).filter(s=>Object.keys(s.before).length).length>=1);
-  const A=sess(ui.cmpA), B=sess(ui.cmpB);
   const candidates=S.sessions.filter(s=>Object.keys(s.before).length||Object.keys(s.after).length);
+  if(!candidates.length) return `${head('Verlauf & Vergleich','Endpositionen zweier Sitzungen nebeneinander.')}<div class="empty">${ic('history')}<span>Noch keine Sitzung mit Messwerten.</span></div>`;
+  const A=sess(ui.cmpA)||candidates[0], B=sess(ui.cmpB)||candidates[1]||candidates[0]; ui.cmpA=A.id; ui.cmpB=B.id;
   const sameBike=A&&B&&A.bikeId===B.bikeId;
   const endA=A?{...A.before,...A.after}:{}, endB=B?{...B.before,...B.after}:{};
   const rows=compareRows(endA,endB);
@@ -1724,16 +1743,208 @@ function vidPanel(s,side){
   return panel('Video oder Foto auswerten',`<div class="stack">
     <details class="more" ${vid.src?'':'open'}><summary>So nimmst du richtig auf</summary><ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">
       <li>iPhone quer halten oder auf ein Stativ, auf Hüfthöhe, genau seitlich zum Rad, etwa 2–3 m Abstand.</li><li>Rad steht gerade im Rollentrainer. Kunde trägt enge Kleidung.</li><li>Tipp: Klebepunkte auf Hüfte, Knie und Außenknöchel machen das Antippen genauer.</li><li>5–10 Sekunden locker fahren lassen und filmen.</li></ol></details>
-    <div class="row"><label class="btn primary" for="vidCam">${ic('camera')}Mit Kamera filmen</label><input class="vh" type="file" id="vidCam" accept="video/*" capture="environment" data-change="vidFile"><label class="btn" for="vidFile">Aus Mediathek</label><input class="vh" type="file" id="vidFile" accept="video/*,image/*" data-change="vidFile"></div>
+    <div class="livecta"><button class="btn primary big" data-act="liveCam" data-id="${s.id}" data-side="${side||ui.motionSide||'after'}">${ic('camera')}Live-Analyse starten</button><span class="muted" style="font-size:13.5px">Automatisch, Mittelwert über ${LIVE_N} Kurbelumdrehungen, mit Knielot und Empfehlung in mm (Beta)</span></div>
+    <div class="label">Oder selbst antippen</div>
+    <div class="row"><label class="btn" for="vidCam">${ic('camera')}Mit Kamera filmen</label><input class="vh" type="file" id="vidCam" accept="video/*" capture="environment" data-change="vidFile"><label class="btn" for="vidFile">Aus Mediathek</label><input class="vh" type="file" id="vidFile" accept="video/*,image/*" data-change="vidFile"></div>
     <div class="seg" role="group" aria-label="Was messen">${Object.entries(VMODES).map(([k,v])=>`<button data-act="vidMode" data-v="${k}" aria-pressed="${vid.mode===k}">${v.label}</button>`).join('')}</div>
     <p class="muted" style="font-size:14px">${m.tip}</p>
     <div class="stack" ${vid.src?'':'hidden'}>
       <canvas id="vidCanvas" style="width:100%;max-width:100%;border-radius:10px;background:#000;touch-action:none;cursor:crosshair" aria-label="Bild zum Antippen der Gelenkpunkte"></canvas>
       ${vid.kind==='video'?`<div class="row" style="flex-wrap:nowrap"><button class="btn sm" data-act="vidStep" data-d="-1" aria-label="Ein Bild zurück">◀</button><input type="range" id="vidSeek" min="0" max="1000" value="${vidEl&&vidEl.duration?Math.round(vid.t/vidEl.duration*1000):0}" style="flex:1;min-width:0" aria-label="Position im Video"><button class="btn sm" data-act="vidStep" data-d="1" aria-label="Ein Bild vor">▶</button></div>`:''}
-      <div class="row"><b id="vidResult" class="num" style="font-size:18px">–</b><button class="btn sm" data-act="vidReset">Punkte neu setzen</button><button class="btn sm" data-act="vidAuto">Automatisch erkennen (Beta)</button></div>
+      <div class="row"><b id="vidResult" class="num" style="font-size:18px">–</b><button class="btn sm" data-act="vidReset">Punkte neu setzen</button><button class="btn sm" data-act="vidAuto">Automatisch erkennen (Beta)</button>${vid.kind==='video'?`<button class="btn sm" data-act="liveFile" data-id="${s.id}" data-side="${side||ui.motionSide||'after'}">Ganzes Video auswerten</button>`:''}</div>
       <div class="row"><select class="input" style="width:auto" id="vidSide" aria-label="Speichern als"><option value="before">als Ausgangswert</option><option value="after" ${(side||ui.motionSide)==='after'?'selected':''}>als Endwert</option></select><button class="btn primary" data-act="vidSave" data-id="${s.id}">In Sitzung speichern</button></div>
       <p class="faint" style="font-size:12.5px">Gespeichert wird nur der Winkel, als „2D-Video (unkalibriert)“. Das Video bleibt auf diesem Gerät und wird nicht hochgeladen. Kamerawinkel und ungenaues Antippen verfälschen das Ergebnis um einige Grad.</p>
     </div></div>`,st('i'));
+}
+
+/* --- Live-Analyse: Punkte automatisch erkennen, Mittel über viele Kurbelumdrehungen --- */
+let poseVideoPromise=null;
+function loadPoseVideo(){
+  if(poseVideoPromise) return poseVideoPromise;
+  const V='0.10.14';
+  poseVideoPromise=(async()=>{
+    const m=await import(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${V}/vision_bundle.mjs`);
+    const fs=await m.FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${V}/wasm`);
+    const opt=d=>({baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task',delegate:d},runningMode:'VIDEO',numPoses:1});
+    try{ return await m.PoseLandmarker.createFromOptions(fs,opt('GPU')); }catch(e){ return await m.PoseLandmarker.createFromOptions(fs,opt('CPU')); }
+  })();
+  poseVideoPromise.catch(()=>{ poseVideoPromise=null; });
+  return poseVideoPromise;
+}
+const LIVE_N=30;
+const live={on:false,src:null,stream:null,lm:null,raf:0,frames:[],cur:[],cycles:[],prevY:null,sideScore:0,lastTs:-1,sid:null,infoT:0,last:null};
+const median=a=>{ const b=a.filter(x=>x!=null&&isFinite(x)).sort((x,y)=>x-y); if(!b.length) return null; const m=b.length>>1; return b.length%2?b[m]:(b[m-1]+b[m])/2; };
+const ang3=(a,b,c)=>{ const v1=[a.x-b.x,a.y-b.y], v2=[c.x-b.x,c.y-b.y]; return deg(Math.acos(clamp1((v1[0]*v2[0]+v1[1]*v2[1])/((Math.hypot(...v1)*Math.hypot(...v2))||1)))); };
+function crankOf(s){ const r=s.after.crankLength||s.before.crankLength; if(r) return Number(r.value); const mk=makerValues(s); return mk&&mk.r&&mk.r.crank?Number(mk.r.crank):172.5; }
+function liveFrame(lmk,W,H,t){
+  const P=i=>({x:lmk[i].x*W,y:lmk[i].y*H,v:lmk[i].visibility??1});
+  const L=[11,23,25,27,29,31], R=[12,24,26,28,30,32]; const sc=ids=>ids.reduce((a,i)=>a+(lmk[i].visibility??0),0);
+  live.sideScore=live.sideScore*0.9+(sc(L)-sc(R));
+  const [sh,hip,kn,an,heel,toe]=(live.sideScore>=0?L:R).map(P);
+  if(Math.min(hip.v,kn.v,an.v)<0.35) return null;
+  const fwd=sh.x>hip.x?1:-1;
+  const ball={x:heel.x+(toe.x-heel.x)*0.7,y:heel.y+(toe.y-heel.y)*0.7}; // Fußballen, etwa über der Pedalachse
+  return {t,knee:ang3(hip,kn,an),hipA:ang3(sh,hip,kn),torso:Math.abs(deg(Math.atan2(hip.y-sh.y,Math.abs(sh.x-hip.x)||0.001))),fwd,sh,hip,kn,an,heel,toe,ball};
+}
+function liveTrack(f){
+  live.frames.push(f); while(live.frames.length&&live.frames[0].t<f.t-3000) live.frames.shift();
+  const ys=live.frames.map(x=>x.ball.y), lo=Math.min(...ys), hi=Math.max(...ys), mid=(lo+hi)/2;
+  live.cur.push(f); const prev=live.prevY; live.prevY=f.ball.y;
+  if(prev==null||hi-lo<15) return;
+  if(prev<mid&&f.ball.y>=mid){ // Fuß geht nach unten durch die Mitte: eine Umdrehung ist vorbei
+    const c=live.cur; live.cur=[f]; if(c.length<6) return;
+    const dur=c[c.length-1].t-c[0].t; if(dur<300||dur>3000) return;
+    const cy=c.map(x=>x.ball.y), yr=Math.max(...cy)-Math.min(...cy); if(yr<15) return;
+    const fwd=median(c.map(x=>x.fwd))>=0?1:-1; const midC=(Math.max(...cy)+Math.min(...cy))/2;
+    // Kurbel waagerecht vorn = Fuß kreuzt auf dem Weg nach unten die Mitte. Zwischen den zwei Bildern davor und danach interpolieren.
+    let kops=null; for(let i=c.length-2;i>=0;i--){ const A=c[i],B=c[i+1]; if(A.ball.y<midC&&B.ball.y>=midC){ const u=(midC-A.ball.y)/((B.ball.y-A.ball.y)||1); kops=((A.kn.x+(B.kn.x-A.kn.x)*u)-(A.ball.x+(B.ball.x-A.ball.x)*u))*fwd; break; } }
+    live.cycles.push({knee:Math.max(...c.map(x=>x.knee)),knee2:Math.min(...c.map(x=>x.knee)),hip:Math.min(...c.map(x=>x.hipA)),torso:median(c.map(x=>x.torso)),kopsPx:kops,yr,dur});
+    if(live.cycles.length>80) live.cycles.shift();
+  }
+}
+function liveResult(){
+  const cs=live.cycles.slice(-LIVE_N); if(!cs.length) return null; const s=sess(live.sid); const crank=crankOf(s);
+  const k=median(cs.map(c=>c.knee)); const mmPx=2*crank/median(cs.map(c=>c.yr));
+  const sd=Math.sqrt(cs.reduce((a,c)=>a+(c.knee-k)**2,0)/cs.length);
+  return {n:cs.length,knee:Math.round(k),hip:Math.round(median(cs.map(c=>c.hip))),torso:Math.round(median(cs.map(c=>c.torso))),kops:Math.round(median(cs.map(c=>c.kopsPx))*mmPx),crank,sd:Math.round(sd*10)/10,cad:Math.round(60000/median(cs.map(c=>c.dur)))};
+}
+/* Rechenmodell: Wie viele Millimeter Sattelhöhe ändern den Kniewinkel unten um 1°? */
+function kneeMaxAt(P,h){ let m=0; for(let d=0;d<360;d+=2) m=Math.max(m,kin({...P,h:{v:h,src:''}},d*Math.PI/180).kneeAng); return m; }
+function saddleAdvice(s,knee){
+  if(knee==null) return null; const P=simInputs(s,'after'); const h=P.h.v;
+  let slope=(kneeMaxAt(P,h+10)-kneeMaxAt(P,h-10))/20; if(!(slope>0.1&&slope<1.5)) slope=0.45;
+  const inRange=knee>=140&&knee<=150; const delta=inRange?0:Math.round((145-knee)/slope);
+  return {inRange,delta,slope,cur:h,newH:Math.round(h+delta),edge:inRange?0:Math.round(((knee<140?140:150)-knee)/slope)};
+}
+const sAdvText=a=>!a?'':a.inRange?'Kniewinkel im üblichen Bereich (140–150°). Sattelhöhe passt.':`Sattel etwa ${a.delta>0?'+':''}${a.delta} mm ${a.delta>0?'höher':'tiefer'} (Mitte des Bereichs, 145°). Mindestens ${a.edge>0?'+':''}${a.edge} mm bis in den Bereich.`;
+function kopsText(v){ if(v==null) return ''; const a=Math.abs(v); return a<=10?`Knie etwa über der Pedalachse (${v>0?'+':''}${v} mm).`:`Knie ${a} mm ${v>0?'vor':'hinter'} der Pedalachse.`; }
+function liveDraw(ctx,f){
+  const lw=Math.max(3,ctx.canvas.width/220), r=lw*1.8; ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+  ctx.lineWidth=lw; ctx.strokeStyle='#ff8030'; ctx.fillStyle='#ff8030'; ctx.lineCap='round';
+  const line=(...p)=>{ ctx.beginPath(); ctx.moveTo(p[0].x,p[0].y); p.slice(1).forEach(q=>ctx.lineTo(q.x,q.y)); ctx.stroke(); };
+  line(f.sh,f.hip,f.kn,f.an); ctx.strokeStyle='#ffd0a8'; line(f.heel,f.toe); ctx.strokeStyle='#ff8030';
+  [f.sh,f.hip,f.kn,f.an,f.ball].forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2); ctx.fill(); });
+  ctx.setLineDash([lw*3,lw*2]); ctx.strokeStyle='#5ad1ff'; ctx.beginPath(); ctx.moveTo(f.kn.x,f.kn.y); ctx.lineTo(f.kn.x,ctx.canvas.height); ctx.stroke(); ctx.setLineDash([]);
+  ctx.font=`700 ${Math.round(r*4)}px Figtree, sans-serif`; ctx.lineWidth=4; ctx.strokeStyle='rgba(0,0,0,.65)'; ctx.fillStyle='#fff';
+  const t=Math.round(f.knee)+'°'; ctx.strokeText(t,f.kn.x+r*2.5,f.kn.y); ctx.fillText(t,f.kn.x+r*2.5,f.kn.y);
+}
+function liveInfo(final){
+  const box=document.getElementById('liveInfo'); if(!box) return; const now=performance.now(); if(!final&&now-live.infoT<300) return; live.infoT=now;
+  const r=liveResult(); const s=sess(live.sid);
+  if(!r){ box.innerHTML=`<div class="statusbox"><div><b>${live.status||'Warte auf Bewegung …'}</b><span class="muted" style="font-size:14px">Ganze Person und Pedal müssen im Bild sein. Gezählt wird ab der ersten vollen Umdrehung.</span></div></div>`; return; }
+  const a=saddleAdvice(s,r.knee); live.last=r;
+  box.innerHTML=`<div class="statusbox ${r.n>=LIVE_N?'ok':''}"><div style="flex:1;min-width:0"><b>${r.n>=LIVE_N?'Genug Umdrehungen für einen stabilen Mittelwert':`${r.n} von ${LIVE_N} Umdrehungen`}</b><span class="muted" style="font-size:14px">Trittfrequenz etwa ${r.cad} U/min · Streuung Kniewinkel ±${fmtNum(r.sd)}°</span></div></div>
+  <div class="cmp"><div class="li"><div class="grow"><div class="t">Kniewinkel unten</div><div class="sub" style="white-space:normal">${esc(sAdvText(a))}</div></div><span class="v"><b>${r.knee}°</b></span></div>
+  <div class="li"><div class="grow"><div class="t">Knielot (Kurbel waagerecht vorn)</div><div class="sub" style="white-space:normal">${esc(kopsText(r.kops))} Geschätzt über die Kurbellänge (${fmtNum(r.crank)} mm), etwa ±10 mm.</div></div><span class="v"><b>${r.kops>0?'+':''}${r.kops} mm</b></span></div>
+  <div class="li"><div class="grow"><div class="t">Hüftwinkel oben</div></div><span class="v"><b>${r.hip}°</b></span></div>
+  <div class="li"><div class="grow"><div class="t">Oberkörperwinkel</div></div><span class="v"><b>${r.torso}°</b></span></div></div>`;
+}
+async function liveLoop(){
+  if(!live.on) return; const el=document.getElementById('liveVideo'), cv=document.getElementById('liveCanvas'); if(!el||!cv){ liveStop(); return; }
+  if(el.readyState>=2&&el.videoWidth){
+    if(cv.width!==el.videoWidth){ cv.width=el.videoWidth; cv.height=el.videoHeight; }
+    const ts=live.src==='file'?el.currentTime*1000:performance.now();
+    if(ts>live.lastTs){ live.lastTs=ts; try{ const r=live.lm.detectForVideo(el,ts); const lmk=r&&r.landmarks&&r.landmarks[0];
+      if(lmk){ const f=liveFrame(lmk,cv.width,cv.height,ts); if(f){ live.status=''; liveTrack(f); liveDraw(cv.getContext('2d'),f); } else live.status='Hüfte, Knie oder Knöchel nicht sicher erkannt'; } else { live.status='Keine Person erkannt'; cv.getContext('2d').clearRect(0,0,cv.width,cv.height); } }catch(e){ live.status='Erkennung fehlgeschlagen'; } }
+    liveInfo();
+  }
+  if(live.src==='file'&&el.ended){ live.on=false; liveInfo(true); const b=document.getElementById('liveState'); if(b) b.textContent='Video fertig ausgewertet.'; return; }
+  live.raf=requestAnimationFrame(liveLoop);
+}
+function liveStop(){ live.on=false; cancelAnimationFrame(live.raf); if(live.stream){ live.stream.getTracks().forEach(t=>t.stop()); live.stream=null; } const el=document.getElementById('liveVideo'); if(el){ try{ el.pause(); }catch(e){} } }
+function liveReset(){ live.frames=[]; live.cur=[]; live.cycles=[]; live.prevY=null; live.last=null; live.lastTs=-1; liveInfo(true); }
+async function liveOpen(sid,src,side){
+  liveStop(); live.sid=sid; live.src=src; liveReset(); live.status='Erkennung wird geladen …';
+  openDrawer('Live-Analyse (Beta)',`<div class="stack">
+    <p class="muted" style="font-size:14px">${src==='cam'?'iPhone quer auf ein Stativ, genau seitlich auf Hüfthöhe, 2–3 m Abstand. Ganze Person mit Pedal im Bild. Kunde fährt locker. Die App erkennt Schulter, Hüfte, Knie, Knöchel und Fuß selbst und bildet den Mittelwert über '+LIVE_N+' Umdrehungen.':'Das geladene Video wird abgespielt und Bild für Bild ausgewertet.'}</p>
+    <div class="livewrap"><video id="liveVideo" playsinline muted autoplay></video><canvas id="liveCanvas" aria-hidden="true"></canvas></div>
+    <p id="liveState" class="faint" style="font-size:13px">Erkennung wird geladen (beim ersten Mal etwa 6 MB) …</p>
+    <div id="liveInfo"></div>
+    <div class="row"><select class="input" style="width:auto" id="liveSide" aria-label="Speichern als"><option value="before">als Ausgangswert</option><option value="after" ${side==='after'?'selected':''}>als Endwert</option></select><button class="btn primary" data-act="liveSave">Werte speichern</button><button class="btn" data-act="liveReset">Neu zählen</button></div>
+    <p class="faint" style="font-size:12.5px">Beta. Braucht beim Start Internet und läuft nur über den GitHub-Link. Die Erkennung (Google MediaPipe) rechnet auf diesem Gerät, das Video wird nicht hochgeladen. 2D-Kamera: Ein schräger Kamerawinkel verfälscht die Werte um einige Grad. Das Knielot ist eine verbreitete Faustregel, keine feste Vorgabe.</p></div>`);
+  liveInfo(true);
+  const st=t=>{ const b=document.getElementById('liveState'); if(b) b.hidden=true; live.status=t; liveInfo(true); };
+  try{ live.lm=await loadPoseVideo(); }catch(e){ st(POSE_FAIL); return; }
+  const el=document.getElementById('liveVideo'); if(!el) return;
+  try{
+    if(src==='cam'){ live.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},audio:false}); el.srcObject=live.stream; }
+    else { el.src=vid.src; el.playbackRate=0.5; el.loop=false; }
+    await el.play();
+  }catch(e){ st(src==='cam'?'Kamera nicht verfügbar. Erlaube den Kamerazugriff in Safari (aA → Website-Einstellungen → Kamera) und öffne die App über den GitHub-Link.':'Video konnte nicht abgespielt werden.'); return; }
+  st(src==='cam'?'Läuft. Kunde soll locker treten.':'Wird ausgewertet (halbe Geschwindigkeit) …'); live.on=true; live.raf=requestAnimationFrame(liveLoop);
+}
+
+/* ---------- Teile-Empfehlung, Rahmen-Finder ---------- */
+function sitBoneOf(s){ const c=cust(s.customerId); const v=(s.check&&s.check.sitBone)||c.body.sitBone; return v?Number(v):null; }
+function partsAdvice(s){
+  const c=cust(s.customerId), b=bike(s.bikeId), out={}; const sb=sitBoneOf(s);
+  if(sb){ const up=['Trekking','E-Bike'].includes(b.type); const lo=sb+(up?30:20), hi=sb+(up?40:30); out.saddle={sb,lo,hi,up}; }
+  const fl=Math.max(Number(c.body.footL)||0,Number(c.body.footR)||0);
+  if(fl&&!(c.est||[]).includes('footR')){ const eu=(fl+15)/6.667; out.shoe={fl,lo:Math.round(eu*2)/2,hi:Math.round(eu*2)/2+0.5}; }
+  return out;
+}
+function partsHtml(s){
+  const p=partsAdvice(s);
+  return `<div class="stack"><h3>Sattel und Schuh</h3><div class="cmp">
+  <div class="li"><div class="grow"><div class="t">Sattelbreite</div><div class="sub" style="white-space:normal">${p.saddle?`Sitzknochenabstand ${p.saddle.sb} mm plus ${p.saddle.up?'30–40 mm (aufrechte Haltung)':'20–30 mm (sportliche Haltung)'}. Nächstliegende Breite des Herstellers wählen und probefahren.`:'Sitzknochenabstand fehlt. Messen im Körpercheck.'}</div></div><span class="v"><b>${p.saddle?`${p.saddle.lo}–${p.saddle.hi} mm`:'–'}</b></span></div>
+  <div class="li"><div class="grow"><div class="t">Schuhgröße (Orientierung)</div><div class="sub" style="white-space:normal">${p.shoe?`Aus der längeren Fußlänge (${p.shoe.fl} mm) plus 15 mm Spielraum. Radschuhe fallen je nach Hersteller unterschiedlich aus: Größentabelle des Herstellers nutzen und anprobieren.`:'Fußlänge fehlt oder ist nur geschätzt.'}</div></div><span class="v"><b>${p.shoe?`EU ${fmtNum(p.shoe.lo)}–${fmtNum(p.shoe.hi)}`:'–'}</b></span></div>
+  </div><p class="faint" style="font-size:12.5px">Faustregeln, nicht validiert. Druckmessung oder Testsattel sind genauer.</p></div>`;
+}
+function frameFinder(s){
+  const b=bike(s.bikeId); const type=ui.finderType||b.type||'alle'; const types=['alle',...new Set(geoAll().map(g=>g.type))];
+  if(!fitPosition(s)) return '';
+  const hits=[]; geoAll().filter(g=>type==='alle'||g.type===type).forEach(g=>{ const a=sizeAdvice(s,g); if(a&&a.best) hits.push({g,x:a.best}); });
+  hits.sort((p,q)=>p.x.score-q.x.score);
+  return `<div class="stack"><h3>Rahmen-Finder</h3><p class="muted" style="font-size:14px">Alle Modelle der Bibliothek, bei denen die gefittete Position mit üblichem Vorbau und 0–40 mm Spacer erreichbar ist. Oben die beste Übereinstimmung.</p>
+  <div class="field"><label for="finderType">Radtyp</label><select class="input" id="finderType" data-change="finderType" style="width:auto">${types.map(t=>`<option ${t===type?'selected':''}>${esc(t)}</option>`).join('')}</select></div>
+  ${hits.length?`<div class="cmp">${hits.slice(0,10).map(h=>`<div class="li click" data-act="finderPick" data-id="${h.g.id}"><div class="grow"><div class="t">${esc(h.g.brand+' '+h.g.model)} · <b>${esc(h.x.size)}</b></div><div class="sub">Vorbau ${h.x.stem} mm · Spacer ${h.x.spacer} mm</div></div>${ic('arrow','width="16" height="16" style="color:var(--faint);flex:none"')}</div>`).join('')}</div>${hits.length>10?`<p class="faint" style="font-size:12.5px">${hits.length-10} weitere passende Modelle.</p>`:''}`:'<p class="muted">Kein Modell dieses Typs passt ohne größere Umbauten.</p>'}</div>`;
+}
+
+/* ---------- Ladenprofil, Export, Zahlen ---------- */
+const EXTRA_ROUTES=['werkstatt','lager','portal','betrieb','hardware','module'];
+const showExtra=()=>!!(S.settings&&S.settings.extra);
+const DEMO_IDS={customers:['c1','c2','c3','c4']};
+const isDemoCust=id=>DEMO_IDS.customers.includes(id)&&!S.demoRemoved;
+function shopName(){ return (S.shop&&S.shop.name)||''; }
+function shopHtml(){ const p=S.shop||{};
+  return panel('Dein Laden',`<div class="stack"><p class="muted" style="font-size:14px">Erscheint oben im Bericht und in der Einwilligung.</p>
+  <form class="form" data-form="shop">
+    <div class="field wide"><label for="sh_n">Name des Ladens</label><input class="input" id="sh_n" name="name" value="${esc(p.name||'')}" placeholder="z. B. Radhaus Muster"></div>
+    <div class="field wide"><label for="sh_a">Adresse</label><input class="input" id="sh_a" name="addr" value="${esc(p.addr||'')}" placeholder="Straße, PLZ Ort"></div>
+    <div class="field"><label for="sh_p">Telefon</label><input class="input" id="sh_p" name="phone" type="tel" value="${esc(p.phone||'')}"></div>
+    <div class="field"><label for="sh_e">E-Mail</label><input class="input" id="sh_e" name="email" type="email" value="${esc(p.email||'')}"></div>
+    <div class="field wide"><label for="sh_w">Website</label><input class="input" id="sh_w" name="web" value="${esc(p.web||'')}"></div>
+    <div class="wide"><button class="btn primary" type="submit">Speichern</button></div></form>
+  <div class="row">${p.logo?`<img src="${p.logo}" alt="Logo" style="max-height:48px;max-width:160px;border-radius:6px;background:#fff;padding:4px">`:'<span class="muted">Noch kein Logo</span>'}<label class="btn" for="shopLogo">Logo wählen</label><input class="vh" type="file" id="shopLogo" accept="image/*" data-change="shopLogo">${p.logo?'<button class="btn ghost" data-act="shopLogoDel">Entfernen</button>':''}</div></div>`);
+}
+const csvCell=v=>{ if(v==null) return ''; const t=typeof v==='number'?String(v).replace('.',','):String(v); return /[;"\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t; };
+function sessionsCsv(){
+  const keys=Object.keys(MK);
+  const head=['Datum','Uhrzeit','Kunde','Fahrrad','Größe','Art','Status','Fitter','Ziel','Beschwerden','Änderungen',...keys.flatMap(k=>[`${MK[k].label} vorher (${MK[k].unit})`,`${MK[k].label} nachher (${MK[k].unit})`])];
+  const rows=S.sessions.slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).map(s=>{ const c=cust(s.customerId)||{}, b=bike(s.bikeId)||{};
+    return [s.date,s.time,c.name,(b.brand||'')+' '+(b.model||''),b.size,s.type,s.status,s.fitter,s.anamnesis.goal,s.anamnesis.complaints,s.changes.length,...keys.flatMap(k=>[s.before[k]?Number(s.before[k].value):null,s.after[k]?Number(s.after[k].value):null])]; });
+  return '﻿'+[head,...rows].map(r=>r.map(csvCell).join(';')).join('\r\n');
+}
+function download(name,txt,type){ const blob=new Blob([txt],{type}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); }
+function statsHtml(){
+  const m={}; S.sessions.forEach(s=>{ const k=s.date.slice(0,7); (m[k]=m[k]||{n:0,done:0,ch:0,cancel:0}); m[k].n++; if(s.status==='abgeschlossen'){ m[k].done++; m[k].ch+=s.changes.length; } if(s.status==='abgesagt') m[k].cancel++; });
+  const ks=Object.keys(m).sort().reverse().slice(0,6);
+  const comp={}; S.sessions.forEach(s=>splitVals(s.anamnesis.complaints).filter(x=>x!=='Keine'&&PRESET.complaints.o.includes(x)).forEach(x=>comp[x]=(comp[x]||0)+1)); const top=Object.entries(comp).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  return panel('Zahlen zu deinen Fittings',`<div class="stack">${ks.length?`<div class="tw"><table><thead><tr><th>Monat</th><th class="r">Fittings</th><th class="r">abgeschlossen</th><th class="r">abgesagt</th><th class="r">Ø Änderungen</th></tr></thead><tbody>${ks.map(k=>`<tr><td>${new Date(k+'-01').toLocaleDateString('de-DE',{month:'long',year:'numeric'})}</td><td class="r num">${m[k].n}</td><td class="r num">${m[k].done}</td><td class="r num">${m[k].cancel}</td><td class="r num">${m[k].done?fmtNum(Math.round(m[k].ch/m[k].done*10)/10):'–'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Noch keine Fittings.</p>'}
+  ${top.length?`<p><b>Häufigste Beschwerden:</b> ${top.map(([k,v])=>`${esc(k)} (${v})`).join(', ')}</p>`:''}
+  <div class="row"><button class="btn" data-act="exportCsv">Alle Fittings als Tabelle (CSV)</button></div><p class="faint" style="font-size:12.5px">Öffnet sich in Excel, Numbers oder Google Tabellen. Am iPhone landet die Datei in „Dateien“ → Downloads.</p></div>`);
+}
+function removeDemo(){
+  try{ localStorage.setItem('fitframe-rescue-'+Date.now(), JSON.stringify(S)); }catch(e){}
+  const sd=seed(); const cids=new Set(sd.customers.map(c=>c.id)); const bids=new Set(sd.bikes.map(b=>b.id)); const sids=new Set(sd.sessions.map(s=>s.id));
+  const n=S.customers.filter(c=>cids.has(c.id)).length;
+  S.customers=S.customers.filter(c=>!cids.has(c.id)); S.bikes=S.bikes.filter(b=>!bids.has(b.id)&&!cids.has(b.customerId)); S.sessions=S.sessions.filter(s=>!sids.has(s.id)&&!cids.has(s.customerId));
+  const wids=new Set((sd.workshop||[]).map(w=>w.id)); S.workshop=(S.workshop||[]).filter(w=>!wids.has(w.id)&&!cids.has(w.customerId));
+  const del=(key,f)=>{ const ids=new Set((sd[key]||[]).map(f)); S[key]=(S[key]||[]).filter(x=>!ids.has(f(x))); };
+  del('sales',x=>x.id); del('warranty',x=>x.id); del('services',x=>x.bikeId+'|'+x.task); del('inventory',x=>x.sku); del('team',x=>x.name); del('audit',x=>x.time+'|'+x.what);
+  Object.keys(S.messages||{}).forEach(k=>{ if(cids.has(k)) delete S.messages[k]; }); Object.keys(S.shared||{}).forEach(k=>{ if(sids.has(k)) delete S.shared[k]; });
+  S.motionMarks=(S.motionMarks||[]).filter(m=>!sids.has(m.sid));
+  S.demoRemoved=true; ui.sess=S.sessions[0]?S.sessions[0].id:null; ui.reportFor=null; ui.aiOut=null; save(); return n;
 }
 
 /* --- Motion --- */
@@ -1878,7 +2089,7 @@ function aiMessage(s){ const c=cust(s.customerId); const fu=s.followUps.find(f=>
   return `Hallo ${c.name.split(' ')[0]},\n\nvielen Dank für Ihren Termin am ${fmtDate(s.date)}. Wir haben ${s.changes.length} Einstellungen an Ihrem Fahrrad angepasst. Den Bericht finden Sie im Kundenportal.\n\nBitte fahren Sie die neue Position einige Wochen und notieren Sie, wie sie sich anfühlt.${fu?` Ihre Nachkontrolle ist am ${fmtDate(fu.due)} geplant.`:''}\n\nViele Grüße\n${s.fitter}`; }
 const AI = [['summary','Sitzung zusammenfassen',aiSummary],['missing','Fehlende Daten finden',aiMissing],['compare','Mit Vorsitzung vergleichen',aiCompare],['next','Nächste Schritte vorschlagen',aiNext],['message','Kundennachricht entwerfen',aiMessage]];
 VIEWS.ki = () => {
-  const s=sess(ui.aiSess);
+  const s=sess(ui.aiSess)||S.sessions[0]; ui.aiSess=s.id;
   return `
   ${head('KI-Assistent','Hilft bei Dokumentation, Vergleichen und Kundenkommunikation. Jeder Vorschlag ist als Vorschlag gekennzeichnet und muss geprüft werden.')}
   <div class="notice warn">${ic('warn')}<div><b>Simuliert.</b> Die Texte entstehen aus festen Regeln und den vorhandenen Daten, nicht aus einem Sprachmodell. Keine Diagnosen, keine Leistungsversprechen, keine erfundenen Messwerte. Eine echte KI-Anbindung ist ${st('x')}.</div></div>
@@ -1893,7 +2104,7 @@ VIEWS.ki = () => {
 
 /* --- Portal --- */
 VIEWS.portal = () => {
-  const c=cust(ui.portalCust); const ss=sessOf(c.id); const shared=ss.filter(s=>S.shared[s.id]); const wos=S.workshop.filter(w=>w.customerId===c.id); const msgs=S.messages[c.id]||[];
+  const c=cust(ui.portalCust)||S.customers[0]; ui.portalCust=c.id; const ss=sessOf(c.id); const shared=ss.filter(s=>S.shared[s.id]); const wos=S.workshop.filter(w=>w.customerId===c.id); const msgs=S.messages[c.id]||[];
   return `
   ${head('Kundenportal','So sieht die Kundin bzw. der Kunde die eigenen Daten. Nur freigegebene Berichte sind sichtbar.',`<select class="input" style="width:auto" data-change="portalCust" aria-label="Ansicht als Kunde">${S.customers.map(x=>`<option value="${x.id}" ${x.id===c.id?'selected':''}>Ansicht als ${esc(x.name)}</option>`).join('')}</select>`)}
   <div class="notice">${ic('info')}<div>Vorschau ${st('s')}. Ein echtes Portal braucht Anmeldung, Mandantentrennung und Hosting ${st('x')}. Freigaben und Nachrichten werden hier nur lokal gespeichert.</div></div>
@@ -2047,6 +2258,19 @@ function createSession(d){
 }
 
 const ACT = {
+  liveCam(el){ liveOpen(el.dataset.id,'cam',el.dataset.side); },
+  liveFile(el){ if(!vid.src||vid.kind!=='video'){ toast('Bitte zuerst ein Video laden',true); return; } liveOpen(el.dataset.id,'file',el.dataset.side); },
+  liveReset(){ liveReset(); },
+  liveSave(){ const r=live.last||liveResult(); if(!r){ toast('Noch keine vollständige Umdrehung erkannt',true); return; } const s=sess(live.sid); const side=document.getElementById('liveSide').value; const meth=`2D-Video live (automatisch)`;
+    [['kneeBDC',r.knee],['hipAngle',r.hip],['torsoAngle',r.torso],['kneeOverPedal',r.kops]].forEach(([k,v])=>{ s[side][k]={...mv(k,v,meth,'gemessen',k==='kneeOverPedal'?10:3),time:nowStamp(),note:`Mittel aus ${r.n} Umdrehungen`}; });
+    if(s.status==='geplant') s.status='in Arbeit'; audit(`Live-Analyse (${r.n} Umdrehungen): Knie ${r.knee}°, Knielot ${r.kops} mm (${side==='before'?'Ausgangswert':'Endwert'})`,s.id); save(); closeDrawer(); render(); toast(`Gespeichert: Kniewinkel ${r.knee}°, Knielot ${r.kops>0?'+':''}${r.kops} mm`); },
+  finderPick(el){ ui.advGeo=el.dataset.id; render(); window.scrollTo({top:0,behavior:'smooth'}); },
+  shopLogoDel(){ if(S.shop){ delete S.shop.logo; save(); render(); } },
+  exportCsv(){ try{ download(`fitframe-fittings-${today()}.csv`,sessionsCsv(),'text/csv;charset=utf-8'); toast('Tabelle erstellt'); }catch(e){ toast('Export nicht möglich',true); } },
+  shareReport(el){ const s=sess(el.dataset.id); const t=reportText(s); if(navigator.share){ navigator.share({title:'Fitting-Bericht',text:t}).catch(()=>{}); } else copyText(t); },
+  setExtra(el){ S.settings=S.settings||{}; S.settings.extra=el.dataset.v==='1'; save(); render(); toast(S.settings.extra?'Zusatzbereiche eingeblendet':'Zusatzbereiche ausgeblendet'); },
+  removeDemo(){ openDrawer('Beispielkunden entfernen',`<div class="stack"><p>Entfernt werden die 4 erfundenen Kunden mit ihren Rädern, Fittings, Werkstattaufträgen und Beispiel-Lagerartikeln.</p><div class="notice">${ic('info')}<div>Deine eigenen Kunden, Räder und Fittings bleiben. Vorher wird automatisch eine Sicherung in diesem Browser angelegt (Mehr → Deine Daten sichern).</div></div><div class="row"><button class="btn danger" data-act="removeDemoConfirm">Beispielkunden entfernen</button><button class="btn" data-act="close">Abbrechen</button></div></div>`); },
+  removeDemoConfirm(){ const n=removeDemo(); closeDrawer(); render(); toast(`${n} Beispielkunden entfernt. Deine Einträge sind geblieben.`); },
   menu(){ document.getElementById('side').classList.toggle('open'); },
   close(){ closeDrawer(); closeMenu(); },
   reset(){ const own=S.customers.filter(c=>!['c1','c2','c3','c4'].includes(c.id)).length; openDrawer('Demo zurücksetzen',`<div class="notice warn">${ic('warn')}<div>Dabei werden <b>alle deine Einträge gelöscht</b>${own?`, auch ${own} selbst angelegte Kunden`:''}. Lade vorher eine Sicherung herunter.</div></div><div class="row"><button class="btn" data-act="exportData">Erst sichern</button><button class="btn danger" data-act="resetConfirm">Trotzdem alles löschen</button><button class="btn" data-act="close">Abbrechen</button></div>`); },
@@ -2058,7 +2282,7 @@ const ACT = {
   startSession(el){ const s=sess(el.dataset.id); s.status='in Arbeit'; audit(`Fitting gestartet: ${cust(s.customerId).name}`,s.id); save(); ui.sess=s.id; ui.sessTab='anamnese'; go('sitzung'); toast('Fitting gestartet'); },
   finishSession(el){ const s=sess(el.dataset.id); const sel={value:'abgeschlossen',dataset:{id:s.id}}; CHG.sessStatus(sel); },
   addComp(el){ const s=sess(el.dataset.id); const f=checkFindings(s).find(x=>x.title===el.dataset.t); s.comp.push({t:`${f.title} – ${f.text.split('.')[0]}`,status:'geplant'}); audit(`Ausgleich eingeplant: ${f.title}`,s.id); save(); render(); toast('Ausgleich eingeplant'); },
-  prepChange(el){ ui.prepKey=el.dataset.key; render(); const h=document.getElementById('changeHead'); if(h) h.scrollIntoView({behavior:'smooth',block:'start'}); const v=document.getElementById('m_val_after'); if(v) v.focus({preventScroll:true}); },
+  prepChange(el){ ui.prepKey=el.dataset.key; ui.prepVal=el.dataset.v||''; ui.prepReason=el.dataset.reason||''; render(); const h=document.getElementById('changeHead'); if(h) h.scrollIntoView({behavior:'smooth',block:'start'}); const v=document.getElementById('m_val_after'); if(v) v.focus({preventScroll:true}); },
   exportData(){ const txt=JSON.stringify({app:'FitFrame',exported:nowStamp(),data:S}); try{ const blob=new Blob([txt],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`fitframe-sicherung-${today()}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); toast('Sicherung erstellt. Falls kein Download startet: „Als Text kopieren“ nutzen'); }catch(e){ toast('Download nicht möglich – bitte „Als Text kopieren“ nutzen',true); } },
   exportCopy(){ copyText(JSON.stringify({app:'FitFrame',exported:nowStamp(),data:S})); toast('Sicherung kopiert – füge sie z. B. in eine Notiz oder Mail an dich ein'); },
   importText(){ const t=document.getElementById('importText').value.trim(); if(!t){ toast('Bitte zuerst den Sicherungstext einfügen',true); return; } importJson(t); },
@@ -2116,7 +2340,7 @@ const ACT = {
   compareCustomer(el){ const ss=sessOf(el.dataset.id).filter(s=>Object.keys(s.before).length); if(ss.length>=2){ui.cmpA=ss[ss.length-2].id; ui.cmpB=ss[ss.length-1].id;} closeDrawer(); go('verlauf'); },
   consent(el){ const c=cust(el.dataset.id); openDrawer('Einwilligung',`<div class="stack">
     <div class="notice warn">${ic('warn')}<div>Mustertext für die Demo, keine Rechtsberatung. Vor dem Einsatz mit echten Kunden von einer Fachperson für Datenschutz prüfen lassen.</div></div>
-    <article class="panel"><div class="panel-b stack" style="font-size:14px">${CONSENT_TEXT}</div></article>
+    <article class="panel"><div class="panel-b stack" style="font-size:14px">${CONSENT_TEXT.replace('%%SHOP%%',esc(S.shop&&S.shop.name?[S.shop.name,S.shop.addr].filter(Boolean).join(', '):'[Name und Anschrift deines Ladens – unter Mehr → Dein Laden eintragen]'))}</div></article>
     <form class="stack" data-form="consent" data-id="${c.id}">
       <label class="row" style="align-items:flex-start;flex-wrap:nowrap"><input type="checkbox" name="basic" required style="margin-top:4px"><span>Ich bin einverstanden, dass meine Kontaktdaten, Körpermaße und Fahrradeinstellungen für das Bikefitting gespeichert werden.</span></label>
       <label class="row" style="align-items:flex-start;flex-wrap:nowrap"><input type="checkbox" name="health" style="margin-top:4px"><span>Ich bin ausdrücklich einverstanden, dass auch gesundheitsbezogene Angaben (Beschwerden, Ergebnisse des Körperchecks) gespeichert werden. Freiwillig.</span></label>
@@ -2191,6 +2415,7 @@ function importJson(t){
 function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
 
 const FORMS = {
+  shop(f,data){ S.shop=S.shop||{}; ['name','addr','phone','email','web'].forEach(k=>S.shop[k]=String(data.get(k)||'').trim()); save(); render(); toast('Ladendaten gespeichert'); },
   anaOne(f,data){ const s=sess(f.dataset.id); const i=Number(f.dataset.i); const k=ANA_Q[i][0]; s.anamnesis[k]=String(data.get(k)||'').trim(); if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit'; audit(`Ziel/Anamnese: ${ANA_Q[i][1]}`,s.id); save();
     ui.wIdx=i+1<ANA_Q.length?i+1:null; render(); window.scrollTo({top:0}); if(ui.wIdx==null) toast('Alle Fragen beantwortet'); },
   anaNotes(f,data){ const s=sess(f.dataset.id); s.notes=data.get('notes'); save(); toast('Notizen gespeichert'); },
@@ -2233,7 +2458,7 @@ const FORMS = {
     if(nx){ nx.closest('section').scrollIntoView({behavior:'smooth',block:'start'}); setTimeout(()=>nx.focus({preventScroll:true}),350); toast(`${MK[k].label} gespeichert – weiter mit ${MK[nextK].label}`); }
     else if(!old&&MEASURE_NOW.includes(k)){ const sn=document.querySelector('.stepnav'); if(sn) sn.scrollIntoView({behavior:'smooth',block:'end'}); toast('Alle 5 Pflichtwerte erfasst – weiter mit „Anpassen“'); }
     else toast(`${MK[k].label} gespeichert`); },
-  change(f,data){ ui.prepKey=null; const s=sess(f.dataset.id); const k=data.get('key'); const v=parseFloat(String(data.get('value')).replace(',','.')); const reason=String(data.get('reason')||'').trim();
+  change(f,data){ ui.prepKey=null; ui.prepVal=''; ui.prepReason=''; const s=sess(f.dataset.id); const k=data.get('key'); const v=parseFloat(String(data.get('value')).replace(',','.')); const reason=String(data.get('reason')||'').trim();
     if(isNaN(v)){toast('Bitte einen Zahlenwert eingeben',true);return;} if(!reason){toast('Bitte eine Begründung angeben',true);return;}
     const from=s.after[k]?s.after[k].value:(s.before[k]?s.before[k].value:null);
     const unc=data.get('unc'); s.after[k]={key:k,value:v,method:data.get('method'),source:data.get('source'),unc:unc===''?null:Number(unc),time:nowStamp()};
@@ -2259,6 +2484,8 @@ const FORMS = {
 };
 
 const CHG = {
+  finderType(el){ ui.finderType=el.value; render(); },
+  shopLogo(el){ const f=el.files&&el.files[0]; if(!f) return; const url=URL.createObjectURL(f); const img=new Image(); img.onload=()=>{ const sc=Math.min(1,400/img.naturalWidth,160/img.naturalHeight); const cv=document.createElement('canvas'); cv.width=Math.round(img.naturalWidth*sc); cv.height=Math.round(img.naturalHeight*sc); cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height); S.shop=S.shop||{}; S.shop.logo=cv.toDataURL('image/png'); URL.revokeObjectURL(url); save(); render(); toast('Logo gespeichert'); }; img.onerror=()=>toast('Bild konnte nicht geladen werden',true); img.src=url; },
   scanFile(el){ const f=el.files&&el.files[0]; if(!f) return; const url=URL.createObjectURL(f); const img=new Image(); img.onload=()=>{ scanImg[scan.view]=img; scan.src[scan.view]=url; scan.pts[scan.view]={}; scanDrawer(); toast('Foto geladen – tippe zuerst den Scheitel an'); }; img.onerror=()=>toast('Foto konnte nicht geladen werden',true); img.src=url; },
   vidFile(el){ const f=el.files&&el.files[0]; if(!f) return; vidMedia(); if(vid.src) try{ URL.revokeObjectURL(vid.src); }catch(e){}
     vid.src=URL.createObjectURL(f); vid.kind=f.type.startsWith('image')?'image':'video'; vid.pts=[]; vid.t=0;
@@ -2300,7 +2527,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); cl
 applyTheme();
 const start=(location.hash||'').slice(1);
 go(VIEWS[start]?start:'dashboard');
-window.__fitframe={scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
