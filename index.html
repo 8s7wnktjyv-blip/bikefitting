@@ -242,6 +242,13 @@ details.more[open] summary::before{content:"▾ "}
   .toasts{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
   .crumb{display:none}
 }
+@media print{
+  body{background:#fff!important}
+  body *{visibility:hidden!important}
+  .report,.report *{visibility:visible!important}
+  .report{position:absolute;left:0;top:0;width:100%;border:0!important;padding:0!important}
+  .drawer,.drawer-b{position:static!important;overflow:visible!important;box-shadow:none!important}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 canvas{max-width:100%;display:block}
 .svgwrap svg{width:100%;height:auto;display:block}
@@ -622,6 +629,13 @@ function sizeAdvice(s,g){
 }
 const geoRowObj=row=>{ const o={}; GCOLS.forEach((c,i)=>o[c]=row[i]); return o; };
 
+const CONSENT_TEXT=`<h3>Einwilligung zur Datenverarbeitung beim Bikefitting</h3>
+<p><b>Wer:</b> [Name und Anschrift deines Ladens]</p>
+<p><b>Wofür:</b> Wir speichern deine Angaben, um dein Rad an dich anzupassen, das Ergebnis zu dokumentieren und bei Nachkontrollen vergleichen zu können.</p>
+<p><b>Welche Daten:</b> Name, Kontaktdaten, Körpermaße, Fahrrad- und Einstellungsdaten. Nur wenn du zusätzlich zustimmst: Beschwerden und Ergebnisse des Körperchecks (Gesundheitsdaten nach Art. 9 DSGVO).</p>
+<p><b>Wie lange:</b> bis du die Löschung verlangst, längstens [Frist eintragen] nach dem letzten Termin.</p>
+<p><b>Deine Rechte:</b> Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit und Beschwerde bei einer Datenschutzbehörde. Du kannst die Einwilligung jederzeit widerrufen. Bis dahin bleibt die Verarbeitung rechtmäßig.</p>
+<p><b>Freiwillig:</b> Ohne Gesundheitsangaben ist ein Fitting möglich, aber weniger genau.</p>`;
 /* ---------- Seed data (fictitious) ---------- */
 function seed(){
   const S = {version:3, seededAt:today()};
@@ -806,7 +820,7 @@ const val = (rec) => rec ? rec.value : null;
 /* ---------- Navigation ---------- */
 const MAIN=[['dashboard','Start','dash'],['kunden','Kunden','users'],['sitzung','Fitting','fit'],['werkstatt','Werkstatt','wrench'],['mehr','Mehr','more']];
 const MORE=[
-  ['Fitting-Werkzeuge',[['fahrraeder','Fahrräder','bike','Alle Räder mit Einstellungen und Historie'],['geometrie','Geometrie-Bibliothek','grid','Rahmenmaße nach Hersteller, Größenberatung'],['verlauf','Verlauf & Vergleich','history','Sitzungen nebeneinander und über die Zeit'],['followup','Nachkontrollen','loop','Wer ist wann wieder dran?'],['motion','Bewegung simulieren','motion','Fahrerfigur aus den eingetragenen Maßen'],['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht, Datenlücken']]],
+  ['Fitting-Werkzeuge',[['fahrraeder','Fahrräder','bike','Alle Räder mit Einstellungen und Historie'],['geometrie','Geometrie-Bibliothek','grid','Rahmenmaße nach Hersteller, Größenberatung'],['verlauf','Verlauf & Vergleich','history','Sitzungen nebeneinander und über die Zeit'],['followup','Nachkontrollen','loop','Wer ist wann wieder dran?'],['motion','Bewegung & Video','motion','Winkel aus Video messen oder simulieren'],['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht, Datenlücken']]],
   ['Laden & Kunden',[['portal','Kundenportal','portal','So sehen Kunden ihre Berichte'],['lager','Lager & Verkauf','box','Bestand, Verkäufe, Garantie'],['betrieb','Team & Zahlen','ops','Auslastung, Rollen, Kennzahlen']]],
   ['Für Profis',[['qualitaet','Messdaten & Qualität','quality','Herkunft und Vollständigkeit aller Werte'],['hardware','Hardware Lab','hw','Geplante eigene Messhilfen'],['module','Alle Module','grid','Gesamtplan und Stand der Demo']]]
 ];
@@ -887,6 +901,7 @@ function quality(s){
   const out=[];
   const c=cust(s.customerId);
   if(!c.consent) out.push(['bad','Einwilligung zur Datenverarbeitung fehlt','Vor Erfassung von Beschwerden einholen']);
+  else if(c.consentInfo&&!c.consentInfo.health&&(s.anamnesis.complaints||Object.keys(s.check||{}).length)) out.push(['warn','Gesundheitsangaben gespeichert, aber keine Zustimmung dafür','Einwilligung ergänzen oder Angaben entfernen']);
   if(!s.anamnesis.goal) out.push(['warn','Fitting-Ziel nicht dokumentiert','Anamnese']);
   if(s.status!=='geplant'){
     REQUIRED.forEach(k=>{ if(!s.before[k]) out.push(['warn',`Ausgangswert fehlt: ${MK[k].label}`,'Ausgangsposition']); });
@@ -1250,8 +1265,9 @@ function reportHtml(s){
   ${s.notes?`<div class="sec"><h3>Beobachtungen</h3><p>${esc(s.notes)}</p></div>`:''}
   <div class="sec"><h3>Nächste Schritte</h3><p>${fu.length?fu.map(f=>`Nachkontrolle am ${fmtDate(f.due)} (${f.days} Tage).`).join(' '):'Nachkontrolle nach 4–6 Wochen empfohlen.'} Bitte melden Sie neue Beschwerden früher.</p></div>
   ${q.length?`<div class="sec"><h3>Offene Punkte zur Datenqualität</h3><ul style="margin:0;padding-left:18px">${q.map(x=>`<li>${esc(x[1])}</li>`).join('')}</ul></div>`:''}
-  <p class="fine" style="margin-top:18px">Demo-Bericht mit fiktiven Daten. Kein medizinischer Befund. Winkel aus unkalibriertem Video sind Orientierungswerte. Ein PDF-Export braucht ein Backend und ist in dieser Demo nicht enthalten.</p></article>
-  <div class="row"><button class="btn" data-act="copyReport" data-id="${s.id}">${ic('copy')}Berichtstext kopieren</button></div>`;
+  <p class="fine" style="margin-top:18px">Demo-Bericht mit fiktiven Daten. Kein medizinischer Befund. Winkel aus unkalibriertem Video sind Orientierungswerte. Erstellt mit FitFrame.</p></article>
+  <div class="row"><button class="btn primary" data-act="printReport">${ic('doc')}Drucken oder als PDF sichern</button><button class="btn" data-act="copyReport" data-id="${s.id}">${ic('copy')}Berichtstext kopieren</button></div>
+  <p class="faint" style="font-size:12.5px">Am iPhone: Drucken → oben auf Teilen → „In Dateien sichern“ ergibt ein PDF. Funktioniert über den GitHub-Link, nicht in der Claude-Vorschau.</p>`;
 }
 function reportText(s){
   const c=cust(s.customerId),b=bike(s.bikeId);
@@ -1388,6 +1404,59 @@ function simCaptureInto(s,side,withFit){
   return {n,r};
 }
 
+/* --- Video- und Fotoauswertung (echte Messung, unkalibriert) --- */
+const VMODES={
+  knee:{label:'Kniewinkel',key:'kneeBDC',pts:['Hüfte','Knie','Knöchel'],tip:'Video an die Stelle schieben, an der die Kurbel ganz unten steht. Dann nacheinander antippen: Hüfte (großer Knochen außen), Knie (Mitte), Außenknöchel.'},
+  hip:{label:'Hüftwinkel',key:'hipAngle',pts:['Schulter','Hüfte','Knie'],tip:'Kurbel ganz oben. Nacheinander antippen: Schulter, Hüfte, Knie.'},
+  torso:{label:'Oberkörperwinkel',key:'torsoAngle',pts:['Hüfte','Schulter'],tip:'Hände an den Bremsgriffen. Nacheinander antippen: Hüfte, Schulter. Gemessen wird zur Waagerechten.'}
+};
+const vid={src:null,kind:null,mode:'knee',pts:[],t:0};
+let vidEl=null, imgEl=null;
+function vidMedia(){
+  if(!vidEl){ vidEl=document.createElement('video'); vidEl.muted=true; vidEl.playsInline=true; vidEl.setAttribute('playsinline',''); vidEl.preload='auto'; vidEl.style.cssText='position:fixed;left:-9999px;width:2px;height:2px;opacity:0'; document.body.appendChild(vidEl); vidEl.addEventListener('seeked',drawVid); vidEl.addEventListener('loadeddata',()=>{ try{ vidEl.currentTime=Math.min(0.05,vidEl.duration||0); }catch(e){} drawVid(); }); }
+  if(!imgEl){ imgEl=new Image(); imgEl.onload=drawVid; }
+}
+function vidAngle(){
+  const m=VMODES[vid.mode], p=vid.pts; if(p.length<m.pts.length) return null;
+  if(vid.mode==='torso'){ const dx=p[1][0]-p[0][0], dy=p[0][1]-p[1][1]; return Math.round(Math.abs(Math.atan2(dy,Math.abs(dx))*180/Math.PI)); }
+  const [a,b,c]=p; const v1=[a[0]-b[0],a[1]-b[1]], v2=[c[0]-b[0],c[1]-b[1]];
+  return Math.round(Math.acos(Math.max(-1,Math.min(1,(v1[0]*v2[0]+v1[1]*v2[1])/(Math.hypot(...v1)*Math.hypot(...v2)))))*180/Math.PI);
+}
+function drawVid(){
+  const cv=document.getElementById('vidCanvas'); if(!cv||!vid.src) return; const el=vid.kind==='video'?vidEl:imgEl;
+  const w=vid.kind==='video'?el.videoWidth:el.naturalWidth, h=vid.kind==='video'?el.videoHeight:el.naturalHeight; if(!w||!h) return;
+  const sc=Math.min(1,1000/w); cv.width=Math.round(w*sc); cv.height=Math.round(h*sc);
+  const ctx=cv.getContext('2d'); ctx.drawImage(el,0,0,cv.width,cv.height);
+  const r=Math.max(6,cv.width/120); ctx.lineWidth=Math.max(3,cv.width/250); ctx.strokeStyle='#ff8030'; ctx.fillStyle='#ff8030'; ctx.font=`600 ${Math.round(r*2.4)}px Figtree, sans-serif`;
+  const p=vid.pts; if(p.length>1){ ctx.beginPath(); ctx.moveTo(...p[0]); p.slice(1).forEach(q=>ctx.lineTo(...q)); ctx.stroke(); }
+  if(vid.mode==='torso'&&p.length===2){ ctx.setLineDash([8,6]); ctx.beginPath(); ctx.moveTo(...p[0]); ctx.lineTo(p[0][0]+(p[1][0]>p[0][0]?1:-1)*cv.width*0.25,p[0][1]); ctx.stroke(); ctx.setLineDash([]); }
+  p.forEach((q,i)=>{ ctx.beginPath(); ctx.arc(q[0],q[1],r,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#fff'; ctx.fillText(VMODES[vid.mode].pts[i],q[0]+r*1.6,q[1]-r); ctx.fillStyle='#ff8030'; });
+  const ang=vidAngle(); const out=document.getElementById('vidResult'); if(out) out.textContent=ang!=null?`${VMODES[vid.mode].label}: ${ang}°`:`Tippe: ${VMODES[vid.mode].pts[p.length]}`;
+  if(ang!=null&&p.length>=2){ const q=p[vid.mode==='torso'?0:1]; ctx.fillStyle='#fff'; ctx.strokeStyle='rgba(0,0,0,.6)'; ctx.lineWidth=4; const t=ang+'°'; ctx.strokeText(t,q[0]-r*5,q[1]+r*3.5); ctx.fillText(t,q[0]-r*5,q[1]+r*3.5); }
+}
+function wireVid(){
+  const cv=document.getElementById('vidCanvas'); if(!cv) return;
+  cv.addEventListener('pointerdown',e=>{ const rc=cv.getBoundingClientRect(); const x=(e.clientX-rc.left)*cv.width/rc.width, y=(e.clientY-rc.top)*cv.height/rc.height; const need=VMODES[vid.mode].pts.length; if(vid.pts.length>=need) vid.pts=[]; vid.pts.push([x,y]); drawVid(); });
+  const sk=document.getElementById('vidSeek'); if(sk) sk.addEventListener('input',()=>{ if(vidEl&&vidEl.duration){ vid.t=vidEl.duration*Number(sk.value)/1000; vidEl.currentTime=vid.t; } });
+  if(vid.src) setTimeout(drawVid,30);
+}
+function vidPanel(s){
+  const m=VMODES[vid.mode];
+  return panel('Video oder Foto auswerten',`<div class="stack">
+    <details class="more" ${vid.src?'':'open'}><summary>So nimmst du richtig auf</summary><ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">
+      <li>iPhone quer halten oder auf ein Stativ, auf Hüfthöhe, genau seitlich zum Rad, etwa 2–3 m Abstand.</li><li>Rad steht gerade im Rollentrainer. Kunde trägt enge Kleidung.</li><li>Tipp: Klebepunkte auf Hüfte, Knie und Außenknöchel machen das Antippen genauer.</li><li>5–10 Sekunden locker fahren lassen und filmen.</li></ol></details>
+    <div class="field"><label for="vidFile">Video oder Foto wählen (am iPhone auch direkt aufnehmen)</label><input type="file" id="vidFile" accept="video/*,image/*" class="input" data-change="vidFile"></div>
+    <div class="seg" role="group" aria-label="Was messen">${Object.entries(VMODES).map(([k,v])=>`<button data-act="vidMode" data-v="${k}" aria-pressed="${vid.mode===k}">${v.label}</button>`).join('')}</div>
+    <p class="muted" style="font-size:14px">${m.tip}</p>
+    <div class="stack" ${vid.src?'':'hidden'}>
+      <canvas id="vidCanvas" style="width:100%;max-width:100%;border-radius:10px;background:#000;touch-action:none;cursor:crosshair" aria-label="Bild zum Antippen der Gelenkpunkte"></canvas>
+      ${vid.kind==='video'?`<div class="row" style="flex-wrap:nowrap"><button class="btn sm" data-act="vidStep" data-d="-1" aria-label="Ein Bild zurück">◀</button><input type="range" id="vidSeek" min="0" max="1000" value="${vidEl&&vidEl.duration?Math.round(vid.t/vidEl.duration*1000):0}" style="flex:1;min-width:0" aria-label="Position im Video"><button class="btn sm" data-act="vidStep" data-d="1" aria-label="Ein Bild vor">▶</button></div>`:''}
+      <div class="row"><b id="vidResult" class="num" style="font-size:18px">–</b><button class="btn sm" data-act="vidReset">Punkte neu setzen</button></div>
+      <div class="row"><select class="input" style="width:auto" id="vidSide" aria-label="Speichern als"><option value="before">als Ausgangswert</option><option value="after" ${ui.motionSide==='after'?'selected':''}>als Endwert</option></select><button class="btn primary" data-act="vidSave" data-id="${s.id}">In Sitzung speichern</button></div>
+      <p class="faint" style="font-size:12.5px">Gespeichert wird nur der Winkel, als „2D-Video (unkalibriert)“. Das Video bleibt auf diesem Gerät und wird nicht hochgeladen. Kamerawinkel und ungenaues Antippen verfälschen das Ergebnis um einige Grad.</p>
+    </div></div>`,st('i'));
+}
+
 /* --- Motion --- */
 VIEWS.motion = () => {
   const s=sess(ui.motionSess)||S.sessions[0]; ui.motionSess=s.id;
@@ -1397,7 +1466,9 @@ VIEWS.motion = () => {
   const srcCls={eingetragen:'c-ok','aus Sitzung':'c-ok',geschätzt:'c-warn','aus Körpergröße':'c-warn',berechnet:'c-info',Standardwert:'c-bad'};
   const defaults=rows.filter(x=>x[1].src==='Standardwert').length;
   return `
-  ${head('Motion & Video','Simulierte Bewegungsanalyse: Die Figur wird aus den eingetragenen Körpermaßen und den Einstellungen der Sitzung berechnet.')}
+  ${head('Bewegung & Video','Miss Winkel aus einem echten Video oder Foto, oder simuliere die Bewegung aus den eingetragenen Maßen.')}
+  ${vidPanel(s)}
+  <h2>Simulation</h2>
   <div class="notice warn">${ic('warn')}<div><b>Simulation, keine Kamera.</b> Es wird nichts gefilmt oder gescannt. Winkel sind Rechenwerte aus einem vereinfachten Modell und keine Messung. Je mehr echte Maße eingetragen sind, desto näher liegt die Figur an der Person.</div></div>
   <div class="grid g-main">
     ${panel('Analyse',`<div class="stack"><div class="row" style="justify-content:space-between">
@@ -1669,7 +1740,7 @@ VIEWS.module = () => `
 function afterRender(){
   labelTables(document.getElementById('view'));
   cancelAnimationFrame(motion.raf); motion.playing=false; motion.last=0;
-  if(ui.route==='motion'){ const cv=document.getElementById('motionCanvas'); if(cv){ drawMotion(cv); } }
+  if(ui.route==='motion'){ const cv=document.getElementById('motionCanvas'); if(cv){ drawMotion(cv); } wireVid(); }
   if(ui.focus){ const el=document.getElementById(ui.focus); if(el){ el.focus(); const v=el.value; try{el.setSelectionRange(v.length,v.length);}catch(e){} } ui.focus=null; }
 }
 
@@ -1711,6 +1782,12 @@ const ACT = {
   exportCopy(){ copyText(JSON.stringify({app:'FitFrame',exported:nowStamp(),data:S})); toast('Sicherung kopiert – füge sie z. B. in eine Notiz oder Mail an dich ein'); },
   importText(){ const t=document.getElementById('importText').value.trim(); if(!t){ toast('Bitte zuerst den Sicherungstext einfügen',true); return; } importJson(t); },
   restoreKey(el){ try{ importJson(localStorage.getItem(el.dataset.k)); }catch(e){ toast('Sicherung nicht lesbar',true); } },
+  vidMode(el){ vid.mode=el.dataset.v; vid.pts=[]; render(); },
+  vidReset(){ vid.pts=[]; drawVid(); },
+  vidStep(el){ if(!vidEl||!vidEl.duration) return; vid.t=Math.max(0,Math.min(vidEl.duration,vidEl.currentTime+Number(el.dataset.d)/30)); vidEl.currentTime=vid.t; const sk=document.getElementById('vidSeek'); if(sk) sk.value=Math.round(vid.t/vidEl.duration*1000); },
+  vidSave(el){ const ang=vidAngle(); if(ang==null){ toast(`Bitte erst alle Punkte antippen: ${VMODES[vid.mode].pts.join(', ')}`,true); return; } const s=sess(el.dataset.id); const side=document.getElementById('vidSide').value; const key=VMODES[vid.mode].key;
+    s[side][key]={...mv(key,ang,'2D-Video (unkalibriert)','gemessen',null),time:nowStamp()}; if(s.status==='geplant') s.status='in Arbeit';
+    audit(`${MK[key].label} aus Video gemessen: ${ang}° (${side==='before'?'Ausgangswert':'Endwert'})`,s.id); save(); toast(`${MK[key].label} ${ang}° in der Sitzung gespeichert`); },
   findCustomer(){ ui.focus='custSearch'; go('kunden'); },
   scrollToday(){ const t=document.getElementById('today'); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); },
   stInfo(el){ const k=STATUS[el.dataset.k]; toast(`${k[1]}: ${k[2]}`); },
@@ -1722,7 +1799,15 @@ const ACT = {
   openWO(el){ woDrawer(el.dataset.id); },
   clearSearch(){ ui.search=''; render(); },
   compareCustomer(el){ const ss=sessOf(el.dataset.id).filter(s=>Object.keys(s.before).length); if(ss.length>=2){ui.cmpA=ss[ss.length-2].id; ui.cmpB=ss[ss.length-1].id;} closeDrawer(); go('verlauf'); },
-  consent(el){ const c=cust(el.dataset.id); c.consent=true; audit(`Einwilligung erfasst: ${c.name}`); save(); toast('Einwilligung gespeichert (Demo, ohne Unterschrift)'); if(drawerCtx&&drawerCtx.type==='customer') customerDrawer(c.id); render(); },
+  consent(el){ const c=cust(el.dataset.id); openDrawer('Einwilligung',`<div class="stack">
+    <div class="notice warn">${ic('warn')}<div>Mustertext für die Demo, keine Rechtsberatung. Vor dem Einsatz mit echten Kunden von einer Fachperson für Datenschutz prüfen lassen.</div></div>
+    <article class="panel"><div class="panel-b stack" style="font-size:14px">${CONSENT_TEXT}</div></article>
+    <form class="stack" data-form="consent" data-id="${c.id}">
+      <label class="row" style="align-items:flex-start;flex-wrap:nowrap"><input type="checkbox" name="basic" required style="margin-top:4px"><span>Ich bin einverstanden, dass meine Kontaktdaten, Körpermaße und Fahrradeinstellungen für das Bikefitting gespeichert werden.</span></label>
+      <label class="row" style="align-items:flex-start;flex-wrap:nowrap"><input type="checkbox" name="health" style="margin-top:4px"><span>Ich bin ausdrücklich einverstanden, dass auch gesundheitsbezogene Angaben (Beschwerden, Ergebnisse des Körperchecks) gespeichert werden. Freiwillig.</span></label>
+      <div class="field"><label for="cs_name">Name der Kundin / des Kunden zur Bestätigung</label><input class="input" id="cs_name" name="name" required value="" placeholder="${esc(c.name)}"></div>
+      <div><button class="btn primary" type="submit">Einwilligung speichern</button></div></form></div>`); },
+  printReport(){ if(window.self!==window.top){ toast('Drucken geht hier nicht. Öffne die App über den GitHub-Link und tippe dort auf „Drucken“.',true); return; } try{ window.print(); }catch(e){ toast('Drucken nicht möglich',true); } },
   newCustomer(){ openDrawer('Kunde anlegen',`<form class="form" data-form="customer"><div class="field wide"><label for="nc_n">Name</label><input class="input" id="nc_n" name="name" required placeholder="Vor- und Nachname (fiktiv)"></div><div class="field"><label for="nc_e">E-Mail</label><input class="input" id="nc_e" name="email" type="email" placeholder="name@example.com"></div><div class="field"><label for="nc_p">Telefon</label><input class="input" id="nc_p" name="phone" type="tel"></div><div class="field"><label for="nc_d">Disziplin</label><select class="input" id="nc_d" name="discipline">${opts(['Rennrad','Gravel','MTB','Triathlon','E-Bike Pendeln','Allroad'])}</select></div>${[["height","Körpergröße","cm"],["inseam","Schrittlänge","cm"],["torso","Rumpflänge","cm"],["arm","Armlänge","cm"],["footR","Fußlänge","mm"]].map(([k,l,u])=>`<div class="field"><label for="nc_${k}">${l} (${u})</label><input class="input num" id="nc_${k}" name="${k}" type="number" step="0.5" inputmode="decimal"></div>`).join("")}<div class="field"><label for="nc_ham">Hintere Oberschenkel</label><select class="input" id="nc_ham" name="hamstring">${opts(["unauffällig","eingeschränkt"])}</select></div><div class="field wide"><label><input type="checkbox" name="est" checked> Fehlende Maße aus der Körpergröße schätzen</label></div><div class="field wide"><label><input type="checkbox" name="consent"> Einwilligung zur Datenverarbeitung liegt vor</label></div><div class="wide notice">${ic('info')}Bitte keine echten Personendaten eingeben. Die Demo speichert nur unverschlüsselt im Browser.</div><div class="wide"><button class="btn primary" type="submit">Kunde anlegen</button></div></form>`); },
   newBike(el){ openDrawer('Fahrrad anlegen',`<form class="form" data-form="bike" data-cid="${el.dataset.id}">
     <div class="field wide"><label for="nb_geo">Modell aus der Geometrie-Bibliothek</label><select class="input" id="nb_geo" name="geo" data-change="geoPick" data-size="nb_gs" data-fill="1"><option value="">Nicht in der Liste – selbst eintragen</option>${geoOptions('')}</select></div>
@@ -1789,6 +1874,8 @@ function importJson(t){
 function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
 
 const FORMS = {
+  consent(f,data){ const c=cust(f.dataset.id); if(String(data.get('name')).trim().toLowerCase()!==c.name.trim().toLowerCase()){ toast(`Bitte den Namen „${c.name}“ genau eintragen`,true); return; }
+    c.consent=true; c.consentInfo={date:nowStamp(),health:data.get('health')==='on',version:'Muster 1'}; audit(`Einwilligung erfasst: ${c.name}${c.consentInfo.health?' inkl. Gesundheitsangaben':''}`); save(); closeDrawer(); render(); toast('Einwilligung gespeichert'); },
   bikeGeo(f,data){ const b=bike(f.dataset.id); const g=geoById(data.get('geo')); if(!g||!data.get('geoSize')){ toast('Bitte Modell und Größe wählen',true); return; } b.geo={id:g.id,size:data.get('geoSize')}; b.size=b.geo.size; audit(`Geometrie zugeordnet: ${b.brand} ${b.model} → ${g.brand} ${g.model} ${b.geo.size}`); save(); bikeDrawer(b.id); render(); toast('Geometrie zugeordnet'); },
   newGeo(f,data){ const id=uid('g'); S.geoCustom.push({id,brand:data.get('brand').trim(),model:data.get('model').trim(),year:data.get('year')?Number(data.get('year')):null,type:data.get('type'),src:data.get('src')||'',rows:[]}); audit(`Geometrie-Modell angelegt: ${data.get('brand')} ${data.get('model')}`); save(); render(); geoDrawer(id); },
   geoRow(f,data){ const g=S.geoCustom.find(x=>x.id===f.dataset.id); const row=GCOLS.map(c=>{ if(c==='size') return data.get('size').trim(); const v=data.get(c); return v===null||v===''?null:Number(v); }); g.rows=g.rows.filter(r=>String(r[0])!==row[0]); g.rows.push(row); save(); geoDrawer(g.id); render(); toast(`Größe ${row[0]} gespeichert`); },
@@ -1834,6 +1921,9 @@ const FORMS = {
 };
 
 const CHG = {
+  vidFile(el){ const f=el.files&&el.files[0]; if(!f) return; vidMedia(); if(vid.src) try{ URL.revokeObjectURL(vid.src); }catch(e){}
+    vid.src=URL.createObjectURL(f); vid.kind=f.type.startsWith('image')?'image':'video'; vid.pts=[]; vid.t=0;
+    if(vid.kind==='image') imgEl.src=vid.src; else { vidEl.src=vid.src; vidEl.load(); } render(); toast(vid.kind==='image'?'Foto geladen – jetzt Punkte antippen':'Video geladen – an die richtige Stelle schieben, dann Punkte antippen'); },
   importFile(el){ const f=el.files&&el.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>importJson(String(r.result)); r.onerror=()=>toast('Datei konnte nicht gelesen werden',true); r.readAsText(f); },
   geoPick(el){ const sel=document.getElementById(el.dataset.size); const wrap=document.getElementById(el.dataset.size+'_wrap'); const g=geoById(el.value);
     if(sel){ sel.innerHTML=geoSizeOptions(el.value,''); } if(wrap) wrap.hidden=!g;
