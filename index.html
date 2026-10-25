@@ -630,14 +630,40 @@ function seed(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
+const APP_VER = '2026-10-25.6';
+let loadIssue = null;
 function load(){
-  try{ const r = localStorage.getItem(KEY); if(r){ const d = JSON.parse(r); if(d && d.version===3) return d; } }catch(e){ storageOk=false; }
+  let raw=null;
+  try{ raw=localStorage.getItem(KEY); }catch(e){ storageOk=false; return seed(); }
+  if(raw){
+    try{ const d=JSON.parse(raw); if(d && d.version===3 && Array.isArray(d.customers)) return d; loadIssue='Gespeicherte Daten hatten ein unbekanntes Format.'; }
+    catch(e){ loadIssue='Gespeicherte Daten waren nicht lesbar.'; }
+    // Nie überschreiben, ohne vorher eine Kopie zu sichern
+    try{ localStorage.setItem('fitframe-rescue-'+Date.now(), raw); }catch(e){}
+  }
   return seed();
+}
+function backupKeys(){ const out=[]; try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(/^fitframe-(rescue|before)-/.test(k)) out.push(k); } }catch(e){} return out.sort().reverse(); }
+function snapshotBeforeUpdate(){
+  if(S.appVer===APP_VER) return;
+  try{ localStorage.setItem('fitframe-before-'+APP_VER, JSON.stringify(S)); const old=backupKeys().filter(k=>k.startsWith('fitframe-before-')).slice(3); old.forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  S.appVer=APP_VER; save();
+}
+function mergeData(d){
+  const n={};
+  const byId=(key,idf)=>{ const src=d[key]||[]; S[key]=S[key]||[]; let c=0; src.forEach(x=>{ if(!S[key].some(y=>idf(y)===idf(x))){ S[key].push(x); c++; } }); n[key]=c; };
+  byId('customers',x=>x.id); byId('bikes',x=>x.id); byId('sessions',x=>x.id); byId('workshop',x=>x.id); byId('inventory',x=>x.sku);
+  byId('sales',x=>x.id); byId('warranty',x=>x.id); byId('geoCustom',x=>x.id); byId('motionMarks',x=>x.id); byId('team',x=>x.name);
+  byId('services',x=>x.bikeId+'|'+x.task); byId('audit',x=>x.time+'|'+x.what);
+  S.messages=S.messages||{}; Object.entries(d.messages||{}).forEach(([k,v])=>{ if(!S.messages[k]) S.messages[k]=v; });
+  S.shared={...(d.shared||{}),...(S.shared||{})};
+  return n;
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ storageOk=false; } }
 function audit(what,ref){ S.audit.unshift({time:nowStamp(),who:'Demo-Nutzer',what,ref:ref||''}); }
-S = load(); S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; }); S.geoCustom=S.geoCustom||[]; S.bikes.forEach(b=>{ if(!b.geo&&b.brand==='Canyon'&&b.model==='Endurace CF 7'&&b.size==='M') b.geo={id:'canyon-endurace-cf-7',size:'M'}; }); (function(){ const sd=seed(); sd.sessions.forEach(d=>{ const x=S.sessions.find(y=>y.id===d.id); if(x&&!Object.keys(x.check).length&&Object.keys(d.check||{}).length&&x.customerId===d.customerId){ x.check=d.check; x.comp=d.comp; } }); })();
+S = load(); try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){} S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; }); S.geoCustom=S.geoCustom||[]; S.bikes.forEach(b=>{ if(!b.geo&&b.brand==='Canyon'&&b.model==='Endurace CF 7'&&b.size==='M') b.geo={id:'canyon-endurace-cf-7',size:'M'}; }); (function(){ const sd=seed(); sd.sessions.forEach(d=>{ const x=S.sessions.find(y=>y.id===d.id); if(x&&!Object.keys(x.check).length&&Object.keys(d.check||{}).length&&x.customerId===d.customerId){ x.check=d.check; x.comp=d.comp; } }); })();
 
+snapshotBeforeUpdate();
 const ui = {route:'dashboard', sess:'s4', sessTab:'anamnese', cust:null, search:'', bikeSearch:'', woFilter:'alle', invSearch:'', invCat:'alle', aiSess:'s1', aiOut:null, portalCust:'c1', motionSess:'s1', motionSide:'after', cmpA:'s1', cmpB:'s2', cmpChanged:false, fitView:'after', hwSel:'cleatlab', cleatSys:'SPD-SL', apptFilter:'heute', fuFilter:'offen'};
 
 const cust = id => S.customers.find(c=>c.id===id);
@@ -771,6 +797,7 @@ VIEWS.dashboard = () => {
   S.inventory.filter(x=>x.stock<x.min).forEach(x=>att.push({icon:'box',t:`${x.name} nachbestellen`,sub:`noch ${x.stock}, Minimum ${x.min}`,a:'data-nav="lager"',chip:'<span class="chip c-warn">knapp</span>'}));
   const appt=s=>{const c=cust(s.customerId),b=bike(s.bikeId);return `<div class="li"><span class="time">${esc(s.time)}</span><div class="avatar">${initials(c.name)}</div><div class="grow"><div class="t">${esc(c.name)}</div><div class="sub">${esc(s.type)} · ${esc(b.brand+' '+b.model)}</div></div>${sessChip(s.status)}${s.status==='geplant'||s.status==='eingetroffen'?`<button class="btn sm primary" data-act="startSession" data-id="${s.id}">Starten</button>`:`<button class="btn sm" data-act="openSession" data-id="${s.id}">Öffnen</button>`}</div>`;};
   return `
+  ${loadIssue?`<div class="notice warn">${ic('warn')}<div><b>${esc(loadIssue)}</b> Eine Kopie wurde gesichert. Unter Mehr → Deine Daten sichern kannst du sie wiederherstellen.</div></div>`:''}
   <div class="pagehead"><div><h1>${greet}!</h1><p>${new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})} · ${todays.length?`Heute ${todays.length===1?'steht 1 Fitting':'stehen '+todays.length+' Fittings'} an.`:'Heute ist kein Fitting geplant.'}</p></div></div>
   <div class="tiles">
     <button class="tile main" data-act="newSession"><span class="ti">${ic('plus')}</span><b>Neues Fitting</b><span>Kunde wählen und loslegen</span></button>
@@ -811,9 +838,22 @@ function geoDrawer(id){
 }
 function geoOptions(sel){ const by={}; geoAll().forEach(g=>(by[g.brand]=by[g.brand]||[]).push(g)); return Object.entries(by).map(([b,list])=>`<optgroup label="${esc(b)}">${list.map(g=>`<option value="${g.id}" ${g.id===sel?'selected':''}>${esc(g.brand+' '+g.model)}</option>`).join('')}</optgroup>`).join(''); }
 function geoSizeOptions(id,sel){ const g=id?geoById(id):null; return g?g.rows.map(r=>`<option value="${esc(r[0])}" ${String(r[0])===String(sel)?'selected':''}>${esc(r[0])}</option>`).join(''):''; }
+function dataPanel(){
+  const bk=backupKeys(); const own=S.customers.filter(c=>!['c1','c2','c3','c4'].includes(c.id)).length;
+  return panel('Deine Daten sichern',`<div class="stack">
+  <div class="notice warn">${ic('warn')}<div><b>Wo deine Einträge liegen:</b> nur in diesem Browser auf diesem Gerät, unter dieser Adresse (<span class="mono">${esc(location.host||'lokale Datei')}</span>). Ein anderer Link, ein anderes Gerät oder der private Modus haben eigene, leere Daten. Safari kann Daten von Webseiten löschen, die du länger als 7 Tage nicht geöffnet hast. Sichere deshalb regelmäßig.</div></div>
+  <p>${S.customers.length} Kunden gespeichert, davon ${own} selbst angelegt.</p>
+  <div class="row"><button class="btn primary" data-act="exportData">Sicherung herunterladen</button><button class="btn" data-act="exportCopy">${ic('copy')}Als Text kopieren</button></div>
+  <details class="more"><summary>Sicherung laden</summary><div class="stack" style="margin-top:10px"><p class="muted" style="font-size:13.5px">Fehlende Kunden, Fahrräder und Fittings werden ergänzt. Vorhandene Einträge bleiben unverändert.</p>
+  <input class="input" type="file" id="importFile" accept=".json,application/json" data-change="importFile">
+  <textarea class="input" id="importText" placeholder="Oder kopierten Sicherungstext hier einfügen"></textarea><div><button class="btn" data-act="importText">Text laden</button></div></div></details>
+  ${bk.length?`<details class="more"><summary>Automatische Sicherungen in diesem Browser (${bk.length})</summary><div class="list" style="margin-top:8px">${bk.map(k=>`<div class="li" style="padding:8px 0"><div class="grow">${k.startsWith('fitframe-rescue-')?'Gerettete Daten vom '+new Date(Number(k.split('-').pop())).toLocaleString('de-DE'):'Stand vor Update '+esc(k.replace('fitframe-before-',''))}</div><button class="btn sm" data-act="restoreKey" data-k="${esc(k)}">Ergänzen</button></div>`).join('')}</div></details>`:''}
+  </div>`);
+}
 VIEWS.mehr = () => `
   ${head('Mehr','Alle weiteren Bereiche von FitFrame.')}
   ${MORE.map(([g,items])=>`<div class="stack"><h2>${g}</h2><div class="tiles">${items.map(([r,l,i,d])=>`<button class="tile" data-nav="${r}"><span class="ti">${ic(i)}</span><b>${l}</b><span>${d}</span></button>`).join('')}</div></div>`).join('')}
+  ${dataPanel()}
   ${panel('Einstellungen',`<div class="stack"><div class="row" style="justify-content:space-between"><span>Darstellung</span><div class="seg"><button data-act="setTheme" data-v="light" aria-pressed="${theme==='light'}">Hell</button><button data-act="setTheme" data-v="dark" aria-pressed="${theme==='dark'}">Dunkel</button></div></div>
   <hr><div class="row" style="justify-content:space-between"><span class="muted" style="max-width:52ch">Deine Einträge liegen nur in diesem Browser. Zurücksetzen lädt die Beispielkunden neu und löscht deine Einträge.</span><button class="btn" data-act="reset">Demo zurücksetzen</button></div></div>`)}
 `;
@@ -1523,8 +1563,8 @@ function createSession(d){
 const ACT = {
   menu(){ document.getElementById('side').classList.toggle('open'); },
   close(){ closeDrawer(); closeMenu(); },
-  reset(){ openDrawer('Demo zurücksetzen',`<p>Alle Änderungen in diesem Browser werden gelöscht und die Beispieldaten neu geladen.</p><div class="row"><button class="btn primary" data-act="resetConfirm">Zurücksetzen</button><button class="btn" data-act="close">Abbrechen</button></div>`); },
-  resetConfirm(){ S=seed(); save(); closeDrawer(); ui.reportFor=null; ui.aiOut=null; render(); toast('Demo-Daten wiederhergestellt'); },
+  reset(){ const own=S.customers.filter(c=>!['c1','c2','c3','c4'].includes(c.id)).length; openDrawer('Demo zurücksetzen',`<div class="notice warn">${ic('warn')}<div>Dabei werden <b>alle deine Einträge gelöscht</b>${own?`, auch ${own} selbst angelegte Kunden`:''}. Lade vorher eine Sicherung herunter.</div></div><div class="row"><button class="btn" data-act="exportData">Erst sichern</button><button class="btn danger" data-act="resetConfirm">Trotzdem alles löschen</button><button class="btn" data-act="close">Abbrechen</button></div>`); },
+  resetConfirm(){ try{ localStorage.setItem('fitframe-rescue-'+Date.now(), JSON.stringify(S)); }catch(e){} S=seed(); S.appVer=APP_VER; save(); closeDrawer(); ui.reportFor=null; ui.aiOut=null; render(); toast('Demo-Daten wiederhergestellt'); },
   apptFilter(el){ ui.apptFilter=el.dataset.v; render(); },
   fuFilter(el){ ui.fuFilter=el.dataset.v; render(); },
   newSession(el){ newSessionDrawer(el.dataset.cust||S.customers[0].id); },
@@ -1533,6 +1573,10 @@ const ACT = {
   finishSession(el){ const s=sess(el.dataset.id); const sel={value:'abgeschlossen',dataset:{id:s.id}}; CHG.sessStatus(sel); },
   addComp(el){ const s=sess(el.dataset.id); const f=checkFindings(s).find(x=>x.title===el.dataset.t); s.comp.push({t:`${f.title} – ${f.text.split('.')[0]}`,status:'geplant'}); audit(`Ausgleich eingeplant: ${f.title}`,s.id); save(); render(); toast('Ausgleich eingeplant'); },
   prepChange(el){ ui.prepKey=el.dataset.key; render(); const h=document.getElementById('changeHead'); if(h) h.scrollIntoView({behavior:'smooth',block:'start'}); const v=document.getElementById('m_val_after'); if(v) v.focus({preventScroll:true}); },
+  exportData(){ const txt=JSON.stringify({app:'FitFrame',exported:nowStamp(),data:S}); try{ const blob=new Blob([txt],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`fitframe-sicherung-${today()}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); toast('Sicherung erstellt. Falls kein Download startet: „Als Text kopieren“ nutzen'); }catch(e){ toast('Download nicht möglich – bitte „Als Text kopieren“ nutzen',true); } },
+  exportCopy(){ copyText(JSON.stringify({app:'FitFrame',exported:nowStamp(),data:S})); toast('Sicherung kopiert – füge sie z. B. in eine Notiz oder Mail an dich ein'); },
+  importText(){ const t=document.getElementById('importText').value.trim(); if(!t){ toast('Bitte zuerst den Sicherungstext einfügen',true); return; } importJson(t); },
+  restoreKey(el){ try{ importJson(localStorage.getItem(el.dataset.k)); }catch(e){ toast('Sicherung nicht lesbar',true); } },
   findCustomer(){ ui.focus='custSearch'; go('kunden'); },
   scrollToday(){ const t=document.getElementById('today'); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); },
   stInfo(el){ const k=STATUS[el.dataset.k]; toast(`${k[1]}: ${k[2]}`); },
@@ -1601,6 +1645,13 @@ const ACT = {
   editItem(el){ itemDrawer(el.dataset.sku); },
   delItem(el){ S.inventory=S.inventory.filter(i=>i.sku!==el.dataset.sku); audit(`Artikel gelöscht: ${el.dataset.sku}`); save(); closeDrawer(); render(); toast('Artikel gelöscht'); }
 };
+function importJson(t){
+  let d; try{ d=JSON.parse(t); }catch(e){ toast('Das ist keine gültige FitFrame-Sicherung',true); return; }
+  if(d&&d.data) d=d.data; if(!d||!Array.isArray(d.customers)){ toast('Das ist keine gültige FitFrame-Sicherung',true); return; }
+  const n=mergeData(d); S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; });
+  audit(`Sicherung geladen: ${n.customers} Kunden, ${n.bikes} Fahrräder, ${n.sessions} Fittings ergänzt`); save(); render();
+  toast(`Ergänzt: ${n.customers} Kunden, ${n.bikes} Fahrräder, ${n.sessions} Fittings`);
+}
 function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
 
 const FORMS = {
@@ -1648,6 +1699,7 @@ const FORMS = {
 };
 
 const CHG = {
+  importFile(el){ const f=el.files&&el.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>importJson(String(r.result)); r.onerror=()=>toast('Datei konnte nicht gelesen werden',true); r.readAsText(f); },
   geoPick(el){ const sel=document.getElementById(el.dataset.size); const wrap=document.getElementById(el.dataset.size+'_wrap'); const g=geoById(el.value);
     if(sel){ sel.innerHTML=geoSizeOptions(el.value,''); } if(wrap) wrap.hidden=!g;
     if(el.dataset.fill&&g){ document.getElementById('nb_b').value=g.brand; document.getElementById('nb_m').value=g.model; document.getElementById('nb_t').value=g.type; const sw=document.getElementById('nb_s_wrap'); if(sw) sw.hidden=true; }
