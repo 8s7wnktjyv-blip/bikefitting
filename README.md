@@ -10,11 +10,15 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 
 ## Ablauf eines Fittings
 
-1. **Ziel** – Anamnese, Beschwerden, Wünsche
+1. **Ziel** – Fragen mit vorgefertigten Antworten zum Antippen (Training, Erfahrung, Beschwerden …)
 2. **Körpercheck** – 11 Tests mit Anleitung (Beinlänge, Becken, Kniespur, Fußgewölbe, Vorfuß, Beweglichkeit, Sitzknochen …). Die App wertet die Ergebnisse nach festen Regeln aus und schlägt einen Ausgleich vor dem Fitting vor (z. B. Shim, Einlage, Keil) oder empfiehlt eine Fachperson.
 3. **Ausgangsposition** – jeder Messpunkt mit „So misst du“-Anleitung, Methode und Genauigkeit
 4. **Anpassen** – Vorschläge aus Beschwerden, Körpercheck und Kniewinkel; jede Änderung mit Begründung
-5. **Ergebnis & Bericht** – Vorher/Nachher, Datenqualität, Bericht, Freigabe im Kundenportal
+5. **Ergebnis & Bericht** – Vorher/Nachher, Datenqualität, Größenberatung, Bericht, Freigabe im Kundenportal
+
+## Geometrie-Bibliothek
+
+12 Modelle (Canyon, Giant, Cube, Rose) mit allen Größen, am 25.10.2026 von den Herstellerseiten übernommen, jeweils mit Quellenlink. Beim Anlegen eines Fahrrads Modell und Größe wählen, die Geometrie wird übernommen. Eigene Modelle lassen sich ergänzen. Die Größenberatung berechnet näherungsweise (±10 mm) Vorbau und Spacer je Rahmengröße aus der gefitteten Position.
 
 ## Stand
 

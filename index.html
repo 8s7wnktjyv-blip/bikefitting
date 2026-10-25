@@ -164,6 +164,10 @@ td.r,th.r{text-align:right}
 .st::before{content:"";width:7px;height:7px;border-radius:50%}
 .st-i::before{background:var(--ok)} .st-s::before{background:var(--info)} .st-k::before{background:var(--faint)} .st-x::before{background:var(--warn)}
 .src{font-size:12px;color:var(--faint)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chipbtn{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--fg);min-height:34px}
+.chipbtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-strong);font-weight:600}
+tr.best td{background:var(--ok-soft)}
 
 .notice{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:var(--info-soft);font-size:14px}
 .notice.warn{background:var(--warn-soft)}
@@ -410,7 +414,7 @@ function readiness(f,s){
 }
 function fitSuggestions(s){
   const out=[]; const t=(s.anamnesis.complaints||'').toLowerCase(); const add=(key,title,why,how)=>out.push({key,title,why,how});
-  if(/hand|taub|finger|handgelenk/.test(t)) add('reach','Hände entlasten','Taube Hände kommen oft von zu viel Gewicht auf dem Lenker.','Sattel–Lenker kürzer oder Lenker höher prüfen. Sattelnase nicht zu tief.');
+  if(/hand|händ|taub|finger/.test(t)) add('reach','Hände entlasten','Taube Hände kommen oft von zu viel Gewicht auf dem Lenker.','Sattel–Lenker kürzer oder Lenker höher prüfen. Sattelnase nicht zu tief.');
   if(/nacken|schulter/.test(t)) add('drop','Nacken entlasten','Ein tiefer, weiter Lenker zwingt den Kopf in den Nacken.','Überhöhung verringern oder Lenker näher holen.');
   if(/knie.*vorn|vorne.*knie|kniescheibe/.test(t)) add('saddleHeight','Knie vorn','Druck vorn am Knie passt oft zu einem zu tiefen oder zu weit vorn stehenden Sattel.','Sattelhöhe in Schritten von 2–3 mm erhöhen, Versatz prüfen, neu messen.');
   if(/kniekehle|knie.*hinten/.test(t)) add('saddleHeight','Kniekehle','Ziehen in der Kniekehle passt oft zu einem zu hohen Sattel.','Sattel in Schritten von 2–3 mm senken und neu messen.');
@@ -422,6 +426,71 @@ function fitSuggestions(s){
   checkFindings(s).filter(f=>f.cat==='fitting'&&f.lvl!=='ok').forEach(f=>add(null,f.title,'Aus dem Körpercheck.',f.text));
   return out;
 }
+
+/* ---------- Geometrie-Bibliothek (Herstellerangaben, abgerufen 25.10.2026) ---------- */
+// Spalten: Größe, Stack, Reach, Oberrohr, Sitzrohr, Sitzwinkel, Lenkwinkel, Steuerrohr, Kettenstrebe, Radstand, Tretlagerabsenkung, Überstandshöhe, Vorbau, Lenker, Kurbel
+const GCOLS=['size','stack','reach','topTube','seatTube','seatAngle','headAngle','headTube','chainstay','wheelbase','bbDrop','standover','stem','bar','crank'];
+const GLABEL={stack:['Stack','mm'],reach:['Reach','mm'],topTube:['Oberrohr','mm'],seatTube:['Sitzrohr','mm'],seatAngle:['Sitzwinkel','°'],headAngle:['Lenkwinkel','°'],headTube:['Steuerrohr','mm'],chainstay:['Kettenstrebe','mm'],wheelbase:['Radstand','mm'],bbDrop:['Tretlagerabsenkung','mm'],standover:['Überstandshöhe','mm'],stem:['Vorbau (Serie)','mm'],bar:['Lenker (Serie)','mm'],crank:['Kurbel (Serie)','mm']};
+const _=null;
+const GEO=[
+ {id:'canyon-endurace-cf-7',brand:'Canyon',model:'Endurace CF 7',year:null,type:'Rennrad',src:'https://www.canyon.com/en-de/productpdf/geometry/?pid=4274&isComplexCustomization=false',note:'Oberrohr laut Hersteller „Top tube length“.',rows:[
+  ['3XS',510,350,501,402,73.5,70.5,122,405,957,_,708,70,370,165],['2XS',529,354,511,432,73.5,71.5,139,405,958,_,733,80,370,165],['XS',548,370,532,462,73.5,71,128,415,989,_,762,80,370,170],['S',568,375,543,492,73.5,72,145,415,991,_,788,90,390,170],
+  ['M',590,378,553,522,73.5,73,164,415,990,_,814,100,410,172.5],['L',611,387,568,552,73.5,73,186,415,1006,_,838,110,410,172.5],['XL',637,405,594,582,73.5,73.25,213,415,1029,_,866,110,410,175],['2XL',656,414,609,612,73.5,73.25,232,415,1044,_,887,120,430,175]]},
+ {id:'canyon-ultimate-cf-sl-7',brand:'Canyon',model:'Ultimate CF SL 7',year:null,type:'Rennrad',src:'https://www.canyon.com/en-ch/productpdf/geometry/?pid=3790',rows:[
+  ['3XS',483,358,497,390,73.9,70.2,104,405,958,_,697,70,370,165],['2XS',498,372,516,420,73.9,71.5,115,405,965,_,720,80,370,165],['XS',520,378,529,450,73.9,71.2,107,410,979,_,748,90,390,170],['S',539,390,546,480,73.9,72.8,121,410,983,_,775,90,390,170],
+  ['M',560,393,555,510,73.9,73.3,142,410,987,_,801,100,410,172.5],['L',580,401,569,540,73.9,73.5,162,413,1004,_,828,110,410,172.5],['XL',606,419,594,570,73.9,73.5,188,415,1029,_,851,110,410,175],['2XL',624,429,610,600,73.9,73.8,206,415,1042,_,874,120,430,175]]},
+ {id:'canyon-grizl-cf-sl-7',brand:'Canyon',model:'Grizl CF SL 7',year:null,type:'Gravel',src:'https://www.canyon.com/en-us/productpdf/geometry/?pid=3244',rows:[
+  ['2XS',522,377,522,432,73.5,70,121,420,1007,_,737,70,400,170],['XS',537,382,531,462,73.5,71,133,420,1007,_,761,70,400,170],['S',556,397,552,492,73.5,71,118,435,1036,_,789,70,420,170],['M',579,402,564,522,73.5,72.25,138,435,1037,_,816,80,440,172.5],
+  ['L',605,409,578,552,73.5,72.5,164,435,1050,_,845,90,440,175],['XL',626,427,602,582,73.5,72.75,185,435,1072,_,870,90,460,175],['2XL',644,436,617,612,73.5,72.75,204,435,1086,_,892,100,460,175]]},
+ {id:'canyon-grail-cf-sl-7-axs',brand:'Canyon',model:'Grail CF SL 7 AXS',year:null,type:'Gravel',src:'https://www.canyon.com/en-us/productpdf/geometry/?pid=3576',rows:[
+  ['2XS',545,372,533,420,73.5,69.5,123,425,1021,_,745,60,420,165],['XS',556,385,550,450,73.5,71,129,425,1024,_,766,60,420,165],['S',573,394,564,480,73.5,71.5,145,425,1034,_,789,70,420,170],['M',591,411,586,510,73.5,71.5,163,425,1057,_,813,70,440,172.5],
+  ['L',613,427,609,540,73.5,71.5,187,425,1080,_,838,70,440,172.5],['XL',633,435,623,570,73.5,71.8,207,425,1092,_,863,80,460,175],['2XL',655,454,648,600,73.5,71.8,230,425,1118,_,901,80,460,175]]},
+ {id:'canyon-speedmax-cf-8-di2',brand:'Canyon',model:'Speedmax CF 8 Di2',year:null,type:'Triathlon',src:'https://www.canyon.com/en-de/productpdf/geometry/?pid=3721',rows:[
+  ['XS',482,374,454,480,80.5,72,113,410,956,_,754,80,410,165],['S',519,402,489,518,80.5,73,115,420,988,_,791,80,410,165],['M',544,420,511,543,80.5,73,140,420,1014,_,815,95,410,170],['L',578,443,540,577,80.5,73,176,420,1047,_,849,95,410,170],['XL',608,468,570,607,80.5,73,207,420,1081,_,879,95,410,172.5]]},
+ {id:'canyon-spectral-cf-7',brand:'Canyon',model:'Spectral CF 7',year:null,type:'MTB',src:'https://www.canyon.com/en-fi/productpdf/geometry/?pid=3637',note:'Radstand und Kettenstrebe für 29"-Aufbau; XS nur als Mullet (Radstand 1184 mm).',rows:[
+  ['XS',612,425,572,375,76.5,64,100,437,_,_,738,40,760,170],['S',621,450,599,400,76.5,64,110,437,1221,_,752,40,760,170],['M',630,475,626,415,76.5,64,120,437,1251,_,747,40,780,170],['L',639,500,653,445,76.5,64,130,437,1280,_,756,40,780,170],['XL',648,525,680,455,76.5,64,140,437,1309,_,762,40,780,170]]},
+ {id:'giant-defy-advanced-1',brand:'Giant',model:'Defy Advanced 1',year:2026,type:'Rennrad',src:'https://www.giant-bicycles.com/gb/defy-advanced-1',rows:[
+  ['S',541,375,530,445,74,71.8,135,420,994,75,733,90,410,165],['M',558,380,545,480,73.5,72.5,150,420,998,75,762,100,430,170],['ML',577,384,560,515,73,72.5,175,420,1010,70,796,100,430,170],['L',596,393,575,535,73,72.5,195,420,1025,70,814,110,450,172.5],['XL',615,402,595,565,73,72.5,215,420,1040,70,841,110,450,172.5]]},
+ {id:'giant-tcr-advanced-1',brand:'Giant',model:'TCR Advanced 1',year:2026,type:'Rennrad',src:'https://www.giant-bicycles.com/gb/tcr-advanced-1',rows:[
+  ['S',528,383,535,445,74,72.3,130,405,977,70,734,90,380,165],['M',545,388,550,470,73.5,73,145,405,980,70,752,100,400,170],['ML',562,393,565,500,73,73,165,405,991,67,768,110,400,170],['L',581,402,580,530,73,73,185,405,1006,67,786,110,420,172.5],['XL',596,412,600,560,72.5,73,200,405,1020,67,803,120,420,172.5]]},
+ {id:'giant-revolt-advanced-1',brand:'Giant',model:'Revolt Advanced 1',year:2026,type:'Gravel',src:'https://www.giant-bicycles.com/gb/revolt-advanced-1',note:'Werte mit Flip-Chip in kurzer Position.',rows:[
+  ['S',570,381,550,450,73.5,71,135,425,1020,80,740,60,420,170],['M',586,387,560,470,73.5,71.5,150,425,1026,80,757,70,440,172.5],['M/L',602,391,575,490,73,72,165,425,1031,80,774,80,440,172.5],['L',616,397,585,510,73,72,180,425,1041,80,791,80,460,175],['XL',630,407,600,530,73,72,195,425,1056,80,807,90,460,175]]},
+ {id:'cube-attain-c62-race',brand:'Cube',model:'Attain C:62 Race',year:null,type:'Rennrad',src:'https://www.cube.eu/cube-attain-c-62-race-carbon-n-coalchrome/1131300',rows:[
+  ['47',525,365,510,410,74.6,70.6,120,420,991,_,_,70,380,165],['50',538,369,517,440,74.6,71.1,130,420,994,_,_,90,400,165],['53',561,376,537,470,74,72,152,420,1000,_,_,90,400,170],['56',591,385,560,500,73.5,72.5,182,420,1014,_,_,100,420,170],
+  ['58',610,388,575,520,73,72.5,202,420,1023,_,_,100,420,172.5],['60',629,392,590,540,72.5,72.5,222,420,1033,_,_,100,440,172.5],['62',648,391,595,560,72.5,72.5,242,420,1038,_,_,110,440,172.5]]},
+ {id:'cube-kathmandu-hybrid-slt-800',brand:'Cube',model:'Kathmandu Hybrid SLT 800',year:null,type:'E-Bike',src:'https://www.cube.eu/cube-kathmandu-hybrid-slt-800-mysticgraphite-n-reflex/1112900',note:'Rahmenform auf der Seite nicht angegeben.',rows:[
+  ['50',638,401,590,460,73.5,68,110,499,1173,_,_,65,720,175],['54',654,410,610,510,73,68.5,125,499,1182,_,_,80,720,175],['58',668,426,630,560,73,68.5,140,499,1203,_,_,80,720,175],['62',692,439,650,600,73,68.5,165,499,1226,_,_,80,720,175],['64',715,452,670,640,73,68.5,190,499,1248,_,_,90,720,175]]},
+ {id:'rose-backroad',brand:'Rose',model:'Backroad (Rahmen FF)',year:null,type:'Gravel',src:'https://www.rosebikes.de/document/Backroad_FF_Frame_Details_V202405.pdf?sf=1',note:'Rahmendatenblatt Stand 05/2024. Gilt nicht für Backroad AL.',rows:[
+  ['XS',523,377,505,450,76.25,71.25,100,420,993,75,751,_,_,_],['S',542,387,527,482,75.5,71.75,118,420,1005,75,777,_,_,_],['M',558,396,546,505,75,72,134,420,1016,75,796,_,_,_],['ML',574,405,564,525,74.5,72.25,153,420,1030,72,817,_,_,_],['L',592,418,582,550,74.5,72.5,171,420,1046,72,837,_,_,_],['XL',616,432,603,585,74.5,72.5,195,420,1067,72,868,_,_,_]]}
+];
+const geoAll=()=>[...GEO.map(g=>({...g,own:false})),...(S.geoCustom||[]).map(g=>({...g,own:true}))];
+const geoById=id=>geoAll().find(g=>g.id===id);
+const geoRow=(g,size)=>{ const r=(g.rows||[]).find(r=>String(r[0])===String(size)); if(!r) return null; const o={}; GCOLS.forEach((c,i)=>o[c]=r[i]); return o; };
+
+/* Näherung: Wie muss Vorbau/Spacer an einem Rahmen aussehen, damit die gefittete Lenkerposition erreicht wird? */
+function fitPosition(s){
+  const e={...s.before,...s.after}; const g=k=>e[k]?Number(e[k].value):null;
+  const h=g('saddleHeight'), sb=g('saddleSetback'), r=g('reach'), d=g('drop');
+  if(h==null||sb==null||r==null||d==null) return null;
+  const xs=sb+70; const Hs=Math.sqrt(Math.max(h*h-xs*xs,0));
+  const bx=-sb+Math.sqrt(Math.max(r*r-d*d,0)), by=Hs-d;
+  return {bx,by,h,sb,r,d};
+}
+function sizeAdvice(s,g){
+  const P=fitPosition(s); if(!P) return null; const mtb=g.type==='MTB';
+  const res=g.rows.map(row=>{ const x=geoRowObj(row); if(x.stack==null||x.reach==null||x.headAngle==null) return {size:x.size,ok:false,why:'Werte fehlen'};
+    const HA=x.headAngle*Math.PI/180, th=(90-x.headAngle-6)*Math.PI/180;
+    const ux=-Math.cos(HA), uy=Math.sin(HA), vx=Math.cos(th), vy=Math.sin(th);
+    const dx=P.bx-x.reach, dy=P.by-x.stack; const det=ux*vy-uy*vx;
+    const Sp=(dx*vy-dy*vx)/det, L=(ux*dy-uy*dx)/det; const spacer=Sp-30;
+    const [lo,hi,mid]=mtb?[35,80,50]:[70,130,100];
+    const fits=L>=lo&&L<=hi&&spacer>=0&&spacer<=40; const near=L>=lo-15&&L<=hi+15&&spacer>=-10&&spacer<=55;
+    return {size:x.size,stem:Math.round(L),spacer:Math.round(spacer),fits,near,score:Math.abs(L-mid)/10+Math.abs(spacer-15)/10};
+  });
+  const best=res.filter(x=>x.fits).sort((a,b)=>a.score-b.score)[0];
+  return {P,res,best};
+}
+const geoRowObj=row=>{ const o={}; GCOLS.forEach((c,i)=>o[c]=row[i]); return o; };
 
 /* ---------- Seed data (fictitious) ---------- */
 function seed(){
@@ -441,7 +510,7 @@ function seed(){
       flex:{hamstring:'',hip:'',ankle:''}, tags:['Werkstattkunde']}
   ];
   S.bikes = [
-    {id:'b1',customerId:'c1',name:'Rennrad',brand:'Canyon',model:'Endurace CF 7',size:'M',year:2023,type:'Rennrad',frameNo:'DEMO-CY-23-0451',pedal:'Shimano SPD-SL',saddle:'Specialized Power Expert 143',km:8400},
+    {id:'b1',customerId:'c1',name:'Rennrad',brand:'Canyon',model:'Endurace CF 7',size:'M',year:2023,type:'Rennrad',frameNo:'DEMO-CY-23-0451',geo:{id:'canyon-endurace-cf-7',size:'M'},pedal:'Shimano SPD-SL',saddle:'Specialized Power Expert 143',km:8400},
     {id:'b2',customerId:'c1',name:'Gravel',brand:'Rose',model:'Backroad AL',size:'S',year:2025,type:'Gravel',frameNo:'DEMO-RO-25-1188',pedal:'Shimano SPD',saddle:'Fizik Terra Argo 150',km:1900},
     {id:'b3',customerId:'c2',name:'Zeitfahrrad',brand:'Cervélo',model:'P-Series',size:'56',year:2024,type:'Triathlon',frameNo:'DEMO-CE-24-3302',pedal:'Look Keo',saddle:'ISM PN 3.1',km:5200},
     {id:'b4',customerId:'c3',name:'Trail-MTB',brand:'Cube',model:'Stereo One22',size:'S',year:2025,type:'MTB',frameNo:'DEMO-CU-25-7710',pedal:'Shimano SPD',saddle:'Serienmodell',km:600},
@@ -567,7 +636,7 @@ function load(){
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ storageOk=false; } }
 function audit(what,ref){ S.audit.unshift({time:nowStamp(),who:'Demo-Nutzer',what,ref:ref||''}); }
-S = load(); S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; }); (function(){ const sd=seed(); sd.sessions.forEach(d=>{ const x=S.sessions.find(y=>y.id===d.id); if(x&&!Object.keys(x.check).length&&Object.keys(d.check||{}).length&&x.customerId===d.customerId){ x.check=d.check; x.comp=d.comp; } }); })();
+S = load(); S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; }); S.geoCustom=S.geoCustom||[]; S.bikes.forEach(b=>{ if(!b.geo&&b.brand==='Canyon'&&b.model==='Endurace CF 7'&&b.size==='M') b.geo={id:'canyon-endurace-cf-7',size:'M'}; }); (function(){ const sd=seed(); sd.sessions.forEach(d=>{ const x=S.sessions.find(y=>y.id===d.id); if(x&&!Object.keys(x.check).length&&Object.keys(d.check||{}).length&&x.customerId===d.customerId){ x.check=d.check; x.comp=d.comp; } }); })();
 
 const ui = {route:'dashboard', sess:'s4', sessTab:'anamnese', cust:null, search:'', bikeSearch:'', woFilter:'alle', invSearch:'', invCat:'alle', aiSess:'s1', aiOut:null, portalCust:'c1', motionSess:'s1', motionSide:'after', cmpA:'s1', cmpB:'s2', cmpChanged:false, fitView:'after', hwSel:'cleatlab', cleatSys:'SPD-SL', apptFilter:'heute', fuFilter:'offen'};
 
@@ -581,7 +650,7 @@ const val = (rec) => rec ? rec.value : null;
 /* ---------- Navigation ---------- */
 const MAIN=[['dashboard','Start','dash'],['kunden','Kunden','users'],['sitzung','Fitting','fit'],['werkstatt','Werkstatt','wrench'],['mehr','Mehr','more']];
 const MORE=[
-  ['Fitting-Werkzeuge',[['fahrraeder','Fahrräder','bike','Alle Räder mit Einstellungen und Historie'],['verlauf','Verlauf & Vergleich','history','Sitzungen nebeneinander und über die Zeit'],['followup','Nachkontrollen','loop','Wer ist wann wieder dran?'],['motion','Bewegung simulieren','motion','Fahrerfigur aus den eingetragenen Maßen'],['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht, Datenlücken']]],
+  ['Fitting-Werkzeuge',[['fahrraeder','Fahrräder','bike','Alle Räder mit Einstellungen und Historie'],['geometrie','Geometrie-Bibliothek','grid','Rahmenmaße nach Hersteller, Größenberatung'],['verlauf','Verlauf & Vergleich','history','Sitzungen nebeneinander und über die Zeit'],['followup','Nachkontrollen','loop','Wer ist wann wieder dran?'],['motion','Bewegung simulieren','motion','Fahrerfigur aus den eingetragenen Maßen'],['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht, Datenlücken']]],
   ['Laden & Kunden',[['portal','Kundenportal','portal','So sehen Kunden ihre Berichte'],['lager','Lager & Verkauf','box','Bestand, Verkäufe, Garantie'],['betrieb','Team & Zahlen','ops','Auslastung, Rollen, Kennzahlen']]],
   ['Für Profis',[['qualitaet','Messdaten & Qualität','quality','Herkunft und Vollständigkeit aller Werte'],['hardware','Hardware Lab','hw','Geplante eigene Messhilfen'],['module','Alle Module','grid','Gesamtplan und Stand der Demo']]]
 ];
@@ -720,6 +789,28 @@ VIEWS.dashboard = () => {
   </div>`;
 };
 
+VIEWS.geometrie = () => {
+  const q=(ui.geoSearch||'').toLowerCase(); const list=geoAll().filter(g=>!q||(g.brand+' '+g.model+' '+g.type).toLowerCase().includes(q));
+  return `${head('Geometrie-Bibliothek','Rahmenmaße aus Herstellerangaben. Tippe ein Modell an, um alle Größen zu sehen.',`<button class="btn primary" data-act="newGeo">${ic('plus')}Modell eintragen</button>`)}
+  <div class="notice">${ic('info')}<div>${GEO.length} Modelle von Canyon, Giant, Cube und Rose, am 25.10.2026 von den Herstellerseiten übernommen, jeweils mit Quelle. Hersteller ändern Geometrien zwischen Modelljahren: vor einer Kaufberatung kurz auf der Herstellerseite prüfen. Fehlt ein Modell, trag es selbst ein. Es ist dann bei jedem Fahrrad auswählbar.</div></div>
+  <section class="panel"><div class="panel-h"><input class="input search" type="search" id="geoSearch" placeholder="Marke oder Modell suchen" value="${esc(ui.geoSearch||'')}" data-input="geoSearch"><span class="muted" style="font-size:13px">${list.length} Modelle</span></div>
+  ${list.length?`<div class="tw"><table><thead><tr><th>Modell</th><th>Typ</th><th>Größen</th><th>Quelle</th></tr></thead><tbody>${list.map(g=>`<tr class="click" data-act="openGeo" data-id="${g.id}"><td><b>${esc(g.brand)}</b> ${esc(g.model)}${g.year?` <span class="faint">(${g.year})</span>`:''}</td><td>${esc(g.type)}</td><td>${g.rows.map(r=>esc(r[0])).join(', ')||'–'}</td><td>${g.own?'<span class="chip c-acc nodot">eigener Eintrag</span>':'<span class="chip nodot">Hersteller</span>'}</td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">${ic('grid')}<span>Kein Modell gefunden.</span><button class="btn sm primary" data-act="newGeo">Modell eintragen</button></div>`}</section>`;
+};
+function geoDrawer(id){
+  const g=geoById(id); drawerCtx={type:'geo',id};
+  const cols=Object.keys(GLABEL).filter(k=>g.rows.some(r=>r[GCOLS.indexOf(k)]!=null));
+  const body=`<dl class="dl"><dt>Typ</dt><dd>${esc(g.type)}</dd>${g.year?`<dt>Modelljahr</dt><dd>${g.year}</dd>`:''}<dt>Quelle</dt><dd>${g.src?`<a href="${esc(g.src)}" target="_blank" rel="noopener">${g.own?'eigene Angabe':'Herstellerseite öffnen'}</a>`:'eigene Angabe'}</dd>${g.note?`<dt>Hinweis</dt><dd>${esc(g.note)}</dd>`:''}</dl>
+  ${g.rows.length?`<div class="tw"><table><thead><tr><th>Größe</th>${cols.map(k=>`<th class="r">${GLABEL[k][0]} (${GLABEL[k][1]})</th>`).join('')}${g.own?'<th></th>':''}</tr></thead><tbody>${g.rows.map((r,i)=>`<tr><td><b>${esc(r[0])}</b></td>${cols.map(k=>`<td class="r num">${r[GCOLS.indexOf(k)]!=null?fmtNum(r[GCOLS.indexOf(k)]):'–'}</td>`).join('')}${g.own?`<td class="r"><button class="btn sm ghost danger" data-act="delGeoRow" data-id="${g.id}" data-i="${i}" aria-label="Größe löschen">${ic('x')}</button></td>`:''}</tr>`).join('')}</tbody></table></div>`:'<p class="muted">Noch keine Größe eingetragen.</p>'}
+  ${g.own?`<hr><div class="stack"><h3>Größe hinzufügen</h3>
+  <details class="more" open><summary>Wo finde ich die Werte?</summary><ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px"><li>Herstellerseite des Modells öffnen.</li><li>Abschnitt „Geometrie“ oder „Geometry“ suchen, oft unten auf der Seite oder als PDF.</li><li>Am wichtigsten sind Stack, Reach, Lenkwinkel und Sitzwinkel. Die übrigen Werte sind optional.</li><li>Längen in Millimetern, Winkel in Grad eintragen.</li></ol></details>
+  <form class="form" data-form="geoRow" data-id="${g.id}"><div class="field"><label for="gr_size">Größe</label><input class="input" id="gr_size" name="size" required placeholder="z. B. M oder 54"></div>
+  ${['stack','reach','headAngle','seatAngle','topTube','headTube','seatTube','chainstay','wheelbase','stem','crank'].map(k=>`<div class="field"><label for="gr_${k}">${GLABEL[k][0]} (${GLABEL[k][1]})${['stack','reach','headAngle'].includes(k)?' *':''}</label><input class="input num" id="gr_${k}" name="${k}" type="number" step="0.1" inputmode="decimal" ${['stack','reach','headAngle'].includes(k)?'required':''}></div>`).join('')}
+  <div class="wide"><button class="btn primary" type="submit">Größe speichern</button></div></form>
+  <button class="btn danger" data-act="delGeo" data-id="${g.id}">Modell löschen</button></div>`:''}`;
+  openDrawer(`${g.brand} ${g.model}`,body);
+}
+function geoOptions(sel){ const by={}; geoAll().forEach(g=>(by[g.brand]=by[g.brand]||[]).push(g)); return Object.entries(by).map(([b,list])=>`<optgroup label="${esc(b)}">${list.map(g=>`<option value="${g.id}" ${g.id===sel?'selected':''}>${esc(g.brand+' '+g.model)}</option>`).join('')}</optgroup>`).join(''); }
+function geoSizeOptions(id,sel){ const g=id?geoById(id):null; return g?g.rows.map(r=>`<option value="${esc(r[0])}" ${String(r[0])===String(sel)?'selected':''}>${esc(r[0])}</option>`).join(''):''; }
 VIEWS.mehr = () => `
   ${head('Mehr','Alle weiteren Bereiche von FitFrame.')}
   ${MORE.map(([g,items])=>`<div class="stack"><h2>${g}</h2><div class="tiles">${items.map(([r,l,i,d])=>`<button class="tile" data-nav="${r}"><span class="ti">${ic(i)}</span><b>${l}</b><span>${d}</span></button>`).join('')}</div></div>`).join('')}
@@ -783,6 +874,8 @@ function bikeDrawer(id){
   const body=`
     <dl class="dl"><dt>Besitzer</dt><dd><button class="btn sm ghost" data-act="openCustomer" data-id="${b.customerId}">${esc(cust(b.customerId).name)}</button></dd><dt>Typ / Größe</dt><dd>${esc(b.type)} · ${esc(b.size)} · Baujahr ${b.year}</dd><dt>Rahmennummer</dt><dd class="mono">${esc(b.frameNo)}</dd><dt>Pedalsystem</dt><dd>${esc(b.pedal)}</dd><dt>Sattel</dt><dd>${esc(b.saddle)}</dd>
     <dt>Kilometer</dt><dd><div class="row"><input class="input num" style="width:120px" type="number" id="kmInput" value="${b.km}" aria-label="Kilometerstand"><button class="btn sm" data-act="saveKm" data-id="${b.id}">Speichern</button></div></dd></dl>
+    <hr><div class="stack"><div class="row" style="justify-content:space-between"><h3>Rahmengeometrie</h3><button class="btn sm" data-act="bikeGeo" data-id="${b.id}">${b.geo?'Ändern':'Aus Bibliothek wählen'}</button></div>
+    ${(()=>{ const g=b.geo&&geoById(b.geo.id); const r=g&&geoRow(g,b.geo.size); if(!r) return '<p class="muted">Noch keine Geometrie zugeordnet. Wähle das Modell aus der Geometrie-Bibliothek.</p>'; return `<p class="faint" style="font-size:13px">${esc(g.brand+' '+g.model)} · Größe ${esc(r.size)} · <a href="${esc(g.src||'#')}" target="_blank" rel="noopener">Quelle</a></p><table><tbody>${Object.keys(GLABEL).filter(k=>r[k]!=null).map(k=>`<tr><td>${GLABEL[k][0]}</td><td class="r num">${fmtNum(r[k])} ${GLABEL[k][1]}</td></tr>`).join('')}</tbody></table>`; })()}</div>
     <hr><h3>Aktuelle Fitting-Einstellungen</h3>
     ${groups.map(g=>{const rows=Object.entries(MK).filter(([,m])=>m.group===g).map(([k,m])=>[k,m,currentSetting(id,k)]).filter(r=>r[2]);return rows.length?`<div><div class="label" style="margin-bottom:4px">${g}</div><table><tbody>${rows.map(([k,m,r])=>`<tr><td>${m.label}</td><td class="r num">${fmtNum(r.value)} ${m.unit}</td><td class="src">${esc(r.method)}</td></tr>`).join('')}</tbody></table></div>`:'';}).join('')||'<span class="muted">Noch keine Fitting-Werte für dieses Fahrrad.</span>'}
     <hr><h3>Historie</h3>
@@ -816,14 +909,28 @@ VIEWS.sitzung = () => {
   </div></section>`;
 };
 const SESSTAB = {};
+const PRESET={
+  goal:{m:'multi',o:['Beschwerden loswerden','Längere Touren','Mehr Leistung','Aerodynamik / Triathlon','Neues Rad richtig einstellen','Größe für Radkauf finden','Rennen fahren']},
+  complaints:{m:'multi',o:['Keine','Hände taub','Handgelenke','Nacken','Schultern','Rücken','Sitzbereich','Knie vorn','Knie innen','Knie außen','Kniekehle','Hüfte','Füße / Zehen','Waden']},
+  training:{m:'set',o:['unter 2 h pro Woche','2–5 h pro Woche','5–10 h pro Woche','mehr als 10 h pro Woche']},
+  experience:{m:'set',o:['unter 1 Jahr','1–3 Jahre','3–10 Jahre','über 10 Jahre']},
+  previous:{m:'set',o:['Noch nie','Selbst eingestellt','Fitting bei uns','Fitting bei anderem Anbieter']},
+  limits:{m:'multi',o:['Keine','Frühere Verletzung','Operation','Eingeschränkte Beweglichkeit','Rückenprobleme']},
+  comfort:{m:'set',o:['Komfort zuerst','Ausgewogen','Leistung / Aero zuerst']}
+};
+const splitVals=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean);
 SESSTAB.anamnese = (s,c) => {
-  const a=s.anamnesis; const F=[['goal','Ziel des Fittings'],['complaints','Beschwerden (Kundenangabe)'],['training','Trainingsumfang'],['experience','Fahrerfahrung'],['previous','Bisherige Fittings'],['limits','Relevante Einschränkungen'],['comfort','Komfortwünsche']];
+  const a=s.anamnesis; const F=[['goal','Was ist das Ziel des Fittings?'],['complaints','Welche Beschwerden gibt es beim Fahren?'],['training','Wie viel fährst du pro Woche?'],['experience','Seit wann fährst du Rad?'],['previous','Gab es schon ein Fitting?'],['limits','Gibt es Einschränkungen?'],['comfort','Was ist wichtiger?']];
+  const field=([k,l])=>{ const p=PRESET[k]; const cur=a[k]||''; const vals=splitVals(cur); const multi=p&&p.m==='multi';
+    return `<div class="field wide"><label for="a_${k}">${l}</label>${p?`<div class="chips" data-group="a_${k}">${p.o.map(o=>`<button type="button" class="chipbtn" data-act="chip" data-t="a_${k}" data-m="${p.m}" data-v="${esc(o)}" aria-pressed="${multi?vals.includes(o):cur===o}">${esc(o)}</button>`).join('')}</div>`:''}
+    ${multi?`<textarea class="input" id="a_${k}" name="${k}" placeholder="Antippen oder selbst schreiben, z. B. wo genau und seit wann" style="min-height:60px">${esc(cur)}</textarea>`:`<input class="input" id="a_${k}" name="${k}" value="${esc(cur)}" placeholder="Antippen oder selbst schreiben">`}</div>`; };
   return `<div class="stack">
-  ${!c.consent?`<div class="notice warn">${ic('warn')}<div>Für diese Kundin bzw. diesen Kunden ist keine Einwilligung erfasst. Gesundheitsbezogene Angaben erst nach Einwilligung speichern. <button class="btn sm" data-act="consent" data-id="${c.id}">Einwilligung erfassen</button></div></div>`:''}
+  ${!c.consent?`<div class="notice warn">${ic('warn')}<div>Für diese Person ist keine Einwilligung erfasst. Gesundheitsbezogene Angaben erst nach Einwilligung speichern. <button class="btn sm" data-act="consent" data-id="${c.id}">Einwilligung erfassen</button></div></div>`:''}
+  <p class="muted">Tippe die passende Antwort an. Bei Zielen, Beschwerden und Einschränkungen gehen mehrere. Du kannst alles auch selbst ergänzen.</p>
   <form class="form" data-form="anamnesis" data-id="${s.id}">
-    ${F.map(([k,l])=>`<div class="field ${k==='goal'||k==='complaints'?'wide':''}"><label for="a_${k}">${l}</label>${k==='goal'||k==='complaints'?`<textarea class="input" id="a_${k}" name="${k}">${esc(a[k])}</textarea>`:`<input class="input" id="a_${k}" name="${k}" value="${esc(a[k])}">`}</div>`).join('')}
-    <div class="field wide"><label for="a_notes">Notizen des Fitters</label><textarea class="input" id="a_notes" name="notes">${esc(s.notes)}</textarea></div>
-    <div class="wide row"><button class="btn primary" type="submit">Anamnese speichern</button><span class="faint" style="font-size:12px">Nur für das Fitting nötige Angaben erfassen. FitFrame stellt keine Diagnosen.</span></div>
+    ${F.map(field).join('')}
+    <div class="field wide"><label for="a_notes">Notizen</label><textarea class="input" id="a_notes" name="notes">${esc(s.notes)}</textarea></div>
+    <div class="wide row"><button class="btn primary" type="submit">Antworten speichern</button><span class="faint" style="font-size:12.5px">Nur für das Fitting nötige Angaben erfassen. FitFrame stellt keine Diagnosen.</span></div>
   </form></div>`;
 };
 SESSTAB.koerper = (s,c) => {
@@ -944,9 +1051,20 @@ SESSTAB.ergebnis = s => {
   const q=quality(s); const crit=q.filter(x=>x[0]!=='info').length;
   return `<div class="stack"><h2>Vorher und nachher</h2>${SESSTAB.vergleich(s)}</div>
   <hr><details class="more" ${crit?'open':''}><summary>Datenqualität prüfen ${crit?`<span class="chip c-warn">${crit} offen</span>`:`<span class="chip c-ok">in Ordnung</span>`}</summary><div style="margin-top:12px">${SESSTAB.qualitaet(s)}</div></details>
+  <hr><div class="stack"><h2>Passt die Position auf dieses Rad?</h2>${adviceHtml(s)}</div>
   <hr><div class="stack"><h2>Bericht</h2>${SESSTAB.bericht(s)}</div>
   <div class="row"><span class="label">Status</span><select class="input" style="width:auto" data-change="sessStatus" data-id="${s.id}" aria-label="Status">${opts(['geplant','eingetroffen','in Arbeit','abgeschlossen','abgesagt'],s.status)}</select></div>`;
 };
+function adviceHtml(s){
+  const b=bike(s.bikeId); const sel=ui.advGeo||(b.geo&&b.geo.id)||''; const g=sel?geoById(sel):null;
+  const pick=`<div class="field"><label for="advGeo">Rahmen aus der Bibliothek</label><select class="input" id="advGeo" data-change="advGeo"><option value="">Modell wählen …</option>${geoAll().map(x=>`<option value="${x.id}" ${x.id===sel?'selected':''}>${esc(x.brand+' '+x.model)}</option>`).join('')}</select></div>`;
+  const intro='<p class="muted">FitFrame rechnet aus der gefitteten Position (Sattelhöhe, Versatz, Sattel–Lenker, Überhöhung), welchen Vorbau und wie viele Spacer jede Rahmengröße bräuchte. So findest du die passende Größe beim Radkauf oder überträgst die Position auf ein neues Rad.</p>';
+  if(!g) return intro+pick;
+  const a=sizeAdvice(s,g);
+  if(!a) return intro+pick+`<div class="notice warn">${ic('warn')}Für die Rechnung fehlen Werte. Nötig sind Sattelhöhe, Sattelversatz, Sattel–Lenker und Überhöhung.</div>`;
+  return intro+pick+`<div class="tw"><table><thead><tr><th>Größe</th><th class="r">Vorbau nötig</th><th class="r">Spacer nötig</th><th>Bewertung</th></tr></thead><tbody>${a.res.map(x=>`<tr class="${a.best&&a.best.size===x.size?'best':''}"><td><b>${esc(x.size)}</b>${a.best&&a.best.size===x.size?' <span class="chip c-ok nodot">Empfehlung</span>':''}</td><td class="r num">${x.stem!=null?x.stem+' mm':'–'}</td><td class="r num">${x.spacer!=null?x.spacer+' mm':'–'}</td><td>${x.why?`<span class="chip">${x.why}</span>`:x.fits?'<span class="chip c-ok">passt</span>':x.near?'<span class="chip c-warn">knapp</span>':'<span class="chip c-bad">passt nicht</span>'}</td></tr>`).join('')}</tbody></table></div>
+  <p class="faint" style="font-size:12.5px">Näherung mit Vorbau −6° und 30 mm Steuersatz-Aufbau, Genauigkeit etwa ±10 mm. Vor dem Kauf am echten Rad prüfen. Quelle der Geometrie: <a href="${esc(g.src||'#')}" target="_blank" rel="noopener">${g.own?'eigener Eintrag':'Herstellerseite'}</a>.</p>`;
+}
 function reportHtml(s){
   const c=cust(s.customerId),b=bike(s.bikeId);const rows=compareRows(s.before,s.after);const fu=s.followUps.filter(f=>f.status==='offen');
   const q=quality(s).filter(x=>x[0]!=='info');
@@ -1428,7 +1546,23 @@ const ACT = {
   compareCustomer(el){ const ss=sessOf(el.dataset.id).filter(s=>Object.keys(s.before).length); if(ss.length>=2){ui.cmpA=ss[ss.length-2].id; ui.cmpB=ss[ss.length-1].id;} closeDrawer(); go('verlauf'); },
   consent(el){ const c=cust(el.dataset.id); c.consent=true; audit(`Einwilligung erfasst: ${c.name}`); save(); toast('Einwilligung gespeichert (Demo, ohne Unterschrift)'); if(drawerCtx&&drawerCtx.type==='customer') customerDrawer(c.id); render(); },
   newCustomer(){ openDrawer('Kunde anlegen',`<form class="form" data-form="customer"><div class="field wide"><label for="nc_n">Name</label><input class="input" id="nc_n" name="name" required placeholder="Vor- und Nachname (fiktiv)"></div><div class="field"><label for="nc_e">E-Mail</label><input class="input" id="nc_e" name="email" type="email" placeholder="name@example.com"></div><div class="field"><label for="nc_p">Telefon</label><input class="input" id="nc_p" name="phone" type="tel"></div><div class="field"><label for="nc_d">Disziplin</label><select class="input" id="nc_d" name="discipline">${opts(['Rennrad','Gravel','MTB','Triathlon','E-Bike Pendeln','Allroad'])}</select></div>${[["height","Körpergröße","cm"],["inseam","Schrittlänge","cm"],["torso","Rumpflänge","cm"],["arm","Armlänge","cm"],["footR","Fußlänge","mm"]].map(([k,l,u])=>`<div class="field"><label for="nc_${k}">${l} (${u})</label><input class="input num" id="nc_${k}" name="${k}" type="number" step="0.5" inputmode="decimal"></div>`).join("")}<div class="field"><label for="nc_ham">Hintere Oberschenkel</label><select class="input" id="nc_ham" name="hamstring">${opts(["unauffällig","eingeschränkt"])}</select></div><div class="field wide"><label><input type="checkbox" name="est" checked> Fehlende Maße aus der Körpergröße schätzen</label></div><div class="field wide"><label><input type="checkbox" name="consent"> Einwilligung zur Datenverarbeitung liegt vor</label></div><div class="wide notice">${ic('info')}Bitte keine echten Personendaten eingeben. Die Demo speichert nur unverschlüsselt im Browser.</div><div class="wide"><button class="btn primary" type="submit">Kunde anlegen</button></div></form>`); },
-  newBike(el){ openDrawer('Fahrrad anlegen',`<form class="form" data-form="bike" data-cid="${el.dataset.id}"><div class="field"><label for="nb_b">Marke</label><input class="input" id="nb_b" name="brand" required></div><div class="field"><label for="nb_m">Modell</label><input class="input" id="nb_m" name="model" required></div><div class="field"><label for="nb_t">Typ</label><select class="input" id="nb_t" name="type">${opts(['Rennrad','Gravel','MTB','Triathlon','E-Bike','Trekking'])}</select></div><div class="field"><label for="nb_s">Größe</label><input class="input" id="nb_s" name="size"></div><div class="field"><label for="nb_p">Pedalsystem</label><select class="input" id="nb_p" name="pedal">${opts(['Shimano SPD-SL','Shimano SPD','Look Keo','Wahoo Speedplay','Plattform'])}</select></div><div class="field"><label for="nb_f">Rahmennummer</label><input class="input mono" id="nb_f" name="frameNo" placeholder="DEMO-…"></div><div class="wide"><button class="btn primary" type="submit">Fahrrad speichern</button></div></form>`); },
+  newBike(el){ openDrawer('Fahrrad anlegen',`<form class="form" data-form="bike" data-cid="${el.dataset.id}">
+    <div class="field wide"><label for="nb_geo">Modell aus der Geometrie-Bibliothek</label><select class="input" id="nb_geo" name="geo" data-change="geoPick" data-size="nb_gs" data-fill="1"><option value="">Nicht in der Liste – selbst eintragen</option>${geoOptions('')}</select></div>
+    <div class="field" id="nb_gs_wrap" hidden><label for="nb_gs">Rahmengröße</label><select class="input" id="nb_gs" name="geoSize"></select></div>
+    <div class="field"><label for="nb_b">Marke</label><input class="input" id="nb_b" name="brand" required></div><div class="field"><label for="nb_m">Modell</label><input class="input" id="nb_m" name="model" required></div>
+    <div class="field"><label for="nb_t">Typ</label><select class="input" id="nb_t" name="type">${opts(['Rennrad','Gravel','MTB','Triathlon','E-Bike','Trekking'])}</select></div><div class="field" id="nb_s_wrap"><label for="nb_s">Größe</label><input class="input" id="nb_s" name="size"></div>
+    <div class="field"><label for="nb_p">Pedalsystem</label><select class="input" id="nb_p" name="pedal">${opts(['Shimano SPD-SL','Shimano SPD','Look Keo','Wahoo Speedplay','Plattform'])}</select></div><div class="field"><label for="nb_f">Rahmennummer</label><input class="input mono" id="nb_f" name="frameNo" placeholder="steht meist unten am Tretlager"></div>
+    <div class="wide notice">${ic('info')}Modell nicht in der Liste? Leer lassen und Marke und Modell selbst eintragen. Die Geometrie kannst du später in der Geometrie-Bibliothek ergänzen.</div>
+    <div class="wide"><button class="btn primary" type="submit">Fahrrad speichern</button></div></form>`); },
+  bikeGeo(el){ const b=bike(el.dataset.id); openDrawer('Geometrie zuordnen',`<form class="form" data-form="bikeGeo" data-id="${b.id}"><div class="field wide"><label for="bg_geo">Modell</label><select class="input" id="bg_geo" name="geo" data-change="geoPick" data-size="bg_gs" required><option value="">Modell wählen …</option>${geoOptions(b.geo&&b.geo.id)}</select></div><div class="field" id="bg_gs_wrap" ${b.geo?'':'hidden'}><label for="bg_gs">Rahmengröße</label><select class="input" id="bg_gs" name="geoSize">${b.geo?geoSizeOptions(b.geo.id,b.geo.size):''}</select></div><div class="wide row"><button class="btn primary" type="submit">Zuordnen</button><button class="btn" type="button" data-nav="geometrie">Modell fehlt? Zur Bibliothek</button></div></form>`); },
+  openGeo(el){ geoDrawer(el.dataset.id); },
+  newGeo(){ openDrawer('Modell eintragen',`<form class="form" data-form="newGeo"><div class="field"><label for="ng_b">Marke</label><input class="input" id="ng_b" name="brand" required></div><div class="field"><label for="ng_m">Modell</label><input class="input" id="ng_m" name="model" required></div><div class="field"><label for="ng_y">Modelljahr</label><input class="input num" id="ng_y" name="year" type="number" inputmode="numeric"></div><div class="field"><label for="ng_t">Typ</label><select class="input" id="ng_t" name="type">${opts(['Rennrad','Gravel','MTB','Triathlon','E-Bike','Trekking'])}</select></div><div class="field wide"><label for="ng_s">Link zur Herstellerseite (optional)</label><input class="input" id="ng_s" name="src" type="url" placeholder="https://…"></div><div class="wide"><button class="btn primary" type="submit">Weiter: Größen eintragen</button></div></form>`); },
+  delGeoRow(el){ const g=S.geoCustom.find(x=>x.id===el.dataset.id); g.rows.splice(Number(el.dataset.i),1); save(); geoDrawer(g.id); render(); },
+  delGeo(el){ S.geoCustom=S.geoCustom.filter(x=>x.id!==el.dataset.id); audit('Geometrie-Modell gelöscht'); save(); closeDrawer(); render(); toast('Modell gelöscht'); },
+  chip(el){ const inp=document.getElementById(el.dataset.t); if(!inp) return; const v=el.dataset.v;
+    if(el.dataset.m==='set'){ inp.value=inp.value===v?'':v; }
+    else { let p=splitVals(inp.value); if(p.includes(v)) p=p.filter(x=>x!==v); else { p.push(v); if(v==='Keine') p=['Keine']; else p=p.filter(x=>x!=='Keine'); } inp.value=p.join(', '); }
+    const vals=splitVals(inp.value); document.querySelectorAll(`[data-group="${el.dataset.t}"] .chipbtn`).forEach(b=>b.setAttribute('aria-pressed',el.dataset.m==='set'?String(inp.value===b.dataset.v):String(vals.includes(b.dataset.v)))); },
   saveKm(el){ const b=bike(el.dataset.id); const v=Number(document.getElementById('kmInput').value); if(!(v>=0)){toast('Bitte einen gültigen Kilometerstand eingeben',true);return;} audit(`Kilometerstand ${b.model}: ${b.km} → ${v}`); b.km=v; save(); toast('Kilometerstand gespeichert'); bikeDrawer(b.id); render(); },
   delMeasure(el){ const s=sess(el.dataset.id); const k=el.dataset.key; const side=el.dataset.side; const m=s[side][k]; delete s[side][k]; audit(`Wert entfernt (${side==='before'?'vorher':'nachher'}): ${MK[k].label} ${fmtNum(m.value)} ${MK[k].unit}`,s.id); save(); render(); toast('Wert entfernt, im Audit-Log protokolliert'); },
   simCapture(el){ const s=sess(el.dataset.id); const c=cust(s.customerId); if(!c.body.height&&!c.body.inseam){ toast('Bitte zuerst Körpergröße oder Schrittlänge eintragen',true); customerDrawer(c.id); return; }
@@ -1470,6 +1604,9 @@ const ACT = {
 function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
 
 const FORMS = {
+  bikeGeo(f,data){ const b=bike(f.dataset.id); const g=geoById(data.get('geo')); if(!g||!data.get('geoSize')){ toast('Bitte Modell und Größe wählen',true); return; } b.geo={id:g.id,size:data.get('geoSize')}; b.size=b.geo.size; audit(`Geometrie zugeordnet: ${b.brand} ${b.model} → ${g.brand} ${g.model} ${b.geo.size}`); save(); bikeDrawer(b.id); render(); toast('Geometrie zugeordnet'); },
+  newGeo(f,data){ const id=uid('g'); S.geoCustom.push({id,brand:data.get('brand').trim(),model:data.get('model').trim(),year:data.get('year')?Number(data.get('year')):null,type:data.get('type'),src:data.get('src')||'',rows:[]}); audit(`Geometrie-Modell angelegt: ${data.get('brand')} ${data.get('model')}`); save(); render(); geoDrawer(id); },
+  geoRow(f,data){ const g=S.geoCustom.find(x=>x.id===f.dataset.id); const row=GCOLS.map(c=>{ if(c==='size') return data.get('size').trim(); const v=data.get(c); return v===null||v===''?null:Number(v); }); g.rows=g.rows.filter(r=>String(r[0])!==row[0]); g.rows.push(row); save(); geoDrawer(g.id); render(); toast(`Größe ${row[0]} gespeichert`); },
   check(f,data){ const s=sess(f.dataset.id); const c=cust(s.customerId); const ch={};
     CHECKS.forEach(t=>(t.side?['L','R']:['']).forEach(sd=>{ const v=data.get(t.k+sd); if(v!==null&&v!=='') ch[t.k+sd]=t.type==='num'?Number(v):v; }));
     s.check=ch;
@@ -1502,7 +1639,7 @@ const FORMS = {
   message(f,data){ const t=String(data.get('text')).trim(); if(!t) return; (S.messages[f.dataset.id]=S.messages[f.dataset.id]||[]).push({from:'Kunde',time:nowStamp(),text:t}); save(); render(); toast('Nachricht gespeichert (kein echter Versand)'); },
   customer(f,data){ const id=uid('c'); const num=k=>{const v=data.get(k);return v===''||v===null?null:Number(v);}; const c={id,name:data.get('name').trim(),email:data.get('email'),phone:data.get('phone'),since:today(),discipline:data.get('discipline'),consent:data.get('consent')==='on',body:{height:num('height'),inseam:num('inseam'),torso:num('torso'),arm:num('arm'),shoulder:null,footL:num('footR'),footR:num('footR'),sitBone:null},flex:{hamstring:data.get('hamstring'),hip:'',ankle:''},tags:['Neu'],est:[]};
     if(data.get('est')==='on') estimateBody(c); S.customers.push(c); audit(`Kunde angelegt: ${c.name}`); save(); render(); customerDrawer(id); toast('Kunde angelegt – jetzt Fahrrad anlegen'); },
-  bike(f,data){ const id=uid('b'); const cid=f.dataset.cid; S.bikes.push({id,customerId:cid,name:data.get('model'),brand:data.get('brand'),model:data.get('model'),size:data.get('size'),year:new Date().getFullYear(),type:data.get('type'),frameNo:data.get('frameNo')||'–',pedal:data.get('pedal'),saddle:'–',km:0}); audit(`Fahrrad angelegt: ${data.get('brand')} ${data.get('model')}`); save(); customerDrawer(cid); render(); toast('Fahrrad angelegt'); },
+  bike(f,data){ const id=uid('b'); const cid=f.dataset.cid; const gid=data.get('geo'), gs=data.get('geoSize'); S.bikes.push({id,customerId:cid,name:data.get('model'),brand:data.get('brand'),model:data.get('model'),geo:gid&&gs?{id:gid,size:gs}:null,size:gid&&gs?gs:data.get('size'),year:new Date().getFullYear(),type:data.get('type'),frameNo:data.get('frameNo')||'–',pedal:data.get('pedal'),saddle:'–',km:0}); audit(`Fahrrad angelegt: ${data.get('brand')} ${data.get('model')}`); save(); customerDrawer(cid); render(); toast('Fahrrad angelegt'); },
   woPos(f,data){ const w=S.workshop.find(x=>x.id===f.dataset.id); const price=Number(data.get('price')), qty=Number(data.get('qty')); if(!(price>=0)||!(qty>0)){toast('Menge und Preis prüfen',true);return;} w.positions.push({t:data.get('t'),kind:data.get('kind'),qty,price}); if(w.status==='Angenommen') w.status='Kostenvoranschlag'; w.log.push({time:nowStamp(),text:`Position hinzugefügt: ${data.get('t')}`}); save(); woDrawer(w.id); render(); },
   newWO(f,data){ const b=bike(data.get('bid')); const n=Math.max(...S.workshop.map(w=>Number(w.id.split('-')[1])))+1; const id='WO-'+n; S.workshop.unshift({id,customerId:b.customerId,bikeId:b.id,title:data.get('title'),status:'Angenommen',created:today(),due:data.get('due'),mechanic:data.get('mechanic'),positions:[],log:[{time:nowStamp(),text:'Auftrag angenommen'}],approval:null}); audit(`Werkstattauftrag ${id} angelegt`); save(); render(); woDrawer(id); toast(`${id} angelegt`); },
   item(f,data){ const sku=f.dataset.sku; const rec={sku:data.get('sku').trim(),name:data.get('name').trim(),cat:data.get('cat'),loc:data.get('loc'),stock:Number(data.get('stock')),min:Number(data.get('min')),price:Number(data.get('price'))};
@@ -1511,9 +1648,14 @@ const FORMS = {
 };
 
 const CHG = {
+  geoPick(el){ const sel=document.getElementById(el.dataset.size); const wrap=document.getElementById(el.dataset.size+'_wrap'); const g=geoById(el.value);
+    if(sel){ sel.innerHTML=geoSizeOptions(el.value,''); } if(wrap) wrap.hidden=!g;
+    if(el.dataset.fill&&g){ document.getElementById('nb_b').value=g.brand; document.getElementById('nb_m').value=g.model; document.getElementById('nb_t').value=g.type; const sw=document.getElementById('nb_s_wrap'); if(sw) sw.hidden=true; }
+    if(el.dataset.fill&&!g){ const sw=document.getElementById('nb_s_wrap'); if(sw) sw.hidden=false; } },
+  advGeo(el){ ui.advGeo=el.value; render(); },
   compDone(el){ const s=sess(el.dataset.id); const cp=s.comp[Number(el.dataset.i)]; cp.status=el.checked?'umgesetzt':'geplant'; audit(`Ausgleich ${cp.status}: ${cp.t}`,s.id); save(); render(); },
   sessStatus(el){ const s=sess(el.dataset.id); const old=s.status; s.status=el.value; if(el.value==='abgeschlossen'&&!s.followUps.length){ const due=new Date(s.date+'T12:00'); due.setDate(due.getDate()+30); s.followUps.push({days:30,due:iso(due),status:'offen'}); toast('Abgeschlossen – Nachkontrolle in 30 Tagen angelegt'); } else toast(`Status: ${el.value}`); audit(`Status ${cust(s.customerId).name}: ${old} → ${el.value}`,s.id); save(); render(); },
-  pickSession(el){ ui.sess=el.value; render(); },
+  pickSession(el){ ui.sess=el.value; ui.advGeo=null; render(); },
   onlyChanged(el){ ui.cmpChanged=el.checked; render(); },
   share(el){ S.shared[el.dataset.id]=el.checked; audit(`Bericht ${el.checked?'im Portal freigegeben':'Freigabe entzogen'}`,el.dataset.id); save(); toast(el.checked?'Im Kundenportal sichtbar':'Nicht mehr im Kundenportal sichtbar'); },
   cmpA(el){ ui.cmpA=el.value; render(); }, cmpB(el){ ui.cmpB=el.value; render(); },
@@ -1542,7 +1684,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); cl
 applyTheme();
 const start=(location.hash||'').slice(1);
 go(VIEWS[start]?start:'dashboard');
-window.__fitframe={S:()=>S,ui,go,ACT,VIEWS,quality};
+window.__fitframe={S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
