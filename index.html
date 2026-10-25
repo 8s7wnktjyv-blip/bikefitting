@@ -129,7 +129,10 @@ textarea.input{min-height:80px;resize:vertical}
 .step.done i{background:var(--ok-soft);color:var(--ok)}
 .step[aria-current="step"]{background:var(--accent-soft);color:var(--fg);border-color:var(--accent-line)}
 .step[aria-current="step"] i{background:var(--accent);color:var(--accent-ink)}
-.stepnav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:16px;margin-top:4px}
+.stepnav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding:12px 0;margin-top:4px;position:sticky;bottom:0;background:var(--surface);z-index:5}
+#view section.panel{scroll-margin-top:140px}
+.stepbar{position:sticky;top:calc(env(safe-area-inset-top,0px) + 61px);z-index:15;background:var(--surface);border-radius:var(--r) var(--r) 0 0}
+@media (max-width:860px){.stepnav{bottom:calc(66px + env(safe-area-inset-bottom,0px))}.stepbar{top:calc(env(safe-area-inset-top,0px) + 61px)}}
 
 .tw{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:14px}
@@ -861,8 +864,8 @@ function go(r){
 }
 function render(){
   renderNav();
-  const v = document.getElementById('view');
-  try{ v.innerHTML = VIEWS[ui.route](); }
+  const v = document.getElementById('view'); const y=window.scrollY;
+  try{ v.innerHTML = VIEWS[ui.route](); window.scrollTo(0,y); }
   catch(e){ console.error(e); v.innerHTML = `<div class="notice warn">${ic('warn')}<div><b>Diese Ansicht konnte nicht geladen werden.</b><br>Fehler: ${esc(e.message)}. Setze die Demo unter „Mehr“ zurück, falls der Fehler bleibt.</div></div>`; }
   afterRender();
 }
@@ -1090,7 +1093,7 @@ VIEWS.sitzung = () => {
     <h1>${esc(c.name)}</h1><p>${esc(s.type)} · ${esc(b.brand+' '+b.model)} (${esc(b.type)}, Größe ${esc(b.size)})</p></div>
     <div class="row"><select class="input" style="width:auto;max-width:100%" data-change="pickSession" aria-label="Anderes Fitting öffnen">${S.sessions.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<option value="${x.id}" ${x.id===s.id?'selected':''}>${fmtDate(x.date)} · ${esc(cust(x.customerId).name)}</option>`).join('')}</select>
     <button class="btn" data-act="newSession">${ic('plus')}Neues Fitting</button></div></div>
-  <section class="panel"><div class="panel-h" style="padding:10px"><nav class="steps" aria-label="Schritte">${STEPS.map(([k,l],i)=>`<button class="step ${stepDone(s,c,k)?'done':''}" data-act="sessTab" data-v="${k}" ${k===ui.sessTab?'aria-current="step"':''}><i>${stepDone(s,c,k)&&k!==ui.sessTab?ic('check','width="14" height="14"'):i+1}</i>${l}</button>`).join('')}</nav></div>
+  <section class="panel"><div class="panel-h stepbar" style="padding:10px"><nav class="steps" aria-label="Schritte">${STEPS.map(([k,l],i)=>`<button class="step ${stepDone(s,c,k)?'done':''}" data-act="sessTab" data-v="${k}" ${k===ui.sessTab?'aria-current="step"':''}><i>${stepDone(s,c,k)&&k!==ui.sessTab?ic('check','width="14" height="14"'):i+1}</i>${l}</button>`).join('')}</nav></div>
   <div class="panel-b stack">${SESSTAB[ui.sessTab](s,c,b)}
     <div class="stepnav">${prev?`<button class="btn" data-act="sessTab" data-v="${prev[0]}">${ic('back')}${prev[1]}</button>`:'<span></span>'}
     ${next?`<button class="btn primary" data-act="sessTab" data-v="${next[0]}">Weiter: ${next[1]}${ic('arrow')}</button>`:s.status!=='abgeschlossen'?`<button class="btn primary" data-act="finishSession" data-id="${s.id}">${ic('check')}Fitting abschließen</button>`:`<span class="chip c-ok">abgeschlossen</span>`}</div>
@@ -1171,7 +1174,7 @@ function measureCard(s,side,k,c,b){
     ${cur?`<div style="text-align:right"><div class="num" style="font-size:18px;font-weight:600">${fmtNum(cur.value)} ${m.unit}</div><div class="src">${esc(cur.method)}</div></div>`:'<span class="chip">fehlt</span>'}</div>
     <details class="more"><summary>So misst du · ${esc(h.tool)}</summary>${IL(k)}<ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">${h.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>${h.tip?`<p class="faint" style="margin-top:6px;font-size:13px">Tipp: ${esc(h.tip)}</p>`:''}</details>
     <form class="stack" style="gap:8px" data-form="measure" data-id="${s.id}" data-side="${side}"><input type="hidden" name="key" value="${k}"><input type="hidden" name="source" value="gemessen">
-      <div class="row" style="flex-wrap:nowrap;align-items:flex-start"><div class="field" style="flex:1"><label for="mc_${k}">Wert (${m.unit})</label><input class="input num" id="mc_${k}" name="value" type="number" step="0.1" inputmode="decimal" value="${cur?cur.value:''}" required ${rangeAttr(rg,'mc_'+k)}>${rangeHint(rg,'mc_'+k,cur?cur.value:'')}</div>
+      <div class="row" style="flex-wrap:nowrap;align-items:flex-start"><div class="field" style="flex:1"><label for="mc_${k}">Wert (${m.unit})</label><input class="input num" id="mc_${k}" name="value" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" value="${cur?cur.value:''}" required ${rangeAttr(rg,'mc_'+k)}>${rangeHint(rg,'mc_'+k,cur?cur.value:'')}</div>
       <button class="btn" type="submit" style="margin-top:23px">${cur?'Ändern':'Speichern'}</button></div>
       <details class="more"><summary>Methode und Genauigkeit</summary><div class="form" style="margin-top:8px"><div class="field"><label for="mm_${k}">Methode</label><select class="input" id="mm_${k}" name="method">${opts(METHODS,cur?cur.method:h.m)}</select></div>
       <div class="field"><label for="mu_${k}">± Genauigkeit (${m.unit})</label><input class="input num" id="mu_${k}" name="unc" type="number" step="0.1" min="0" inputmode="decimal" value="${cur&&cur.unc!=null?cur.unc:''}" placeholder="optional"></div></div></details>
@@ -1912,7 +1915,11 @@ const FORMS = {
     const old=s.before[k]; const unc=data.get('unc'); ui.editMaker=null; s.before[k]={key:k,value:v,method:data.get('method'),source:(old&&old.source==='vom Hersteller'&&Number(old.value)===v)?'vom Hersteller':data.get('method')==='Herstellerangabe'?'manuell eingegeben':data.get('source'),unc:unc===''?null:Number(unc),time:nowStamp()};
     if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit';
     { const rg=measureRange(k,cust(s.customerId),bike(s.bikeId)); if(rg&&rg.lo!=null&&(v<rg.lo||v>rg.hi)) setTimeout(()=>toast(`${MK[k].label} liegt außerhalb von ${fmtNum(rg.lo)}–${fmtNum(rg.hi)} ${rg.unit} – bitte nachmessen`,true),50); }
-    audit(old?`Ausgangswert korrigiert: ${MK[k].label} ${fmtNum(old.value)} → ${fmtNum(v)} ${MK[k].unit}`:`Ausgangswert erfasst: ${MK[k].label} ${fmtNum(v)} ${MK[k].unit}`,s.id); save(); render(); toast(`${MK[k].label} gespeichert`); },
+    audit(old?`Ausgangswert korrigiert: ${MK[k].label} ${fmtNum(old.value)} → ${fmtNum(v)} ${MK[k].unit}`:`Ausgangswert erfasst: ${MK[k].label} ${fmtNum(v)} ${MK[k].unit}`,s.id); save(); render();
+    const nextK=MEASURE_NOW.find(x=>!s.before[x]); const nx=nextK&&document.getElementById('mc_'+nextK);
+    if(nx){ nx.closest('section').scrollIntoView({behavior:'smooth',block:'start'}); setTimeout(()=>nx.focus({preventScroll:true}),350); toast(`${MK[k].label} gespeichert – weiter mit ${MK[nextK].label}`); }
+    else if(!old&&MEASURE_NOW.includes(k)){ const sn=document.querySelector('.stepnav'); if(sn) sn.scrollIntoView({behavior:'smooth',block:'end'}); toast('Alle 5 Pflichtwerte erfasst – weiter mit „Anpassen“'); }
+    else toast(`${MK[k].label} gespeichert`); },
   change(f,data){ ui.prepKey=null; const s=sess(f.dataset.id); const k=data.get('key'); const v=parseFloat(String(data.get('value')).replace(',','.')); const reason=String(data.get('reason')||'').trim();
     if(isNaN(v)){toast('Bitte einen Zahlenwert eingeben',true);return;} if(!reason){toast('Bitte eine Begründung angeben',true);return;}
     const from=s.after[k]?s.after[k].value:(s.before[k]?s.before[k].value:null);
