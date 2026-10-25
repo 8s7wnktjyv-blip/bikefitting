@@ -165,6 +165,17 @@ td.r,th.r{text-align:right}
 .st-i::before{background:var(--ok)} .st-s::before{background:var(--info)} .st-k::before{background:var(--faint)} .st-x::before{background:var(--warn)}
 .src{font-size:12px;color:var(--faint)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
+.hint{font-size:12.5px;color:var(--muted);line-height:1.4}
+.hint.out{color:var(--bad);font-weight:600}
+.illus{background:var(--surface-2);border-radius:10px;padding:8px;margin:10px 0 6px;max-width:380px}
+.illus svg{width:100%;height:auto;display:block;overflow:visible}
+.illus line,.illus path{stroke-linecap:round;stroke-linejoin:round}
+.illus circle,.illus ellipse{fill:none}
+.il-b{stroke:var(--muted);fill:none} .il-f{stroke:var(--line);fill:none;stroke-width:2} rect.il-f{fill:var(--surface);stroke:var(--line)}
+.il-p{stroke:var(--fg);fill:none} .il-h{stroke:var(--accent);fill:none} .il-d{stroke:var(--faint);stroke-dasharray:4 4;stroke-width:1.5}
+.il-head{fill:var(--accent);stroke:none}
+.illus circle.il-fill.il-b{fill:var(--muted)} .illus circle.il-fill.il-p{fill:var(--fg)} .illus circle.il-fill.il-h{fill:var(--accent)}
+.il-t{fill:var(--fg);font:600 12px var(--f-body)} .il-s{fill:var(--muted);font:11px var(--f-body)}
 .chipbtn{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--fg);min-height:34px}
 .chipbtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-strong);font-weight:600}
 tr.best td{background:var(--ok-soft)}
@@ -364,6 +375,125 @@ const HOW = {
   hipAngle:{m:'Goniometer',tool:'Goniometer oder Winkel-App',steps:['Kurbel am höchsten Punkt anhalten.','Winkel zwischen Oberkörper (Hüfte–Schulter) und Oberschenkel (Hüfte–Knie) messen.'],tip:'Sehr kleine Winkel drücken oft auf Hüfte oder Bauch.'},
   torsoAngle:{m:'Goniometer',tool:'Goniometer oder Winkel-App',steps:['Hände an den Bremsgriffen.','Winkel der Linie Hüfte–Schulter zur Waagerechten messen.'],tip:''}
 };
+
+/* ---------- Skizzen zu Messpunkten und Tests (eigene Zeichnungen, schematisch) ---------- */
+const IL = (()=>{
+  const ln=(x1,y1,x2,y2,c='b',w)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="il-${c}"${w?` style="stroke-width:${w}"`:''}/>`;
+  const ci=(x,y,r,c='b',fill)=>`<circle cx="${x}" cy="${y}" r="${r}" class="il-${c}${fill?' il-fill':''}"/>`;
+  const tx=(x,y,t,anchor='middle',c='t')=>`<text x="${x}" y="${y}" text-anchor="${anchor}" class="il-${c}">${t}</text>`;
+  const head=(x,y,ang)=>{ const a1=ang+2.6, a2=ang-2.6; return `<path d="M${x},${y} L${x+7*Math.cos(a1)},${y+7*Math.sin(a1)} L${x+7*Math.cos(a2)},${y+7*Math.sin(a2)}Z" class="il-head"/>`; };
+  const arw=(x1,y1,x2,y2,both=true)=>{ const a=Math.atan2(y2-y1,x2-x1); return ln(x1,y1,x2,y2,'h',2.4)+head(x2,y2,a)+(both?head(x1,y1,a+Math.PI):''); };
+  const arc=(cx,cy,r,a1,a2)=>{ const p=a=>[cx+r*Math.cos(a*Math.PI/180),cy-r*Math.sin(a*Math.PI/180)]; const [x1,y1]=p(a1),[x2,y2]=p(a2); const large=Math.abs(a2-a1)>180?1:0; const sweep=a2>a1?0:1; return `<path d="M${x1},${y1} A${r},${r} 0 ${large} ${sweep} ${x2},${y2}" class="il-h" style="fill:none;stroke-width:2.4"/>`; };
+  const dash=(x1,y1,x2,y2)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="il-d"/>`;
+  const svg=(inner,label,vb='0 0 320 180')=>`<svg viewBox="${vb}" role="img" aria-label="${label}">${inner}</svg>`;
+  // Fahrrad Seitenansicht, Fahrtrichtung rechts
+  const BB=[150,122], ST=[124,50], SAD=[92,40,138,40], HT=[214,52,222,80], BAR=[240,52];
+  const bike=(opt={})=>[
+    ci(72,112,46,'f'), ci(250,112,46,'f'), ci(72,112,3,'b',1), ci(250,112,3,'b',1),
+    ln(BB[0],BB[1],ST[0],ST[1],'b',3), ln(ST[0],ST[1],HT[0],HT[1]+4,'b',3), ln(BB[0],BB[1],HT[2],HT[3],'b',3), ln(HT[0],HT[1],HT[2],HT[3],'b',4),
+    ln(BB[0],BB[1],72,112,'b',2.5), ln(ST[0],ST[1]+4,72,112,'b',2.5), ln(HT[2],HT[3],250,112,'b',2.5),
+    ln(ST[0],ST[1],120,42,'b',3), `<path d="M${SAD[0]},${SAD[1]} Q115,35 ${SAD[2]},${SAD[3]}" class="il-b" style="stroke-width:4;fill:none"/>`,
+    ln(HT[0],HT[1],HT[0]-2,HT[1]-6,opt.spacer?'h':'b',opt.spacer?5:4),
+    ln(HT[0]-2,HT[1]-7,BAR[0]-4,BAR[1]-10,opt.stem?'h':'b',opt.stem?4:3),
+    `<path d="M${BAR[0]-4},${BAR[1]-10} q10,0 10,10 q0,10 -8,12" class="il-b" style="fill:none;stroke-width:3"/>`,
+    ln(BB[0],BB[1],opt.crankDown?150:132,opt.crankDown?160:150,opt.crank?'h':'b',opt.crank?4:3), ci(opt.crankDown?150:132,opt.crankDown?160:150,3,'b',1), ci(BB[0],BB[1],4,'b',1)
+  ].join('');
+  // Fahrerin als Strichfigur
+  const rider=(hip,knee,ankle,sh,hand,hi)=>[
+    ln(...hip,...knee,hi==='leg'?'h':'p',5), ln(...knee,...ankle,hi==='leg'?'h':'p',5), ln(...hip,...sh,hi==='torso'?'h':'p',6), ln(...sh,...hand,'p',4), ci(sh[0]+12,sh[1]-12,10,'p',1), ci(...knee,3,'b',1), ci(...hip,3,'b',1)
+  ].join('');
+  const floor=(y=170)=>ln(10,y,310,y,'f',2);
+  const person=(x,y,sc=1,opt={})=>{ // stehend, von vorn
+    const s=v=>v*sc; return [ci(x,y+s(12),s(11),'p',1), ln(x,y+s(24),x,y+s(80),'p',6), ln(x-s(24),y+s(32),x+s(24),y+s(32),opt.shoulder?'h':'p',opt.shoulder?4:5),
+      ln(x-s(24),y+s(32),x-s(30),y+s(74),'p',4), ln(x+s(24),y+s(32),x+s(30),y+s(74),'p',4), ln(x-s(14),y+s(80),x+s(14),y+s(80),opt.pelvis?'h':'p',opt.pelvis?4:5),
+      ln(x-s(12),y+s(80),x-s(14),y+s(140),'p',5), ln(x+s(12),y+s(80),x+s(14),y+s(140),'p',5)].join(''); };
+  const D={
+    saddleHeight:()=>svg(bike({crank:1})+arw(148,118,121,44)+tx(86,58,'Sattelhöhe','end')+tx(86,72,'Tretlager → Sattel','end','s'),'Sattelhöhe messen'),
+    saddleSetback:()=>svg(bike()+dash(150,18,150,126)+arw(138,30,150,30)+tx(150,13,'Lot durch Tretlager')+tx(108,26,'Versatz','end'),'Sattelversatz messen'),
+    saddleTilt:()=>svg(`<path d="M60,100 Q160,72 260,92" class="il-b" style="stroke-width:7;fill:none"/>`+dash(60,100,270,100)+arc(70,100,60,0,9)+tx(160,130,'Neigung zur Waagerechten')+tx(160,148,'Winkelmesser längs auflegen','middle','s')+`<rect x="100" y="64" width="110" height="14" rx="3" class="il-h" style="fill:none;stroke-width:2"/>`,'Sattelneigung messen'),
+    reach:()=>svg(bike()+arw(138,36,238,40)+tx(188,26,'Sattel → Lenkermitte'),'Abstand Sattel zu Lenker messen'),
+    drop:()=>svg(bike()+dash(92,40,272,40)+arw(262,40,262,52)+tx(268,72,'Überhöhung','end'),'Überhöhung messen'),
+    stemLength:()=>svg(bike({stem:1})+tx(226,24,'Vorbau'),'Vorbaulänge'),
+    spacer:()=>svg(bike({spacer:1})+tx(196,30,'Spacer','end'),'Spacer'),
+    barWidth:()=>svg(`<path d="M80,60 L240,60 M80,60 q-14,0 -14,24 q0,22 12,30 M240,60 q14,0 14,24 q0,22 -12,30" class="il-b" style="fill:none;stroke-width:5"/>`+ln(160,60,160,40,'b',6)+arw(70,140,250,140)+dash(70,84,70,146)+dash(250,84,250,146)+tx(160,160,'Mitte zu Mitte am Unterlenker'),'Lenkerbreite'),
+    crankLength:()=>svg(bike({crank:1})+tx(116,166,'Kurbellänge: steht innen am Arm'),'Kurbellänge'),
+    cleatFore:()=>svg(`<path d="M40,110 Q40,70 90,68 L230,74 Q280,80 282,104 L282,118 L40,118Z" class="il-b" style="fill:none;stroke-width:4"/>`+ci(200,100,6,'h',1)+tx(200,58,'Großzehen-Grundgelenk')+ln(200,63,200,92,'h',1.5)+`<rect x="150" y="120" width="60" height="10" rx="3" class="il-b" style="fill:none;stroke-width:3"/>`+ci(180,140,5,'b',1)+arw(180,152,200,152)+tx(180,172,'Abstand zur Pedalachse'),'Cleat-Position längs'),
+    cleatRotL:()=>D.cleatRotR(),
+    cleatRotR:()=>svg(`<path d="M160,20 C210,20 215,80 205,120 C198,160 180,170 160,170 C140,170 122,160 115,120 C105,80 110,20 160,20Z" class="il-b" style="fill:none;stroke-width:4"/>`+dash(160,10,160,176)+`<g transform="rotate(-10 160 70)"><rect x="135" y="45" width="50" height="50" rx="8" class="il-h" style="fill:none;stroke-width:3"/>${ln(160,30,160,110,'h',1.5)}</g>`+arc(160,70,46,90,100)+tx(250,70,'Winkel zur','middle')+tx(250,86,'Schuhachse','middle')+tx(160,178,'Schuh von unten','middle','s'),'Cleat-Rotation','0 0 320 186'),
+    kneeBDC:()=>svg(bike({crankDown:1})+rider([112,36],[168,82],[152,150],[188,10],[236,44],'leg')+arc(168,82,20,128,248)+tx(8,4,'Kniewinkel','start')+tx(8,18,'Kurbel ganz unten','start','s'),'Kniewinkel am unteren Totpunkt','0 -10 320 190'),
+    hipAngle:()=>svg(bike()+rider([112,36],[168,40],[150,96],[188,10],[236,44])+arc(112,36,22,0,40)+tx(70,22,'Hüftwinkel','end')+tx(70,36,'Kurbel ganz oben','end','s'),'Hüftwinkel','0 -10 320 190'),
+    torsoAngle:()=>svg(bike()+rider([112,36],[168,70],[150,140],[188,10],[236,44],'torso')+dash(112,36,212,36)+arc(112,36,30,0,22)+tx(312,0,'Oberkörperwinkel','end'),'Oberkörperwinkel','0 -10 320 190'),
+    // Körpercheck
+    pain:()=>svg(person(110,12,1)+`<path d="M170,30 h120 a10,10 0 0 1 10,10 v40 a10,10 0 0 1 -10,10 h-90 l-18,16 v-16 h-12 a10,10 0 0 1 -10,-10 v-40 a10,10 0 0 1 10,-10Z" class="il-h" style="fill:none;stroke-width:2.4"/>`+tx(230,58,'Schmerzen?')+tx(230,76,'Wo genau?','middle','s'),'Nach Schmerzen fragen'),
+    legLen:()=>svg(floor(130)+`<rect x="20" y="112" width="280" height="18" rx="4" class="il-f"/>`+ci(40,96,11,'p',1)+ln(52,98,140,98,'p',8)+ln(140,98,280,92,'p',6)+ln(140,104,280,104,'p',6)+ci(140,92,4,'h',1)+ci(282,100,4,'h',1)+arw(140,78,282,78)+tx(140,68,'Beckenknochen','middle','s')+tx(282,68,'Innenknöchel','end','s')+tx(210,160,'Rückenlage, beide Seiten messen'),'Beinlänge messen'),
+    pelvis:()=>svg(person(160,10,1,{pelvis:1})+dash(110,90,210,90)+tx(160,176,'Von hinten: beide Beckenkämme gleich hoch?'),'Beckenstand im Stehen','0 0 320 184'),
+    shoulder:()=>svg(person(160,10,1,{shoulder:1})+dash(110,42,210,42)+tx(160,176,'Von vorn: Schultern gleich hoch?'),'Schulterstand','0 0 320 184'),
+    kneeTrack:()=>svg(ci(160,16,11,'p',1)+ln(160,28,160,80,'p',6)+ln(160,80,150,120,'p',5)+ln(150,120,162,166,'p',5)+ln(160,80,198,96,'p',5)+ln(198,96,214,124,'p',5)+floor(168)+dash(162,60,162,168)+arw(170,120,150,120,false)+ci(150,120,4,'h',1)+tx(240,130,'Knie bleibt über','start','s')+tx(240,144,'dem Fuß?','start','s')+tx(60,130,'fällt nach innen?','middle','s'),'Kniespur bei einbeiniger Kniebeuge'),
+    arch:()=>svg(`<path d="M40,140 L60,128 Q130,90 200,120 L280,140" class="il-p" style="fill:none;stroke-width:5"/>`+floor(142)+arw(130,104,130,140)+tx(130,90,'Gewölbe')+tx(160,166,'Von innen: flach, normal oder hoch?'),'Fußgewölbe'),
+    forefoot:()=>svg(`<ellipse cx="160" cy="130" rx="34" ry="22" class="il-p" style="fill:none;stroke-width:4"/>`+ln(110,70,210,56,'h',4)+dash(100,70,220,70)+tx(160,44,'Linie der Zehenballen')+tx(160,174,'Bauchlage, Fuß von hinten','middle','s')+ln(126,112,118,72,'p',3)+ln(194,112,202,60,'p',3),'Vorfußstellung'),
+    hamstring:()=>svg(floor(160)+ln(150,160,152,100,'p',5)+ln(160,160,158,100,'p',5)+ln(155,100,205,64,'p',6)+ci(215,58,11,'p',1)+ln(200,68,210,128,'p',4)+arw(210,132,210,160)+tx(226,150,'Finger bis Boden','start','s'),'Finger-Boden-Abstand'),
+    hipFlex:()=>svg(`<rect x="20" y="122" width="280" height="14" rx="4" class="il-f"/>`+ci(42,108,11,'p',1)+ln(54,110,140,110,'p',8)+ln(140,110,280,112,'p',6)+ln(140,108,120,62,'h',6)+ln(120,62,96,96,'h',5)+tx(180,60,'Knie zur Brust,','start','s')+tx(180,74,'anderes Bein bleibt liegen','start','s'),'Hüftbeugung'),
+    ankle:()=>svg(ln(250,10,250,170,'b',6)+floor(170)+`<path d="M130,170 L200,170 L214,160" class="il-p" style="fill:none;stroke-width:5"/>`+ln(140,164,180,110,'p',6)+ln(180,110,248,98,'h',5)+ci(248,98,4,'h',1)+arw(214,152,250,152)+tx(232,146,'Abstand','middle','s')+tx(120,40,'Knie zur Wand,','middle','s')+tx(120,54,'Ferse bleibt unten','middle','s'),'Knie-zur-Wand-Test'),
+    sitBone:()=>svg(`<rect x="60" y="40" width="200" height="110" rx="10" class="il-f" style="stroke-width:3"/>`+ci(120,96,12,'h')+ci(200,96,12,'h')+arw(120,96,200,96)+tx(160,84,'Mitte zu Mitte')+tx(160,170,'Abdrücke auf Wellpappe','middle','s'),'Sitzknochenabstand')
+  };
+  return k=>D[k]?`<div class="illus">${D[k]()}</div>`:'';
+})();
+
+/* ---------- Plausibilitätsbereiche ---------- */
+// Grobe Richtwerte zur Kontrolle auf Messfehler. Segmentanteile an der Körpergröße nach üblichen
+// biomechanischen Faustregeln (z. B. Drillis & Contini), mit großzügigem Spielraum. Keine Normwerte.
+const BODY_RANGE = {
+  height:{lo:120,hi:215,unit:'cm',basis:'Erwachsene'},
+  inseam:{r:[0.43,0.50],unit:'cm',basis:'Schrittlänge etwa 43–50 % der Körpergröße'},
+  torso:{r:[0.26,0.34],unit:'cm',basis:'Rumpf etwa 26–34 % der Körpergröße'},
+  arm:{r:[0.32,0.41],unit:'cm',basis:'Arm etwa 32–41 % der Körpergröße'},
+  shoulder:{r:[0.20,0.27],unit:'cm',basis:'Schulterbreite etwa 20–27 % der Körpergröße'},
+  footL:{r:[1.38,1.65],unit:'mm',basis:'Fuß etwa 14–16,5 % der Körpergröße'},
+  footR:{r:[1.38,1.65],unit:'mm',basis:'Fuß etwa 14–16,5 % der Körpergröße'},
+  sitBone:{lo:80,hi:160,unit:'mm',basis:'üblicher Bereich bei Erwachsenen'}
+};
+const CHECK_RANGE = {
+  legLen:{r:[0.48,0.56],unit:'cm',basis:'Beckenknochen bis Innenknöchel etwa 48–56 % der Körpergröße'},
+  hamstring:{lo:0,hi:35,unit:'cm',basis:'üblicher Bereich'},
+  ankle:{lo:0,hi:20,unit:'cm',basis:'üblicher Bereich'},
+  sitBone:{lo:80,hi:160,unit:'mm',basis:'üblicher Bereich bei Erwachsenen'}
+};
+function rangeFor(def,c){
+  if(!def) return null;
+  if(def.r){ const H=Number(c.body.height); if(!H) return {need:'Körpergröße'}; const lo=H*def.r[0], hi=H*def.r[1]; const round=v=>def.unit==='mm'?Math.round(v):Math.round(v*2)/2; return {lo:round(lo),hi:round(hi),unit:def.unit,basis:`${def.basis} (bei ${fmtNum(H)} cm)`}; }
+  return {lo:def.lo,hi:def.hi,unit:def.unit,basis:def.basis};
+}
+function measureRange(k,c,b){
+  const ins=c.body.inseam?Number(c.body.inseam):(c.body.height?Number(c.body.height)*0.47:null);
+  const t=b?b.type:'';
+  switch(k){
+    case 'saddleHeight': return ins?{lo:Math.round(ins*10*0.85),hi:Math.round(ins*10*0.92),unit:'mm',basis:`etwa 85–92 % der Schrittlänge (${fmtNum(ins)} cm${c.body.inseam?'':', geschätzt'})`}:{need:'Schrittlänge'};
+    case 'saddleSetback': return t==='Triathlon'?{lo:-60,hi:40,unit:'mm',basis:'üblicher Bereich Triathlon'}:{lo:0,hi:110,unit:'mm',basis:'üblicher Bereich'};
+    case 'saddleTilt': return {lo:-8,hi:4,unit:'°',basis:'üblicher Bereich'};
+    case 'reach': { const tor=c.body.torso?Number(c.body.torso):null, arm=c.body.arm?Number(c.body.arm):null; if(tor&&arm) return {lo:Math.round((tor+arm)*10*0.36),hi:Math.round((tor+arm)*10*0.54),unit:'mm',basis:'aus Rumpf- und Armlänge'}; return {lo:350,hi:700,unit:'mm',basis:'üblicher Bereich'}; }
+    case 'drop': return t==='Triathlon'?{lo:0,hi:180,unit:'mm',basis:'üblicher Bereich Triathlon'}:t==='E-Bike'||t==='Trekking'?{lo:-150,hi:40,unit:'mm',basis:'üblicher Bereich'}:{lo:-60,hi:150,unit:'mm',basis:'üblicher Bereich'};
+    case 'stemLength': return t==='MTB'?{lo:30,hi:80,unit:'mm',basis:'übliche Vorbauten MTB'}:{lo:50,hi:140,unit:'mm',basis:'übliche Vorbauten'};
+    case 'spacer': return {lo:0,hi:60,unit:'mm',basis:'üblicher Bereich'};
+    case 'barWidth': return t==='MTB'||t==='E-Bike'||t==='Trekking'?{lo:580,hi:820,unit:'mm',basis:'übliche Lenker'}:{lo:340,hi:500,unit:'mm',basis:'übliche Rennlenker'};
+    case 'crankLength': return {lo:150,hi:180,unit:'mm',basis:'erhältliche Kurbellängen'};
+    case 'cleatFore': return {lo:-10,hi:25,unit:'mm',basis:'üblicher Bereich'};
+    case 'cleatRotL': case 'cleatRotR': return {lo:-10,hi:10,unit:'°',basis:'üblicher Bereich'};
+    case 'kneeBDC': return {lo:125,hi:165,unit:'°',basis:'plausibler Bereich; häufig genannt: 140–150°'};
+    case 'hipAngle': return {lo:30,hi:90,unit:'°',basis:'plausibler Bereich'};
+    case 'torsoAngle': return {lo:5,hi:80,unit:'°',basis:'plausibler Bereich'};
+  }
+  return null;
+}
+const rangeAttr=(rg,id)=>rg&&rg.lo!=null?`data-lo="${rg.lo}" data-hi="${rg.hi}" data-hint="${id}_hint"`:'';
+const rangeHint=(rg,id,val)=>{ if(!rg) return ''; if(rg.need) return `<div class="hint" id="${id}_hint">Bereich erscheint, sobald die ${rg.need} eingetragen ist.</div>`;
+  const v=val===''||val==null?null:Number(val); const out=v!=null&&(v<rg.lo||v>rg.hi);
+  return `<div class="hint ${out?'out':''}" id="${id}_hint" data-base="Erwartet: ${fmtNum(rg.lo)}–${fmtNum(rg.hi)} ${rg.unit}">${out?`Liegt außerhalb von ${fmtNum(rg.lo)}–${fmtNum(rg.hi)} ${rg.unit}. Bitte nachmessen.`:`Erwartet: ${fmtNum(rg.lo)}–${fmtNum(rg.hi)} ${rg.unit}`} <span class="faint">· ${esc(rg.basis)}</span></div>`; };
+function liveRange(el){
+  const h=document.getElementById(el.dataset.hint); if(!h) return; const v=el.value===''?null:Number(el.value); const lo=Number(el.dataset.lo), hi=Number(el.dataset.hi);
+  const out=v!=null&&(v<lo||v>hi); h.classList.toggle('out',out);
+  const basis=h.querySelector('.faint'); const b=basis?basis.outerHTML:'';
+  h.innerHTML=(out?`Liegt außerhalb von ${fmtNum(lo)}–${fmtNum(hi)}. Bitte nachmessen.`:h.dataset.base)+' '+b;
+}
 
 /* ---------- Körpercheck ---------- */
 const CHECKS = [
@@ -770,6 +900,9 @@ function quality(s){
   Object.keys(s.after).forEach(k=>{ const b=s.before[k], a=s.after[k]; if(b && a && b.method!==a.method) out.push(['warn',`${MK[k].label}: Vorher und nachher mit unterschiedlicher Methode gemessen`,`${b.method} → ${a.method}`]); });
   if(s.status!=='geplant'&&!Object.keys(s.check||{}).length) out.push(['warn','Körpercheck nicht durchgeführt','Schritt Körpercheck']);
   checkFindings(s).filter(x=>x.cat==='arzt').forEach(x=>out.push(['bad',`${x.title}: Fachperson hinzuziehen`,'Körpercheck']));
+  BODY.forEach(([k,l])=>{ const rg=rangeFor(BODY_RANGE[k],c); const v=c.body[k]; if(rg&&rg.lo!=null&&v!=null&&v!==''&&(v<rg.lo||v>rg.hi)) out.push(['warn',`${l} ${fmtNum(v)} liegt außerhalb von ${fmtNum(rg.lo)}–${fmtNum(rg.hi)} ${rg.unit}: nachmessen`,'Körpermaße']); });
+  ['before','after'].forEach(side=>Object.values(s[side]).forEach(m=>{ const rg=measureRange(m.key,c,bike(s.bikeId)); if(rg&&rg.lo!=null&&(m.value<rg.lo||m.value>rg.hi)) out.push(['warn',`${MK[m.key].label} ${fmtNum(m.value)} ${MK[m.key].unit} liegt außerhalb von ${fmtNum(rg.lo)}–${fmtNum(rg.hi)}: nachmessen`,side==='before'?'Ausgangsposition':'Anpassungen']); }));
+  Object.entries(s.check||{}).forEach(([k,v])=>{ const base=k.replace(/[LR]$/,''); const rg=rangeFor(CHECK_RANGE[CHECK_RANGE[k]?k:base],c); if(rg&&rg.lo!=null&&typeof v==='number'&&(v<rg.lo||v>rg.hi)) out.push(['warn',`Körpercheck: ${fmtNum(v)} ${rg.unit} liegt außerhalb von ${fmtNum(rg.lo)}–${fmtNum(rg.hi)}: nachmessen`,'Körpercheck']); });
   const body=c.body; const missing=BODY.filter(([k])=>body[k]===null||body[k]===undefined||body[k]==='').map(b=>b[1]);
   if(missing.length) out.push(['info',`Körpermaße unvollständig: ${missing.join(', ')}`,'Kundenprofil']);
   if((c.est||[]).length) out.push(['info',`Körpermaße geschätzt, nicht gemessen: ${c.est.map(k=>BODY.find(b=>b[0]===k)[1]).join(', ')}`,'Kundenprofil']);
@@ -869,7 +1002,7 @@ VIEWS.kunden = () => {
   </tbody></table></div>`:`<div class="empty">Kein Kunde passt zur Suche „${esc(ui.search)}“.<button class="btn sm" data-act="clearSearch">Suche zurücksetzen</button></div>`}`)}`;
 };
 
-function bodyFormHtml(c,ctx){ return `<form class="form" data-form="body" data-id="${c.id}" data-ctx="${ctx}">${BODY.map(([k,l,u])=>`<div class="field"><label for="b_${k}">${l} (${u})${(c.est||[]).includes(k)?' <span class="chip nodot c-warn" style="font-size:10px;padding:0 6px">geschätzt</span>':''}</label><input class="input num" id="b_${k}" name="${k}" type="number" step="0.5" inputmode="decimal" value="${c.body[k]??''}" placeholder="nicht erhoben"></div>`).join('')}
+function bodyFormHtml(c,ctx){ return `<form class="form" data-form="body" data-id="${c.id}" data-ctx="${ctx}">${BODY.map(([k,l,u])=>`<div class="field"><label for="b_${k}">${l} (${u})${(c.est||[]).includes(k)?' <span class="chip nodot c-warn" style="font-size:10px;padding:0 6px">geschätzt</span>':''}</label><input class="input num" id="b_${k}" name="${k}" type="number" step="0.5" inputmode="decimal" value="${c.body[k]??''}" placeholder="nicht erhoben" ${rangeAttr(rangeFor(BODY_RANGE[k],c),'b_'+k)}>${rangeHint(rangeFor(BODY_RANGE[k],c),'b_'+k,c.body[k])}</div>`).join('')}
     <div class="field"><label for="f_ham">Hintere Oberschenkel</label><input class="input" id="f_ham" name="hamstring" value="${esc(c.flex.hamstring)}"></div>
     <div class="field"><label for="f_hip">Hüfte</label><input class="input" id="f_hip" name="hip" value="${esc(c.flex.hip)}"></div>
     <div class="field"><label for="f_ank">Sprunggelenk</label><input class="input" id="f_ank" name="ankle" value="${esc(c.flex.ankle)}"></div>
@@ -976,7 +1109,7 @@ SESSTAB.anamnese = (s,c) => {
 SESSTAB.koerper = (s,c) => {
   const f=checkFindings(s), r=readiness(f,s);
   const inp=(t,sd)=>{ const id=`ck_${t.k}${sd||''}`, val=chkVal(s,t.k,sd)??''; const lab=sd?(sd==='L'?'Links':'Rechts'):'Ergebnis';
-    return `<div class="field"><label for="${id}">${lab}${t.unit?` (${t.unit})`:''}</label>${t.type==='num'?`<input class="input num" id="${id}" name="${t.k}${sd||''}" type="number" step="${t.step||0.5}" inputmode="decimal" value="${esc(val)}">`:`<select class="input" id="${id}" name="${t.k}${sd||''}"><option value="">nicht geprüft</option>${opts(t.opts,val)}</select>`}</div>`; };
+    return `<div class="field"><label for="${id}">${lab}${t.unit?` (${t.unit})`:''}</label>${t.type==='num'?`<input class="input num" id="${id}" name="${t.k}${sd||''}" type="number" step="${t.step||0.5}" inputmode="decimal" value="${esc(val)}" ${rangeAttr(rangeFor(CHECK_RANGE[t.k],c),id)}>${rangeHint(rangeFor(CHECK_RANGE[t.k],c),id,val)}`:`<select class="input" id="${id}" name="${t.k}${sd||''}"><option value="">nicht geprüft</option>${opts(t.opts,val)}</select>`}</div>`; };
   return `<div class="stack">
   <div class="notice acc">${ic('info')}<div><b>Warum zuerst der Körpercheck?</b> Das Rad wird an den Körper angepasst. Wenn ein Bein kürzer ist oder ein Fuß schräg steht, gleichst du das zuerst aus. Sonst stellst du das Rad auf eine schiefe Haltung ein. FitFrame stellt keine Diagnosen. Bei Schmerzen oder großen Unterschieden: Fachleute hinzuziehen.</div></div>
   <section class="panel" style="box-shadow:none"><div class="panel-h"><h3>Ergebnis</h3><span class="chip ${r[0]}">${r[1]}</span></div><div class="panel-b stack"><p class="muted">${r[2]}</p>
@@ -987,7 +1120,7 @@ SESSTAB.koerper = (s,c) => {
   <form class="stack" data-form="check" data-id="${s.id}">
   ${CHECKS.map(t=>`<section class="panel" style="box-shadow:none"><div class="panel-b stack">
     <div><h3>${t.label}</h3><p class="muted" style="font-size:14px">${t.why}</p></div>
-    <details class="more"><summary>So geht's · ${esc(t.tool)}</summary><ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">${t.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></details>
+    <details class="more"><summary>So geht's · ${esc(t.tool)}</summary>${IL(t.k)}<ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">${t.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></details>
     <div class="form">${t.side?inp(t,'L')+inp(t,'R'):inp(t)}</div></div></section>`).join('')}
   <div class="row"><button class="btn primary" type="submit">Körpercheck speichern und auswerten</button></div></form>
   <h2>Körpermaße</h2><p class="muted">Die Maße gehören zum Kunden und gelten für alle seine Fittings. Sie füttern auch die Simulation.</p>
@@ -1013,14 +1146,15 @@ function measureForm(s,side,isChange){
   </form>`;
 }
 function measureCards(s,side){
+  const c=cust(s.customerId), b=bike(s.bikeId);
   const groups=[...new Set(Object.values(MK).map(m=>m.group))];
   return groups.map(g=>`<div class="stack"><h3>${g}</h3>${Object.entries(MK).filter(([,m])=>m.group===g).map(([k,m])=>{const cur=s[side][k], h=HOW[k]||{m:'Maßband',steps:[],tool:''};
     return `<section class="panel" style="box-shadow:none"><div class="panel-b stack">
       <div class="row" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0;flex:1"><div class="t" style="font-weight:650">${m.label}${REQUIRED.includes(k)?' <span class="chip nodot c-acc" style="font-size:11px">wichtig</span>':''}</div><div class="muted" style="font-size:13.5px">${esc(m.def||'')}</div></div>
       ${cur?`<div style="text-align:right"><div class="num" style="font-size:18px;font-weight:600">${fmtNum(cur.value)} ${m.unit}</div><div class="src">${esc(cur.method)} · ${esc(cur.source)}</div></div>`:'<span class="chip">fehlt</span>'}</div>
-      <details class="more"><summary>So misst du · ${esc(h.tool)}</summary><ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">${h.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>${h.tip?`<p class="faint" style="margin-top:6px;font-size:13px">Tipp: ${esc(h.tip)}</p>`:''}</details>
+      <details class="more"><summary>So misst du · ${esc(h.tool)}</summary>${IL(k)}<ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">${h.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>${h.tip?`<p class="faint" style="margin-top:6px;font-size:13px">Tipp: ${esc(h.tip)}</p>`:''}</details>
       <form class="form" data-form="measure" data-id="${s.id}" data-side="${side}"><input type="hidden" name="key" value="${k}"><input type="hidden" name="source" value="gemessen">
-        <div class="field"><label for="mc_${k}">Wert (${m.unit})</label><input class="input num" id="mc_${k}" name="value" type="number" step="0.1" inputmode="decimal" value="${cur?cur.value:''}" required></div>
+        <div class="field"><label for="mc_${k}">Wert (${m.unit})</label><input class="input num" id="mc_${k}" name="value" type="number" step="0.1" inputmode="decimal" value="${cur?cur.value:''}" required ${rangeAttr(measureRange(k,c,b),'mc_'+k)}>${rangeHint(measureRange(k,c,b),'mc_'+k,cur?cur.value:'')}</div>
         <div class="field"><label for="mm_${k}">Methode</label><select class="input" id="mm_${k}" name="method">${opts(METHODS,cur?cur.method:h.m)}</select></div>
         <div class="field"><label for="mu_${k}">± Genauigkeit (${m.unit})</label><input class="input num" id="mu_${k}" name="unc" type="number" step="0.1" min="0" inputmode="decimal" value="${cur&&cur.unc!=null?cur.unc:''}" placeholder="optional"></div>
         <div class="field" style="justify-content:flex-end"><button class="btn" type="submit">${cur?'Ändern':'Speichern'}</button></div></form>
@@ -1672,6 +1806,7 @@ const FORMS = {
   measure(f,data){ const s=sess(f.dataset.id); const k=data.get('key'); const v=parseFloat(String(data.get('value')).replace(',','.')); if(isNaN(v)){toast('Bitte einen Zahlenwert eingeben',true);return;}
     const old=s.before[k]; const unc=data.get('unc'); s.before[k]={key:k,value:v,method:data.get('method'),source:data.get('source'),unc:unc===''?null:Number(unc),time:nowStamp()};
     if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit';
+    { const rg=measureRange(k,cust(s.customerId),bike(s.bikeId)); if(rg&&rg.lo!=null&&(v<rg.lo||v>rg.hi)) setTimeout(()=>toast(`${MK[k].label} liegt außerhalb von ${fmtNum(rg.lo)}–${fmtNum(rg.hi)} ${rg.unit} – bitte nachmessen`,true),50); }
     audit(old?`Ausgangswert korrigiert: ${MK[k].label} ${fmtNum(old.value)} → ${fmtNum(v)} ${MK[k].unit}`:`Ausgangswert erfasst: ${MK[k].label} ${fmtNum(v)} ${MK[k].unit}`,s.id); save(); render(); toast(`${MK[k].label} gespeichert`); },
   change(f,data){ ui.prepKey=null; const s=sess(f.dataset.id); const k=data.get('key'); const v=parseFloat(String(data.get('value')).replace(',','.')); const reason=String(data.get('reason')||'').trim();
     if(isNaN(v)){toast('Bitte einen Zahlenwert eingeben',true);return;} if(!reason){toast('Bitte eine Begründung angeben',true);return;}
@@ -1730,13 +1865,13 @@ document.addEventListener('submit',e=>{
   try{ FORMS[f.dataset.form](f,new FormData(f)); }catch(err){ console.error(err); toast('Speichern fehlgeschlagen: '+err.message,true); }
 });
 document.addEventListener('change',e=>{ const el=e.target.closest('[data-change]'); if(el&&CHG[el.dataset.change]){ try{ CHG[el.dataset.change](el); }catch(err){ console.error(err); toast('Fehler: '+err.message,true);} } });
-document.addEventListener('input',e=>{ const el=e.target.closest('[data-input]'); if(!el) return; ui[el.dataset.input]=el.value; ui.focus=el.id; render(); });
+document.addEventListener('input',e=>{ if(e.target&&e.target.dataset&&e.target.dataset.lo!==undefined) liveRange(e.target); const el=e.target.closest('[data-input]'); if(!el) return; ui[el.dataset.input]=el.value; ui.focus=el.id; render(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); closeMenu(); } });
 
 applyTheme();
 const start=(location.hash||'').slice(1);
 go(VIEWS[start]?start:'dashboard');
-window.__fitframe={S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
