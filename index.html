@@ -191,6 +191,9 @@ td.r,th.r{text-align:right}
 .cmp .li{padding:10px 0;gap:10px}
 .cmp .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}
 .wiz{display:flex;flex-direction:column;gap:16px}
+.card.plan .t{margin-bottom:6px}
+.planrow{display:flex;flex-direction:column;gap:4px;margin-top:8px;align-items:flex-start}
+.planrow ul{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px}
 .livewrap{position:relative;border-radius:12px;overflow:hidden;background:#000;min-height:120px}
 .livewrap video{display:block;width:100%;height:auto}
 .livewrap canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
@@ -1001,7 +1004,7 @@ function seed(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-26.2';
+const APP_VER = '2026-10-26.3';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1473,8 +1476,56 @@ function targetHtml(s){ const tg=targetFit(s); if(!tg.rows.length) return '';
   return `<details class="more" ${Object.keys(s.before).length?'':'open'}><summary>Startwerte aus den Körpermaßen</summary><div class="stack" style="margin-top:8px">
   <div class="cmp">${tg.rows.map(r=>{ const m=MK[r.key], off=r.diff!=null&&Math.abs(r.diff)>r.tol; return `<div class="li"><div class="grow"><div class="t">${m.label}</div><div class="sub">${r.cur==null?'noch nicht gemessen':`eingestellt ${fmtNum(r.cur)} ${m.unit}`}${r.diff!=null&&Math.abs(r.diff)>0.05?` · Abstand ${r.diff>0?'+':''}${fmtNum(r.diff)}`:''}</div></div><span class="v" style="${off?'color:var(--warn);font-weight:600':''}">${fmtNum(r.target)} ${m.unit}</span><button class="btn sm ${off||r.cur==null?'primary':''}" data-act="prepChange" data-key="${r.key}" data-v="${r.target}" data-reason="Startwert aus Körpermaßen">Übernehmen</button></div>`; }).join('')}</div>
   <p class="faint" style="font-size:12.5px">Berechnet aus Schrittlänge ${fmtNum(tg.ins)} cm (${esc(tg.insSrc)}), Rumpf, Arm und Fuß sowie dem Radtyp ${esc(tg.type)}. Faustregeln, nicht validiert. Kniewinkel per Kamera ist genauer als die Sattelhöhen-Formel.</p></div></details>`; }
-SESSTAB.anpassung = s => { const sg=fitSuggestions(s); const top=sg.slice(0,3), rest=sg.slice(3);
-  const card=x=>`<div class="card"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal;font-size:14px">${esc(x.how)}</div><details class="more" style="margin-top:4px"><summary style="font-size:13px">Warum?</summary><p class="muted" style="font-size:13.5px">${esc(x.why)}</p></details></div>${x.key?`<button class="btn sm primary" data-act="prepChange" data-key="${x.key}" data-v="${x.v??''}" data-reason="${esc(x.reason||x.title)}">Ändern</button>`:''}</div>`;
+/* Teileplan: was mit neuen Teilen ginge und was ohne neue Teile möglich ist */
+function partsPlan(s){
+  const tg=targetFit(s); if(!tg.rows.length) return [];
+  const R=Object.fromEntries(tg.rows.map(r=>[r.key,r])); const off=k=>R[k]&&R[k].diff!=null&&Math.abs(R[k].diff)>R[k].tol;
+  const end={...s.before,...s.after}; const b=bike(s.bikeId); const mk=makerValues(s);
+  const stem=end.stemLength?Number(end.stemLength.value):(mk&&mk.r&&mk.r.stem)||null; const spacer=end.spacer?Number(end.spacer.value):null;
+  const drops=['Rennrad','Gravel'].includes(b.type), flat=['MTB','Trekking','E-Bike'].includes(b.type);
+  const f=v=>fmtNum(Math.round(v)); const out=[];
+  let sbMove=0;
+  if(off('saddleSetback')){ const d=R.saddleSetback.diff, a=Math.abs(d), rail=Math.min(a,15); sbMove=d>0?rail:-rail;
+    out.push({key:'saddleSetback',title:`Sattelversatz ${d>0?'+':''}${f(d)} mm (${d>0?'nach hinten':'nach vorn'})`,
+      noParts:[`Sattel auf den Streben um ${f(rail)} mm ${d>0?'nach hinten':'nach vorn'} schieben. Die meisten Sattelgestelle erlauben etwa ±15 mm (Markierung am Gestell beachten).`,'Danach die Sattelhöhe neu messen: Nach hinten wird der Sattel effektiv höher, nach vorn tiefer.'],
+      parts:a>15?[`Für die restlichen ${f(a-15)} mm: Sattelstütze ${d>0?'mit mehr Versatz (z. B. 20–25 mm statt 0 mm)':'ohne Versatz (0 mm) statt mit Versatz'}.`]:[]}); }
+  if(off('reach')||(sbMove&&R.reach&&R.reach.cur!=null)){ const dr=(R.reach.diff||0)-sbMove; const a=Math.abs(dr);
+    if(a>R.reach.tol){ const np=[]; let left=a;
+      if(drops){ const g=Math.min(left,10); np.push(`Bremsgriffe auf dem Lenker ${dr>0?'etwas weiter nach vorn/unten':'etwas weiter nach hinten/oben'} setzen: bis etwa ${f(g)} mm. Lenkerband muss dafür neu gewickelt werden.`); left-=g;
+        const g2=Math.min(left,10); if(g2>0){ np.push(`Lenker leicht ${dr>0?'nach vorn':'nach hinten'} drehen: etwa ${f(g2)} mm am Griff. Unterlenker-Ende sollte ungefähr Richtung Hinterradachse zeigen.`); left-=g2; } }
+      else if(flat){ const g=Math.min(left,10); np.push(`Griffe und Bremshebel ${dr>0?'weiter außen':'weiter innen'} montieren bzw. Lenker mit Kröpfung ${dr>0?'flacher':'steiler nach hinten'} drehen: etwa ${f(g)} mm.`); left-=g; }
+      if(!sbMove) np.push(`Nur wenn das Knielot passt: Sattel ${dr>0?'nach hinten':'nach vorn'} schieben (bis ±10 mm). Das verändert aber auch die Beinposition.`);
+      const ns=stem?Math.max(40,Math.min(140,Math.round((stem+dr)/10)*10)):null;
+      out.push({key:'reach',title:`Sattel–Lenker ${dr>0?'+':''}${f(dr)} mm (${dr>0?'länger':'kürzer'})${sbMove?' – nach dem Verschieben des Sattels':''}`,
+        noParts:[...np,...(left>2?[`Ohne neue Teile bleiben etwa ${f(left)} mm offen.`]:[])],
+        parts:[stem?`Vorbau ${f(stem)} → ${f(ns)} mm${(stem+dr<60||stem+dr>140)?' – liegt am Rand des Üblichen, der Rahmen ist dann eventuell zu groß oder zu klein (Rahmen-Finder prüfen)':''}.`:`Vorbau ${dr>0?'länger':'kürzer'} um etwa ${f(Math.round(a/10)*10)} mm (aktuelle Vorbaulänge eintragen, dann rechnet FitFrame die genaue Länge).`,
+          ...(drops?[`Alternativ Lenker mit ${dr>0?'mehr':'weniger'} Reach (Lenker-Reach unterscheidet sich je Modell um 10–20 mm).`]:[])]}); } }
+  if(off('drop')){ const dd=R.drop.diff, a=Math.abs(dd), np=[];
+    if(dd>0) np.push(spacer!=null?`Spacer von unter dem Vorbau nach oben setzen: bis zu ${f(Math.min(a,spacer))} mm möglich (${f(spacer)} mm vorhanden).`:'Spacer von unter dem Vorbau nach oben setzen, so viele wie vorhanden.');
+    else np.push('Spacer von oberhalb des Vorbaus nach unten setzen, so viele wie oben liegen. Gabelschaft nicht kürzen, solange die Position nicht sicher ist.');
+    if(stem){ const flip=Math.round(2*stem*Math.sin(6*Math.PI/180)); np.push(`Vorbau umdrehen (−6° ↔ +6°): Lenker etwa ${flip} mm ${dd>0?'tiefer':'höher'}. Sattel–Lenker ändert sich dabei um wenige Millimeter.`); }
+    out.push({key:'drop',title:`Überhöhung ${dd>0?'+':''}${f(dd)} mm (Lenker ${dd>0?'tiefer':'höher'})`,noParts:np,
+      parts:[`Vorbau mit ${dd>0?'flacherem':'steilerem'} Winkel (z. B. ${dd>0?'−17° statt −6°':'+17° statt +6°'}).`,...(flat&&dd<0?['Lenker mit mehr Rise (Hochlenker) oder Vorbau mit Höhenverstellung.']:[])]}); }
+  if(off('saddleHeight')){ const d=R.saddleHeight.diff;
+    out.push({key:'saddleHeight',title:`Sattelhöhe ${d>0?'+':''}${f(d)} mm`,noParts:[`Sattelstütze um ${f(Math.abs(d))} mm ${d>0?'herausziehen':'versenken'}, in Schritten von 2–3 mm. Markierung für Mindesteinstecktiefe beachten.`],parts:d>0?['Nur wenn die Mindesteinstecktiefe erreicht ist: längere Sattelstütze.']:[]}); }
+  if(off('crankLength')){ const c=R.crankLength;
+    out.push({key:'crankLength',title:`Kurbel ${f(c.cur)} → ${fmtNum(c.target)} mm`,noParts:['Keine echte Alternative. Ohne Beschwerden (Knie, Hüfte) kann die Kurbel bleiben.'],parts:[`Kurbel ${fmtNum(c.target)} mm, danach Sattelhöhe um die Differenz (${fmtNum(Math.abs(c.cur-c.target))} mm) anpassen.`]}); }
+  if(off('cleatFore')){ const d=R.cleatFore.diff; out.push({key:'cleatFore',title:`Cleat längs ${d>0?'+':''}${fmtNum(d)} mm`,noParts:[`Cleat ${fmtNum(Math.abs(d))} mm ${d>0?'weiter nach hinten':'weiter nach vorn'} setzen.`],parts:[]}); }
+  const p=partsAdvice(s); if(p.saddle) out.push({key:'saddle',title:`Sattelbreite ${p.saddle.lo}–${p.saddle.hi} mm`,noParts:['Vorhandenen Sattel behalten, wenn keine Sitzbeschwerden bestehen. Breite des aktuellen Sattels nachmessen und vergleichen.'],parts:['Bei Sitzbeschwerden: Sattel in dieser Breite, am besten erst einen Testsattel fahren.']});
+  return out;
+}
+function partsPlanHtml(s){
+  const pl=partsPlan(s);
+  if(!pl.length) return `<div class="stack"><h3>Teile und Alternativen</h3><p class="muted">Die Einstellung liegt nahe an den Startwerten aus den Körpermaßen. Es werden keine neuen Teile gebraucht.</p></div>`;
+  return `<div class="stack"><h3>Teile und Alternativen</h3><p class="muted" style="font-size:14px">Abstand der aktuellen Einstellung zu den Startwerten aus den Körpermaßen. Für jeden Punkt: was ohne neue Teile geht und welches Teil man bräuchte. Nur umsetzen, wenn Beschwerden oder das Ziel es verlangen.</p>
+  ${pl.map(x=>`<div class="card plan"><div class="grow"><div class="t">${esc(x.title)}</div>
+    <div class="planrow"><span class="chip c-ok nodot">Ohne neue Teile</span><ul>${x.noParts.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>
+    ${x.parts.length?`<div class="planrow"><span class="chip c-acc nodot">Mit neuen Teilen</span><ul>${x.parts.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`:''}</div></div>`).join('')}
+  <p class="faint" style="font-size:12.5px">Startwerte sind Faustregeln, nicht validiert. Richtwerte: Bremsgriffe und Lenkerdrehung je etwa 10 mm, Sattelgestell etwa ±15 mm, Vorbau umdrehen ±6° ergibt je nach Länge 15–30 mm Höhe.</p></div>`;
+}
+
+SESSTAB.anpassung = s => { const sg=fitSuggestions(s); const top=sg.slice(0,3), rest=sg.slice(3); const pp=partsPlan(s);
+  const card=x=>`<div class="card"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal;font-size:14px">${esc(x.how)}</div><details class="more" style="margin-top:4px"><summary style="font-size:13px">Warum?</summary><p class="muted" style="font-size:13.5px">${esc(x.why)}</p></details>${(()=>{ const q=pp.find(y=>y.key===x.key); return q?`<details class="more" style="margin-top:2px"><summary style="font-size:13px">Kunde will keine neuen Teile?</summary><ul class="muted" style="font-size:13.5px;margin:4px 0 0;padding-left:18px">${q.noParts.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>${q.parts.length?`<p class="muted" style="font-size:13.5px;margin-top:4px"><b>Mit Teilen:</b> ${q.parts.map(esc).join(' ')}</p>`:''}</details>`:''; })()}</div>${x.key?`<button class="btn sm primary" data-act="prepChange" data-key="${x.key}" data-v="${x.v??''}" data-reason="${esc(x.reason||x.title)}">Ändern</button>`:''}</div>`;
   return `<div class="stack">
   <p class="onlyline">Stell das Rad in kleinen Schritten um. Nach jeder Änderung kurz fahren lassen und nachfragen.</p>
   ${top.length?`<div><div class="label" style="margin-bottom:8px">Vorschläge ${st('s')}</div><div class="sugg">${top.map(card).join('')}</div>${rest.length?`<details class="more" style="margin-top:8px"><summary>${rest.length} weitere Vorschläge</summary><div class="sugg" style="margin-top:8px">${rest.map(card).join('')}</div></details>`:''}</div>`:'<div class="statusbox"><div><b>Keine Vorschläge</b><span class="muted" style="font-size:14px">Trag Beschwerden im Schritt „Ziel“ ein oder miss den Kniewinkel.</span></div></div>'}
@@ -1549,8 +1600,8 @@ SESSTAB.bericht = s => `<div class="stack"><div class="row" style="justify-conte
   <div id="reportBox">${ui.reportFor===s.id?reportHtml(s):'<div class="empty">Noch kein Bericht erzeugt.</div>'}</div></div>`;
 SESSTAB.ergebnis = s => {
   const q=quality(s), crit=q.filter(x=>x[0]!=='info').length; const t=ui.resTab||'vergleich';
-  const tabs=[['vergleich','Vorher / Nachher'],['groesse','Größe & Teile'],['qualitaet',`Datenqualität${crit?` (${crit})`:''}`],['bericht','Bericht']];
-  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
+  const tabs=[['vergleich','Vorher / Nachher'],['teile','Teile & Alternativen'],['groesse','Größe & Sattel'],['qualitaet',`Datenqualität${crit?` (${crit})`:''}`],['bericht','Bericht']];
+  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,teile:()=>partsPlanHtml(s),groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
   return `<div class="stack">
   <p class="onlyline">Prüfe das Ergebnis, erstelle den Bericht und schließ das Fitting ab.</p>
   <div class="tabsbar" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${t===k}" data-act="resTab" data-v="${k}">${l}</button>`).join('')}</div>
@@ -1577,6 +1628,7 @@ function reportHtml(s){
   <div class="sec"><h3>Vorgenommene Änderungen</h3>${s.changes.length?`<table><thead><tr><th>Einstellung</th><th style="text-align:right">Vorher</th><th style="text-align:right">Nachher</th><th>Grund</th></tr></thead><tbody>${s.changes.map(ch=>`<tr><td>${MK[ch.key].label}</td><td style="text-align:right">${fmtNum(ch.from)} ${MK[ch.key].unit}</td><td style="text-align:right">${fmtNum(ch.to)} ${MK[ch.key].unit}</td><td>${esc(ch.reason)}</td></tr>`).join('')}</tbody></table>`:'<p>Keine Änderungen.</p>'}</div>
   <div class="sec"><h3>Endposition</h3><table><tbody>${rows.filter(r=>r.a||r.b).map(r=>`<tr><td>${r.m.label}</td><td style="text-align:right">${fmtNum((r.a||r.b).value)} ${r.m.unit}</td><td class="fine">${esc((r.a||r.b).method)}${(r.a||r.b).source==='geschätzt'?' · geschätzt':''}</td></tr>`).join('')}</tbody></table></div>
   ${(()=>{ const p=partsAdvice(s); const kp=s.after.kneeOverPedal||s.before.kneeOverPedal; const l=[]; if(p.saddle) l.push(`Sattelbreite etwa ${p.saddle.lo}–${p.saddle.hi} mm (Sitzknochenabstand ${p.saddle.sb} mm)`); if(p.shoe) l.push(`Schuhgröße etwa EU ${fmtNum(p.shoe.lo)}–${fmtNum(p.shoe.hi)} (Herstellertabelle prüfen)`); if(kp) l.push(kopsText(Math.round(kp.value))+' (Kamera, Schätzung)'); return l.length?`<div class="sec"><h3>Empfehlungen</h3><ul style="margin:0;padding-left:18px">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''; })()}
+  ${(()=>{ const pl=partsPlan(s).filter(x=>x.key!=='saddle'); return pl.length?`<div class="sec"><h3>Mögliche weitere Anpassungen</h3>${pl.map(x=>`<p><b>${esc(x.title)}.</b> Ohne neue Teile: ${esc(x.noParts.join(' '))}${x.parts.length?` <br>Mit neuen Teilen: ${esc(x.parts.join(' '))}`:''}</p>`).join('')}<p class="fine">Abstand zu Startwerten aus Körpermaßen (Faustregeln). Nur umsetzen bei Beschwerden oder passendem Ziel.</p></div>`:''; })()}
   ${s.notes?`<div class="sec"><h3>Beobachtungen</h3><p>${esc(s.notes)}</p></div>`:''}
   <div class="sec"><h3>Nächste Schritte</h3><p>${fu.length?fu.map(f=>`Nachkontrolle am ${fmtDate(f.due)} (${f.days} Tage).`).join(' '):'Nachkontrolle nach 4–6 Wochen empfohlen.'} Bitte melden Sie neue Beschwerden früher.</p></div>
   ${q.length?`<div class="sec"><h3>Offene Punkte zur Datenqualität</h3><ul style="margin:0;padding-left:18px">${q.map(x=>`<li>${esc(x[1])}</li>`).join('')}</ul></div>`:''}
