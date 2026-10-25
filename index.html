@@ -1,0 +1,1549 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>FitFrame</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: freundliche Werkbank – helle Karten auf warmem Grund, 5 Hauptbereiche, Fitting als geführter Ablauf in Schritten */
+:root{
+  --bg:#f5f4f1; --surface:#ffffff; --surface-2:#f0eee9; --line:#e3e0d9; --fg:#1e2124; --muted:#5f656d; --faint:#8a8f96;
+  --accent:#ee6a14; --accent-ink:#ffffff; --accent-strong:#c9550a; --accent-soft:#fdeee3; --accent-line:#f6c29d;
+  --ok:#1d8f5a; --ok-soft:#e3f4ea; --warn:#a87308; --warn-soft:#fbf1d9; --bad:#c83c3c; --bad-soft:#fbe6e6; --info:#2a6fb8; --info-soft:#e4eefa;
+  --glass:rgba(255,255,255,.9); --shadow:0 1px 2px rgba(30,33,36,.05),0 4px 14px rgba(30,33,36,.05);
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --r:14px; --side:248px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#131416; --surface:#1b1d21; --surface-2:#24272d; --line:#30343c; --fg:#eceae6; --muted:#a3a8b1; --faint:#737983;
+  --accent:#ff8030; --accent-ink:#1c0d02; --accent-strong:#ff9a55; --accent-soft:rgba(255,128,48,.14); --accent-line:rgba(255,128,48,.45);
+  --ok:#4cc790; --ok-soft:rgba(76,199,144,.13); --warn:#e8bd45; --warn-soft:rgba(232,189,69,.13); --bad:#f07070; --bad-soft:rgba(240,112,112,.13); --info:#6cb0ef; --info-soft:rgba(108,176,239,.13);
+  --glass:rgba(27,29,33,.92); --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131416; --surface:#1b1d21; --surface-2:#24272d; --line:#30343c; --fg:#eceae6; --muted:#a3a8b1; --faint:#737983;
+  --accent:#ff8030; --accent-ink:#1c0d02; --accent-strong:#ff9a55; --accent-soft:rgba(255,128,48,.14); --accent-line:rgba(255,128,48,.45);
+  --ok:#4cc790; --ok-soft:rgba(76,199,144,.13); --warn:#e8bd45; --warn-soft:rgba(232,189,69,.13); --bad:#f07070; --bad-soft:rgba(240,112,112,.13); --info:#6cb0ef; --info-soft:rgba(108,176,239,.13);
+  --glass:rgba(27,29,33,.92); --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--f-body);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent-strong)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+h1,h2,h3{font-weight:700;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:28px;line-height:1.15}
+h2{font-size:20px;line-height:1.25}
+h3{font-size:16px;font-weight:650}
+p{margin:0}
+.label{font-size:12px;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)} .faint{color:var(--faint)}
+
+.shell{display:grid;grid-template-columns:var(--side) minmax(0,1fr);min-height:100%}
+.side{position:sticky;top:0;height:100vh;overflow:auto;background:var(--surface);border-right:1px solid var(--line);padding:20px 14px 24px max(14px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:20px}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px}
+.brand svg{flex:none}
+.brand b{font-size:21px;font-weight:800;letter-spacing:.02em}
+.brand small{display:block;font-size:11.5px;color:var(--muted);margin-top:-2px}
+.navgroup{display:flex;flex-direction:column;gap:3px}
+.navgroup .label{padding:0 10px 4px}
+.navbtn{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:9px 10px;color:var(--muted);cursor:pointer;font-size:14.5px;font-weight:500}
+.navbtn:hover{background:var(--surface-2);color:var(--fg)}
+.navbtn[aria-current="page"]{background:var(--accent-soft);color:var(--fg);font-weight:650}
+.navbtn[aria-current="page"] svg{color:var(--accent)}
+.navbtn svg{width:19px;height:19px;flex:none}
+.navbtn.small{font-size:13.5px;padding:6px 10px}
+.navbtn.small svg{width:16px;height:16px}
+.navbtn .cnt{margin-left:auto;font-size:12px;font-weight:600;color:var(--accent-strong);background:var(--accent-soft);border-radius:99px;padding:0 8px}
+.demo-note{margin-top:auto;font-size:12px;color:var(--faint);border-top:1px solid var(--line);padding:12px 8px 0;display:flex;flex-direction:column;gap:8px}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding-block:10px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:10px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.topbar .crumb{font-size:13px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar .spacer{flex:1}
+.demo-pill{font-size:12px;font-weight:600;color:var(--accent-strong);background:var(--accent-soft);border-radius:99px;padding:4px 10px;white-space:nowrap}
+.content{padding-block:24px 48px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px;max-width:1180px;width:100%}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.pagehead p{color:var(--muted);max-width:62ch;margin-top:6px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0;box-shadow:var(--shadow)}
+.panel-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.panel-b{padding:16px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g-main{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(2,minmax(0,1fr))}.g-main{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){.g2,.g3{grid-template-columns:minmax(0,1fr)}.li{flex-wrap:wrap}.li .grow{flex:1 0 calc(100% - 110px)}}
+
+.kpi{padding:16px;display:flex;flex-direction:column;gap:4px}
+.kpi .v{font-size:30px;font-weight:750;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:13px;color:var(--muted)}
+
+/* Startkacheln */
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:900px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{display:flex;flex-direction:column;gap:10px;align-items:flex-start;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;cursor:pointer;box-shadow:var(--shadow);min-width:0}
+.tile:hover{border-color:var(--accent-line)}
+.tile .ti{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-strong)}
+.tile .ti svg{width:22px;height:22px}
+.tile b{font-size:16px;font-weight:650}
+.tile span{font-size:13px;color:var(--muted)}
+.tile.main{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tile.main .ti{background:rgba(255,255,255,.22);color:var(--accent-ink)}
+.tile.main span{color:var(--accent-ink);opacity:.85}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap;min-height:40px}
+.btn:hover{border-color:var(--faint)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.ghost{background:none;border-color:transparent}
+.btn.sm{padding:5px 11px;font-size:13px;min-height:32px;border-radius:8px}
+.btn.danger{color:var(--bad)}
+.btn svg{width:16px;height:16px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:13px;color:var(--muted);font-weight:500}
+.input,select.input,textarea.input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-width:0;font-size:16px;min-height:42px}
+.input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+textarea.input{min-height:80px;resize:vertical}
+.form{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.form .wide{grid-column:1/-1}
+.search{max-width:340px}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{background:none;border:0;padding:6px 13px;cursor:pointer;color:var(--muted);font-size:13.5px;font-weight:600;border-radius:8px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+
+/* Schritte */
+.steps{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.step{display:flex;align-items:center;gap:8px;background:none;border:1px solid transparent;border-radius:99px;padding:6px 12px 6px 6px;cursor:pointer;color:var(--muted);white-space:nowrap;font-weight:600;font-size:14px}
+.step i{font-style:normal;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);font-size:13px;color:var(--muted)}
+.step.done i{background:var(--ok-soft);color:var(--ok)}
+.step[aria-current="step"]{background:var(--accent-soft);color:var(--fg);border-color:var(--accent-line)}
+.step[aria-current="step"] i{background:var(--accent);color:var(--accent-ink)}
+.stepnav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:16px;margin-top:4px}
+
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12.5px;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--surface-2)}
+td.r,th.r{text-align:right}
+.up{color:var(--accent-strong)} .down{color:var(--info)}
+@media (max-width:640px){
+  table.rcard thead{display:none}
+  table.rcard,table.rcard tbody,table.rcard tr,table.rcard td{display:block;width:100%}
+  table.rcard tr{border:1px solid var(--line);border-radius:12px;margin:0 0 10px;padding:6px 12px;background:var(--surface)}
+  table.rcard td{border:0;padding:6px 0;display:flex;justify-content:space-between;gap:12px;text-align:right}
+  table.rcard td::before{content:attr(data-l);color:var(--muted);font-size:13px;text-align:left;flex:none;max-width:45%}
+  table.rcard td:first-child{text-align:left;font-weight:600;display:block}
+  table.rcard td:first-child::before{display:none}
+  table.rcard td:empty{display:none}
+  .tw:has(table.rcard){padding:10px}
+}
+
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;padding:3px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap;line-height:1.45}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.nodot::before{display:none}
+.c-ok{color:var(--ok);background:var(--ok-soft)}
+.c-warn{color:var(--warn);background:var(--warn-soft)}
+.c-bad{color:var(--bad);background:var(--bad-soft)}
+.c-info{color:var(--info);background:var(--info-soft)}
+.c-acc{color:var(--accent-strong);background:var(--accent-soft)}
+.st{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--faint);background:none;border:0;padding:2px 4px;cursor:help;white-space:nowrap}
+.st::before{content:"";width:7px;height:7px;border-radius:50%}
+.st-i::before{background:var(--ok)} .st-s::before{background:var(--info)} .st-k::before{background:var(--faint)} .st-x::before{background:var(--warn)}
+.src{font-size:12px;color:var(--faint)}
+
+.notice{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:var(--info-soft);font-size:14px}
+.notice.warn{background:var(--warn-soft)}
+.notice.acc{background:var(--accent-soft)}
+.notice svg{flex:none;width:18px;height:18px;margin-top:2px}
+.notice.warn svg{color:var(--warn)} .notice svg{color:var(--info)} .notice.acc svg{color:var(--accent-strong)}
+.list{display:flex;flex-direction:column}
+.li{display:flex;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);min-width:0}
+.li:last-child{border-bottom:0}
+.li .grow{flex:1;min-width:0}
+.li .t{font-weight:600}
+.li .sub{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.li.click{cursor:pointer}.li.click:hover{background:var(--surface-2)}
+.time{font-family:var(--f-mono);font-size:14px;font-weight:500;color:var(--accent-strong);min-width:48px}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none;color:var(--accent-strong)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:center}
+.empty svg{width:28px;height:28px;color:var(--faint)}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;font-size:14px}
+.dl dt{color:var(--muted)} .dl dd{margin:0}
+.bar{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.stack{display:flex;flex-direction:column;gap:14px}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+details.more summary{cursor:pointer;color:var(--muted);font-weight:600;list-style:none;padding:4px 0}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::before{content:"▸ "}
+details.more[open] summary::before{content:"▾ "}
+
+.scrim{position:fixed;inset:0;background:rgba(20,22,25,.4);z-index:50}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(620px,100%);background:var(--bg);border-left:1px solid var(--line);z-index:51;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px);box-shadow:-10px 0 40px rgba(0,0,0,.12)}
+.drawer-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface)}
+.drawer-h h2{flex:1;min-width:0}
+.drawer-b{overflow:auto;padding:18px;display:flex;flex-direction:column;gap:18px}
+.iconbtn{background:var(--surface);border:1px solid var(--line);border-radius:10px;width:40px;height:40px;display:grid;place-items:center;cursor:pointer;flex:none}
+.iconbtn svg{width:18px;height:18px}
+.iconbtn.menu-btn{display:none}
+.toasts{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.toast{background:var(--fg);color:var(--bg);padding:11px 15px;border-radius:12px;font-size:14px;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.toast.err{background:var(--bad);color:#fff}
+
+.report{background:#ffffff;color:#1b1c1e;border:1px solid var(--line);border-radius:12px;padding:26px 24px;font-size:14px;line-height:1.55}
+.report h2,.report h3{color:#1b1c1e}
+.report .rh{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2px solid #ee6a14;padding-bottom:10px;margin-bottom:14px}
+.report table td,.report table th{border-color:#e2dfd8;color:#1b1c1e}
+.report th{color:#5c5f66}
+.report .sec{margin-top:16px;display:flex;flex-direction:column;gap:6px}
+.report .fine{font-size:12px;color:#6a6d74}
+
+.bottomnav{display:none}
+@media (max-width:860px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;left:0;top:0;bottom:0;width:min(300px,86vw);height:auto;z-index:55;transform:translateX(-102%);transition:transform .2s ease;padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+  .side.open{transform:none;box-shadow:0 0 40px rgba(0,0,0,.25)}
+  .iconbtn.menu-btn{display:grid}
+  .content{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  .bottomnav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px))}
+  .bottomnav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;font-weight:600;color:var(--muted);padding:5px 0;cursor:pointer}
+  .bottomnav button svg{width:23px;height:23px}
+  .bottomnav button[aria-current="page"]{color:var(--accent-strong)}
+  h1{font-size:25px}
+  .toasts{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+  .crumb{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+canvas{max-width:100%;display:block}
+.svgwrap svg{width:100%;height:auto;display:block}
+.cal{display:grid;grid-template-columns:110px repeat(5,minmax(70px,1fr));gap:5px;min-width:520px;font-size:13px}
+.cal .cell{background:var(--surface-2);border-radius:8px;padding:7px;min-height:44px}
+.cal .over{outline:2px solid var(--bad)}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav class="side" id="side" aria-label="Hauptnavigation"></nav>
+  <div class="main">
+    <header class="topbar">
+      <button class="iconbtn menu-btn" data-act="menu" aria-label="Menü öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div class="crumb" id="crumb">FitFrame</div>
+      <div class="spacer"></div>
+      <span class="demo-pill" title="Alle Daten sind fiktiv">Demo</span>
+      <button class="iconbtn" data-act="theme" id="themeBtn" aria-label="Hell oder dunkel"></button>
+    </header>
+    <main class="content" id="view" tabindex="-1"></main>
+  </div>
+</div>
+<nav class="bottomnav" id="bottomnav" aria-label="Schnellnavigation"></nav>
+<div id="overlay"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- Icons ---------- */
+const I = {
+  dash:'<path d="M4 13h6V4H4zM14 20h6v-9h-6zM14 4h6v5h-6zM4 20h6v-3H4z"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.8.7 3 2.4 3.5 5.2"/>',
+  bike:'<circle cx="6" cy="16" r="3.6"/><circle cx="18" cy="16" r="3.6"/><path d="M6 16l4-8h5l3 8M10 8l2.5 8H6M9 5h3M15 8l-1.5-3H16"/>',
+  fit:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  history:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
+  loop:'<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>',
+  quality:'<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  motion:'<rect x="3" y="5" width="13" height="14" rx="2"/><path d="M16 10l5-3v10l-5-3"/>',
+  hw:'<path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/>',
+  ai:'<path d="M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
+  portal:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  wrench:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+  box:'<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+  ops:'<path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
+  warn:'<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>',
+  more:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
+  doc:'<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 13h6M9 17h6"/>',
+  play:'<path d="M7 4l13 8-13 8z"/>', pause:'<path d="M7 4h4v16H7zM14 4h4v16h-4z"/>',
+  flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  check:'<path d="M5 12l5 5 9-10"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  back:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>'
+};
+const ic = (n,extra='') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${I[n]||''}</svg>`;
+
+/* ---------- Helpers ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = p => p + Math.random().toString(36).slice(2,8);
+const pad = n => String(n).padStart(2,'0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const dayOff = n => { const d = new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()+n); return iso(d); };
+const today = () => dayOff(0);
+const fmtDate = s => { if(!s) return '–'; const [y,m,d] = s.slice(0,10).split('-'); return `${d}.${m}.${y}`; };
+const fmtNum = (v,dec) => (v===null||v===undefined||v==='') ? '–' : Number(v).toLocaleString('de-DE',{minimumFractionDigits:dec??0,maximumFractionDigits:dec??1});
+const eur = v => Number(v||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
+const nowStamp = () => { const d=new Date(); return `${iso(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const initials = n => n.split(' ').map(x=>x[0]).slice(0,2).join('');
+const daysBetween = (a,b) => Math.round((new Date(b+'T12:00')-new Date(a+'T12:00'))/864e5);
+
+const STATUS = {
+  i:['st-i','Interaktiv','Funktioniert in der Demo mit lokal gespeicherten Daten'],
+  s:['st-s','Simuliert','Ergebnisse werden aus Beispieldaten oder Regeln erzeugt'],
+  k:['st-k','Konzept','Nur dargestellt, keine Funktion dahinter'],
+  x:['st-x','Integration nötig','Braucht echte Hardware, API oder Backend']
+};
+const st = k => `<button type="button" class="st ${STATUS[k][0]}" data-act="stInfo" data-k="${k}" title="${esc(STATUS[k][2])}">${STATUS[k][1].toLowerCase()}</button>`;
+
+/* ---------- Measurement catalog ---------- */
+const MK = {
+  saddleHeight:{label:'Sattelhöhe',unit:'mm',group:'Sattel',def:'Mitte Tretlager bis Satteloberfläche entlang Sitzrohr'},
+  saddleSetback:{label:'Sattelversatz',unit:'mm',group:'Sattel',def:'Horizontal vom Lot durch das Tretlager bis zur Sattelspitze'},
+  saddleTilt:{label:'Sattelneigung',unit:'°',group:'Sattel',def:'Zur Waagerechten; negativ = Nase unten'},
+  reach:{label:'Sattel–Lenker',unit:'mm',group:'Cockpit',def:'Sattelspitze bis Lenkermitte'},
+  drop:{label:'Überhöhung',unit:'mm',group:'Cockpit',def:'Satteloberfläche minus Lenkeroberseite'},
+  stemLength:{label:'Vorbaulänge',unit:'mm',group:'Cockpit',def:'Herstellerangabe'},
+  spacer:{label:'Spacer',unit:'mm',group:'Cockpit',def:'Spacerhöhe unter dem Vorbau'},
+  barWidth:{label:'Lenkerbreite',unit:'mm',group:'Cockpit',def:'Mitte–Mitte am Unterlenker'},
+  crankLength:{label:'Kurbellänge',unit:'mm',group:'Antrieb',def:'Herstellerangabe'},
+  cleatFore:{label:'Cleat längs',unit:'mm',group:'Cleats',def:'Pedalachse relativ zum Großzehengrundgelenk; + = dahinter'},
+  cleatRotL:{label:'Cleat-Rotation L',unit:'°',group:'Cleats',def:'+ = Ferse nach innen'},
+  cleatRotR:{label:'Cleat-Rotation R',unit:'°',group:'Cleats',def:'+ = Ferse nach innen'},
+  kneeBDC:{label:'Kniewinkel unten',unit:'°',group:'Bewegung',def:'Kniewinkel am unteren Totpunkt'},
+  hipAngle:{label:'Hüftwinkel oben',unit:'°',group:'Bewegung',def:'Minimaler Hüftwinkel am oberen Totpunkt'},
+  torsoAngle:{label:'Oberkörperwinkel',unit:'°',group:'Bewegung',def:'Rumpf zur Waagerechten, Griff Bremsgriffe'}
+};
+const REQUIRED = ['saddleHeight','saddleSetback','reach','drop','crankLength','cleatFore'];
+const METHODS = ['Maßband','Laser-Wasserwaage','Digitaler Winkelmesser','Goniometer','2D-Video (unkalibriert)','2D-Video (kalibriert)','Herstellerangabe','Berechnet','CleatLab (Prototyp, nicht validiert)'];
+const SOURCES = ['gemessen','manuell eingegeben','berechnet','geschätzt'];
+const mv = (key,value,method,source,unc) => ({key,value,method,source:source||'gemessen',unc:unc??null,time:''});
+
+const BODY = [
+  ['height','Körpergröße','cm'],['inseam','Schrittlänge','cm'],['torso','Rumpflänge','cm'],['arm','Armlänge','cm'],
+  ['shoulder','Schulterbreite','cm'],['footL','Fußlänge links','mm'],['footR','Fußlänge rechts','mm'],['sitBone','Sitzknochenabstand','mm']
+];
+
+/* ---------- Anleitungen je Messpunkt ---------- */
+const HOW = {
+  saddleHeight:{m:'Maßband',tool:'Maßband',steps:['Rad gerade in den Rollentrainer stellen, Reifen voll aufgepumpt.','Kurbel so drehen, dass sie in Verlängerung des Sitzrohrs zeigt.','Von der Mitte der Tretlagerachse am Sitzrohr entlang bis zur Oberseite des Sattels messen, an der Stelle, auf der man sitzt.'],tip:'Immer am gleichen Punkt des Sattels messen und diesen Punkt notieren.'},
+  saddleSetback:{m:'Laser-Wasserwaage',tool:'Laser-Wasserwaage oder Lot',steps:['Rad waagerecht ausrichten.','Senkrechte Laserlinie (oder Lot) genau durch die Tretlagermitte.','Waagerechten Abstand von der Linie bis zur Sattelspitze messen.'],tip:'Liegt die Sattelspitze hinter der Linie, ist der Wert positiv.'},
+  saddleTilt:{m:'Digitaler Winkelmesser',tool:'Digitaler Winkelmesser',steps:['Winkelmesser auf dem Boden auf 0 stellen.','Längs auf den Sattel legen, von der Spitze bis zur hinteren Sitzfläche.','Wert ablesen.'],tip:'Minus bedeutet: Sattelnase zeigt nach unten.'},
+  reach:{m:'Maßband',tool:'Maßband',steps:['Von der Sattelspitze bis zur Lenkermitte am Vorbau messen.'],tip:'Immer gerade messen, nicht schräg nach unten.'},
+  drop:{m:'Laser-Wasserwaage',tool:'Laser-Wasserwaage oder Wasserwaage mit Latte',steps:['Waagerechte Linie auf Höhe der Satteloberfläche.','Abstand von dieser Linie bis zur Oberseite des Lenkers am Vorbau messen.'],tip:'Lenker tiefer als Sattel = positiver Wert.'},
+  stemLength:{m:'Herstellerangabe',tool:'Ablesen',steps:['Die Länge ist meist auf dem Vorbau eingraviert, in Millimetern.'],tip:''},
+  spacer:{m:'Maßband',tool:'Maßband oder Messschieber',steps:['Alle Ringe unter dem Vorbau zusammen messen.'],tip:''},
+  barWidth:{m:'Herstellerangabe',tool:'Ablesen oder Maßband',steps:['Breite ist meist auf dem Lenker aufgedruckt.','Sonst: Mitte zu Mitte am Unterlenker messen.'],tip:''},
+  crankLength:{m:'Herstellerangabe',tool:'Ablesen',steps:['Die Länge steht auf der Innenseite des Kurbelarms, z. B. 172.5.'],tip:''},
+  cleatFore:{m:'Maßband',tool:'Maßband, Klebepunkt',steps:['Am Fuß den dicken Knochen innen am Großzeh (Großzehengrundgelenk) ertasten.','Die Stelle außen am Schuh markieren.','Schuh im Pedal, Kurbel waagerecht nach vorn.','Abstand zwischen Markierung und Pedalachse messen.'],tip:'Liegt die Pedalachse hinter der Markierung, ist der Wert positiv.'},
+  cleatRotL:{m:'Goniometer',tool:'Goniometer oder Winkel-Schablone',steps:['Schuh von unten betrachten.','Winkel zwischen Cleat-Mittellinie und Schuh-Längsachse messen.'],tip:'Ferse nach innen = positiver Wert.'},
+  cleatRotR:{m:'Goniometer',tool:'Goniometer oder Winkel-Schablone',steps:['Schuh von unten betrachten.','Winkel zwischen Cleat-Mittellinie und Schuh-Längsachse messen.'],tip:'Ferse nach innen = positiver Wert.'},
+  kneeBDC:{m:'Goniometer',tool:'Goniometer',steps:['Kunde fährt 5 Minuten locker warm.','Kurbel am tiefsten Punkt anhalten, Fuß wie beim Fahren.','Goniometer anlegen: Mitte am Knie, Schenkel Richtung Hüftknochen und Außenknöchel.','Winkel ablesen.'],tip:'Häufig genannter Bereich: etwa 140–150°. Das ist eine Orientierung, kein Grenzwert.'},
+  hipAngle:{m:'Goniometer',tool:'Goniometer oder Winkel-App',steps:['Kurbel am höchsten Punkt anhalten.','Winkel zwischen Oberkörper (Hüfte–Schulter) und Oberschenkel (Hüfte–Knie) messen.'],tip:'Sehr kleine Winkel drücken oft auf Hüfte oder Bauch.'},
+  torsoAngle:{m:'Goniometer',tool:'Goniometer oder Winkel-App',steps:['Hände an den Bremsgriffen.','Winkel der Linie Hüfte–Schulter zur Waagerechten messen.'],tip:''}
+};
+
+/* ---------- Körpercheck ---------- */
+const CHECKS = [
+  {k:'pain',label:'Aktuelle Schmerzen',type:'sel',opts:['nein','ja'],side:false,tool:'Gespräch',why:'Bei akuten Schmerzen ist ein Fitting nicht der richtige erste Schritt.',steps:['Frag: Hast du gerade Schmerzen beim Radfahren oder im Alltag? Wo genau?','Die Antwort im Wortlaut bei „Beschwerden“ im Schritt Ziel notieren.']},
+  {k:'legLen',label:'Beinlänge',type:'num',unit:'cm',step:0.1,side:true,tool:'Maßband, Liege',why:'Unterschiedlich lange Beine lassen das Becken auf dem Sattel kippen.',steps:['Person liegt auf dem Rücken, Beine gestreckt.','Kurz das Becken anheben und wieder ablegen lassen, damit es gerade liegt.','Den vorstehenden Beckenknochen vorne an der Hüfte ertasten.','Vom Beckenknochen bis zur Mitte des Innenknöchels messen.','Jede Seite zweimal messen, den Mittelwert eintragen.']},
+  {k:'pelvis',label:'Beckenstand im Stehen',type:'sel',opts:['gerade','links höher','rechts höher'],side:false,tool:'Hände, Spiegel',why:'Zeigt, ob das Becken schon im Stehen schief steht.',steps:['Person steht barfuß, Füße hüftbreit.','Von hinten beide Hände flach auf die Beckenkämme legen.','Auf Augenhöhe gehen und vergleichen, ob beide Hände gleich hoch sind.']},
+  {k:'shoulder',label:'Schulterstand',type:'sel',opts:['gerade','links tiefer','rechts tiefer'],side:false,tool:'Augenmaß, Spiegel',why:'Schiefe Schultern können sich am Lenker zeigen.',steps:['Person steht entspannt, Arme hängen.','Von vorn die Höhe beider Schultern vergleichen.']},
+  {k:'kneeTrack',label:'Kniespur bei einbeiniger Kniebeuge',type:'sel',opts:['gerade','fällt nach innen','fällt nach außen'],side:true,tool:'Augenmaß',why:'Zeigt, wie das Knie beim Treten wandert.',steps:['Person steht auf einem Bein, Hände an der Hüfte.','Langsam etwa 45° in die Knie gehen und wieder hoch, 5-mal.','Von vorn beobachten: Bleibt das Knie über dem Fuß oder wandert es nach innen oder außen?','Dann die andere Seite.']},
+  {k:'arch',label:'Fußgewölbe',type:'sel',opts:['normal','flach','hoch'],side:true,tool:'Augenmaß',why:'Das Gewölbe beeinflusst, wie der Fuß im Radschuh steht.',steps:['Person steht barfuß, Gewicht gleich verteilt.','Von innen auf das Längsgewölbe schauen.','Flach: Innenkante liegt fast auf. Hoch: deutlicher Bogen, wenig Kontakt.']},
+  {k:'forefoot',label:'Vorfußstellung',type:'sel',opts:['neutral','Innenkante höher','Außenkante höher'],side:true,tool:'Liege, Augenmaß',why:'Ein schräger Vorfuß kippt den Fuß auf dem Pedal.',steps:['Person liegt auf dem Bauch, Füße über dem Liegenende.','Ferse gerade halten, Fuß locker.','Von hinten auf die Linie der Zehenballen schauen: waagerecht oder schräg?']},
+  {k:'hamstring',label:'Rückseite Oberschenkel (Finger-Boden-Abstand)',type:'num',unit:'cm',step:1,side:false,tool:'Maßband',why:'Wenig Beweglichkeit hier erschwert eine tiefe Haltung.',steps:['Person steht, Beine gestreckt, Füße zusammen.','Langsam nach vorn beugen, Arme hängen lassen.','Abstand von den Fingerspitzen bis zum Boden messen. Boden erreicht = 0.']},
+  {k:'hipFlex',label:'Hüftbeugung (Knie zur Brust)',type:'sel',opts:['frei','etwas eingeschränkt','deutlich eingeschränkt'],side:true,tool:'Liege',why:'Die Hüfte muss am oberen Totpunkt weit beugen.',steps:['Person liegt auf dem Rücken.','Ein Knie mit beiden Händen zur Brust ziehen, das andere Bein bleibt gestreckt liegen.','Frei: Knie fast an der Brust, anderes Bein bleibt liegen.']},
+  {k:'ankle',label:'Sprunggelenk (Knie-zur-Wand-Test)',type:'num',unit:'cm',step:0.5,side:true,tool:'Maßband, Wand',why:'Ein steifes Sprunggelenk beeinflusst Cleat-Position und Sattelhöhe.',steps:['Person steht mit dem Fuß vor einer Wand.','Knie zur Wand bringen, Ferse bleibt am Boden.','Fuß so weit zurücksetzen, wie es gerade noch geht.','Abstand Großzeh bis Wand messen.']},
+  {k:'sitBone',label:'Sitzknochenabstand',type:'num',unit:'mm',step:1,side:false,tool:'Wellpappe oder Gelkissen',why:'Hilft bei der Wahl der Sattelbreite.',steps:['Person setzt sich auf Wellpappe, Füße angehoben, leicht nach vorn geneigt.','Wieder aufstehen. Die zwei tiefsten Abdrücke markieren.','Abstand Mitte zu Mitte messen.']}
+];
+const chkVal=(s,k,side)=> (s.check||{})[k+(side||'')];
+function checkFindings(s){
+  const out=[]; const v=(k,sd)=>chkVal(s,k,sd); const add=(lvl,cat,title,text)=>out.push({lvl,cat,title,text});
+  if(v('pain')==='ja') add('bad','arzt','Schmerzen angegeben','Bei akuten Schmerzen erst ärztlich oder physiotherapeutisch abklären lassen. Das Fitting kann danach folgen.');
+  const L=Number(v('legLen','L')), R=Number(v('legLen','R'));
+  if(L&&R){ const d=Math.round(Math.abs(L-R)*10); const short=L<R?'links':'rechts';
+    if(d>=10) add('warn','arzt',`Beinlänge: ${d} mm Unterschied`,`Deutlicher Unterschied, ${short} kürzer. Ursache von Fachleuten abklären lassen. Ausgleich am Rad nur nach Rücksprache.`);
+    else if(d>=5) add('warn','ausgleich',`Beinlänge: ${d} mm Unterschied`,`${short[0].toUpperCase()+short.slice(1)} kürzer. Ausgleich prüfen: Unterlegplatte (Shim) unter dem Cleat ${short}. Faustregel: etwa die Hälfte des Unterschieds, dann fahren und nachfragen.`);
+    else add('ok','fitting',`Beinlänge: ${d} mm Unterschied`,'Kein Ausgleich nötig.'); }
+  if(v('pelvis')&&v('pelvis')!=='gerade') add('info','fitting',`Becken im Stehen: ${v('pelvis')}`,L&&R?'Mit der Beinlänge zusammen betrachten.':'Beinlänge messen, um die Ursache einzugrenzen.');
+  if(v('shoulder')&&v('shoulder')!=='gerade') add('info','fitting',`Schultern: ${v('shoulder')}`,'Beim Fitting auf schiefe Haltung am Lenker achten.');
+  ['L','R'].forEach(sd=>{ const n=sd==='L'?'links':'rechts';
+    if(v('kneeTrack',sd)==='fällt nach innen') add('warn','ausgleich',`Knie ${n} fällt nach innen`,'Fußgewölbe prüfen. Einlage mit Gewölbestütze oder Keil im Schuh erwägen. Nach dem Ausgleich die Kniebeuge wiederholen.');
+    if(v('kneeTrack',sd)==='fällt nach außen') add('warn','fitting',`Knie ${n} fällt nach außen`,'Seitliche Cleat-Position und Pedalachsenlänge beim Fitting beobachten.');
+    if(v('arch',sd)==='flach') add('warn','ausgleich',`Fußgewölbe ${n} flach`,'Radschuh-Einlage mit Gewölbestütze prüfen.');
+    if(v('arch',sd)==='hoch') add('info','ausgleich',`Fußgewölbe ${n} hoch`,'Auf Druckstellen achten, gepolsterte Einlage prüfen.');
+    if(v('forefoot',sd)==='Innenkante höher') add('warn','ausgleich',`Vorfuß ${n}: Innenkante höher`,'Keil unter der Innenkante (Varus-Keil) im Schuh oder unter dem Cleat prüfen.');
+    if(v('forefoot',sd)==='Außenkante höher') add('info','ausgleich',`Vorfuß ${n}: Außenkante höher`,'Keil unter der Außenkante prüfen. Eher selten, genau beobachten.');
+    if(v('hipFlex',sd)==='deutlich eingeschränkt') add('warn','fitting',`Hüfte ${n} deutlich eingeschränkt`,'Hüftwinkel oben nicht zu klein werden lassen: weniger Überhöhung oder kürzere Kurbel prüfen.');
+    const a=Number(v('ankle',sd)); if(a&&a<8) add('info','fitting',`Sprunggelenk ${n}: ${a} cm`,'Wenig Beweglichkeit. Cleat eher weiter hinten, Sattel nicht zu hoch.');
+  });
+  const hm=v('hamstring'); if(hm!==undefined&&hm!==''){ const h=Number(hm); if(h>20) add('warn','fitting',`Rückseite Oberschenkel: ${h} cm`,'Deutlich eingeschränkt. Wenig Überhöhung, Sattel nicht zu hoch. Dehnübungen empfehlen.'); else if(h>10) add('info','fitting',`Rückseite Oberschenkel: ${h} cm`,'Leicht eingeschränkt. Überhöhung moderat halten.'); }
+  const sbv=Number(v('sitBone')); if(sbv) add('info','fitting',`Sitzknochenabstand ${sbv} mm`,`Sattelbreite nach Herstellerangabe wählen; viele Hersteller rechnen etwa 20–30 mm auf den Sitzknochenabstand.`);
+  return out;
+}
+function readiness(f,s){
+  const filled=Object.keys(s.check||{}).length;
+  if(!filled) return ['c-info','Noch nicht geprüft','Mach zuerst den Körpercheck.'];
+  if(f.some(x=>x.cat==='arzt')) return ['c-bad','Erst abklären','Mindestens ein Punkt sollte von Fachleuten angeschaut werden.'];
+  const open=f.filter(x=>x.cat==='ausgleich'&&!(s.comp||[]).some(c=>c.t.startsWith(x.title))).length;
+  if(open) return ['c-warn','Ausgleich vorbereiten',`${open} Ausgleich${open>1?'e':''} vor dem Fitting einplanen.`];
+  return ['c-ok','Bereit fürs Fitting','Keine Punkte, die vorher ausgeglichen werden müssen.'];
+}
+function fitSuggestions(s){
+  const out=[]; const t=(s.anamnesis.complaints||'').toLowerCase(); const add=(key,title,why,how)=>out.push({key,title,why,how});
+  if(/hand|taub|finger|handgelenk/.test(t)) add('reach','Hände entlasten','Taube Hände kommen oft von zu viel Gewicht auf dem Lenker.','Sattel–Lenker kürzer oder Lenker höher prüfen. Sattelnase nicht zu tief.');
+  if(/nacken|schulter/.test(t)) add('drop','Nacken entlasten','Ein tiefer, weiter Lenker zwingt den Kopf in den Nacken.','Überhöhung verringern oder Lenker näher holen.');
+  if(/knie.*vorn|vorne.*knie|kniescheibe/.test(t)) add('saddleHeight','Knie vorn','Druck vorn am Knie passt oft zu einem zu tiefen oder zu weit vorn stehenden Sattel.','Sattelhöhe in Schritten von 2–3 mm erhöhen, Versatz prüfen, neu messen.');
+  if(/kniekehle|knie.*hinten/.test(t)) add('saddleHeight','Kniekehle','Ziehen in der Kniekehle passt oft zu einem zu hohen Sattel.','Sattel in Schritten von 2–3 mm senken und neu messen.');
+  if(/knie.*innen|knie.*außen|knie innen|knie außen/.test(t)) add('cleatRotR','Knie innen oder außen','Die Fußstellung im Pedal steuert die Kniespur.','Cleat-Rotation und seitliche Cleat-Position prüfen. Körpercheck Kniespur beachten.');
+  if(/sitz|gesäß|druck|damm|sattel/.test(t)) add('saddleTilt','Sitzbeschwerden','Druck im Sitzbereich hängt an Neigung, Breite und Höhe des Sattels.','Sattelneigung in kleinen Schritten anpassen, Sattelbreite mit Sitzknochenabstand prüfen.');
+  if(/rücken|lenden/.test(t)) add('drop','Rücken','Eine sehr gestreckte Haltung belastet den unteren Rücken.','Überhöhung und Sattel–Lenker-Abstand prüfen.');
+  if(/wade|zeh|fuß|brennen/.test(t)) add('cleatFore','Füße und Waden','Weit vorn sitzende Cleats belasten Waden und Vorfuß.','Cleat weiter nach hinten setzen, Einlage und Schuhgröße prüfen.');
+  const k=(s.after.kneeBDC||s.before.kneeBDC); if(k){ if(k.value<140) add('saddleHeight',`Kniewinkel unten ${fmtNum(k.value)}°`,'Unter dem häufig genannten Bereich von etwa 140–150°. Der Sattel könnte zu tief sein.','Sattel in Schritten von 2–3 mm erhöhen und den Winkel neu messen.'); else if(k.value>150) add('saddleHeight',`Kniewinkel unten ${fmtNum(k.value)}°`,'Über dem häufig genannten Bereich von etwa 140–150°. Der Sattel könnte zu hoch sein.','Sattel in Schritten von 2–3 mm senken und den Winkel neu messen.'); }
+  checkFindings(s).filter(f=>f.cat==='fitting'&&f.lvl!=='ok').forEach(f=>add(null,f.title,'Aus dem Körpercheck.',f.text));
+  return out;
+}
+
+/* ---------- Seed data (fictitious) ---------- */
+function seed(){
+  const S = {version:3, seededAt:today()};
+  S.customers = [
+    {id:'c1',name:'Lena Hoffmann',email:'lena.hoffmann@example.com',phone:'0151 000 00 01',since:dayOff(-420),discipline:'Rennrad, Gravel',consent:true,
+      body:{height:172,inseam:81.5,torso:58,arm:61,shoulder:38,footL:258,footR:261,sitBone:125},
+      flex:{hamstring:'eingeschränkt (Finger-Boden 12 cm)',hip:'unauffällig',ankle:'unauffällig'}, tags:['Wiederkehrerin']},
+    {id:'c2',name:'Markus Weber',email:'m.weber@example.com',phone:'0170 000 00 02',since:dayOff(-60),discipline:'Triathlon',consent:true,
+      body:{height:184,inseam:88,torso:null,arm:66,shoulder:43,footL:281,footR:282,sitBone:null},
+      flex:{hamstring:'unauffällig',hip:'eingeschränkt rechts',ankle:'unauffällig'}, tags:['Langdistanz']},
+    {id:'c3',name:'Sophie Brandt',email:'sophie.brandt@example.com',phone:'0160 000 00 03',since:dayOff(-12),discipline:'MTB',consent:false,
+      body:{height:165,inseam:76,torso:null,arm:null,shoulder:null,footL:null,footR:null,sitBone:null},
+      flex:{hamstring:'',hip:'',ankle:''}, tags:['Neukundin']},
+    {id:'c4',name:'Jonas Albrecht',email:'jonas.albrecht@example.com',phone:'0176 000 00 04',since:dayOff(-800),discipline:'E-Bike Pendeln',consent:true,
+      body:{height:179,inseam:84,torso:null,arm:null,shoulder:null,footL:null,footR:null,sitBone:null},
+      flex:{hamstring:'',hip:'',ankle:''}, tags:['Werkstattkunde']}
+  ];
+  S.bikes = [
+    {id:'b1',customerId:'c1',name:'Rennrad',brand:'Canyon',model:'Endurace CF 7',size:'M',year:2023,type:'Rennrad',frameNo:'DEMO-CY-23-0451',pedal:'Shimano SPD-SL',saddle:'Specialized Power Expert 143',km:8400},
+    {id:'b2',customerId:'c1',name:'Gravel',brand:'Rose',model:'Backroad AL',size:'S',year:2025,type:'Gravel',frameNo:'DEMO-RO-25-1188',pedal:'Shimano SPD',saddle:'Fizik Terra Argo 150',km:1900},
+    {id:'b3',customerId:'c2',name:'Zeitfahrrad',brand:'Cervélo',model:'P-Series',size:'56',year:2024,type:'Triathlon',frameNo:'DEMO-CE-24-3302',pedal:'Look Keo',saddle:'ISM PN 3.1',km:5200},
+    {id:'b4',customerId:'c3',name:'Trail-MTB',brand:'Cube',model:'Stereo One22',size:'S',year:2025,type:'MTB',frameNo:'DEMO-CU-25-7710',pedal:'Shimano SPD',saddle:'Serienmodell',km:600},
+    {id:'b5',customerId:'c4',name:'Pendelrad',brand:'Riese & Müller',model:'Charger4',size:'53',year:2022,type:'E-Bike',frameNo:'DEMO-RM-22-0907',pedal:'Plattform',saddle:'Serienmodell',km:14300}
+  ];
+  const s1before = {
+    saddleHeight:mv('saddleHeight',728,'Maßband','gemessen',2), saddleSetback:mv('saddleSetback',62,'Laser-Wasserwaage','gemessen',2),
+    saddleTilt:mv('saddleTilt',-1.5,'Digitaler Winkelmesser','gemessen',0.2), reach:mv('reach',548,'Maßband','gemessen',3),
+    drop:mv('drop',72,'Laser-Wasserwaage','gemessen',2), stemLength:mv('stemLength',100,'Herstellerangabe','manuell eingegeben'),
+    spacer:mv('spacer',15,'Maßband','gemessen',1), barWidth:mv('barWidth',400,'Herstellerangabe','manuell eingegeben'),
+    crankLength:mv('crankLength',172.5,'Herstellerangabe','manuell eingegeben'), cleatFore:mv('cleatFore',4,'Maßband','gemessen',2),
+    cleatRotL:mv('cleatRotL',0,'Goniometer','gemessen',1), cleatRotR:mv('cleatRotR',0,'Goniometer','gemessen',1),
+    kneeBDC:mv('kneeBDC',148,'2D-Video (unkalibriert)','geschätzt',null), torsoAngle:mv('torsoAngle',41,'2D-Video (unkalibriert)','geschätzt',null)
+  };
+  const s1after = {
+    saddleHeight:mv('saddleHeight',736,'Maßband','gemessen',2), saddleSetback:mv('saddleSetback',57,'Laser-Wasserwaage','gemessen',2),
+    saddleTilt:mv('saddleTilt',-0.5,'Digitaler Winkelmesser','gemessen',0.2), reach:mv('reach',531,'Maßband','gemessen',3),
+    drop:mv('drop',58,'Laser-Wasserwaage','gemessen',2), stemLength:mv('stemLength',90,'Herstellerangabe','manuell eingegeben'),
+    spacer:mv('spacer',25,'Maßband','gemessen',1), barWidth:mv('barWidth',380,'Herstellerangabe','manuell eingegeben'),
+    crankLength:mv('crankLength',172.5,'Herstellerangabe','manuell eingegeben'), cleatFore:mv('cleatFore',8,'Maßband','gemessen',2),
+    cleatRotL:mv('cleatRotL',0,'Goniometer','gemessen',1), cleatRotR:mv('cleatRotR',1.5,'Goniometer','gemessen',1),
+    kneeBDC:mv('kneeBDC',143,'2D-Video (unkalibriert)','geschätzt',null), torsoAngle:mv('torsoAngle',46,'2D-Video (unkalibriert)','geschätzt',null)
+  };
+  const copy = o => JSON.parse(JSON.stringify(o));
+  const s2before = copy(s1after); s2before.saddleHeight.value=736; s2before.cleatRotR.value=1.5;
+  const s2after = copy(s2before); s2after.saddleHeight.value=733; s2after.cleatRotR.value=3; s2after.kneeBDC.value=145;
+  S.sessions = [
+    {id:'s1',customerId:'c1',bikeId:'b1',date:dayOff(-130),time:'10:00',type:'Erstfitting',status:'abgeschlossen',fitter:'Tom Krämer',version:1,
+      anamnesis:{goal:'Längere Ausfahrten über 100 km ohne Beschwerden',complaints:'Taube Hände nach ca. 60 Minuten; Druck im vorderen Sitzbereich',training:'6–8 h pro Woche',experience:'5 Jahre Rennrad',previous:'Kein professionelles Fitting',limits:'Verkürzte hintere Oberschenkelmuskulatur (Kundenangabe)',comfort:'Komfort vor Aerodynamik'},
+      before:s1before, after:s1after,
+      changes:[
+        {key:'saddleHeight',from:728,to:736,reason:'Knie am unteren Totpunkt stark gebeugt (Beobachtung)',time:dayOff(-130)+' 10:48'},
+        {key:'saddleSetback',from:62,to:57,reason:'Gewicht weiter nach vorn, Druck Hände/Sitz neu verteilen',time:dayOff(-130)+' 10:55'},
+        {key:'stemLength',from:100,to:90,reason:'Reach verkürzen, Druck auf Hände reduzieren',time:dayOff(-130)+' 11:10'},
+        {key:'spacer',from:15,to:25,reason:'Überhöhung reduzieren wegen Beweglichkeit',time:dayOff(-130)+' 11:12'},
+        {key:'barWidth',from:400,to:380,reason:'Lenkerbreite an Schulterbreite angepasst (Kundenwunsch nach Test)',time:dayOff(-130)+' 11:20'},
+        {key:'cleatFore',from:4,to:8,reason:'Cleat nach hinten, Kundin berichtet Wadenspannung',time:dayOff(-130)+' 11:30'}
+      ],
+      check:{pain:'nein',legLenL:89.0,legLenR:88.4,pelvis:'rechts höher',shoulder:'gerade',kneeTrackL:'gerade',kneeTrackR:'fällt nach innen',archL:'normal',archR:'flach',forefootL:'neutral',forefootR:'Innenkante höher',hamstring:12,hipFlexL:'frei',hipFlexR:'frei',ankleL:10,ankleR:9,sitBone:125},
+      comp:[{t:'Beinlänge: 6 mm Unterschied – Shim 3 mm unter Cleat links',status:'umgesetzt'},{t:'Fußgewölbe rechts flach – Einlage mit Gewölbestütze',status:'umgesetzt'}],
+      notes:'Kundin fühlt sich nach Anpassung deutlich entspannter in den Händen (subjektiv). Nachkontrolle nach 4–6 Wochen vereinbart.',
+      feedback:[{date:dayOff(-123),score:7,text:'Hände besser, Sitz nach 2 h noch leicht unangenehm'},{date:dayOff(-100),score:8,text:'120 km ohne Taubheit gefahren'}],
+      followUps:[{days:7,due:dayOff(-123),status:'erledigt'},{days:30,due:dayOff(-100),status:'erledigt'}]},
+    {id:'s2',customerId:'c1',bikeId:'b1',date:dayOff(-94),time:'16:00',type:'Nachkontrolle',status:'abgeschlossen',fitter:'Tom Krämer',version:1,
+      anamnesis:{goal:'Feinjustierung nach 5 Wochen',complaints:'Leichter Druck rechtes Knie innen nach langen Anstiegen',training:'8 h pro Woche',experience:'5 Jahre Rennrad',previous:'Erstfitting FitFrame',limits:'wie zuvor',comfort:'Komfort vor Aerodynamik'},
+      before:s2before, after:s2after,
+      changes:[
+        {key:'saddleHeight',from:736,to:733,reason:'Hüfte kippt seitlich am unteren Totpunkt (Beobachtung im Video)',time:dayOff(-94)+' 16:30'},
+        {key:'cleatRotR',from:1.5,to:3,reason:'Kundenangabe Knie rechts innen; Ferse weiter nach innen',time:dayOff(-94)+' 16:40'}
+      ],
+      notes:'Rechts mehr Cleat-Rotation. Wirkung auf das Knie ist nicht belegt und wird bei der nächsten Nachkontrolle erfragt.',
+      feedback:[{date:dayOff(-60),score:9,text:'Keine Knieprobleme mehr bemerkt'}],
+      followUps:[{days:30,due:dayOff(-64),status:'erledigt'},{days:90,due:dayOff(-4),status:'offen'}]},
+    {id:'s3',customerId:'c1',bikeId:'b2',date:today(),time:'14:00',type:'Erstfitting',status:'geplant',fitter:'Tom Krämer',version:1,
+      anamnesis:{goal:'Gravelrad an Rennrad-Position angleichen',complaints:'',training:'',experience:'',previous:'Zwei Sitzungen am Rennrad',limits:'',comfort:''},
+      before:{},after:{},changes:[],notes:'',feedback:[],followUps:[]},
+    {id:'s4',customerId:'c2',bikeId:'b3',date:today(),time:'09:00',type:'Erstfitting',status:'in Arbeit',fitter:'Anna Sommer',version:1,
+      anamnesis:{goal:'Aeroposition für Langdistanz, 180 km halten',complaints:'Nackenverspannung ab 90 Minuten',training:'12 h pro Woche',experience:'3 Jahre Triathlon',previous:'Fitting 2022 (anderer Anbieter, keine Daten)',limits:'',comfort:'Aero mit Komfort für 5 h'},
+      before:{saddleHeight:mv('saddleHeight',781,'Maßband','gemessen',2),saddleSetback:mv('saddleSetback',-18,'Laser-Wasserwaage','gemessen',2),crankLength:mv('crankLength',170,'Herstellerangabe','manuell eingegeben'),drop:mv('drop',96,'Maßband','gemessen',null),kneeBDC:mv('kneeBDC',150,'2D-Video (unkalibriert)','geschätzt',null)},
+      after:{saddleHeight:mv('saddleHeight',778,'Laser-Wasserwaage','gemessen',2)},
+      changes:[{key:'saddleHeight',from:781,to:778,reason:'Becken wippt am unteren Totpunkt',time:today()+' 09:40'}],
+      check:{pain:'nein',hamstring:4,hipFlexL:'frei',hipFlexR:'etwas eingeschränkt',shoulder:'rechts tiefer'},comp:[],
+      notes:'',feedback:[],followUps:[]},
+    {id:'s5',customerId:'c3',bikeId:'b4',date:dayOff(2),time:'11:00',type:'Erstfitting',status:'geplant',fitter:'Anna Sommer',version:1,
+      anamnesis:{goal:'Mehr Kontrolle in Abfahrten',complaints:'Handgelenke nach Trailtagen',training:'',experience:'1 Jahr',previous:'',limits:'',comfort:''},
+      before:{},after:{},changes:[],notes:'',feedback:[],followUps:[]}
+  ];
+  S.workshop = [
+    {id:'WO-1042',customerId:'c4',bikeId:'b5',title:'Jahresinspektion E-Bike',status:'Freigabe ausstehend',created:dayOff(-3),due:dayOff(1),mechanic:'Felix Yilmaz',
+      positions:[{t:'Inspektion E-Bike',kind:'Arbeit',qty:1,price:89},{t:'Bremsbeläge hinten',kind:'Teil',qty:1,price:24.9},{t:'Kette 11-fach',kind:'Teil',qty:1,price:39.9},{t:'Kette montieren',kind:'Arbeit',qty:0.25,price:72}],
+      log:[{time:dayOff(-3)+' 09:12',text:'Auftrag angenommen'},{time:dayOff(-2)+' 15:40',text:'Kostenvoranschlag erstellt und an Kunden gesendet (simuliert)'}], approval:null},
+    {id:'WO-1043',customerId:'c1',bikeId:'b2',title:'Schaltung einstellen, Reifen tubeless',status:'In Arbeit',created:dayOff(-1),due:today(),mechanic:'Felix Yilmaz',
+      positions:[{t:'Schaltung einstellen',kind:'Arbeit',qty:0.5,price:72},{t:'Tubeless-Umbau',kind:'Arbeit',qty:0.75,price:72},{t:'Tubeless-Milch 120 ml',kind:'Teil',qty:2,price:7.5}],
+      log:[{time:dayOff(-1)+' 10:02',text:'Auftrag angenommen'},{time:dayOff(-1)+' 11:00',text:'Kunde hat Kostenvoranschlag freigegeben (simuliert)'}], approval:{time:dayOff(-1)+' 11:00',by:'Lena Hoffmann'}},
+    {id:'WO-1044',customerId:'c2',bikeId:'b3',title:'Bremsen entlüften',status:'Abholbereit',created:dayOff(-4),due:dayOff(-1),mechanic:'Felix Yilmaz',
+      positions:[{t:'Bremsen entlüften (2×)',kind:'Arbeit',qty:1,price:59},{t:'Mineralöl',kind:'Teil',qty:1,price:9.9}],
+      log:[{time:dayOff(-4)+' 08:50',text:'Auftrag angenommen'},{time:dayOff(-1)+' 17:10',text:'Fertig, Kunde benachrichtigt (simuliert)'}], approval:{time:dayOff(-4)+' 09:30',by:'Markus Weber'}},
+    {id:'WO-1045',customerId:'c3',bikeId:'b4',title:'Federgabel-Service 50 h',status:'Angenommen',created:today(),due:dayOff(5),mechanic:'–',
+      positions:[],log:[{time:today()+' 08:30',text:'Auftrag angenommen'}],approval:null}
+  ];
+  S.services = [
+    {bikeId:'b5',task:'Inspektion',interval:'12 Monate',last:dayOff(-370),next:dayOff(-5)},
+    {bikeId:'b1',task:'Kettenverschleiß prüfen',interval:'3.000 km',last:dayOff(-90),next:dayOff(20)},
+    {bikeId:'b4',task:'Gabelservice',interval:'50 Betriebsstunden',last:'',next:dayOff(3)},
+    {bikeId:'b3',task:'Bremsflüssigkeit',interval:'12 Monate',last:dayOff(-1),next:dayOff(364)}
+  ];
+  S.inventory = [
+    {sku:'KT-11-105',name:'Kette 11-fach',cat:'Verschleißteile',stock:6,min:4,price:39.9,loc:'Regal A2'},
+    {sku:'BB-RES-01',name:'Bremsbeläge Resin (Paar)',cat:'Verschleißteile',stock:3,min:6,price:24.9,loc:'Regal A3'},
+    {sku:'VB-90-6',name:'Vorbau 90 mm, −6°',cat:'Fitting-Teile',stock:2,min:2,price:49,loc:'Fitting-Wand'},
+    {sku:'VB-110-6',name:'Vorbau 110 mm, −6°',cat:'Fitting-Teile',stock:1,min:2,price:49,loc:'Fitting-Wand'},
+    {sku:'SP-5',name:'Spacer-Set 5 mm',cat:'Fitting-Teile',stock:14,min:5,price:6.5,loc:'Fitting-Wand'},
+    {sku:'CL-SL-Y',name:'Cleats SPD-SL gelb (6°)',cat:'Fitting-Teile',stock:5,min:3,price:21.95,loc:'Fitting-Wand'},
+    {sku:'SA-143-PW',name:'Testsattel 143 mm',cat:'Fitting-Teile',stock:1,min:1,price:0,loc:'Testsattel-Box'},
+    {sku:'TB-120',name:'Tubeless-Milch 120 ml',cat:'Werkstatt',stock:9,min:4,price:7.5,loc:'Regal C1'},
+    {sku:'BK-GR-S',name:'Gravelrad Größe S (Ausstellung)',cat:'Fahrräder',stock:1,min:0,price:1499,loc:'Verkaufsfläche'}
+  ];
+  S.sales = [
+    {id:'VK-301',customerId:'c1',date:dayOff(-130),items:'Vorbau 90 mm, Spacer-Set',total:55.5,status:'bezahlt',bikeId:'b1'},
+    {id:'VK-302',customerId:'c2',date:today(),items:'Cleats Look Keo grau',total:24.9,status:'offen',bikeId:'b3'}
+  ];
+  S.warranty = [
+    {id:'GA-17',customerId:'c4',bikeId:'b5',item:'Akku-Ladegerät',reported:dayOff(-20),status:'beim Hersteller'}
+  ];
+  S.messages = {c1:[{from:'Betrieb',time:dayOff(-94)+' 17:20',text:'Ihr Bericht zur Nachkontrolle ist freigegeben.'},{from:'Kundin',time:dayOff(-60)+' 08:05',text:'Danke, alles gut. Ich melde mich wegen des Gravelrads.'}]};
+  S.shared = {s1:true,s2:true};
+  S.audit = [{time:dayOff(-130)+' 11:40',who:'Tom Krämer',what:'Sitzung s1 abgeschlossen',ref:'s1'},{time:dayOff(-94)+' 16:45',who:'Tom Krämer',what:'Sitzung s2 abgeschlossen',ref:'s2'},{time:today()+' 09:40',who:'Anna Sommer',what:'Sattelhöhe 781 → 778 mm (s4)',ref:'s4'}];
+  S.motionMarks = [];
+  S.team = [
+    {name:'Tom Krämer',role:'Bikefitter',loc:'Hauptladen',hours:32},{name:'Anna Sommer',role:'Bikefitterin',loc:'Hauptladen',hours:24},
+    {name:'Felix Yilmaz',role:'Mechaniker',loc:'Hauptladen',hours:40},{name:'Mara König',role:'Inhaberin, Verwaltung',loc:'Beide Standorte',hours:20}
+  ];
+  return S;
+}
+
+/* ---------- State ---------- */
+const KEY = 'fitframe-demo-v3';
+let S;
+let storageOk = true;
+function load(){
+  try{ const r = localStorage.getItem(KEY); if(r){ const d = JSON.parse(r); if(d && d.version===3) return d; } }catch(e){ storageOk=false; }
+  return seed();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ storageOk=false; } }
+function audit(what,ref){ S.audit.unshift({time:nowStamp(),who:'Demo-Nutzer',what,ref:ref||''}); }
+S = load(); S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; }); (function(){ const sd=seed(); sd.sessions.forEach(d=>{ const x=S.sessions.find(y=>y.id===d.id); if(x&&!Object.keys(x.check).length&&Object.keys(d.check||{}).length&&x.customerId===d.customerId){ x.check=d.check; x.comp=d.comp; } }); })();
+
+const ui = {route:'dashboard', sess:'s4', sessTab:'anamnese', cust:null, search:'', bikeSearch:'', woFilter:'alle', invSearch:'', invCat:'alle', aiSess:'s1', aiOut:null, portalCust:'c1', motionSess:'s1', motionSide:'after', cmpA:'s1', cmpB:'s2', cmpChanged:false, fitView:'after', hwSel:'cleatlab', cleatSys:'SPD-SL', apptFilter:'heute', fuFilter:'offen'};
+
+const cust = id => S.customers.find(c=>c.id===id);
+const bike = id => S.bikes.find(b=>b.id===id);
+const sess = id => S.sessions.find(s=>s.id===id);
+const bikesOf = cid => S.bikes.filter(b=>b.customerId===cid);
+const sessOf = cid => S.sessions.filter(s=>s.customerId===cid).sort((a,b)=>a.date.localeCompare(b.date));
+const val = (rec) => rec ? rec.value : null;
+
+/* ---------- Navigation ---------- */
+const MAIN=[['dashboard','Start','dash'],['kunden','Kunden','users'],['sitzung','Fitting','fit'],['werkstatt','Werkstatt','wrench'],['mehr','Mehr','more']];
+const MORE=[
+  ['Fitting-Werkzeuge',[['fahrraeder','Fahrräder','bike','Alle Räder mit Einstellungen und Historie'],['verlauf','Verlauf & Vergleich','history','Sitzungen nebeneinander und über die Zeit'],['followup','Nachkontrollen','loop','Wer ist wann wieder dran?'],['motion','Bewegung simulieren','motion','Fahrerfigur aus den eingetragenen Maßen'],['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht, Datenlücken']]],
+  ['Laden & Kunden',[['portal','Kundenportal','portal','So sehen Kunden ihre Berichte'],['lager','Lager & Verkauf','box','Bestand, Verkäufe, Garantie'],['betrieb','Team & Zahlen','ops','Auslastung, Rollen, Kennzahlen']]],
+  ['Für Profis',[['qualitaet','Messdaten & Qualität','quality','Herkunft und Vollständigkeit aller Werte'],['hardware','Hardware Lab','hw','Geplante eigene Messhilfen'],['module','Alle Module','grid','Gesamtplan und Stand der Demo']]]
+];
+const TITLES=Object.fromEntries([...MAIN.map(m=>[m[0],m[1]]),...MORE.flatMap(g=>g[1].map(m=>[m[0],m[1]]))]);
+const isMore=r=>MORE.some(g=>g[1].some(m=>m[0]===r));
+const TABALIAS={vergleich:'ergebnis',qualitaet:'ergebnis',bericht:'ergebnis'};
+
+function counts(){
+  return {
+    kunden:S.customers.length,
+    sitzung:S.sessions.filter(s=>s.date===today()&&s.status!=='abgesagt'&&s.status!=='abgeschlossen').length,
+    followup:S.sessions.flatMap(s=>s.followUps).filter(f=>f.status==='offen').length,
+    werkstatt:S.workshop.filter(w=>w.status!=='Übergeben').length
+  };
+}
+function renderNav(){
+  const c = counts();
+  const btn=(r,l,i,cls)=>`<button class="navbtn ${cls||''}" data-nav="${r}" ${ui.route===r?'aria-current="page"':''}>${ic(i)}<span>${l}</span>${c[r]?`<span class="cnt">${c[r]}</span>`:''}</button>`;
+  document.getElementById('side').innerHTML = `
+    <div class="brand">
+      <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" style="fill:var(--accent)"/><path d="M10 23l6-14h7M13 16h7" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div><b>FitFrame</b><small>Bikefitting für deinen Laden</small></div>
+    </div>
+    <div class="navgroup">${MAIN.filter(m=>m[0]!=='mehr').map(([r,l,i])=>btn(r,l,i)).join('')}</div>
+    ${MORE.map(([g,items])=>`<div class="navgroup"><div class="label">${g}</div>${items.map(([r,l,i])=>btn(r,l,i,'small')).join('')}</div>`).join('')}
+    <div class="demo-note">
+      <span>Demo mit erfundenen Beispielkunden. Deine Einträge bleiben nur in diesem Browser.</span>
+      <button class="btn sm" data-act="reset">Demo zurücksetzen</button>
+    </div>`;
+  document.getElementById('bottomnav').innerHTML = MAIN.map(([r,l,i])=>`<button data-nav="${r}" ${(ui.route===r||(r==='mehr'&&isMore(ui.route)))?'aria-current="page"':''}>${ic(i)}<span>${l}</span></button>`).join('');
+  document.getElementById('crumb').textContent = isMore(ui.route)?`Mehr / ${TITLES[ui.route]}`:(TITLES[ui.route]||'');
+}
+function go(r){
+  if(!VIEWS[r]) r='dashboard';
+  ui.route = r;
+  try{ if(location.hash.slice(1)!==r) history.replaceState(null,'','#'+r); }catch(e){}
+  closeMenu(); render(); window.scrollTo(0,0);
+}
+function render(){
+  renderNav();
+  const v = document.getElementById('view');
+  try{ v.innerHTML = VIEWS[ui.route](); }
+  catch(e){ console.error(e); v.innerHTML = `<div class="notice warn">${ic('warn')}<div><b>Diese Ansicht konnte nicht geladen werden.</b><br>Fehler: ${esc(e.message)}. Setze die Demo unter „Mehr“ zurück, falls der Fehler bleibt.</div></div>`; }
+  afterRender();
+}
+const hostTheme=document.documentElement.getAttribute('data-theme');
+let theme=(()=>{ try{ return localStorage.getItem('fitframe-theme')||'light'; }catch(e){ return 'light'; } })();
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme',theme);
+  const b=document.getElementById('themeBtn'); if(b){ b.innerHTML=ic(theme==='dark'?'sun':'moon'); b.setAttribute('aria-label',theme==='dark'?'Hell anzeigen':'Dunkel anzeigen'); b.title=b.getAttribute('aria-label'); }
+}
+function labelTables(root){
+  (root||document).querySelectorAll('table').forEach(t=>{
+    if(t.closest('.report')) return; const ths=[...t.querySelectorAll('thead th')]; if(!ths.length) return;
+    t.classList.add('rcard');
+    t.querySelectorAll('tbody tr').forEach(tr=>[...tr.children].forEach((td,i)=>{ if(!td.hasAttribute('data-l')) td.setAttribute('data-l',(ths[i]||{}).textContent||''); }));
+  });
+}
+function toast(msg,err){ const t=document.createElement('div'); t.className='toast'+(err?' err':''); t.textContent=msg; const box=document.getElementById('toasts'); box.appendChild(t); setTimeout(()=>t.remove(),3200); }
+function openDrawer(title,body,actions){
+  document.getElementById('overlay').innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="drawer-h"><h2>${esc(title)}</h2>${actions||''}<button class="iconbtn" data-act="close" aria-label="Schließen">${ic('x')}</button></div><div class="drawer-b" id="drawerBody">${body}</div></aside>`;
+  labelTables(document.getElementById('overlay')); const d=document.querySelector('.drawer'); d && d.querySelector('.iconbtn').focus();
+}
+function closeDrawer(){ document.getElementById('overlay').innerHTML=''; drawerCtx=null; }
+let drawerCtx = null;
+function closeMenu(){ document.getElementById('side').classList.remove('open'); }
+
+function head(title,sub,right){ return `<div class="pagehead"><div><h1>${title}</h1>${sub?`<p>${sub}</p>`:''}</div>${right?`<div class="row">${right}</div>`:''}</div>`; }
+function panel(title,body,right,cls){ return `<section class="panel ${cls||''}">${title?`<div class="panel-h"><h3>${title}</h3>${right?`<div class="row">${right}</div>`:''}</div>`:''}<div class="panel-b">${body}</div></section>`; }
+function panelFlush(title,body,right){ return `<section class="panel">${title?`<div class="panel-h"><h3>${title}</h3>${right?`<div class="row">${right}</div>`:''}</div>`:''}${body}</section>`; }
+const sessChip = s => { const m={'abgeschlossen':'c-ok','in Arbeit':'c-acc','geplant':'c-info','abgesagt':'c-bad','eingetroffen':'c-warn'}; return `<span class="chip ${m[s]||''}">${esc(s)}</span>`; };
+const woChip = s => { const m={'Angenommen':'c-info','Kostenvoranschlag':'c-info','Freigabe ausstehend':'c-warn','In Arbeit':'c-acc','Abholbereit':'c-ok','Übergeben':''}; return `<span class="chip ${m[s]||''}">${esc(s)}</span>`; };
+const srcChip = src => { const m={'gemessen':'c-ok','manuell eingegeben':'c-info','berechnet':'','geschätzt':'c-warn'}; return `<span class="chip nodot ${m[src]||''}">${esc(src)}</span>`; };
+const opts = (arr,sel) => arr.map(a=>{const [v,l]=Array.isArray(a)?a:[a,a]; return `<option value="${esc(v)}" ${String(v)===String(sel)?'selected':''}>${esc(l)}</option>`;}).join('');
+
+/* ---------- Quality (FitQuality) ---------- */
+function quality(s){
+  const out=[];
+  const c=cust(s.customerId);
+  if(!c.consent) out.push(['bad','Einwilligung zur Datenverarbeitung fehlt','Vor Erfassung von Beschwerden einholen']);
+  if(!s.anamnesis.goal) out.push(['warn','Fitting-Ziel nicht dokumentiert','Anamnese']);
+  if(s.status!=='geplant'){
+    REQUIRED.forEach(k=>{ if(!s.before[k]) out.push(['warn',`Ausgangswert fehlt: ${MK[k].label}`,'Ausgangsposition']); });
+    if(s.status==='abgeschlossen') REQUIRED.forEach(k=>{ if(!s.after[k]) out.push(['warn',`Endwert fehlt: ${MK[k].label}`,'Anpassungen']); });
+  }
+  ['before','after'].forEach(side=>Object.values(s[side]).forEach(m=>{
+    if(m.source==='geschätzt') out.push(['info',`${MK[m.key].label} (${side==='before'?'vorher':'nachher'}) ist geschätzt, keine reproduzierbare Messung`,m.method]);
+    if(m.source==='gemessen' && (m.unc===null||m.unc===undefined) && !/Herstellerangabe/.test(m.method)) out.push(['info',`Messunsicherheit fehlt: ${MK[m.key].label}`,m.method]);
+    if(/unkalibriert/.test(m.method)) out.push(['warn',`${MK[m.key].label}: Video nicht kalibriert, Winkel nur als Orientierung`,m.method]);
+  }));
+  Object.keys(s.after).forEach(k=>{ const b=s.before[k], a=s.after[k]; if(b && a && b.method!==a.method) out.push(['warn',`${MK[k].label}: Vorher und nachher mit unterschiedlicher Methode gemessen`,`${b.method} → ${a.method}`]); });
+  if(s.status!=='geplant'&&!Object.keys(s.check||{}).length) out.push(['warn','Körpercheck nicht durchgeführt','Schritt Körpercheck']);
+  checkFindings(s).filter(x=>x.cat==='arzt').forEach(x=>out.push(['bad',`${x.title}: Fachperson hinzuziehen`,'Körpercheck']));
+  const body=c.body; const missing=BODY.filter(([k])=>body[k]===null||body[k]===undefined||body[k]==='').map(b=>b[1]);
+  if(missing.length) out.push(['info',`Körpermaße unvollständig: ${missing.join(', ')}`,'Kundenprofil']);
+  if((c.est||[]).length) out.push(['info',`Körpermaße geschätzt, nicht gemessen: ${c.est.map(k=>BODY.find(b=>b[0]===k)[1]).join(', ')}`,'Kundenprofil']);
+  return out;
+}
+function qScore(s){
+  if(s.status==='geplant') return null;
+  const q=quality(s); const pen=q.reduce((a,[l])=>a+(l==='bad'?20:l==='warn'?8:2),0);
+  return Math.max(0,100-pen);
+}
+
+/* ---------- Views ---------- */
+const VIEWS = {};
+
+VIEWS.dashboard = () => {
+  const td=today(); const h=new Date().getHours(); const greet=h<11?'Guten Morgen':h<18?'Hallo':'Guten Abend';
+  const todays=S.sessions.filter(s=>s.date===td).sort((a,b)=>a.time.localeCompare(b.time));
+  const upcoming=S.sessions.filter(s=>s.date>td&&s.status!=='abgesagt').sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).slice(0,3);
+  const openWO=S.workshop.filter(w=>w.status!=='Übergeben');
+  const att=[];
+  S.sessions.forEach(s=>s.followUps.forEach(f=>{ if(f.status==='offen'&&f.due<=td) att.push({icon:'loop',t:`${cust(s.customerId).name}: Nachkontrolle fällig`,sub:`seit ${fmtDate(f.due)}`,a:'data-nav="followup"',chip:'<span class="chip c-bad">fällig</span>'}); }));
+  S.sessions.filter(s=>s.status==='in Arbeit').forEach(s=>{ const q=quality(s).filter(x=>x[0]!=='info'); if(q.length) att.push({icon:'quality',t:`${cust(s.customerId).name}: ${q.length} offene Punkte im Fitting`,sub:q[0][1],a:`data-act="openSession" data-id="${s.id}" data-tab="ergebnis"`,chip:'<span class="chip c-warn">prüfen</span>'}); });
+  openWO.filter(w=>w.status==='Freigabe ausstehend').forEach(w=>att.push({icon:'wrench',t:`${w.title}`,sub:`${cust(w.customerId).name} muss den Kostenvoranschlag freigeben`,a:`data-act="openWO" data-id="${w.id}"`,chip:'<span class="chip c-warn">wartet</span>'}));
+  openWO.filter(w=>w.status==='Abholbereit').forEach(w=>att.push({icon:'wrench',t:`${w.title} ist fertig`,sub:`${cust(w.customerId).name} kann abholen`,a:`data-act="openWO" data-id="${w.id}"`,chip:'<span class="chip c-ok">abholbereit</span>'}));
+  S.inventory.filter(x=>x.stock<x.min).forEach(x=>att.push({icon:'box',t:`${x.name} nachbestellen`,sub:`noch ${x.stock}, Minimum ${x.min}`,a:'data-nav="lager"',chip:'<span class="chip c-warn">knapp</span>'}));
+  const appt=s=>{const c=cust(s.customerId),b=bike(s.bikeId);return `<div class="li"><span class="time">${esc(s.time)}</span><div class="avatar">${initials(c.name)}</div><div class="grow"><div class="t">${esc(c.name)}</div><div class="sub">${esc(s.type)} · ${esc(b.brand+' '+b.model)}</div></div>${sessChip(s.status)}${s.status==='geplant'||s.status==='eingetroffen'?`<button class="btn sm primary" data-act="startSession" data-id="${s.id}">Starten</button>`:`<button class="btn sm" data-act="openSession" data-id="${s.id}">Öffnen</button>`}</div>`;};
+  return `
+  <div class="pagehead"><div><h1>${greet}!</h1><p>${new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})} · ${todays.length?`Heute ${todays.length===1?'steht 1 Fitting':'stehen '+todays.length+' Fittings'} an.`:'Heute ist kein Fitting geplant.'}</p></div></div>
+  <div class="tiles">
+    <button class="tile main" data-act="newSession"><span class="ti">${ic('plus')}</span><b>Neues Fitting</b><span>Kunde wählen und loslegen</span></button>
+    <button class="tile" data-act="findCustomer"><span class="ti">${ic('users')}</span><b>Kunde suchen</b><span>${S.customers.length} Kunden gespeichert</span></button>
+    <button class="tile" data-act="scrollToday"><span class="ti">${ic('fit')}</span><b>Heutige Termine</b><span>${todays.length} heute, ${upcoming.length} demnächst</span></button>
+    <button class="tile" data-nav="werkstatt"><span class="ti">${ic('wrench')}</span><b>Werkstatt</b><span>${openWO.length} offene Aufträge</span></button>
+  </div>
+  <div class="grid g-main">
+    <div class="stack">
+      <section class="panel" id="today"><div class="panel-h"><h3>Heute</h3></div>${todays.length?`<div class="list">${todays.map(appt).join('')}</div>`:`<div class="empty">${ic('fit')}<span>Heute ist frei. Lust auf ein neues Fitting?</span><button class="btn sm primary" data-act="newSession">Fitting anlegen</button></div>`}</section>
+      ${upcoming.length?`<section class="panel"><div class="panel-h"><h3>Demnächst</h3></div><div class="list">${upcoming.map(s=>{const c=cust(s.customerId);return `<div class="li click" data-act="openSession" data-id="${s.id}"><span class="time" style="color:var(--muted)">${fmtDate(s.date).slice(0,6)}</span><div class="grow"><div class="t">${esc(c.name)}</div><div class="sub">${esc(s.type)} um ${esc(s.time)}</div></div>${ic('arrow','width="18" height="18" style="color:var(--faint)"')}</div>`;}).join('')}</div></section>`:''}
+    </div>
+    <section class="panel"><div class="panel-h"><h3>Braucht deine Aufmerksamkeit</h3>${att.length?`<span class="chip c-acc nodot">${att.length}</span>`:''}</div>
+      ${att.length?`<div class="list">${att.map(x=>`<div class="li click" ${x.a}><div class="avatar" style="background:var(--surface-2);color:var(--muted)">${ic(x.icon,'width="17" height="17"')}</div><div class="grow"><div class="t">${esc(x.t)}</div><div class="sub">${esc(x.sub)}</div></div>${x.chip}</div>`).join('')}</div>`:`<div class="empty">${ic('check')}<span>Alles erledigt. Nichts wartet auf dich.</span></div>`}
+    </section>
+  </div>`;
+};
+
+VIEWS.mehr = () => `
+  ${head('Mehr','Alle weiteren Bereiche von FitFrame.')}
+  ${MORE.map(([g,items])=>`<div class="stack"><h2>${g}</h2><div class="tiles">${items.map(([r,l,i,d])=>`<button class="tile" data-nav="${r}"><span class="ti">${ic(i)}</span><b>${l}</b><span>${d}</span></button>`).join('')}</div></div>`).join('')}
+  ${panel('Einstellungen',`<div class="stack"><div class="row" style="justify-content:space-between"><span>Darstellung</span><div class="seg"><button data-act="setTheme" data-v="light" aria-pressed="${theme==='light'}">Hell</button><button data-act="setTheme" data-v="dark" aria-pressed="${theme==='dark'}">Dunkel</button></div></div>
+  <hr><div class="row" style="justify-content:space-between"><span class="muted" style="max-width:52ch">Deine Einträge liegen nur in diesem Browser. Zurücksetzen lädt die Beispielkunden neu und löscht deine Einträge.</span><button class="btn" data-act="reset">Demo zurücksetzen</button></div></div>`)}
+`;
+
+VIEWS.kunden = () => {
+  const q=ui.search.toLowerCase();
+  const list=S.customers.filter(c=>!q||(c.name+c.email+c.discipline).toLowerCase().includes(q));
+  return `
+  ${head('Kunden','Tippe auf einen Namen, um Maße, Fahrräder und Fittings zu sehen.',`<div class="seg"><button data-nav="kunden" aria-pressed="true">Kunden</button><button data-nav="fahrraeder" aria-pressed="false">Fahrräder</button></div><button class="btn primary" data-act="newCustomer">${ic('plus')}Kunde anlegen</button>`)}
+  ${panelFlush('',`<div class="panel-h"><input class="input search" id="custSearch" type="search" placeholder="Name, E-Mail oder Disziplin suchen" value="${esc(ui.search)}" data-input="search"><span class="muted" style="font-size:12px">${list.length} von ${S.customers.length}</span></div>
+  ${list.length?`<div class="tw"><table><thead><tr><th>Name</th><th>Disziplin</th><th>Fahrräder</th><th>Sitzungen</th><th>Letztes Fitting</th><th>Einwilligung</th></tr></thead><tbody>
+  ${list.map(c=>{const ss=sessOf(c.id).filter(s=>s.status==='abgeschlossen');const last=ss[ss.length-1];return `<tr class="click" data-act="openCustomer" data-id="${c.id}"><td><div class="row" style="flex-wrap:nowrap"><div class="avatar">${initials(c.name)}</div><div><div>${esc(c.name)}</div><div class="faint" style="font-size:12px">${esc(c.email)}</div></div></div></td><td>${esc(c.discipline)}</td><td class="num">${bikesOf(c.id).length}</td><td class="num">${sessOf(c.id).length}</td><td>${last?fmtDate(last.date):'–'}</td><td>${c.consent?'<span class="chip c-ok">liegt vor</span>':'<span class="chip c-bad">fehlt</span>'}</td></tr>`;}).join('')}
+  </tbody></table></div>`:`<div class="empty">Kein Kunde passt zur Suche „${esc(ui.search)}“.<button class="btn sm" data-act="clearSearch">Suche zurücksetzen</button></div>`}`)}`;
+};
+
+function bodyFormHtml(c,ctx){ return `<form class="form" data-form="body" data-id="${c.id}" data-ctx="${ctx}">${BODY.map(([k,l,u])=>`<div class="field"><label for="b_${k}">${l} (${u})${(c.est||[]).includes(k)?' <span class="chip nodot c-warn" style="font-size:10px;padding:0 6px">geschätzt</span>':''}</label><input class="input num" id="b_${k}" name="${k}" type="number" step="0.5" inputmode="decimal" value="${c.body[k]??''}" placeholder="nicht erhoben"></div>`).join('')}
+    <div class="field"><label for="f_ham">Hintere Oberschenkel</label><input class="input" id="f_ham" name="hamstring" value="${esc(c.flex.hamstring)}"></div>
+    <div class="field"><label for="f_hip">Hüfte</label><input class="input" id="f_hip" name="hip" value="${esc(c.flex.hip)}"></div>
+    <div class="field"><label for="f_ank">Sprunggelenk</label><input class="input" id="f_ank" name="ankle" value="${esc(c.flex.ankle)}"></div>
+    <div class="wide row"><button class="btn primary" type="submit">Körpermaße speichern</button><span class="faint" style="font-size:12px">Beweglichkeit: Beobachtung, keine Diagnose.</span></div></form>`; }
+function customerDrawer(id){
+  const c=cust(id); drawerCtx={type:'customer',id};
+  const ss=sessOf(id);
+  const body=`
+    <div class="row">${c.tags.map(t=>`<span class="chip nodot">${esc(t)}</span>`).join('')}${c.consent?'<span class="chip c-ok">Einwilligung liegt vor</span>':'<button class="btn sm" data-act="consent" data-id="'+c.id+'">Einwilligung erfassen</button>'}</div>
+    <dl class="dl"><dt>E-Mail</dt><dd>${esc(c.email)}</dd><dt>Telefon</dt><dd class="mono">${esc(c.phone)}</dd><dt>Kunde seit</dt><dd>${fmtDate(c.since)}</dd><dt>Disziplin</dt><dd>${esc(c.discipline)}</dd></dl>
+    <hr>
+    <div class="stack"><div class="row" style="justify-content:space-between"><h3>Körpermaße</h3><button class="btn sm" type="button" data-act="estBody" data-id="${c.id}">Fehlende aus Körpergröße schätzen</button></div><p class="faint" style="font-size:12px">Diese Maße speisen die Simulation. Eingetragene Werte haben Vorrang vor Schätzungen.</p>
+    ${bodyFormHtml(c,'drawer')}</div>
+    <hr>
+    <div class="stack"><div class="row" style="justify-content:space-between"><h3>Fahrräder</h3><button class="btn sm" data-act="newBike" data-id="${c.id}">${ic('plus')}Fahrrad</button></div>
+    ${bikesOf(id).map(b=>`<div class="li click" style="padding:8px 0" data-act="openBike" data-id="${b.id}">${ic('bike','width="20" height="20"')}<div class="grow"><div class="t">${esc(b.brand+' '+b.model)}</div><div class="sub">${esc(b.type)} · Größe ${esc(b.size)} · ${fmtNum(b.km)} km</div></div></div>`).join('')||'<span class="muted">Noch kein Fahrrad.</span>'}</div>
+    <hr>
+    <div class="stack"><div class="row" style="justify-content:space-between"><h3>Fitting-Historie</h3><button class="btn sm" data-act="newSession" data-cust="${c.id}">${ic('plus')}Sitzung</button></div>
+    ${ss.map(s=>`<div class="li click" style="padding:8px 0" data-act="openSession" data-id="${s.id}"><span class="mono faint" style="font-size:12px">${fmtDate(s.date)}</span><div class="grow"><div class="t">${esc(s.type)}</div><div class="sub">${esc(bike(s.bikeId).brand+' '+bike(s.bikeId).model)} · ${s.changes.length} Änderungen</div></div>${sessChip(s.status)}</div>`).join('')||'<span class="muted">Noch keine Sitzung.</span>'}
+    ${ss.length>1?`<button class="btn sm" data-act="compareCustomer" data-id="${c.id}">Sitzungen vergleichen</button>`:''}</div>`;
+  openDrawer(c.name,body);
+}
+
+VIEWS.fahrraeder = () => {
+  const q=ui.bikeSearch.toLowerCase();
+  const list=S.bikes.filter(b=>!q||(b.brand+b.model+b.type+cust(b.customerId).name+b.frameNo).toLowerCase().includes(q));
+  return `
+  ${head('Fahrräder','Jedes Rad hat eine eigene Akte mit Einstellungen und Servicehistorie (BikePassport).',`<div class="seg"><button data-nav="kunden" aria-pressed="false">Kunden</button><button data-nav="fahrraeder" aria-pressed="true">Fahrräder</button></div>`)}
+  ${panelFlush('',`<div class="panel-h"><input class="input search" type="search" placeholder="Marke, Modell, Rahmennummer, Kunde" value="${esc(ui.bikeSearch)}" data-input="bikeSearch" id="bikeSearch"><span class="muted" style="font-size:12px">${list.length} Fahrräder</span></div>
+  ${list.length?`<div class="tw"><table><thead><tr><th>Fahrrad</th><th>Besitzer</th><th>Typ</th><th>Größe</th><th>Pedalsystem</th><th class="r">Kilometer</th><th>Aktuelle Sattelhöhe</th></tr></thead><tbody>
+  ${list.map(b=>{const sh=currentSetting(b.id,'saddleHeight');return `<tr class="click" data-act="openBike" data-id="${b.id}"><td>${esc(b.brand+' '+b.model)}<div class="faint mono" style="font-size:11px">${esc(b.frameNo)}</div></td><td>${esc(cust(b.customerId).name)}</td><td>${esc(b.type)}</td><td>${esc(b.size)}</td><td>${esc(b.pedal)}</td><td class="r num">${fmtNum(b.km)}</td><td class="num">${sh?fmtNum(sh.value)+' mm':'<span class="faint">noch nicht gefittet</span>'}</td></tr>`;}).join('')}
+  </tbody></table></div>`:`<div class="empty">Kein Fahrrad gefunden.</div>`}`)}`;
+};
+function currentSetting(bikeId,key){
+  const ss=S.sessions.filter(s=>s.bikeId===bikeId && (s.after[key]||s.before[key])).sort((a,b)=>a.date.localeCompare(b.date));
+  const last=ss[ss.length-1]; if(!last) return null; return last.after[key]||last.before[key];
+}
+function bikeDrawer(id){
+  const b=bike(id); drawerCtx={type:'bike',id};
+  const groups=[...new Set(Object.values(MK).map(m=>m.group))].filter(g=>g!=='Bewegung');
+  const svc=S.services.filter(x=>x.bikeId===id), wos=S.workshop.filter(w=>w.bikeId===id), ss=S.sessions.filter(s=>s.bikeId===id);
+  const body=`
+    <dl class="dl"><dt>Besitzer</dt><dd><button class="btn sm ghost" data-act="openCustomer" data-id="${b.customerId}">${esc(cust(b.customerId).name)}</button></dd><dt>Typ / Größe</dt><dd>${esc(b.type)} · ${esc(b.size)} · Baujahr ${b.year}</dd><dt>Rahmennummer</dt><dd class="mono">${esc(b.frameNo)}</dd><dt>Pedalsystem</dt><dd>${esc(b.pedal)}</dd><dt>Sattel</dt><dd>${esc(b.saddle)}</dd>
+    <dt>Kilometer</dt><dd><div class="row"><input class="input num" style="width:120px" type="number" id="kmInput" value="${b.km}" aria-label="Kilometerstand"><button class="btn sm" data-act="saveKm" data-id="${b.id}">Speichern</button></div></dd></dl>
+    <hr><h3>Aktuelle Fitting-Einstellungen</h3>
+    ${groups.map(g=>{const rows=Object.entries(MK).filter(([,m])=>m.group===g).map(([k,m])=>[k,m,currentSetting(id,k)]).filter(r=>r[2]);return rows.length?`<div><div class="label" style="margin-bottom:4px">${g}</div><table><tbody>${rows.map(([k,m,r])=>`<tr><td>${m.label}</td><td class="r num">${fmtNum(r.value)} ${m.unit}</td><td class="src">${esc(r.method)}</td></tr>`).join('')}</tbody></table></div>`:'';}).join('')||'<span class="muted">Noch keine Fitting-Werte für dieses Fahrrad.</span>'}
+    <hr><h3>Historie</h3>
+    <div class="list">${[...ss.map(s=>({d:s.date,t:`Fitting: ${s.type}`,c:sessChip(s.status),a:`data-act="openSession" data-id="${s.id}"`})),...wos.map(w=>({d:w.created,t:`Werkstatt: ${w.title}`,c:woChip(w.status),a:`data-act="openWO" data-id="${w.id}"`}))].sort((x,y)=>y.d.localeCompare(x.d)).map(e=>`<div class="li click" style="padding:8px 0" ${e.a}><span class="mono faint" style="font-size:12px">${fmtDate(e.d)}</span><div class="grow">${esc(e.t)}</div>${e.c}</div>`).join('')||'<span class="muted">Keine Einträge.</span>'}</div>
+    ${svc.length?`<hr><h3>Wartungsintervalle</h3><table><tbody>${svc.map(x=>`<tr><td>${esc(x.task)}</td><td>${esc(x.interval)}</td><td>${x.next<today()?'<span class="chip c-bad">fällig seit '+fmtDate(x.next)+'</span>':'nächste '+fmtDate(x.next)}</td></tr>`).join('')}</tbody></table>`:''}`;
+  openDrawer(`${b.brand} ${b.model}`,body);
+}
+
+/* --- Fitting session workspace --- */
+const STEPS=[['anamnese','Ziel'],['koerper','Körpercheck'],['ausgang','Ausgangsposition'],['anpassung','Anpassen'],['ergebnis','Ergebnis & Bericht']];
+function stepDone(s,c,k){
+  if(k==='anamnese') return !!s.anamnesis.goal;
+  if(k==='koerper') return Object.keys(s.check||{}).length>=5 && c.body.inseam!=null && c.body.inseam!=='';
+  if(k==='ausgang') return REQUIRED.every(x=>s.before[x]);
+  if(k==='anpassung') return s.changes.length>0;
+  return s.status==='abgeschlossen';
+}
+VIEWS.sitzung = () => {
+  const s=sess(ui.sess)||S.sessions[0]; ui.sess=s.id; if(!STEPS.some(x=>x[0]===ui.sessTab)) ui.sessTab=TABALIAS[ui.sessTab]||'anamnese';
+  const c=cust(s.customerId), b=bike(s.bikeId); const sc=qScore(s);
+  const idx=STEPS.findIndex(x=>x[0]===ui.sessTab); const prev=STEPS[idx-1], next=STEPS[idx+1];
+  return `
+  <div class="pagehead"><div><div class="row" style="margin-bottom:6px">${sessChip(s.status)}<span class="faint" style="font-size:13px">${fmtDate(s.date)}${s.time?' · '+esc(s.time):''} · ${esc(s.fitter)}</span>${sc!==null?`<span class="chip nodot ${sc>=80?'c-ok':sc>=60?'c-warn':'c-bad'}">Daten ${sc} %</span>`:''}</div>
+    <h1>${esc(c.name)}</h1><p>${esc(s.type)} · ${esc(b.brand+' '+b.model)} (${esc(b.type)}, Größe ${esc(b.size)})</p></div>
+    <div class="row"><select class="input" style="width:auto;max-width:100%" data-change="pickSession" aria-label="Anderes Fitting öffnen">${S.sessions.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<option value="${x.id}" ${x.id===s.id?'selected':''}>${fmtDate(x.date)} · ${esc(cust(x.customerId).name)}</option>`).join('')}</select>
+    <button class="btn" data-act="newSession">${ic('plus')}Neues Fitting</button></div></div>
+  <section class="panel"><div class="panel-h" style="padding:10px"><nav class="steps" aria-label="Schritte">${STEPS.map(([k,l],i)=>`<button class="step ${stepDone(s,c,k)?'done':''}" data-act="sessTab" data-v="${k}" ${k===ui.sessTab?'aria-current="step"':''}><i>${stepDone(s,c,k)&&k!==ui.sessTab?ic('check','width="14" height="14"'):i+1}</i>${l}</button>`).join('')}</nav></div>
+  <div class="panel-b stack">${SESSTAB[ui.sessTab](s,c,b)}
+    <div class="stepnav">${prev?`<button class="btn" data-act="sessTab" data-v="${prev[0]}">${ic('back')}${prev[1]}</button>`:'<span></span>'}
+    ${next?`<button class="btn primary" data-act="sessTab" data-v="${next[0]}">Weiter: ${next[1]}${ic('arrow')}</button>`:s.status!=='abgeschlossen'?`<button class="btn primary" data-act="finishSession" data-id="${s.id}">${ic('check')}Fitting abschließen</button>`:`<span class="chip c-ok">abgeschlossen</span>`}</div>
+  </div></section>`;
+};
+const SESSTAB = {};
+SESSTAB.anamnese = (s,c) => {
+  const a=s.anamnesis; const F=[['goal','Ziel des Fittings'],['complaints','Beschwerden (Kundenangabe)'],['training','Trainingsumfang'],['experience','Fahrerfahrung'],['previous','Bisherige Fittings'],['limits','Relevante Einschränkungen'],['comfort','Komfortwünsche']];
+  return `<div class="stack">
+  ${!c.consent?`<div class="notice warn">${ic('warn')}<div>Für diese Kundin bzw. diesen Kunden ist keine Einwilligung erfasst. Gesundheitsbezogene Angaben erst nach Einwilligung speichern. <button class="btn sm" data-act="consent" data-id="${c.id}">Einwilligung erfassen</button></div></div>`:''}
+  <form class="form" data-form="anamnesis" data-id="${s.id}">
+    ${F.map(([k,l])=>`<div class="field ${k==='goal'||k==='complaints'?'wide':''}"><label for="a_${k}">${l}</label>${k==='goal'||k==='complaints'?`<textarea class="input" id="a_${k}" name="${k}">${esc(a[k])}</textarea>`:`<input class="input" id="a_${k}" name="${k}" value="${esc(a[k])}">`}</div>`).join('')}
+    <div class="field wide"><label for="a_notes">Notizen des Fitters</label><textarea class="input" id="a_notes" name="notes">${esc(s.notes)}</textarea></div>
+    <div class="wide row"><button class="btn primary" type="submit">Anamnese speichern</button><span class="faint" style="font-size:12px">Nur für das Fitting nötige Angaben erfassen. FitFrame stellt keine Diagnosen.</span></div>
+  </form></div>`;
+};
+SESSTAB.koerper = (s,c) => {
+  const f=checkFindings(s), r=readiness(f,s);
+  const inp=(t,sd)=>{ const id=`ck_${t.k}${sd||''}`, val=chkVal(s,t.k,sd)??''; const lab=sd?(sd==='L'?'Links':'Rechts'):'Ergebnis';
+    return `<div class="field"><label for="${id}">${lab}${t.unit?` (${t.unit})`:''}</label>${t.type==='num'?`<input class="input num" id="${id}" name="${t.k}${sd||''}" type="number" step="${t.step||0.5}" inputmode="decimal" value="${esc(val)}">`:`<select class="input" id="${id}" name="${t.k}${sd||''}"><option value="">nicht geprüft</option>${opts(t.opts,val)}</select>`}</div>`; };
+  return `<div class="stack">
+  <div class="notice acc">${ic('info')}<div><b>Warum zuerst der Körpercheck?</b> Das Rad wird an den Körper angepasst. Wenn ein Bein kürzer ist oder ein Fuß schräg steht, gleichst du das zuerst aus. Sonst stellst du das Rad auf eine schiefe Haltung ein. FitFrame stellt keine Diagnosen. Bei Schmerzen oder großen Unterschieden: Fachleute hinzuziehen.</div></div>
+  <section class="panel" style="box-shadow:none"><div class="panel-h"><h3>Ergebnis</h3><span class="chip ${r[0]}">${r[1]}</span></div><div class="panel-b stack"><p class="muted">${r[2]}</p>
+  ${f.length?`<div class="list">${f.map(x=>{const taken=(s.comp||[]).some(cp=>cp.t.startsWith(x.title));return `<div class="li" style="padding:10px 0;align-items:flex-start"><span class="chip ${x.lvl==='bad'?'c-bad':x.lvl==='warn'?'c-warn':x.lvl==='ok'?'c-ok':'c-info'}">${x.cat==='arzt'?'Fachperson':x.cat==='ausgleich'?'Ausgleich':'Fürs Fitting'}</span><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal">${esc(x.text)}</div></div>${x.cat==='ausgleich'?(taken?'<span class="chip c-ok">eingeplant</span>':`<button class="btn sm" data-act="addComp" data-id="${s.id}" data-t="${esc(x.title)}">Einplanen</button>`):''}</div>`;}).join('')}</div>`:'<p class="faint">Noch keine Auffälligkeiten. Trag unten die Testergebnisse ein.</p>'}
+  ${(s.comp||[]).length?`<div><div class="label" style="margin-bottom:6px">Ausgleich vor dem Fitting</div>${s.comp.map((cp,i)=>`<label class="li" style="padding:8px 0;cursor:pointer"><input type="checkbox" data-change="compDone" data-id="${s.id}" data-i="${i}" ${cp.status==='umgesetzt'?'checked':''}><span class="grow">${esc(cp.t)}</span><span class="chip ${cp.status==='umgesetzt'?'c-ok':'c-warn'}">${cp.status}</span></label>`).join('')}</div>`:''}
+  </div></section>
+  <h2>Tests</h2><p class="muted">Jeder Test dauert 1–2 Minuten. Tippe auf „So geht's“ für die Anleitung. Nicht jeder Test ist bei jedem Fitting nötig.</p>
+  <form class="stack" data-form="check" data-id="${s.id}">
+  ${CHECKS.map(t=>`<section class="panel" style="box-shadow:none"><div class="panel-b stack">
+    <div><h3>${t.label}</h3><p class="muted" style="font-size:14px">${t.why}</p></div>
+    <details class="more"><summary>So geht's · ${esc(t.tool)}</summary><ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">${t.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></details>
+    <div class="form">${t.side?inp(t,'L')+inp(t,'R'):inp(t)}</div></div></section>`).join('')}
+  <div class="row"><button class="btn primary" type="submit">Körpercheck speichern und auswerten</button></div></form>
+  <h2>Körpermaße</h2><p class="muted">Die Maße gehören zum Kunden und gelten für alle seine Fittings. Sie füttern auch die Simulation.</p>
+  ${bodyFormHtml(c,'session')}
+  </div>`;
+};
+function measureTable(s,side){
+  const recs=Object.keys(MK).filter(k=>s[side][k]).map(k=>s[side][k]);
+  if(!recs.length) return `<div class="empty">Noch keine Werte. Trag sie unten ein oder lass sie aus den Körpermaßen simulieren.</div>`;
+  return `<div class="tw"><table><thead><tr><th>Messpunkt</th><th class="r">Wert</th><th>Methode</th><th>Quelle</th><th class="r">± Unsicherheit</th><th></th></tr></thead><tbody>
+  ${recs.map(m=>`<tr><td>${MK[m.key].label}<div class="faint" style="font-size:11px">${esc(MK[m.key].def||'')}</div></td><td class="r num">${fmtNum(m.value)} ${MK[m.key].unit}</td><td>${esc(m.method)}</td><td>${srcChip(m.source)}</td><td class="r num">${m.unc!=null?fmtNum(m.unc)+' '+MK[m.key].unit:'<span class="faint">–</span>'}</td><td class="r"><button class="btn sm ghost danger" data-act="delMeasure" data-id="${s.id}" data-side="${side}" data-key="${m.key}" aria-label="Wert entfernen">${ic('x')}</button></td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+function measureForm(s,side,isChange){
+  return `<form class="form" data-form="${isChange?'change':'measure'}" data-id="${s.id}" data-side="${side}">
+    <div class="field"><label for="m_key_${side}">Messpunkt</label><select class="input" id="m_key_${side}" name="key">${Object.entries(MK).map(([k,m])=>`<option value="${k}" ${ui.prepKey===k?'selected':''}>${m.group}: ${m.label} (${m.unit})</option>`).join('')}</select></div>
+    <div class="field"><label for="m_val_${side}">${isChange?'Neuer Wert':'Wert'}</label><input class="input num" id="m_val_${side}" name="value" type="number" step="0.1" inputmode="decimal" required></div>
+    <div class="field"><label for="m_meth_${side}">Methode</label><select class="input" id="m_meth_${side}" name="method">${opts(METHODS,'Maßband')}</select></div>
+    <div class="field"><label for="m_src_${side}">Quelle</label><select class="input" id="m_src_${side}" name="source">${opts(SOURCES,'gemessen')}</select></div>
+    <div class="field"><label for="m_unc_${side}">± Unsicherheit</label><input class="input num" id="m_unc_${side}" name="unc" type="number" step="0.1" min="0" inputmode="decimal" placeholder="optional"></div>
+    ${isChange?`<div class="field wide"><label for="m_reason">Begründung der Änderung</label><input class="input" id="m_reason" name="reason" placeholder="z. B. Knie am unteren Totpunkt stark gebeugt (Beobachtung)" required></div>`:''}
+    <div class="wide row"><button class="btn primary" type="submit">${isChange?'Änderung dokumentieren':'Wert hinzufügen'}</button>${!isChange?`<button class="btn" type="button" data-act="simCapture" data-id="${s.id}">Aus Körpermaßen simulieren</button>${st('s')}`:''}</div>
+  </form>`;
+}
+function measureCards(s,side){
+  const groups=[...new Set(Object.values(MK).map(m=>m.group))];
+  return groups.map(g=>`<div class="stack"><h3>${g}</h3>${Object.entries(MK).filter(([,m])=>m.group===g).map(([k,m])=>{const cur=s[side][k], h=HOW[k]||{m:'Maßband',steps:[],tool:''};
+    return `<section class="panel" style="box-shadow:none"><div class="panel-b stack">
+      <div class="row" style="justify-content:space-between;align-items:flex-start"><div style="min-width:0;flex:1"><div class="t" style="font-weight:650">${m.label}${REQUIRED.includes(k)?' <span class="chip nodot c-acc" style="font-size:11px">wichtig</span>':''}</div><div class="muted" style="font-size:13.5px">${esc(m.def||'')}</div></div>
+      ${cur?`<div style="text-align:right"><div class="num" style="font-size:18px;font-weight:600">${fmtNum(cur.value)} ${m.unit}</div><div class="src">${esc(cur.method)} · ${esc(cur.source)}</div></div>`:'<span class="chip">fehlt</span>'}</div>
+      <details class="more"><summary>So misst du · ${esc(h.tool)}</summary><ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">${h.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>${h.tip?`<p class="faint" style="margin-top:6px;font-size:13px">Tipp: ${esc(h.tip)}</p>`:''}</details>
+      <form class="form" data-form="measure" data-id="${s.id}" data-side="${side}"><input type="hidden" name="key" value="${k}"><input type="hidden" name="source" value="gemessen">
+        <div class="field"><label for="mc_${k}">Wert (${m.unit})</label><input class="input num" id="mc_${k}" name="value" type="number" step="0.1" inputmode="decimal" value="${cur?cur.value:''}" required></div>
+        <div class="field"><label for="mm_${k}">Methode</label><select class="input" id="mm_${k}" name="method">${opts(METHODS,cur?cur.method:h.m)}</select></div>
+        <div class="field"><label for="mu_${k}">± Genauigkeit (${m.unit})</label><input class="input num" id="mu_${k}" name="unc" type="number" step="0.1" min="0" inputmode="decimal" value="${cur&&cur.unc!=null?cur.unc:''}" placeholder="optional"></div>
+        <div class="field" style="justify-content:flex-end"><button class="btn" type="submit">${cur?'Ändern':'Speichern'}</button></div></form>
+    </div></section>`;}).join('')}</div>`).join('');
+}
+SESSTAB.ausgang = s => { const miss=REQUIRED.filter(k=>!s.before[k]).length; return `<div class="stack">
+  <div class="notice acc">${ic('info')}<div><b>So startest du:</b> Miss das Rad so, wie der Kunde es mitgebracht hat. Fang mit den Punkten „wichtig“ an. Bei jedem Punkt steht, wie du misst. ${miss?`Es fehlen noch ${miss} wichtige Werte.`:'Alle wichtigen Werte sind da.'}</div></div>
+  <div class="row"><button class="btn" type="button" data-act="simCapture" data-id="${s.id}">Fehlende Werte aus Körpermaßen simulieren</button>${st('s')}</div>
+  ${measureCards(s,'before')}</div>`; };
+SESSTAB.anpassung = s => { const sg=fitSuggestions(s); return `<div class="stack">
+  <section class="panel" style="box-shadow:none"><div class="panel-h"><h3>Vorschläge</h3>${st('s')}</div><div class="panel-b">${sg.length?`<div class="list">${sg.map(x=>`<div class="li" style="padding:10px 0;align-items:flex-start"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal">${esc(x.why)} <b>So gehst du vor:</b> ${esc(x.how)}</div></div>${x.key?`<button class="btn sm" data-act="prepChange" data-key="${x.key}">${MK[x.key].label} ändern</button>`:''}</div>`).join('')}</div><p class="faint" style="font-size:12.5px;margin-top:8px">Faustregeln aus Beschwerden, Körpercheck und Kniewinkel. Immer in kleinen Schritten ändern, neu messen und den Kunden fragen.</p>`:'<p class="faint">Keine Vorschläge. Trag Beschwerden im Schritt Ziel ein oder miss den Kniewinkel.</p>'}</div></section>
+  <p class="muted">Trag jede Änderung mit kurzem Grund ein. Alte Werte bleiben erhalten.</p>
+  ${s.changes.length?`<div class="tw"><table><thead><tr><th>Zeit</th><th>Einstellung</th><th class="r">Vorher</th><th class="r">Nachher</th><th class="r">Δ</th><th>Begründung</th></tr></thead><tbody>${s.changes.map(ch=>{const m=MK[ch.key];const d=(ch.from!=null&&ch.to!=null)?ch.to-ch.from:null;return `<tr><td class="mono faint" style="font-size:12px;white-space:nowrap">${esc(ch.time.slice(11)||ch.time)}</td><td>${m.label}</td><td class="r num">${fmtNum(ch.from)}</td><td class="r num">${fmtNum(ch.to)} ${m.unit}</td><td class="r num ${d>0?'up':d<0?'down':''}">${d===null?'–':(d>0?'+':'')+fmtNum(d)}</td><td>${esc(ch.reason)}</td></tr>`;}).join('')}</tbody></table></div>`:'<div class="empty">Noch nichts geändert. Trag unten die erste Anpassung ein.</div>'}
+  <hr><h3 id="changeHead">Einstellung ändern</h3>${measureForm(s,'after',true)}
+  <hr><h3>Aktuelle Endwerte</h3>${measureTable(s,'after')}</div>`; };
+function bikeSvg(s,view){
+  const pos = side => { const g=k=> val(s[side][k]) ?? val(s.before[k]); const h=g('saddleHeight'), sb=g('saddleSetback'), r=g('reach'), d=g('drop'); if(h==null) return null; const sbx=sb??60; const sy=Math.sqrt(Math.max(h*h-sbx*sbx,0)); return {sx:-sbx, sy, bx:-sbx+(r??540)*0.98, by:sy-(d??60)}; };
+  const B=pos('before'), A=Object.keys(s.after).length?pos('after'):null;
+  if(!B) return '<div class="empty">Für die Darstellung wird mindestens die Sattelhöhe benötigt.</div>';
+  const W=640,H=330, sc=0.34, ox=230, oy=290;
+  const P=(x,y)=>[ox+x*sc, oy-y*sc];
+  const mark=(p,cls,label)=>{ if(!p) return ''; const [x1,y1]=P(p.sx,p.sy),[x2,y2]=P(p.bx,p.by),[bx,by]=P(0,0); const col=cls==='a'?'var(--accent)':'var(--muted)'; const dash=cls==='a'?'':'stroke-dasharray="5 4"';
+    return `<g><line x1="${bx}" y1="${by}" x2="${x1}" y2="${y1}" stroke="${col}" stroke-width="2" ${dash}/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="1.4" ${dash} opacity=".7"/><rect x="${x1-26}" y="${y1-5}" width="44" height="7" rx="3" fill="${col}"/><circle cx="${x2}" cy="${y2}" r="7" fill="none" stroke="${col}" stroke-width="2.4"/><text x="${x2+12}" y="${y2-8}" fill="${col}" font-size="11" font-family="IBM Plex Mono, monospace">${label}</text></g>`; };
+  const [bbx,bby]=P(0,0);
+  const showB = view!=='after', showA = view!=='before' && A;
+  return `<div class="svgwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Schematische Seitenansicht: Sattel- und Lenkerposition vorher und nachher">
+    <line x1="20" y1="${oy+28}" x2="${W-20}" y2="${oy+28}" stroke="var(--line)"/>
+    <circle cx="${bbx-140}" cy="${oy-10}" r="38" fill="none" stroke="var(--line)" stroke-width="2"/><circle cx="${bbx+210}" cy="${oy-10}" r="38" fill="none" stroke="var(--line)" stroke-width="2"/>
+    <circle cx="${bbx}" cy="${bby}" r="5" fill="var(--fg)"/><text x="${bbx+9}" y="${bby+16}" fill="var(--faint)" font-size="10" font-family="IBM Plex Mono, monospace">Tretlager</text>
+    ${showB?mark(B,'b','vorher'):''}${showA?mark(A,'a','nachher'):''}
+    <text x="20" y="20" fill="var(--faint)" font-size="10.5" font-family="IBM Plex Sans, sans-serif">Schematisch aus Sattelhöhe, Versatz, Sattel–Lenker und Überhöhung · nicht maßstäblich zum Rahmen</text>
+  </svg></div>`;
+}
+function compareRows(bRec,aRec){
+  return Object.keys(MK).filter(k=>bRec[k]||aRec[k]).map(k=>{const b=bRec[k],a=aRec[k];const d=(b&&a)?a.value-b.value:null;const methodDiff=b&&a&&b.method!==a.method;return {k,m:MK[k],b,a,d,methodDiff};});
+}
+function compareTable(rows,onlyChanged,la,lb){
+  rows=rows.filter(r=>!onlyChanged||(r.d!==null&&Math.abs(r.d)>0.001));
+  if(!rows.length) return '<div class="empty">Keine geänderten Werte.</div>';
+  const maxAbs=Math.max(1,...rows.filter(r=>r.d!==null&&r.m.unit==='mm').map(r=>Math.abs(r.d)));
+  return `<div class="tw"><table><thead><tr><th>Messpunkt</th><th class="r">${la||'Vorher'}</th><th class="r">${lb||'Nachher'}</th><th class="r">Δ</th><th style="min-width:110px">Veränderung</th><th>Vergleichbarkeit</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr><td>${r.m.label}</td><td class="r num">${r.b?fmtNum(r.b.value):'–'}</td><td class="r num">${r.a?fmtNum(r.a.value):'–'} ${r.m.unit}</td><td class="r num ${r.d>0?'up':r.d<0?'down':''}">${r.d===null?'–':(r.d>0?'+':'')+fmtNum(r.d)}</td>
+  <td>${r.d!==null&&r.m.unit==='mm'?`<svg width="110" height="10" viewBox="0 0 110 10" aria-hidden="true"><line x1="55" y1="0" x2="55" y2="10" stroke="var(--line)"/><rect x="${r.d<0?55-Math.abs(r.d)/maxAbs*52:55}" y="2" width="${Math.max(1,Math.abs(r.d)/maxAbs*52)}" height="6" rx="2" fill="${r.d<0?'var(--info)':'var(--accent)'}"/></svg>`:''}</td>
+  <td>${!r.b||!r.a?'<span class="chip c-info">nur ein Wert</span>':r.methodDiff?`<span class="chip c-warn" title="${esc(r.b.method+' → '+r.a.method)}">Methode abweichend</span>`:(r.a.source==='geschätzt'||r.b.source==='geschätzt')?'<span class="chip c-warn">geschätzt</span>':'<span class="chip c-ok">vergleichbar</span>'}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+SESSTAB.vergleich = s => {
+  const rows=compareRows(s.before,s.after);
+  return `<div class="stack">
+  <div class="row" style="justify-content:space-between"><div class="seg">${[['before','Vorher'],['both','Beide'],['after','Nachher']].map(([v,l])=>`<button data-act="fitView" data-v="${v}" aria-pressed="${ui.fitView===v}">${l}</button>`).join('')}</div>
+  <label class="row" style="font-size:13px"><input type="checkbox" id="onlyChanged" data-change="onlyChanged" ${ui.cmpChanged?'checked':''}> nur geänderte Werte</label></div>
+  ${bikeSvg(s,ui.fitView)}
+  ${compareTable(rows,ui.cmpChanged)}
+  ${s.feedback.length?`<div><h3>Kundenfeedback (subjektiv)</h3><div class="list">${s.feedback.map(f=>`<div class="li" style="padding:8px 0"><span class="mono faint" style="font-size:12px">${fmtDate(f.date)}</span><div class="grow">${esc(f.text)}</div><span class="chip nodot">Komfort ${f.score}/10</span></div>`).join('')}</div></div>`:''}
+  <p class="faint" style="font-size:12px">Vergleiche zeigen Veränderungen der Einstellung. Ob eine Änderung eine Verbesserung verursacht hat, ist damit nicht belegt.</p></div>`;
+};
+SESSTAB.qualitaet = s => {
+  const q=quality(s); const sc=qScore(s);
+  return `<div class="stack"><div class="row" style="justify-content:space-between"><div><h3>FitQuality</h3><p class="muted">Prüft Vollständigkeit, Messherkunft und Vergleichbarkeit nach festen Regeln.</p></div>${st('s')}</div>
+  ${sc!==null?`<div><div class="row" style="justify-content:space-between"><span class="label">Datenqualität</span><span class="num">${sc} %</span></div><div class="bar"><i style="width:${sc}%"></i></div></div>`:'<div class="notice">'+ic('info')+'Sitzung ist noch geplant. Die Prüfung startet mit der ersten Messung.</div>'}
+  ${q.length?`<div class="list">${q.map(([l,t,src])=>`<div class="li" style="padding:9px 0"><span class="chip ${l==='bad'?'c-bad':l==='warn'?'c-warn':'c-info'}">${l==='bad'?'kritisch':l==='warn'?'Hinweis':'Info'}</span><div class="grow">${esc(t)}<div class="sub">${esc(src)}</div></div></div>`).join('')}</div>`:'<div class="notice acc">'+ic('quality')+'Keine Hinweise. Alle Pflichtwerte sind vorhanden.</div>'}</div>`;
+};
+SESSTAB.bericht = s => `<div class="stack"><div class="row" style="justify-content:space-between"><p class="muted" style="max-width:60ch">Der Bericht wird aus den erfassten Daten erzeugt. Freigegebene Berichte erscheinen im Kundenportal.</p>
+  <div class="row"><button class="btn primary" data-act="genReport" data-id="${s.id}">${ic('doc')}Bericht erzeugen</button>${st('s')}</div></div>
+  <div class="row"><label class="row" style="font-size:13px"><input type="checkbox" data-change="share" data-id="${s.id}" ${S.shared[s.id]?'checked':''}> Im Kundenportal freigeben</label></div>
+  <div id="reportBox">${ui.reportFor===s.id?reportHtml(s):'<div class="empty">Noch kein Bericht erzeugt.</div>'}</div></div>`;
+SESSTAB.ergebnis = s => {
+  const q=quality(s); const crit=q.filter(x=>x[0]!=='info').length;
+  return `<div class="stack"><h2>Vorher und nachher</h2>${SESSTAB.vergleich(s)}</div>
+  <hr><details class="more" ${crit?'open':''}><summary>Datenqualität prüfen ${crit?`<span class="chip c-warn">${crit} offen</span>`:`<span class="chip c-ok">in Ordnung</span>`}</summary><div style="margin-top:12px">${SESSTAB.qualitaet(s)}</div></details>
+  <hr><div class="stack"><h2>Bericht</h2>${SESSTAB.bericht(s)}</div>
+  <div class="row"><span class="label">Status</span><select class="input" style="width:auto" data-change="sessStatus" data-id="${s.id}" aria-label="Status">${opts(['geplant','eingetroffen','in Arbeit','abgeschlossen','abgesagt'],s.status)}</select></div>`;
+};
+function reportHtml(s){
+  const c=cust(s.customerId),b=bike(s.bikeId);const rows=compareRows(s.before,s.after);const fu=s.followUps.filter(f=>f.status==='offen');
+  const q=quality(s).filter(x=>x[0]!=='info');
+  return `<article class="report"><div class="rh"><div><h2 style="font-size:24px">Fitting-Bericht</h2><div>${esc(c.name)} · ${esc(b.brand+' '+b.model)}</div></div><div style="text-align:right"><b>FitFrame</b><div class="fine">${fmtDate(s.date)} · ${esc(s.type)} · Version ${s.version}<br>Fitter: ${esc(s.fitter)}</div></div></div>
+  <div class="sec"><h3>Ziel und Ausgangslage</h3><p>${esc(s.anamnesis.goal||'Nicht dokumentiert.')}</p>${s.anamnesis.complaints?`<p><b>Angaben der Kundin/des Kunden:</b> ${esc(s.anamnesis.complaints)}</p>`:''}</div>
+  ${Object.keys(s.check||{}).length?`<div class="sec"><h3>Körpercheck</h3>${checkFindings(s).filter(x=>x.lvl!=='ok').map(x=>`<p><b>${esc(x.title)}.</b> ${esc(x.text)}</p>`).join('')||'<p>Keine Auffälligkeiten.</p>'}${(s.comp||[]).length?`<p><b>Ausgleich:</b> ${s.comp.map(cp=>esc(cp.t)+' ('+cp.status+')').join('; ')}</p>`:''}</div>`:''}
+  <div class="sec"><h3>Vorgenommene Änderungen</h3>${s.changes.length?`<table><thead><tr><th>Einstellung</th><th style="text-align:right">Vorher</th><th style="text-align:right">Nachher</th><th>Grund</th></tr></thead><tbody>${s.changes.map(ch=>`<tr><td>${MK[ch.key].label}</td><td style="text-align:right">${fmtNum(ch.from)} ${MK[ch.key].unit}</td><td style="text-align:right">${fmtNum(ch.to)} ${MK[ch.key].unit}</td><td>${esc(ch.reason)}</td></tr>`).join('')}</tbody></table>`:'<p>Keine Änderungen.</p>'}</div>
+  <div class="sec"><h3>Endposition</h3><table><tbody>${rows.filter(r=>r.a||r.b).map(r=>`<tr><td>${r.m.label}</td><td style="text-align:right">${fmtNum((r.a||r.b).value)} ${r.m.unit}</td><td class="fine">${esc((r.a||r.b).method)}${(r.a||r.b).source==='geschätzt'?' · geschätzt':''}</td></tr>`).join('')}</tbody></table></div>
+  ${s.notes?`<div class="sec"><h3>Beobachtungen</h3><p>${esc(s.notes)}</p></div>`:''}
+  <div class="sec"><h3>Nächste Schritte</h3><p>${fu.length?fu.map(f=>`Nachkontrolle am ${fmtDate(f.due)} (${f.days} Tage).`).join(' '):'Nachkontrolle nach 4–6 Wochen empfohlen.'} Bitte melden Sie neue Beschwerden früher.</p></div>
+  ${q.length?`<div class="sec"><h3>Offene Punkte zur Datenqualität</h3><ul style="margin:0;padding-left:18px">${q.map(x=>`<li>${esc(x[1])}</li>`).join('')}</ul></div>`:''}
+  <p class="fine" style="margin-top:18px">Demo-Bericht mit fiktiven Daten. Kein medizinischer Befund. Winkel aus unkalibriertem Video sind Orientierungswerte. Ein PDF-Export braucht ein Backend und ist in dieser Demo nicht enthalten.</p></article>
+  <div class="row"><button class="btn" data-act="copyReport" data-id="${s.id}">${ic('copy')}Berichtstext kopieren</button></div>`;
+}
+function reportText(s){
+  const c=cust(s.customerId),b=bike(s.bikeId);
+  return [`Fitting-Bericht – ${c.name} – ${b.brand} ${b.model} – ${fmtDate(s.date)}`,'',`Ziel: ${s.anamnesis.goal||'–'}`,'','Änderungen:',...s.changes.map(ch=>`- ${MK[ch.key].label}: ${fmtNum(ch.from)} → ${fmtNum(ch.to)} ${MK[ch.key].unit} (${ch.reason})`),'',s.notes?`Beobachtungen: ${s.notes}`:'','(Demo-Daten, kein medizinischer Befund)'].join('\n');
+}
+
+VIEWS.verlauf = () => {
+  const withMulti=S.customers.filter(c=>sessOf(c.id).filter(s=>Object.keys(s.before).length).length>=1);
+  const A=sess(ui.cmpA), B=sess(ui.cmpB);
+  const candidates=S.sessions.filter(s=>Object.keys(s.before).length||Object.keys(s.after).length);
+  const sameBike=A&&B&&A.bikeId===B.bikeId;
+  const endA=A?{...A.before,...A.after}:{}, endB=B?{...B.before,...B.after}:{};
+  const rows=compareRows(endA,endB);
+  const cid=A?A.customerId:'c1'; const series=S.sessions.filter(s=>s.customerId===cid&&s.bikeId===(A?A.bikeId:'b1')&&Object.keys(s.before).length).sort((a,b)=>a.date.localeCompare(b.date));
+  return `
+  ${head('Verlauf & Vergleich','FitReplay: Endpositionen zweier Sitzungen nebeneinander und die Entwicklung über alle Termine.',st('i'))}
+  ${panel('Sitzungen vergleichen',`<div class="form"><div class="field"><label for="cmpA">Sitzung A</label><select class="input" id="cmpA" data-change="cmpA">${candidates.map(s=>`<option value="${s.id}" ${s.id===ui.cmpA?'selected':''}>${fmtDate(s.date)} · ${esc(cust(s.customerId).name)} · ${esc(s.type)}</option>`).join('')}</select></div>
+  <div class="field"><label for="cmpB">Sitzung B</label><select class="input" id="cmpB" data-change="cmpB">${candidates.map(s=>`<option value="${s.id}" ${s.id===ui.cmpB?'selected':''}>${fmtDate(s.date)} · ${esc(cust(s.customerId).name)} · ${esc(s.type)}</option>`).join('')}</select></div></div>
+  <div style="margin-top:12px">${!sameBike?`<div class="notice warn" style="margin-bottom:12px">${ic('warn')}Die Sitzungen betreffen unterschiedliche Fahrräder. Werte sind nur eingeschränkt vergleichbar.</div>`:''}${compareTable(rows,false,'Endstand A','Endstand B')}</div>`)}
+  ${panel(`Entwicklung über alle Sitzungen · ${esc(cust(cid).name)}, ${esc(bike(A?A.bikeId:'b1').model)}`,series.length?trendChart(series):'<div class="empty">Keine Daten.</div>')}`;
+};
+function trendChart(series){
+  const keys=['saddleHeight','reach','drop','saddleSetback'];
+  const pts=[]; series.forEach(s=>{pts.push({d:s.date,label:'vorher',s,rec:s.before});if(Object.keys(s.after).length)pts.push({d:s.date,label:'nachher',s,rec:s.after});});
+  return `<div class="grid g2">${keys.map(k=>{
+    const vals=pts.map(p=>p.rec[k]?p.rec[k].value:null).filter(v=>v!=null); if(!vals.length) return '';
+    const min=Math.min(...vals),max=Math.max(...vals),span=Math.max(max-min,4),lo=min-span*.25,hi=max+span*.25;
+    const W=300,H=130,L=40,R=10,T=14,Bm=28; const x=i=>L+(pts.length===1?0:i*(W-L-R)/(pts.length-1)); const y=v=>T+(hi-v)/(hi-lo)*(H-T-Bm);
+    let path='',dots=''; pts.forEach((p,i)=>{const v=p.rec[k]?p.rec[k].value:null; if(v==null) return; path+=(path?'L':'M')+x(i)+','+y(v); dots+=`<circle cx="${x(i)}" cy="${y(v)}" r="${i===pts.length-1?4.5:3}" fill="${i===pts.length-1?'var(--accent)':'var(--surface)'}" stroke="var(--accent)" stroke-width="1.6"/>`;});
+    const last=vals[vals.length-1];
+    return `<div><div class="row" style="justify-content:space-between"><span class="label">${MK[k].label}</span><span class="num">${fmtNum(last)} ${MK[k].unit}</span></div><div class="svgwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${MK[k].label} über die Sitzungen">
+      ${[lo+ (hi-lo)*.2, (lo+hi)/2, hi-(hi-lo)*.2].map(g=>`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="var(--line)" stroke-dasharray="2 3"/><text x="${L-6}" y="${y(g)+3}" text-anchor="end" fill="var(--faint)" font-size="9" font-family="IBM Plex Mono, monospace">${fmtNum(g,0)}</text>`).join('')}
+      <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="1.8"/>${dots}
+      ${pts.map((p,i)=>`<text x="${x(i)}" y="${H-12}" text-anchor="middle" fill="var(--faint)" font-size="8.5" font-family="IBM Plex Mono, monospace">${fmtDate(p.d).slice(0,5)}</text><text x="${x(i)}" y="${H-2}" text-anchor="middle" fill="var(--faint)" font-size="8">${p.label}</text>`).join('')}
+    </svg></div></div>`;}).join('')}</div><p class="faint" style="font-size:12px;margin-top:8px">Jede Sitzung erscheint mit Ausgangs- und Endwert. Frühere Werte bleiben erhalten.</p>`;
+}
+
+VIEWS.followup = () => {
+  const td=today();
+  let items=S.sessions.flatMap(s=>s.followUps.map((f,i)=>({...f,i,s})));
+  if(ui.fuFilter==='offen') items=items.filter(f=>f.status==='offen');
+  items.sort((a,b)=>a.due.localeCompare(b.due));
+  const done=S.sessions.filter(s=>s.status==='abgeschlossen');
+  return `
+  ${head('Follow-up','ProgressLoop: Nachkontrollen nach konfigurierbaren Intervallen, Komfort-Rückmeldungen und neue Sitzung auf Basis der Historie.',st('i'))}
+  <div class="notice">${ic('info')}<div>Erinnerungen per E-Mail oder SMS sind ${st('x')}. In der Demo wird der Versand nur protokolliert.</div></div>
+  ${panelFlush('Nachkontrollen',items.length?`<div class="list">${items.map(f=>`<div class="li"><div class="avatar">${initials(cust(f.s.customerId).name)}</div><div class="grow"><div class="t">${esc(cust(f.s.customerId).name)} · ${f.days}-Tage-Kontrolle</div><div class="sub">nach ${esc(f.s.type)} vom ${fmtDate(f.s.date)} · ${esc(bike(f.s.bikeId).model)} · fällig ${fmtDate(f.due)}</div></div>
+    ${f.status==='erledigt'?'<span class="chip c-ok">erledigt</span>':f.due<td?'<span class="chip c-bad">überfällig</span>':'<span class="chip c-info">offen</span>'}
+    ${f.status==='offen'?`<button class="btn sm" data-act="remind" data-id="${f.s.id}">Erinnern</button><button class="btn sm" data-act="fuFeedback" data-id="${f.s.id}" data-i="${f.i}">Rückmeldung</button><button class="btn sm primary" data-act="fuNewSession" data-id="${f.s.id}" data-i="${f.i}">Neue Sitzung</button>`:''}</div>`).join('')}</div>`:'<div class="empty">Keine offenen Nachkontrollen.</div>',
+    `<div class="seg"><button data-act="fuFilter" data-v="offen" aria-pressed="${ui.fuFilter==='offen'}">Offen</button><button data-act="fuFilter" data-v="alle" aria-pressed="${ui.fuFilter==='alle'}">Alle</button></div>`)}
+  ${panel('Follow-up planen',`<form class="form" data-form="followup"><div class="field"><label for="fu_s">Sitzung</label><select class="input" id="fu_s" name="sid">${done.map(s=>`<option value="${s.id}">${fmtDate(s.date)} · ${esc(cust(s.customerId).name)} · ${esc(s.type)}</option>`).join('')}</select></div>
+  <div class="field"><label for="fu_d">Intervall</label><select class="input" id="fu_d" name="days">${opts([['7','7 Tage'],['30','30 Tage'],['90','90 Tage'],['180','180 Tage']],'30')}</select></div>
+  <div class="wide"><button class="btn primary" type="submit">Nachkontrolle anlegen</button></div></form>`)}`;
+};
+
+VIEWS.qualitaet = () => {
+  const rows=S.sessions.filter(s=>s.status!=='geplant').map(s=>({s,q:quality(s),sc:qScore(s)}));
+  const recs=S.sessions.flatMap(s=>['before','after'].flatMap(side=>Object.values(s[side]).map(m=>({...m,s,side}))));
+  const bySrc=SOURCES.map(x=>[x,recs.filter(r=>r.source===x).length]);
+  return `
+  ${head('Messdaten & Qualität','Messprotokolle, Herkunft jedes Werts, Vollständigkeit und eine lückenlose Änderungshistorie.')}
+  <div class="grid g4">${bySrc.map(([k,n])=>`<div class="panel kpi"><span class="label">${esc(k)}</span><span class="v">${n}</span><span class="s">${Math.round(n/Math.max(recs.length,1)*100)} % aller Messwerte</span></div>`).join('')}</div>
+  ${panelFlush('FitQuality je Sitzung',`<div class="tw"><table><thead><tr><th>Sitzung</th><th>Status</th><th style="min-width:140px">Datenqualität</th><th class="r">Kritisch</th><th class="r">Hinweise</th><th class="r">Info</th></tr></thead><tbody>${rows.map(({s,q,sc})=>`<tr class="click" data-act="openSession" data-id="${s.id}" data-tab="qualitaet"><td>${fmtDate(s.date)} · ${esc(cust(s.customerId).name)}<div class="faint" style="font-size:12px">${esc(s.type)}</div></td><td>${sessChip(s.status)}</td><td><div class="row" style="flex-wrap:nowrap"><div class="bar" style="flex:1"><i style="width:${sc}%"></i></div><span class="num" style="font-size:12px">${sc} %</span></div></td><td class="r num">${q.filter(x=>x[0]==='bad').length}</td><td class="r num">${q.filter(x=>x[0]==='warn').length}</td><td class="r num">${q.filter(x=>x[0]==='info').length}</td></tr>`).join('')}</tbody></table></div>`,st('s'))}
+  ${panelFlush('Messprotokoll',`<div class="tw"><table><thead><tr><th>Sitzung</th><th>Phase</th><th>Messpunkt</th><th class="r">Wert</th><th>Methode</th><th>Quelle</th><th class="r">±</th></tr></thead><tbody>${recs.sort((a,b)=>b.s.date.localeCompare(a.s.date)).map(r=>`<tr><td class="mono" style="font-size:12px;white-space:nowrap">${fmtDate(r.s.date)} · ${esc(initials(cust(r.s.customerId).name))}</td><td>${r.side==='before'?'vorher':'nachher'}</td><td>${MK[r.key].label}</td><td class="r num">${fmtNum(r.value)} ${MK[r.key].unit}</td><td>${esc(r.method)}</td><td>${srcChip(r.source)}</td><td class="r num">${r.unc!=null?fmtNum(r.unc):'–'}</td></tr>`).join('')}</tbody></table></div>`,st('i'))}
+  ${panelFlush('Änderungshistorie (Audit-Log)',`<div class="tw"><table><thead><tr><th>Zeit</th><th>Person</th><th>Vorgang</th></tr></thead><tbody>${S.audit.slice(0,40).map(a=>`<tr><td class="mono" style="font-size:12px;white-space:nowrap">${esc(a.time)}</td><td>${esc(a.who)}</td><td>${esc(a.what)}</td></tr>`).join('')}</tbody></table></div>`,`<span class="faint" style="font-size:12px">${S.audit.length} Einträge</span>`)}`;
+};
+
+/* --- Simulation aus eingetragenen Daten --- */
+// Grobe Durchschnittsverhältnisse zur Körpergröße. Demo-Annahmen, keine validierten Werte.
+const RATIO={inseam:0.47,torso:0.30,arm:0.36,shoulder:0.225,footL:1.5,footR:1.5};
+const BODY_DEFAULT={height:175,inseam:82,torso:56,arm:60,shoulder:40,footL:265,footR:265,sitBone:null};
+const estVal=(H,k)=>k.startsWith('foot')?Math.round(H*RATIO[k]):Math.round(H*RATIO[k]*2)/2;
+function bodyVal(c,k){
+  const v=c.body[k];
+  if(v!==null&&v!==undefined&&v!=='') return {v:Number(v),src:(c.est||[]).includes(k)?'geschätzt':'eingetragen'};
+  const H=Number(c.body.height);
+  if(H&&RATIO[k]) return {v:estVal(H,k),src:'aus Körpergröße'};
+  return {v:BODY_DEFAULT[k],src:'Standardwert'};
+}
+function estimateBody(c){
+  const H=Number(c.body.height); if(!H) return -1; c.est=c.est||[]; let n=0;
+  Object.keys(RATIO).forEach(k=>{ if(c.body[k]===null||c.body[k]===undefined||c.body[k]===''){ c.body[k]=estVal(H,k); if(!c.est.includes(k)) c.est.push(k); n++; } });
+  return n;
+}
+const FITBASE={Rennrad:{sb:55,r:.45,dr:60},Gravel:{sb:50,r:.43,dr:40},Triathlon:{sb:-15,r:.47,dr:90},MTB:{sb:35,r:.47,dr:15},'E-Bike':{sb:65,r:.40,dr:-40},Trekking:{sb:60,r:.41,dr:-30}};
+function simFit(c,b){
+  const ins=bodyVal(c,'inseam').v, tor=bodyVal(c,'torso').v, arm=bodyVal(c,'arm').v, foot=bodyVal(c,'footR').v;
+  const k=FITBASE[b.type]||{sb:55,r:.44,dr:50}; const stiff=/eingeschränkt/.test(c.flex.hamstring||'');
+  return {saddleHeight:Math.round(ins*10*0.883-(stiff?5:0)),saddleSetback:Math.round(k.sb+(ins-80)*1.5),saddleTilt:b.type==='Triathlon'?-2:0,
+    reach:Math.round((tor+arm)*10*k.r),drop:Math.round(k.dr-(stiff?15:0)),crankLength:ins<78?165:ins<84?170:ins<90?172.5:175,
+    cleatFore:foot>270?7:5,cleatRotL:0,cleatRotR:0};
+}
+function simInputs(s,side){
+  const c=cust(s.customerId), b=bike(s.bikeId), fit=simFit(c,b);
+  const rec=side==='after'?{...s.before,...s.after}:s.before;
+  const get=k=>rec[k]?{v:Number(rec[k].value),src:'aus Sitzung'}:{v:fit[k],src:'berechnet'};
+  return {c,b,h:get('saddleHeight'),sb:get('saddleSetback'),reach:get('reach'),drop:get('drop'),crank:get('crankLength'),
+    height:bodyVal(c,'height'),inseam:bodyVal(c,'inseam'),torso:bodyVal(c,'torso'),arm:bodyVal(c,'arm')};
+}
+const clamp1=x=>Math.max(-1,Math.min(1,x));
+const deg=r=>r*180/Math.PI;
+function kin(P,a){
+  const h=P.h.v, sb=P.sb.v, crank=P.crank.v, reach=P.reach.v, drop=P.drop.v;
+  const thigh=P.inseam.v*10*0.52, shank=P.inseam.v*10*0.52;
+  const sy=Math.sqrt(Math.max(h*h-sb*sb,1));
+  const hip=[-sb-90,sy+30], hand=[-sb+reach,sy-drop];
+  const pedal=[Math.cos(a)*crank,Math.sin(a)*crank];
+  let ankle=[pedal[0]-40,pedal[1]+110];
+  const dx=ankle[0]-hip[0], dy=ankle[1]-hip[1], d=Math.hypot(dx,dy), over=d>thigh+shank;
+  const dd=Math.min(d,thigh+shank-0.5); const base=Math.atan2(dy,dx);
+  if(over) ankle=[hip[0]+Math.cos(base)*dd,hip[1]+Math.sin(base)*dd];
+  const ah=Math.acos(clamp1((thigh*thigh+dd*dd-shank*shank)/(2*thigh*dd)));
+  const knee=[hip[0]+thigh*Math.cos(base+ah),hip[1]+thigh*Math.sin(base+ah)];
+  const kneeAng=deg(Math.acos(clamp1((thigh*thigh+shank*shank-dd*dd)/(2*thigh*shank))));
+  const T=P.torso.v*10, A=P.arm.v*10*0.92, hx=hand[0]-hip[0], hy=hand[1]-hip[1], D=Math.hypot(hx,hy), ux=hx/D, uy=hy/D;
+  let shoulder;
+  if(D>=T+A) shoulder=[hip[0]+ux*T,hip[1]+uy*T];
+  else { const aa=(T*T-A*A+D*D)/(2*D), hh=Math.sqrt(Math.max(T*T-aa*aa,0)); shoulder=[hip[0]+aa*ux-hh*uy,hip[1]+aa*uy+hh*ux]; }
+  const tv=[shoulder[0]-hip[0],shoulder[1]-hip[1]], kv=[knee[0]-hip[0],knee[1]-hip[1]];
+  const hipAng=deg(Math.acos(clamp1((tv[0]*kv[0]+tv[1]*kv[1])/(Math.hypot(...tv)*Math.hypot(...kv)))));
+  const torsoAng=deg(Math.atan2(tv[1],tv[0]));
+  return {hip,hand,pedal,ankle,knee,shoulder,sy,kneeAng,hipAng,torsoAng,over,stretched:D>=T+A};
+}
+function cycle(P){
+  let kMax=0,kMin=999,hMin=999,over=false,k;
+  for(let d=0;d<360;d+=3){ k=kin(P,d*Math.PI/180); kMax=Math.max(kMax,k.kneeAng); kMin=Math.min(kMin,k.kneeAng); hMin=Math.min(hMin,k.hipAng); over=over||k.over; }
+  return {kneeMax:Math.round(kMax),kneeMin:Math.round(kMin),hipMin:Math.round(hMin),torso:Math.round(k.torsoAng),over,stretched:k.stretched};
+}
+function simCaptureInto(s,side,withFit){
+  const c=cust(s.customerId), b=bike(s.bikeId); const fit=simFit(c,b); let n=0; const tgt=s[side];
+  if(withFit) Object.entries(fit).forEach(([k,v])=>{ if(!s.before[k]){ s.before[k]={...mv(k,v,'Simulation aus Körpermaßen','berechnet',null),time:nowStamp()}; n++; } });
+  const r=cycle(simInputs(s,side));
+  [['kneeBDC',r.kneeMax],['hipAngle',r.hipMin],['torsoAngle',r.torso]].forEach(([k,v])=>{ tgt[k]={...mv(k,v,'Simulation (Motion)','geschätzt',null),time:nowStamp()}; n++; });
+  return {n,r};
+}
+
+/* --- Motion --- */
+VIEWS.motion = () => {
+  const s=sess(ui.motionSess)||S.sessions[0]; ui.motionSess=s.id;
+  const marks=S.motionMarks.filter(m=>m.sid===s.id);
+  const P=simInputs(s,ui.motionSide), r=cycle(P);
+  const rows=[['Körpergröße',P.height,'cm'],['Schrittlänge',P.inseam,'cm'],['Rumpflänge',P.torso,'cm'],['Armlänge',P.arm,'cm'],['Sattelhöhe',P.h,'mm'],['Sattelversatz',P.sb,'mm'],['Sattel–Lenker',P.reach,'mm'],['Überhöhung',P.drop,'mm'],['Kurbellänge',P.crank,'mm']];
+  const srcCls={eingetragen:'c-ok','aus Sitzung':'c-ok',geschätzt:'c-warn','aus Körpergröße':'c-warn',berechnet:'c-info',Standardwert:'c-bad'};
+  const defaults=rows.filter(x=>x[1].src==='Standardwert').length;
+  return `
+  ${head('Motion & Video','Simulierte Bewegungsanalyse: Die Figur wird aus den eingetragenen Körpermaßen und den Einstellungen der Sitzung berechnet.')}
+  <div class="notice warn">${ic('warn')}<div><b>Simulation, keine Kamera.</b> Es wird nichts gefilmt oder gescannt. Winkel sind Rechenwerte aus einem vereinfachten Modell und keine Messung. Je mehr echte Maße eingetragen sind, desto näher liegt die Figur an der Person.</div></div>
+  <div class="grid g-main">
+    ${panel('Analyse',`<div class="stack"><div class="row" style="justify-content:space-between">
+      <select class="input" style="width:auto;max-width:100%" data-change="motionSess" aria-label="Sitzung">${S.sessions.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<option value="${x.id}" ${x.id===s.id?'selected':''}>${fmtDate(x.date)} · ${esc(cust(x.customerId).name)} · ${esc(bike(x.bikeId).model)}</option>`).join('')}</select>
+      <div class="seg"><button data-act="motionSide" data-v="before" aria-pressed="${ui.motionSide==='before'}">Vorher</button><button data-act="motionSide" data-v="after" aria-pressed="${ui.motionSide==='after'}">Nachher</button></div></div>
+      <canvas id="motionCanvas" width="720" height="460" style="width:100%;aspect-ratio:36/23;background:#0d0e10;border-radius:6px;border:1px solid var(--line)" aria-label="Simulierte Seitenansicht beim Pedalieren"></canvas>
+      <div class="row"><button class="btn" data-act="motionPlay" id="playBtn">${ic('play')}Abspielen</button>
+      <label class="row" style="font-size:12.5px">Tempo <input type="range" id="motionSpeed" min="0.2" max="2" step="0.1" value="1" aria-label="Wiedergabetempo"></label>
+      <button class="btn" data-act="motionMark">${ic('flag')}Zeitpunkt markieren</button>
+      <button class="btn primary" data-act="motionScan">Simulierten Scan speichern</button>${st('s')}</div>
+      ${r.over?`<div class="notice warn">${ic('warn')}Das Bein erreicht das Pedal im Modell nicht ganz. Sattel ist für die eingetragene Schrittlänge sehr hoch.</div>`:''}
+      ${r.stretched?`<div class="notice warn">${ic('warn')}Die Arme sind im Modell voll gestreckt. Sattel–Lenker-Abstand ist für die eingetragenen Maße sehr lang.</div>`:''}</div>`)}
+    <div class="stack">
+      ${panel('Ergebnis über einen Kurbelzyklus',`<dl class="dl"><dt>Kniewinkel unten</dt><dd class="num">${r.kneeMax}°</dd><dt>Kniewinkel oben</dt><dd class="num">${r.kneeMin}°</dd><dt>Hüftwinkel oben</dt><dd class="num">${r.hipMin}°</dd><dt>Oberkörperwinkel</dt><dd class="num">${r.torso}°</dd></dl><hr style="margin:12px 0"><dl class="dl" id="motionVals"><dt>Kurbelwinkel</dt><dd class="num">–</dd></dl>`,st('s'))}
+      ${panelFlush('Eingangsdaten',`<div class="tw"><table><tbody>${rows.map(([l,x,u])=>`<tr><td>${l}</td><td class="r num">${fmtNum(x.v)} ${u}</td><td><span class="chip nodot ${srcCls[x.src]||''}">${esc(x.src)}</span></td></tr>`).join('')}</tbody></table></div>
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:8px">${defaults?`<p class="muted" style="font-size:12.5px">${defaults} Wert${defaults>1?'e':''} mit Standardwert. Trag die Körpermaße ein, damit die Simulation zur Person passt.</p>`:''}
+        <div class="row"><button class="btn sm" data-act="openCustomer" data-id="${P.c.id}">Körpermaße von ${esc(P.c.name.split(' ')[0])} bearbeiten</button><button class="btn sm" data-act="openSession" data-id="${s.id}" data-tab="ausgang">Einstellungen bearbeiten</button></div></div>`)}
+      ${panelFlush('Markierte Zeitpunkte',marks.length?`<div class="list">${marks.map(m=>`<div class="li"><span class="mono faint" style="font-size:12px">${m.crank}°</span><div class="grow">Knie ${m.knee}° · Hüfte ${m.hip}°<div class="sub">${m.side==='before'?'vorher':'nachher'} · ${esc(m.time)}</div></div><button class="btn sm ghost danger" data-act="delMark" data-id="${m.id}" aria-label="Markierung löschen">${ic('x')}</button></div>`).join('')}</div>`:'<div class="empty">Noch keine Markierung. Pausieren und „Zeitpunkt markieren“ tippen.</div>')}
+    </div>
+  </div>
+  ${panel('Motion360 – Kameraquellen',`<div class="grid g4">${['Seite rechts','Seite links','Front','Oben'].map(n=>`<div class="panel" style="background:var(--surface-2)"><div style="aspect-ratio:4/3;display:grid;place-items:center;color:var(--faint);border-bottom:1px solid var(--line)">${ic('motion','width="28" height="28"')}</div><div class="panel-b" style="padding:10px"><div style="font-weight:500">${n}</div><div class="row" style="margin-top:4px"><span class="chip">simuliert</span></div></div></div>`).join('')}</div>
+  <p class="faint" style="font-size:12px;margin-top:10px">Später: feste Kamerapositionen über CameraFit, Kalibrierung über Referenzmaß im Bild, mehrere Ansichten. ${st('x')}</p>`,st('k'))}`;
+};
+let motion={raf:0,playing:false,t:0,last:0};
+function motionStep(ts){
+  const cv=document.getElementById('motionCanvas'); if(!cv){cancelAnimationFrame(motion.raf);motion.playing=false;return;}
+  const sp=Number((document.getElementById('motionSpeed')||{}).value||1);
+  if(motion.playing){ if(motion.last) motion.t+=(ts-motion.last)/1000*sp*1.4; motion.last=ts; }
+  drawMotion(cv);
+  if(motion.playing) motion.raf=requestAnimationFrame(motionStep);
+}
+function drawMotion(cv){
+  const s=sess(ui.motionSess); if(!s) return; const P=simInputs(s,ui.motionSide);
+  const ctx=cv.getContext('2d'), W=cv.width, H=cv.height; ctx.clearRect(0,0,W,H);
+  const sc=0.27, ox=270, oy=370; const Pt=(x,y)=>[ox+x*sc,oy-y*sc];
+  ctx.strokeStyle='#22252b'; ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  const a=-motion.t*2*Math.PI; const k=kin(P,a);
+  const line=(p,q,col,w)=>{const [x1,y1]=Pt(...p),[x2,y2]=Pt(...q);ctx.strokeStyle=col;ctx.lineWidth=w;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();};
+  const dot=(p,col,r)=>{const [x,y]=Pt(...p);ctx.fillStyle=col;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();};
+  const sb=P.sb.v, rear=[-410,70], front=[600,70];
+  ctx.strokeStyle='#3a3f48'; ctx.lineWidth=3; [rear,front].forEach(w=>{const [x,y]=Pt(...w);ctx.beginPath();ctx.arc(x,y,340*sc,0,Math.PI*2);ctx.stroke();});
+  const seatTop=[-sb,k.sy-60], head=[k.hand[0]-60,k.hand[1]-60];
+  line([0,0],seatTop,'#3a3f48',5); line([0,0],head,'#3a3f48',5); line(seatTop,head,'#3a3f48',4); line([0,0],rear,'#3a3f48',4); line(seatTop,rear,'#3a3f48',3); line(head,front,'#3a3f48',4);
+  line([-sb-130,k.sy],[-sb+10,k.sy],'#6c727d',7); line(head,k.hand,'#6c727d',4);
+  line([0,0],k.pedal,'#9ba1ab',4); dot([0,0],'#ecebe8',5);
+  line(k.hip,k.shoulder,'#ecebe8',7); line(k.shoulder,k.hand,'#cfcdc8',5);
+  line(k.hip,k.knee,'#ff7a1a',8); line(k.knee,k.ankle,'#ff7a1a',7); line(k.ankle,[k.pedal[0]+60,k.pedal[1]],'#ff7a1a',5);
+  const tv=[k.shoulder[0]-k.hip[0],k.shoulder[1]-k.hip[1]], tl=Math.hypot(...tv);
+  const [hx,hy]=Pt(k.shoulder[0]+tv[0]/tl*90+40,k.shoulder[1]+tv[1]/tl*90); ctx.fillStyle='#ecebe8'; ctx.beginPath(); ctx.arc(hx,hy,14,0,Math.PI*2); ctx.fill();
+  [k.hip,k.knee,k.ankle,k.shoulder].forEach(p=>dot(p,'#fff',4));
+  const [kx,ky]=Pt(...k.knee); ctx.fillStyle='#ff7a1a'; ctx.font='600 15px IBM Plex Mono, monospace'; ctx.fillText(k.kneeAng.toFixed(0)+'°',kx+12,ky-6);
+  ctx.fillStyle='#6c727d'; ctx.font='12px IBM Plex Sans, sans-serif';
+  ctx.fillText(`SIMULATION · ${P.c.name} · ${ui.motionSide==='after'?'Nachher':'Vorher'} · Sattelhöhe ${fmtNum(P.h.v)} mm · Schrittlänge ${fmtNum(P.inseam.v)} cm`,14,H-14);
+  const crankDeg=((-a*180/Math.PI)%360+360)%360;
+  motion.cur={knee:Math.round(k.kneeAng),hip:Math.round(k.hipAng),crank:Math.round(crankDeg)};
+  const box=document.getElementById('motionVals');
+  if(box) box.innerHTML=`<dt>Kurbelwinkel</dt><dd class="num">${Math.round(crankDeg)}°</dd><dt>Kniewinkel jetzt</dt><dd class="num">${Math.round(k.kneeAng)}°</dd><dt>Hüftwinkel jetzt</dt><dd class="num">${Math.round(k.hipAng)}°</dd>`;
+}
+
+/* --- Hardware --- */
+const HW = [
+  {id:'universalbase',name:'UniversalBase',purpose:'Grundplatte mit definiertem Nullpunkt für wiederholbare Messaufbauten',compat:'Basis für CleatLab, PositionTrack, CameraFit',stage:1,prio:3},
+  {id:'cleatlab',name:'CleatLab',purpose:'Cleat-Positionierer: Grundplatte mit austauschbaren Einsätzen je Pedalsystem',compat:'Shimano SPD-SL, Shimano SPD, Look Keo, Wahoo Speedplay (geplant)',stage:1,prio:2},
+  {id:'positiontrack',name:'PositionTrack',purpose:'Hilfsmittel zum reproduzierbaren Erfassen von Sattel- und Cockpitposition',compat:'Rennrad, Gravel, Triathlon',stage:0,prio:3},
+  {id:'motiontiles',name:'MotionTiles',purpose:'Bodenmarkierungen für gleiche Rad- und Kameraposition bei jedem Termin',compat:'CameraFit, Motion360',stage:1,prio:1},
+  {id:'camerafit',name:'CameraFit / Motion360',purpose:'Kamerahalter mit fester Höhe, Abstand und Kalibrierreferenz',compat:'Smartphone, Webcam; bis zu 4 Ansichten',stage:1,prio:1},
+  {id:'footmap',name:'FootMap',purpose:'Fußdruckmessung – vorzugsweise Integration vorhandener Sensoren',compat:'offen',stage:0,prio:4},
+  {id:'saddlemap',name:'SaddleMap',purpose:'Satteldruckmessung – vorzugsweise Integration vorhandener Sensormatten',compat:'offen',stage:0,prio:4},
+  {id:'fitquality',name:'FitQuality',purpose:'Software-Prüfung von Messaufbau, Vollständigkeit und Plausibilität',compat:'alle Sitzungen',stage:3,prio:1,soft:true},
+  {id:'fitreplay',name:'FitReplay',purpose:'Vergleich dokumentierter Positionen über mehrere Sitzungen',compat:'alle Sitzungen',stage:3,prio:1,soft:true}
+];
+const STAGES=['Idee','Konzept','CAD-Entwurf','Software-Demo','Prototyp gedruckt','Funktion getestet','Messung validiert'];
+const CLEAT = {
+  'SPD-SL':{mount:'3-Loch-Befestigung (Rennradschuh)',float:'0°, 2° oder 6° je nach Cleat-Variante (SM-SH10/12/11)'},
+  'SPD':{mount:'2-Loch-Befestigung (MTB-/Gravelschuh)',float:'abhängig vom Cleat-Typ – zu prüfen'},
+  'Look Keo':{mount:'3-Loch-Befestigung (Rennradschuh)',float:'abhängig von der Cleat-Farbe – zu prüfen'},
+  'Speedplay':{mount:'4-Loch-Adapter oder eigene Sohlenbefestigung – zu prüfen',float:'einstellbar laut Hersteller – zu prüfen'}
+};
+VIEWS.hardware = () => {
+  const h=HW.find(x=>x.id===ui.hwSel)||HW[1];
+  return `
+  ${head('Hardware Lab','FitFrame Lab: eigene modulare Mess- und Positionierungshilfen aus dem 3D-Drucker, passend zur Software.')}
+  <div class="notice warn">${ic('warn')}<div>Kein Modul ist gedruckt, getestet oder validiert. Es gibt keine Maß- oder Genauigkeitsangaben. Passform, Kalibrierung und Messgenauigkeit müssen an echten Teilen physisch geprüft werden.</div></div>
+  ${panelFlush('Module',`<div class="tw"><table><thead><tr><th>Modul</th><th>Zweck</th><th>Kompatibilität</th><th>Entwicklungsstand</th><th class="r">Priorität</th></tr></thead><tbody>${HW.map(x=>`<tr class="click" data-act="hwSel" data-id="${x.id}" ${x.id===h.id?'style="background:var(--accent-soft)"':''}><td><b style="font-weight:600">${x.name}</b>${x.soft?'<div class="faint" style="font-size:11px">reine Software</div>':''}</td><td>${esc(x.purpose)}</td><td>${esc(x.compat)}</td><td><div class="row" style="flex-wrap:nowrap;gap:3px" title="${STAGES[x.stage]}">${STAGES.map((_,i)=>`<span style="width:10px;height:6px;border-radius:2px;background:${i<=x.stage?'var(--accent)':'var(--surface-2)'}"></span>`).join('')}</div><div class="faint" style="font-size:11px;margin-top:3px">${STAGES[x.stage]}</div></td><td class="r num">${x.prio}</td></tr>`).join('')}</tbody></table></div>`,st('k'))}
+  ${h.id==='cleatlab'?cleatLab():panel(h.name,`<dl class="dl"><dt>Zweck</dt><dd>${esc(h.purpose)}</dd><dt>Kompatibilität</dt><dd>${esc(h.compat)}</dd><dt>Stand</dt><dd>${STAGES[h.stage]}</dd><dt>Nächster Schritt</dt><dd>${h.soft?'In der Demo nutzbar, siehe Qualität bzw. Verlauf.':'Anforderungen mit Fittern klären, danach parametrisches CAD mit offenen Maßvariablen.'}</dd></dl>${h.soft?`<div style="margin-top:12px"><button class="btn" data-nav="${h.id==='fitquality'?'qualitaet':'verlauf'}">Zum Modul</button></div>`:''}`,h.soft?st('i'):st('k'))}`;
+};
+function cleatLab(){
+  const sys=ui.cleatSys, c=CLEAT[sys];
+  const params=[['Lochabstand Befestigung','offen – an realem Cleat messen'],['Kontur Einsatz','offen – technische Zeichnung fehlt'],['Toleranz Passung','offen – Drucktest nötig'],['Referenzpunkt Pedalachse','offen – Definition mit Fittern klären'],['Skala Rotation','offen'],['Skala Längsposition','offen']];
+  const sessions=S.sessions.filter(s=>s.status!=='abgeschlossen'||s.date===today());
+  return panel('CleatLab – Konfigurator',`<div class="grid g2"><div class="stack">
+    <div class="seg" role="group" aria-label="Pedalsystem">${Object.keys(CLEAT).map(k=>`<button data-act="cleatSys" data-v="${k}" aria-pressed="${k===sys}">${k}</button>`).join('')}</div>
+    <div class="svgwrap"><svg viewBox="0 0 320 200" role="img" aria-label="Schema: Grundplatte mit austauschbarem Einsatz für ${esc(sys)}">
+      <rect x="20" y="20" width="280" height="160" rx="12" fill="var(--surface-2)" stroke="var(--line)" stroke-width="2"/>
+      ${[...Array(9)].map((_,i)=>`<line x1="${60+i*25}" y1="30" x2="${60+i*25}" y2="${i%2?40:46}" stroke="var(--faint)"/>`).join('')}
+      <line x1="40" y1="100" x2="280" y2="100" stroke="var(--line)" stroke-dasharray="4 4"/>
+      <g transform="rotate(${sys==='Speedplay'?0:4} 160 100)"><rect x="110" y="62" width="100" height="76" rx="${sys==='Speedplay'?38:10}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+      ${(sys==='SPD'?[[140,100],[180,100]]:sys==='Speedplay'?[[145,85],[175,85],[145,115],[175,115]]:[[160,78],[138,120],[182,120]]).map(([x,y])=>`<circle cx="${x}" cy="${y}" r="5" fill="none" stroke="var(--accent)" stroke-width="2"/>`).join('')}</g>
+      <text x="160" y="170" text-anchor="middle" fill="var(--faint)" font-size="10" font-family="IBM Plex Mono, monospace">Einsatz ${esc(sys)} · schematisch, ohne Maße</text>
+    </svg></div>
+    <dl class="dl"><dt>Befestigung</dt><dd>${esc(c.mount)}</dd><dt>Float</dt><dd>${esc(c.float)}</dd><dt>Magnete</dt><dd>nur zum Halten, nicht als Referenz</dd></dl></div>
+    <div class="stack"><h3>Parametrische Variablen</h3><table><tbody>${params.map(([k,v])=>`<tr><td>${k}</td><td class="faint">${v}</td></tr>`).join('')}</tbody></table>
+    <hr><h3>Wert an Sitzung übergeben</h3><p class="muted" style="font-size:12.5px">Zeigt, wie Hardware und Software zusammenarbeiten sollen. Die Werte trägst du hier selbst ein.</p>
+    <form class="form" data-form="cleatTransfer"><div class="field"><label for="ct_s">Sitzung</label><select class="input" id="ct_s" name="sid">${sessions.map(s=>`<option value="${s.id}">${fmtDate(s.date)} · ${esc(cust(s.customerId).name)}</option>`).join('')}</select></div>
+    <div class="field"><label for="ct_f">Cleat längs (mm)</label><input class="input num" id="ct_f" name="fore" type="number" step="0.5" required></div>
+    <div class="field"><label for="ct_r">Rotation rechts (°)</label><input class="input num" id="ct_r" name="rot" type="number" step="0.5"></div>
+    <div class="wide row"><button class="btn primary" type="submit">An Sitzung übergeben</button>${st('s')}</div></form></div></div>`,st('k'));
+}
+
+/* --- KI-Assistent --- */
+function aiSummary(s){ const c=cust(s.customerId),b=bike(s.bikeId); const big=s.changes.slice().sort((x,y)=>Math.abs(y.to-y.from)-Math.abs(x.to-x.from)).slice(0,3);
+  return `${c.name} kam am ${fmtDate(s.date)} zum ${s.type} mit dem ${b.brand} ${b.model}. Ziel: ${s.anamnesis.goal||'nicht dokumentiert'}. ${s.anamnesis.complaints?`Angegebene Beschwerden: ${s.anamnesis.complaints}. `:''}${s.changes.length?`Es wurden ${s.changes.length} Einstellungen geändert, die größten: ${big.map(ch=>`${MK[ch.key].label} ${fmtNum(ch.from)} → ${fmtNum(ch.to)} ${MK[ch.key].unit}`).join('; ')}.`:'Es wurden noch keine Änderungen dokumentiert.'} ${s.feedback.length?`Letzte Rückmeldung: „${s.feedback[s.feedback.length-1].text}“ (subjektiv).`:''}`; }
+function aiMissing(s){ const q=quality(s); return q.length?q.map(x=>'• '+x[1]).join('\n'):'Keine fehlenden Pflichtangaben gefunden.'; }
+function aiCompare(s){ const prev=S.sessions.filter(x=>x.customerId===s.customerId&&x.bikeId===s.bikeId&&x.date<s.date).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  if(!prev) return 'Keine frühere Sitzung mit demselben Fahrrad vorhanden.';
+  const rows=compareRows({...prev.before,...prev.after},{...s.before,...s.after}).filter(r=>r.d!==null&&Math.abs(r.d)>0.001);
+  return `Verglichen mit ${prev.type} vom ${fmtDate(prev.date)}:\n`+(rows.length?rows.map(r=>`• ${r.m.label}: ${r.d>0?'+':''}${fmtNum(r.d)} ${r.m.unit}${r.methodDiff?' (Methode abweichend, nur eingeschränkt vergleichbar)':''}`).join('\n'):'• Keine Unterschiede in den Endwerten.')+'\nOb die Änderungen die Rückmeldung verursacht haben, lässt sich daraus nicht ableiten.'; }
+function aiNext(s){ const t=[]; const q=quality(s);
+  if(q.some(x=>/Einwilligung/.test(x[1]))) t.push('Einwilligung einholen, bevor weitere Angaben gespeichert werden.');
+  if(q.some(x=>/Ausgangswert fehlt/.test(x[1]))) t.push('Fehlende Ausgangswerte messen, bevor weitere Änderungen erfolgen.');
+  if(q.some(x=>/unkalibriert/.test(x[1]))) t.push('Kniewinkel mit kalibrierter Aufnahme oder Goniometer prüfen.');
+  if(!s.followUps.some(f=>f.status==='offen')&&s.status==='abgeschlossen') t.push('Nachkontrolle in 30 Tagen anlegen.');
+  if(s.anamnesis.complaints) t.push('Bei der Nachkontrolle gezielt nach den angegebenen Beschwerden fragen und Antwort dokumentieren.');
+  return t.length?t.map(x=>'• '+x).join('\n'):'Keine offenen Schritte erkannt.'; }
+function aiMessage(s){ const c=cust(s.customerId); const fu=s.followUps.find(f=>f.status==='offen');
+  return `Hallo ${c.name.split(' ')[0]},\n\nvielen Dank für Ihren Termin am ${fmtDate(s.date)}. Wir haben ${s.changes.length} Einstellungen an Ihrem Fahrrad angepasst. Den Bericht finden Sie im Kundenportal.\n\nBitte fahren Sie die neue Position einige Wochen und notieren Sie, wie sie sich anfühlt.${fu?` Ihre Nachkontrolle ist am ${fmtDate(fu.due)} geplant.`:''}\n\nViele Grüße\n${s.fitter}`; }
+const AI = [['summary','Sitzung zusammenfassen',aiSummary],['missing','Fehlende Daten finden',aiMissing],['compare','Mit Vorsitzung vergleichen',aiCompare],['next','Nächste Schritte vorschlagen',aiNext],['message','Kundennachricht entwerfen',aiMessage]];
+VIEWS.ki = () => {
+  const s=sess(ui.aiSess);
+  return `
+  ${head('KI-Assistent','Hilft bei Dokumentation, Vergleichen und Kundenkommunikation. Jeder Vorschlag ist als Vorschlag gekennzeichnet und muss geprüft werden.')}
+  <div class="notice warn">${ic('warn')}<div><b>Simuliert.</b> Die Texte entstehen aus festen Regeln und den vorhandenen Daten, nicht aus einem Sprachmodell. Keine Diagnosen, keine Leistungsversprechen, keine erfundenen Messwerte. Eine echte KI-Anbindung ist ${st('x')}.</div></div>
+  <div class="grid g-main">
+    ${panel('Anfrage',`<div class="stack"><div class="field"><label for="aiSess">Sitzung</label><select class="input" id="aiSess" data-change="aiSess">${S.sessions.map(x=>`<option value="${x.id}" ${x.id===ui.aiSess?'selected':''}>${fmtDate(x.date)} · ${esc(cust(x.customerId).name)} · ${esc(x.type)}</option>`).join('')}</select></div>
+      <div class="row">${AI.map(([k,l])=>`<button class="btn" data-act="ai" data-k="${k}">${ic('ai')}${l}</button>`).join('')}</div>
+      ${ui.aiOut?`<div class="panel" style="background:var(--surface-2);border-color:var(--accent-line)"><div class="panel-h"><span class="label" style="color:var(--accent)">Vorschlag · ${esc(ui.aiOut.label)}</span>${st('s')}</div><div class="panel-b"><textarea class="input" id="aiText" style="min-height:180px;background:var(--bg)">${esc(ui.aiOut.text)}</textarea>
+      <div class="row" style="margin-top:10px"><button class="btn primary" data-act="aiAccept">Geprüft – in Notizen übernehmen</button><button class="btn" data-act="aiCopy">${ic('copy')}Kopieren</button><button class="btn ghost" data-act="aiDiscard">Verwerfen</button></div></div></div>`:'<div class="empty">Wähle eine Aktion. Der Vorschlag erscheint hier, damit du ihn prüfen kannst.</div>'}</div>`)}
+    ${panel('Grenzen des Assistenten',`<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;color:var(--muted)"><li>erfindet keine Messwerte oder Beobachtungen</li><li>speichert nichts ohne Freigabe durch den Fitter</li><li>stellt keine medizinischen Diagnosen</li><li>behauptet keine Ursache-Wirkung ohne Daten</li><li>kennzeichnet unsichere und geschätzte Werte</li></ul><hr style="margin:12px 0"><p class="faint" style="font-size:12px">Für später zu vergleichen: lokale Modelle (Datenschutz, höherer Wartungsaufwand) und Cloud-Modelle (geringer Aufwand, Auftragsverarbeitung nötig).</p>`,st('k'))}
+  </div>`;
+};
+
+/* --- Portal --- */
+VIEWS.portal = () => {
+  const c=cust(ui.portalCust); const ss=sessOf(c.id); const shared=ss.filter(s=>S.shared[s.id]); const wos=S.workshop.filter(w=>w.customerId===c.id); const msgs=S.messages[c.id]||[];
+  return `
+  ${head('Kundenportal','So sieht die Kundin bzw. der Kunde die eigenen Daten. Nur freigegebene Berichte sind sichtbar.',`<select class="input" style="width:auto" data-change="portalCust" aria-label="Ansicht als Kunde">${S.customers.map(x=>`<option value="${x.id}" ${x.id===c.id?'selected':''}>Ansicht als ${esc(x.name)}</option>`).join('')}</select>`)}
+  <div class="notice">${ic('info')}<div>Vorschau ${st('s')}. Ein echtes Portal braucht Anmeldung, Mandantentrennung und Hosting ${st('x')}. Freigaben und Nachrichten werden hier nur lokal gespeichert.</div></div>
+  <div class="grid g2">
+    ${panelFlush('BikePassport',bikesOf(c.id).map(b=>{const sh=currentSetting(b.id,'saddleHeight'),r=currentSetting(b.id,'reach'),cf=currentSetting(b.id,'cleatFore');return `<div class="li"><div class="grow"><div class="t">${esc(b.brand+' '+b.model)}</div><div class="sub">${esc(b.type)} · Größe ${esc(b.size)} · <span class="mono">${esc(b.frameNo)}</span></div><div class="row" style="margin-top:6px">${sh?`<span class="chip nodot">Sattelhöhe ${fmtNum(sh.value)} mm</span>`:''}${r?`<span class="chip nodot">Sattel–Lenker ${fmtNum(r.value)} mm</span>`:''}${cf?`<span class="chip nodot">Cleat ${fmtNum(cf.value)} mm</span>`:''}${!sh?'<span class="chip nodot">noch kein Fitting</span>':''}</div></div></div>`;}).join('')||'<div class="empty">Kein Fahrrad.</div>',`<span class="faint" style="font-size:12px">QR-Code zeigt später nur einen Verweis, keine Kundendaten</span>`)}
+    ${panelFlush('Berichte',shared.length?`<div class="list">${shared.map(s=>`<div class="li click" data-act="portalReport" data-id="${s.id}"><span class="mono faint" style="font-size:12px">${fmtDate(s.date)}</span><div class="grow">${esc(s.type)} · ${esc(bike(s.bikeId).model)}</div>${ic('doc','width="18" height="18"')}</div>`).join('')}</div>`:'<div class="empty">Noch keine freigegebenen Berichte.</div>')}
+    ${panelFlush('Freigaben',wos.length?`<div class="list">${wos.map(w=>{const tot=w.positions.reduce((a,p)=>a+p.qty*p.price,0);return `<div class="li"><div class="grow"><div class="t">${esc(w.title)}</div><div class="sub">${w.id} · Kostenvoranschlag ${eur(tot)}</div></div>${w.status==='Freigabe ausstehend'?`<button class="btn sm primary" data-act="approve" data-id="${w.id}">Freigeben</button><button class="btn sm" data-act="decline" data-id="${w.id}">Ablehnen</button>`:w.approval?`<span class="chip c-ok">freigegeben ${fmtDate(w.approval.time)}</span>`:woChip(w.status)}</div>`;}).join('')}</div>`:'<div class="empty">Keine offenen Freigaben.</div>')}
+    ${panelFlush('Termine & Follow-up',`<div class="list">${[...ss.filter(s=>s.date>=today()).map(s=>`<div class="li"><span class="mono faint" style="font-size:12px">${fmtDate(s.date)}</span><div class="grow">${esc(s.type)} um ${esc(s.time)}</div>${sessChip(s.status)}</div>`),...ss.flatMap(s=>s.followUps.filter(f=>f.status==='offen').map(f=>`<div class="li"><span class="mono faint" style="font-size:12px">${fmtDate(f.due)}</span><div class="grow">Nachkontrolle (${f.days} Tage)</div><span class="chip c-info">offen</span></div>`))].join('')||'<div class="empty">Keine anstehenden Termine.</div>'}</div>`)}
+  </div>
+  ${panel('Nachrichten',`<div class="stack">${msgs.map(m=>`<div class="notice ${m.from==='Betrieb'?'':'acc'}" style="flex-direction:column;gap:2px"><span class="label">${esc(m.from)} · ${esc(m.time)}</span><span>${esc(m.text)}</span></div>`).join('')||'<span class="muted">Noch keine Nachrichten.</span>'}
+  <form class="row" data-form="message" data-id="${c.id}" style="flex-wrap:nowrap"><input class="input" name="text" id="msgText" placeholder="Nachricht an den Betrieb" required><button class="btn primary" type="submit">Senden</button></form></div>`)}`;
+};
+
+/* --- Werkstatt --- */
+const WO_FLOW=['Angenommen','Kostenvoranschlag','Freigabe ausstehend','In Arbeit','Abholbereit','Übergeben'];
+VIEWS.werkstatt = () => {
+  const list=S.workshop.filter(w=>ui.woFilter==='alle'||w.status===ui.woFilter);
+  const td=today();
+  return `
+  ${head('Werkstatt & Service','Aufträge, Kostenvoranschläge, Kundenfreigaben, Wartungsintervalle und Übergabe. Verknüpft mit der Fahrradakte.',`<button class="btn primary" data-act="newWO">${ic('plus')}Auftrag anlegen</button>`)}
+  <div class="row">${['alle',...WO_FLOW].map(f=>`<button class="btn sm ${ui.woFilter===f?'primary':''}" data-act="woFilter" data-v="${f}">${f==='alle'?'Alle':f} <span class="mono" style="opacity:.7">${f==='alle'?S.workshop.length:S.workshop.filter(w=>w.status===f).length}</span></button>`).join('')}</div>
+  ${panelFlush('Aufträge',list.length?`<div class="tw"><table><thead><tr><th>Nr.</th><th>Auftrag</th><th>Kunde / Fahrrad</th><th>Fällig</th><th class="r">Summe</th><th>Status</th></tr></thead><tbody>${list.map(w=>`<tr class="click" data-act="openWO" data-id="${w.id}"><td class="mono">${w.id}</td><td>${esc(w.title)}</td><td>${esc(cust(w.customerId).name)}<div class="faint" style="font-size:12px">${esc(bike(w.bikeId).model)}</div></td><td>${w.due<td&&w.status!=='Übergeben'?`<span class="chip c-bad">${fmtDate(w.due)}</span>`:fmtDate(w.due)}</td><td class="r num">${eur(w.positions.reduce((a,p)=>a+p.qty*p.price,0))}</td><td>${woChip(w.status)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Keine Aufträge mit diesem Status.</div>',st('i'))}
+  <div class="grid g2">
+    ${panelFlush('Wartungsintervalle & Erinnerungen',`<div class="tw"><table><thead><tr><th>Fahrrad</th><th>Aufgabe</th><th>Intervall</th><th>Nächste</th><th></th></tr></thead><tbody>${S.services.map((x,i)=>`<tr><td>${esc(bike(x.bikeId).model)}<div class="faint" style="font-size:12px">${esc(cust(bike(x.bikeId).customerId).name)}</div></td><td>${esc(x.task)}</td><td>${esc(x.interval)}</td><td>${x.next<td?`<span class="chip c-bad">${fmtDate(x.next)}</span>`:fmtDate(x.next)}</td><td class="r"><button class="btn sm" data-act="svcRemind" data-i="${i}">Erinnern</button></td></tr>`).join('')}</tbody></table></div>`,st('s'))}
+    ${panel('WearPredict – Verschleißhinweise',`<div class="stack">${S.bikes.map(b=>{const pct=Math.min(100,Math.round((b.km%3000)/3000*100));return `<div><div class="row" style="justify-content:space-between"><span>${esc(b.model)} · Kette</span><span class="num faint" style="font-size:12px">${fmtNum(b.km%3000)} / 3.000 km</span></div><div class="bar"><i style="width:${pct}%;background:${pct>85?'var(--bad)':pct>65?'var(--warn)':'var(--accent)'}"></i></div></div>`;}).join('')}<p class="faint" style="font-size:12px">Simuliert aus Kilometerstand und festem Intervall. Echte Vorhersage braucht Verschleißmessungen und Nutzungsdaten.</p></div>`,st('s'))}
+  </div>`;
+};
+function woDrawer(id){
+  const w=S.workshop.find(x=>x.id===id); drawerCtx={type:'wo',id};
+  const tot=w.positions.reduce((a,p)=>a+p.qty*p.price,0); const idx=WO_FLOW.indexOf(w.status); const next=WO_FLOW[idx+1];
+  const body=`<div class="row">${woChip(w.status)}<span class="chip nodot">Mechaniker: ${esc(w.mechanic)}</span><span class="chip nodot">fällig ${fmtDate(w.due)}</span></div>
+  <dl class="dl"><dt>Kunde</dt><dd><button class="btn sm ghost" data-act="openCustomer" data-id="${w.customerId}">${esc(cust(w.customerId).name)}</button></dd><dt>Fahrrad</dt><dd><button class="btn sm ghost" data-act="openBike" data-id="${w.bikeId}">${esc(bike(w.bikeId).brand+' '+bike(w.bikeId).model)}</button></dd></dl>
+  <div class="stack"><h3>Arbeitspositionen & Teile</h3>${w.positions.length?`<div class="tw"><table><thead><tr><th>Position</th><th>Art</th><th class="r">Menge</th><th class="r">Preis</th><th class="r">Summe</th><th></th></tr></thead><tbody>${w.positions.map((p,i)=>`<tr><td>${esc(p.t)}</td><td>${esc(p.kind)}</td><td class="r num">${fmtNum(p.qty,2)}</td><td class="r num">${eur(p.price)}</td><td class="r num">${eur(p.qty*p.price)}</td><td class="r"><button class="btn sm ghost danger" data-act="delPos" data-id="${w.id}" data-i="${i}" aria-label="Position löschen">${ic('x')}</button></td></tr>`).join('')}<tr><td colspan="4"><b>Gesamt (brutto, Demo)</b></td><td class="r num"><b>${eur(tot)}</b></td><td></td></tr></tbody></table></div>`:'<span class="muted">Noch keine Positionen.</span>'}
+  <form class="form" data-form="woPos" data-id="${w.id}"><div class="field wide"><label for="p_t">Bezeichnung</label><input class="input" id="p_t" name="t" list="invList" required placeholder="z. B. Bremsbeläge vorne"><datalist id="invList">${S.inventory.map(x=>`<option value="${esc(x.name)}">`).join('')}</datalist></div>
+  <div class="field"><label for="p_k">Art</label><select class="input" id="p_k" name="kind">${opts(['Arbeit','Teil'])}</select></div><div class="field"><label for="p_q">Menge / Std.</label><input class="input num" id="p_q" name="qty" type="number" step="0.25" value="1" min="0"></div><div class="field"><label for="p_p">Einzelpreis €</label><input class="input num" id="p_p" name="price" type="number" step="0.01" min="0" required></div><div class="wide"><button class="btn" type="submit">${ic('plus')}Position hinzufügen</button></div></form></div>
+  <div class="stack"><h3>Status</h3><div class="row">${WO_FLOW.map((f,i)=>`<span class="chip nodot ${i<idx?'c-ok':i===idx?'c-acc':''}">${i+1}. ${f}</span>`).join('')}</div>
+  <div class="row">${next?`<button class="btn primary" data-act="woNext" data-id="${w.id}">Weiter: ${next}</button>`:''}${w.status==='Kostenvoranschlag'||w.status==='Angenommen'?`<button class="btn" data-act="woSendKV" data-id="${w.id}" ${w.positions.length?'':'disabled'}>Kostenvoranschlag an Kunden senden</button>`:''}${idx>0?`<button class="btn ghost" data-act="woBack" data-id="${w.id}">Zurück</button>`:''}</div>
+  ${w.approval?`<div class="notice acc">${ic('quality')}Freigegeben von ${esc(w.approval.by)} am ${esc(w.approval.time)} (simuliert).</div>`:''}</div>
+  <div class="stack"><h3>Verlauf</h3><div class="list">${w.log.slice().reverse().map(l=>`<div class="li" style="padding:7px 0"><span class="mono faint" style="font-size:12px;white-space:nowrap">${esc(l.time)}</span><div class="grow">${esc(l.text)}</div></div>`).join('')}</div></div>`;
+  openDrawer(`${w.id} · ${w.title}`,body);
+}
+
+/* --- Lager --- */
+VIEWS.lager = () => {
+  const q=ui.invSearch.toLowerCase(); const cats=['alle',...new Set(S.inventory.map(x=>x.cat))];
+  const list=S.inventory.filter(x=>(ui.invCat==='alle'||x.cat===ui.invCat)&&(!q||(x.name+x.sku+x.loc).toLowerCase().includes(q)));
+  const low=S.inventory.filter(x=>x.stock<x.min);
+  return `
+  ${head('Lager & Verkauf','Bestand, Fitting-Teile, Verkaufsaufträge mit Zuordnung zu Kunde und Fahrrad, Garantie und Reklamation.')}
+  <div class="grid g4"><div class="panel kpi"><span class="label">Artikel</span><span class="v">${S.inventory.length}</span><span class="s">${S.inventory.reduce((a,x)=>a+x.stock,0)} Stück im Lager</span></div><div class="panel kpi"><span class="label">Unter Mindestbestand</span><span class="v" style="color:${low.length?'var(--warn)':'inherit'}">${low.length}</span><span class="s">${low.map(x=>x.name).slice(0,2).join(', ')||'alles im Soll'}</span></div><div class="panel kpi"><span class="label">Lagerwert (VK)</span><span class="v" style="font-size:26px">${eur(S.inventory.reduce((a,x)=>a+x.stock*x.price,0))}</span><span class="s">Demo-Preise</span></div><div class="panel kpi"><span class="label">Offene Verkäufe</span><span class="v">${S.sales.filter(x=>x.status==='offen').length}</span><span class="s">${S.warranty.length} Garantiefall</span></div></div>
+  ${panelFlush('Bestand',`<div class="panel-h"><div class="row"><input class="input search" type="search" id="invSearch" placeholder="Artikel, Nummer, Lagerplatz" value="${esc(ui.invSearch)}" data-input="invSearch"><select class="input" style="width:auto" data-change="invCat" aria-label="Kategorie">${opts(cats.map(c=>[c,c==='alle'?'Alle Kategorien':c]),ui.invCat)}</select></div><button class="btn sm primary" data-act="newItem">${ic('plus')}Artikel</button></div>
+  ${list.length?`<div class="tw"><table><thead><tr><th>Artikel</th><th>Kategorie</th><th>Lagerplatz</th><th class="r">Preis</th><th class="r">Bestand</th><th></th></tr></thead><tbody>${list.map(x=>`<tr><td>${esc(x.name)}<div class="faint mono" style="font-size:11px">${esc(x.sku)}</div></td><td>${esc(x.cat)}</td><td>${esc(x.loc)}</td><td class="r num">${eur(x.price)}</td><td class="r num">${x.stock<x.min?`<span class="chip c-warn">${x.stock} / min. ${x.min}</span>`:x.stock}</td><td class="r" style="white-space:nowrap"><button class="btn sm" data-act="stock" data-sku="${esc(x.sku)}" data-d="-1" aria-label="Bestand verringern">−</button> <button class="btn sm" data-act="stock" data-sku="${esc(x.sku)}" data-d="1" aria-label="Bestand erhöhen">+</button> <button class="btn sm ghost" data-act="editItem" data-sku="${esc(x.sku)}">Bearbeiten</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Kein Artikel gefunden.</div>'}`)}
+  <div class="grid g2">
+    ${panelFlush('Verkaufsaufträge',`<div class="tw"><table><thead><tr><th>Nr.</th><th>Kunde / Fahrrad</th><th>Artikel</th><th class="r">Summe</th><th>Status</th></tr></thead><tbody>${S.sales.map(x=>`<tr><td class="mono">${x.id}</td><td>${esc(cust(x.customerId).name)}<div class="faint" style="font-size:12px">${esc(bike(x.bikeId).model)}</div></td><td>${esc(x.items)}</td><td class="r num">${eur(x.total)}</td><td><select class="input" style="width:auto" data-change="saleStatus" data-id="${x.id}" aria-label="Status">${opts(['offen','bezahlt','storniert'],x.status)}</select></td></tr>`).join('')}</tbody></table></div>`,st('i'))}
+    ${panelFlush('Garantie & Reklamation',`<div class="tw"><table><thead><tr><th>Nr.</th><th>Artikel</th><th>Gemeldet</th><th>Status</th></tr></thead><tbody>${S.warranty.map(x=>`<tr><td class="mono">${x.id}</td><td>${esc(x.item)}<div class="faint" style="font-size:12px">${esc(cust(x.customerId).name)} · ${esc(bike(x.bikeId).model)}</div></td><td>${fmtDate(x.reported)}</td><td><select class="input" style="width:auto" data-change="warrStatus" data-id="${x.id}" aria-label="Status">${opts(['gemeldet','beim Hersteller','Ersatz erhalten','abgelehnt','erledigt'],x.status)}</select></td></tr>`).join('')}</tbody></table></div>`,st('i'))}
+  </div>`;
+};
+function itemDrawer(sku){
+  const x=sku?S.inventory.find(i=>i.sku===sku):{sku:'',name:'',cat:'Fitting-Teile',stock:0,min:0,price:0,loc:''};
+  openDrawer(sku?'Artikel bearbeiten':'Artikel anlegen',`<form class="form" data-form="item" data-sku="${esc(sku||'')}">
+    <div class="field"><label for="i_sku">Artikelnummer</label><input class="input mono" id="i_sku" name="sku" value="${esc(x.sku)}" required ${sku?'readonly':''}></div>
+    <div class="field wide"><label for="i_name">Bezeichnung</label><input class="input" id="i_name" name="name" value="${esc(x.name)}" required></div>
+    <div class="field"><label for="i_cat">Kategorie</label><select class="input" id="i_cat" name="cat">${opts(['Fitting-Teile','Verschleißteile','Werkstatt','Fahrräder','Zubehör'],x.cat)}</select></div>
+    <div class="field"><label for="i_loc">Lagerplatz</label><input class="input" id="i_loc" name="loc" value="${esc(x.loc)}"></div>
+    <div class="field"><label for="i_stock">Bestand</label><input class="input num" id="i_stock" name="stock" type="number" min="0" value="${x.stock}"></div>
+    <div class="field"><label for="i_min">Mindestbestand</label><input class="input num" id="i_min" name="min" type="number" min="0" value="${x.min}"></div>
+    <div class="field"><label for="i_price">Verkaufspreis €</label><input class="input num" id="i_price" name="price" type="number" step="0.01" min="0" value="${x.price}"></div>
+    <div class="wide row"><button class="btn primary" type="submit">Speichern</button>${sku?`<button class="btn danger" type="button" data-act="delItem" data-sku="${esc(sku)}">Löschen</button>`:''}</div></form>`);
+}
+
+/* --- Betrieb --- */
+VIEWS.betrieb = () => {
+  const days=[0,1,2,3,4].map(i=>dayOff(i)); const fitters=S.team.filter(t=>/fitter/i.test(t.role)||/Mechaniker/.test(t.role));
+  const load=(name,d)=>{ const f=S.sessions.filter(s=>s.fitter===name&&s.date===d&&s.status!=='abgesagt').length*2; const w=S.workshop.filter(w=>w.mechanic===name&&w.due===d&&w.status!=='Übergeben').reduce((a,w)=>a+Math.max(1,w.positions.filter(p=>p.kind==='Arbeit').reduce((x,p)=>x+p.qty,0)),0); return f+w; };
+  const rev=S.workshop.reduce((a,w)=>a+w.positions.reduce((x,p)=>x+p.qty*p.price,0),0); const lab=S.workshop.reduce((a,w)=>a+w.positions.filter(p=>p.kind==='Arbeit').reduce((x,p)=>x+p.qty*p.price,0),0);
+  const fitRev=S.sessions.filter(s=>s.status==='abgeschlossen').length*249;
+  return `
+  ${head('Team & Auswertung','Rollen, Standorte, Kapazität, Kennzahlen, Flotten und Anbindungen. Großteils Konzept mit Beispieldaten.')}
+  <div class="grid g4"><div class="panel kpi"><span class="label">Umsatz Fittings (Demo)</span><span class="v" style="font-size:26px">${eur(fitRev)}</span><span class="s">${S.sessions.filter(s=>s.status==='abgeschlossen').length} × 249 € Annahme</span></div><div class="panel kpi"><span class="label">Werkstatt-Volumen</span><span class="v" style="font-size:26px">${eur(rev)}</span><span class="s">davon Arbeit ${eur(lab)}</span></div><div class="panel kpi"><span class="label">Material-Anteil</span><span class="v">${Math.round((rev-lab)/Math.max(rev,1)*100)} %</span><span class="s">Profit ${st('s')}</span></div><div class="panel kpi"><span class="label">Standorte</span><span class="v">2</span><span class="s">MultiShop ${st('k')}</span></div></div>
+  ${panel('Capacity – Auslastung nächste 5 Tage',`<div class="tw"><div class="cal"><div></div>${days.map(d=>`<div class="label">${new Date(d+'T12:00').toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'})}</div>`).join('')}
+    ${fitters.map(t=>`<div style="padding:6px 0"><div>${esc(t.name)}</div><div class="faint" style="font-size:11px">${esc(t.role)}</div></div>${days.map(d=>{const h=load(t.name,d);const cap=t.hours/5;return `<div class="cell ${h>cap?'over':''}"><span class="num">${fmtNum(h)} h</span><div class="bar" style="margin-top:6px"><i style="width:${Math.min(100,h/cap*100)}%;background:${h>cap?'var(--bad)':'var(--accent)'}"></i></div></div>`;}).join('')}`).join('')}</div></div><p class="faint" style="font-size:12px;margin-top:8px">Fitting = 2 h, Werkstatt = Arbeitspositionen. Rot = über Tageskapazität.</p>`,st('s'))}
+  <div class="grid g2">
+    ${panelFlush('Team & Rollen',`<div class="tw"><table><thead><tr><th>Name</th><th>Rolle</th><th>Standort</th><th>Rechte</th></tr></thead><tbody>${S.team.map(t=>`<tr><td>${esc(t.name)}</td><td>${esc(t.role)}</td><td>${esc(t.loc)}</td><td style="font-size:12px" class="muted">${/Inhaber/.test(t.role)?'alles, inkl. Auswertung':/fitter/i.test(t.role)?'Kunden, Sitzungen, Berichte':'Werkstatt, Lager'}</td></tr>`).join('')}</tbody></table></div>`,st('k'))}
+    ${panelFlush('Fleet – Flotten',`<div class="tw"><table><thead><tr><th>Flotte</th><th class="r">Räder</th><th>Nächster Service</th></tr></thead><tbody><tr><td>Firmenräder Stadtwerke (Demo)</td><td class="r num">12</td><td>${fmtDate(dayOff(14))}</td></tr><tr><td>Lieferdienst Velo-Kurier (Demo)</td><td class="r num">6</td><td>${fmtDate(dayOff(3))}</td></tr></tbody></table></div>`,st('k'))}
+  </div>
+  ${panelFlush('OpenLink – Anbindungen',`<div class="tw"><table><thead><tr><th>System</th><th>Zweck</th><th>Status</th></tr></thead><tbody>${[['Kalender','Termine synchronisieren'],['E-Mail / SMS','Erinnerungen, Berichte versenden'],['Buchhaltung','Rechnungen übergeben'],['Kassensystem','Verkäufe abgleichen'],['Lieferanten','Bestellungen'],['Satteldruck-Sensoren','Messdaten importieren'],['Videoquellen','Aufnahmen zuordnen'],['Offene API','Datenaustausch mit Partnern']].map(([n,z])=>`<tr><td>${n}</td><td class="muted">${z}</td><td><span class="chip">nicht verbunden</span></td></tr>`).join('')}</tbody></table></div><div class="panel-b"><p class="faint" style="font-size:12px">Keine dieser Anbindungen existiert. Jede braucht eine echte Schnittstelle ${st('x')}. Network (Datenaustausch zwischen Betrieben) und Academy (Schulungen) sind Konzepte ${st('k')}.</p></div>`)}`;
+};
+
+/* --- Module overview --- */
+const MODULES = [
+  ['Bikefit','Bikefitting','Kunden, Fahrräder, Sitzungen, Anamnese, Messwerte, Anpassungen, Bericht','i','sitzung'],
+  ['FitQuality','Messung','Regelbasierte Prüfung auf Vollständigkeit und Vergleichbarkeit','s','qualitaet'],
+  ['FitReplay','Messung','Vergleich von Endpositionen über Sitzungen','i','verlauf'],
+  ['ProgressLoop','Bikefitting','Nachkontrollen, Rückmeldungen, neue Sitzung aus Historie','i','followup'],
+  ['BikePassport','Daten','Digitale Akte je Fahrrad inkl. Fitting und Service','i','fahrraeder'],
+  ['Motion / Motion360','Analyse','Videoarbeitsplatz, Mehrkamera-Konzept; Figur und Winkel simuliert','s','motion'],
+  ['FitFrame Lab','Hardware','UniversalBase, CleatLab, PositionTrack, MotionTiles, CameraFit, FootMap, SaddleMap','k','hardware'],
+  ['FitFrame AI','Analyse','Zusammenfassung, Datenlücken, Vergleich, Kundennachricht (regelbasiert)','s','ki'],
+  ['Connect / Kundenportal','Kunden','Berichte, BikePassport, Freigaben, Nachrichten','s','portal'],
+  ['Approve','Werkstatt','Kostenvoranschlag, Kundenfreigabe mit Zeitstempel','s','werkstatt'],
+  ['Workshop','Werkstatt','Aufträge, Positionen, Status, Übergabe','i','werkstatt'],
+  ['Service','Werkstatt','Wartungsintervalle, Erinnerungen','s','werkstatt'],
+  ['Workshop AI','Werkstatt','Vorschläge für Arbeitspositionen aus Fahrradakte','k','werkstatt'],
+  ['WearPredict','Werkstatt','Verschleißhinweise aus Kilometerstand','s','werkstatt'],
+  ['Stock','Lager','Bestand, Mindestbestand, Artikelpflege','i','lager'],
+  ['Retail','Verkauf','Verkaufsaufträge, Garantie und Reklamation','i','lager'],
+  ['Capacity','Betrieb','Auslastung Fitter und Werkstatt','s','betrieb'],
+  ['Profit','Betrieb','Umsatz- und Materialkennzahlen','s','betrieb'],
+  ['Team / MultiShop','Betrieb','Rollen, Rechte, mehrere Standorte','k','betrieb'],
+  ['Fleet','Betrieb','Flottenverwaltung','k','betrieb'],
+  ['OpenLink','Integration','Kalender, Buchhaltung, Kasse, Sensoren, API','x','betrieb'],
+  ['Network','Integration','Kontrollierter Datenaustausch zwischen Betrieben','k','betrieb'],
+  ['Academy','Wissen','Schulungen und Protokoll-Vorlagen für Fitter','k','module']
+];
+VIEWS.module = () => `
+  ${head('Modulübersicht','Die gesamte geplante FitFrame-Plattform. Bikefitting ist der Kern, alle anderen Module erweitern ihn.')}
+  ${panel('Legende',`<div class="grid g4">${Object.entries(STATUS).map(([k,v])=>`<div class="row" style="flex-wrap:nowrap;align-items:flex-start">${st(k)}<span class="muted" style="font-size:12.5px">${v[2]}</span></div>`).join('')}</div>`)}
+  ${panelFlush('',`<div class="tw"><table><thead><tr><th>Modul</th><th>Bereich</th><th>Inhalt</th><th>Stand in der Demo</th><th></th></tr></thead><tbody>${MODULES.map(([n,a,d,s,r])=>`<tr><td><b style="font-weight:600">${n}</b></td><td class="muted">${a}</td><td>${d}</td><td>${st(s)}</td><td class="r">${r!=='module'?`<button class="btn sm" data-nav="${r}">Öffnen</button>`:''}</td></tr>`).join('')}</tbody></table></div>`)}
+  ${panel('Was für eine echte Produktversion fehlt',`<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>Backend mit Datenbank, Anmeldung, Rollen und Mandantentrennung</li><li>EU-Hosting, Backups, Verschlüsselung, Lösch- und Exportfunktion (DSGVO)</li><li>PDF-Export der Berichte, E-Mail- und SMS-Versand</li><li>Echte Videoaufnahme, Kalibrierung und geprüfte Gelenkerkennung</li><li>Gedruckte und getestete Hardware mit dokumentierter Genauigkeit</li><li>Anbindung an Sprachmodell mit Auftragsverarbeitung</li><li>Schnittstellen zu Kalender, Kasse, Buchhaltung und Sensoren</li><li>Validierung der Abläufe mit echten Bikefittern</li></ul>`)}
+  ${panel('Über diese Demo',`<p class="muted" style="max-width:70ch">Eine einzige HTML-Datei ohne Server. Änderungen werden nur lokal in diesem Browser gespeichert und sind auf anderen Geräten nicht sichtbar. „Demo zurücksetzen“ stellt die Beispieldaten wieder her. Alle Personen, Fahrräder, Preise und Messwerte sind erfunden und keine fachlichen Vorgaben.</p>`)}`;
+
+/* ---------- After render hooks ---------- */
+function afterRender(){
+  labelTables(document.getElementById('view'));
+  cancelAnimationFrame(motion.raf); motion.playing=false; motion.last=0;
+  if(ui.route==='motion'){ const cv=document.getElementById('motionCanvas'); if(cv){ drawMotion(cv); } }
+  if(ui.focus){ const el=document.getElementById(ui.focus); if(el){ el.focus(); const v=el.value; try{el.setSelectionRange(v.length,v.length);}catch(e){} } ui.focus=null; }
+}
+
+/* ---------- Actions ---------- */
+function newSessionDrawer(cid){
+  openDrawer('Neue Fitting-Sitzung',`<form class="form" data-form="newSession">
+    <div class="field wide"><label for="ns_c">Kunde</label><select class="input" id="ns_c" name="cid" data-change="nsCust">${S.customers.map(c=>`<option value="${c.id}" ${c.id===cid?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div>
+    <div class="field wide"><label for="ns_b">Fahrrad</label><select class="input" id="ns_b" name="bid">${bikesOf(cid||S.customers[0].id).map(b=>`<option value="${b.id}">${esc(b.brand+' '+b.model)}</option>`).join('')}</select></div>
+    <div class="field"><label for="ns_t">Art</label><select class="input" id="ns_t" name="type">${opts(['Erstfitting','Nachkontrolle','Neues Fahrrad','Cleat-Fitting','Sattelberatung'])}</select></div>
+    <div class="field"><label for="ns_d">Datum</label><input class="input" type="date" id="ns_d" name="date" value="${today()}" required></div>
+    <div class="field"><label for="ns_ti">Uhrzeit</label><input class="input" type="time" id="ns_ti" name="time" value="15:00"></div>
+    <div class="field"><label for="ns_f">Fitter</label><select class="input" id="ns_f" name="fitter">${opts(S.team.filter(t=>/fitter/i.test(t.role)).map(t=>t.name))}</select></div>
+    <div class="field wide"><label for="ns_copy"><input type="checkbox" id="ns_copy" name="copy" checked> Endwerte der letzten Sitzung mit diesem Fahrrad als Ausgangsposition übernehmen</label></div>
+    <div class="wide"><button class="btn primary" type="submit">Sitzung anlegen</button></div></form>`);
+}
+function createSession(d){
+  const id=uid('s');
+  const prev=S.sessions.filter(s=>s.bikeId===d.bid&&(Object.keys(s.after).length||Object.keys(s.before).length)).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const before={}; if(d.copy&&prev){ const end={...prev.before,...prev.after}; Object.entries(end).forEach(([k,m])=>before[k]={...m,source:m.source,method:m.method}); }
+  S.sessions.push({id,customerId:d.cid,bikeId:d.bid,date:d.date,time:d.time||'',type:d.type,status:'geplant',fitter:d.fitter,version:1,anamnesis:{goal:'',complaints:'',training:'',experience:'',previous:prev?`${prev.type} vom ${fmtDate(prev.date)}`:'',limits:'',comfort:''},before,after:{},changes:[],notes:'',feedback:[],followUps:[],check:{},comp:[]});
+  audit(`Sitzung angelegt: ${cust(d.cid).name}, ${d.type} am ${fmtDate(d.date)}${prev&&d.copy?' (Ausgangswerte übernommen)':''}`,id);
+  return id;
+}
+
+const ACT = {
+  menu(){ document.getElementById('side').classList.toggle('open'); },
+  close(){ closeDrawer(); closeMenu(); },
+  reset(){ openDrawer('Demo zurücksetzen',`<p>Alle Änderungen in diesem Browser werden gelöscht und die Beispieldaten neu geladen.</p><div class="row"><button class="btn primary" data-act="resetConfirm">Zurücksetzen</button><button class="btn" data-act="close">Abbrechen</button></div>`); },
+  resetConfirm(){ S=seed(); save(); closeDrawer(); ui.reportFor=null; ui.aiOut=null; render(); toast('Demo-Daten wiederhergestellt'); },
+  apptFilter(el){ ui.apptFilter=el.dataset.v; render(); },
+  fuFilter(el){ ui.fuFilter=el.dataset.v; render(); },
+  newSession(el){ newSessionDrawer(el.dataset.cust||S.customers[0].id); },
+  openSession(el){ ui.sess=el.dataset.id; ui.sessTab=TABALIAS[el.dataset.tab]||el.dataset.tab||'anamnese'; closeDrawer(); go('sitzung'); },
+  startSession(el){ const s=sess(el.dataset.id); s.status='in Arbeit'; audit(`Fitting gestartet: ${cust(s.customerId).name}`,s.id); save(); ui.sess=s.id; ui.sessTab='anamnese'; go('sitzung'); toast('Fitting gestartet'); },
+  finishSession(el){ const s=sess(el.dataset.id); const sel={value:'abgeschlossen',dataset:{id:s.id}}; CHG.sessStatus(sel); },
+  addComp(el){ const s=sess(el.dataset.id); const f=checkFindings(s).find(x=>x.title===el.dataset.t); s.comp.push({t:`${f.title} – ${f.text.split('.')[0]}`,status:'geplant'}); audit(`Ausgleich eingeplant: ${f.title}`,s.id); save(); render(); toast('Ausgleich eingeplant'); },
+  prepChange(el){ ui.prepKey=el.dataset.key; render(); const h=document.getElementById('changeHead'); if(h) h.scrollIntoView({behavior:'smooth',block:'start'}); const v=document.getElementById('m_val_after'); if(v) v.focus({preventScroll:true}); },
+  findCustomer(){ ui.focus='custSearch'; go('kunden'); },
+  scrollToday(){ const t=document.getElementById('today'); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); },
+  stInfo(el){ const k=STATUS[el.dataset.k]; toast(`${k[1]}: ${k[2]}`); },
+  theme(){ theme=theme==='dark'?'light':'dark'; try{localStorage.setItem('fitframe-theme',theme);}catch(e){} applyTheme(); if(ui.route==='mehr') render(); },
+  setTheme(el){ theme=el.dataset.v; try{localStorage.setItem('fitframe-theme',theme);}catch(e){} applyTheme(); render(); },
+  sessTab(el){ ui.sessTab=el.dataset.v; render(); },
+  openCustomer(el){ customerDrawer(el.dataset.id); },
+  openBike(el){ bikeDrawer(el.dataset.id); },
+  openWO(el){ woDrawer(el.dataset.id); },
+  clearSearch(){ ui.search=''; render(); },
+  compareCustomer(el){ const ss=sessOf(el.dataset.id).filter(s=>Object.keys(s.before).length); if(ss.length>=2){ui.cmpA=ss[ss.length-2].id; ui.cmpB=ss[ss.length-1].id;} closeDrawer(); go('verlauf'); },
+  consent(el){ const c=cust(el.dataset.id); c.consent=true; audit(`Einwilligung erfasst: ${c.name}`); save(); toast('Einwilligung gespeichert (Demo, ohne Unterschrift)'); if(drawerCtx&&drawerCtx.type==='customer') customerDrawer(c.id); render(); },
+  newCustomer(){ openDrawer('Kunde anlegen',`<form class="form" data-form="customer"><div class="field wide"><label for="nc_n">Name</label><input class="input" id="nc_n" name="name" required placeholder="Vor- und Nachname (fiktiv)"></div><div class="field"><label for="nc_e">E-Mail</label><input class="input" id="nc_e" name="email" type="email" placeholder="name@example.com"></div><div class="field"><label for="nc_p">Telefon</label><input class="input" id="nc_p" name="phone" type="tel"></div><div class="field"><label for="nc_d">Disziplin</label><select class="input" id="nc_d" name="discipline">${opts(['Rennrad','Gravel','MTB','Triathlon','E-Bike Pendeln','Allroad'])}</select></div>${[["height","Körpergröße","cm"],["inseam","Schrittlänge","cm"],["torso","Rumpflänge","cm"],["arm","Armlänge","cm"],["footR","Fußlänge","mm"]].map(([k,l,u])=>`<div class="field"><label for="nc_${k}">${l} (${u})</label><input class="input num" id="nc_${k}" name="${k}" type="number" step="0.5" inputmode="decimal"></div>`).join("")}<div class="field"><label for="nc_ham">Hintere Oberschenkel</label><select class="input" id="nc_ham" name="hamstring">${opts(["unauffällig","eingeschränkt"])}</select></div><div class="field wide"><label><input type="checkbox" name="est" checked> Fehlende Maße aus der Körpergröße schätzen</label></div><div class="field wide"><label><input type="checkbox" name="consent"> Einwilligung zur Datenverarbeitung liegt vor</label></div><div class="wide notice">${ic('info')}Bitte keine echten Personendaten eingeben. Die Demo speichert nur unverschlüsselt im Browser.</div><div class="wide"><button class="btn primary" type="submit">Kunde anlegen</button></div></form>`); },
+  newBike(el){ openDrawer('Fahrrad anlegen',`<form class="form" data-form="bike" data-cid="${el.dataset.id}"><div class="field"><label for="nb_b">Marke</label><input class="input" id="nb_b" name="brand" required></div><div class="field"><label for="nb_m">Modell</label><input class="input" id="nb_m" name="model" required></div><div class="field"><label for="nb_t">Typ</label><select class="input" id="nb_t" name="type">${opts(['Rennrad','Gravel','MTB','Triathlon','E-Bike','Trekking'])}</select></div><div class="field"><label for="nb_s">Größe</label><input class="input" id="nb_s" name="size"></div><div class="field"><label for="nb_p">Pedalsystem</label><select class="input" id="nb_p" name="pedal">${opts(['Shimano SPD-SL','Shimano SPD','Look Keo','Wahoo Speedplay','Plattform'])}</select></div><div class="field"><label for="nb_f">Rahmennummer</label><input class="input mono" id="nb_f" name="frameNo" placeholder="DEMO-…"></div><div class="wide"><button class="btn primary" type="submit">Fahrrad speichern</button></div></form>`); },
+  saveKm(el){ const b=bike(el.dataset.id); const v=Number(document.getElementById('kmInput').value); if(!(v>=0)){toast('Bitte einen gültigen Kilometerstand eingeben',true);return;} audit(`Kilometerstand ${b.model}: ${b.km} → ${v}`); b.km=v; save(); toast('Kilometerstand gespeichert'); bikeDrawer(b.id); render(); },
+  delMeasure(el){ const s=sess(el.dataset.id); const k=el.dataset.key; const side=el.dataset.side; const m=s[side][k]; delete s[side][k]; audit(`Wert entfernt (${side==='before'?'vorher':'nachher'}): ${MK[k].label} ${fmtNum(m.value)} ${MK[k].unit}`,s.id); save(); render(); toast('Wert entfernt, im Audit-Log protokolliert'); },
+  simCapture(el){ const s=sess(el.dataset.id); const c=cust(s.customerId); if(!c.body.height&&!c.body.inseam){ toast('Bitte zuerst Körpergröße oder Schrittlänge eintragen',true); customerDrawer(c.id); return; }
+    const {n}=simCaptureInto(s,'before',true); if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit';
+    audit(`Simulierte Messwerterfassung aus Körpermaßen: ${n} Werte`,s.id); save(); render(); toast(`${n} Werte aus den Körpermaßen von ${c.name.split(' ')[0]} simuliert`); },
+  motionScan(){ const s=sess(ui.motionSess); const side=ui.motionSide==='after'?'after':'before'; const {r}=simCaptureInto(s,side,false); audit(`Simulierter Scan gespeichert (${side==='after'?'nachher':'vorher'}): Knie ${r.kneeMax}°, Hüfte ${r.hipMin}°, Oberkörper ${r.torso}°`,s.id); save(); render(); toast('Simulierte Winkel in der Sitzung gespeichert'); },
+  estBody(el){ const c=cust(el.dataset.id); const n=estimateBody(c); if(n<0){ toast('Bitte zuerst die Körpergröße eintragen',true); return; } audit(`${n} Körpermaße geschätzt: ${c.name}`); save(); customerDrawer(c.id); render(); toast(n?`${n} fehlende Maße aus der Körpergröße geschätzt`:'Es fehlen keine schätzbaren Maße'); },
+  fitView(el){ ui.fitView=el.dataset.v; render(); },
+  genReport(el){ ui.reportFor=el.dataset.id; audit('Bericht erzeugt (simuliert)',el.dataset.id); save(); render(); toast('Bericht erzeugt'); },
+  copyReport(el){ copyText(reportText(sess(el.dataset.id))); },
+  portalReport(el){ const s=sess(el.dataset.id); openDrawer('Bericht',reportHtml(s)); },
+  remind(el){ const s=sess(el.dataset.id); audit(`Erinnerung an ${cust(s.customerId).name} vorgemerkt (kein Versand)`,s.id); save(); toast('Erinnerung protokolliert – Versand braucht eine Integration'); },
+  fuFeedback(el){ const s=sess(el.dataset.id); openDrawer('Rückmeldung erfassen',`<form class="form" data-form="feedback" data-id="${s.id}" data-i="${el.dataset.i}"><div class="field"><label for="fb_s">Komfort (1–10, subjektiv)</label><input class="input num" id="fb_s" name="score" type="number" min="1" max="10" value="7" required></div><div class="field wide"><label for="fb_t">Aussage der Kundin / des Kunden</label><textarea class="input" id="fb_t" name="text" required></textarea></div><div class="wide"><label><input type="checkbox" name="done" checked> Nachkontrolle damit erledigt</label></div><div class="wide"><button class="btn primary" type="submit">Speichern</button></div></form>`); },
+  fuNewSession(el){ const s=sess(el.dataset.id); const id=createSession({cid:s.customerId,bid:s.bikeId,date:today(),time:'',type:'Nachkontrolle',fitter:s.fitter,copy:true}); s.followUps[Number(el.dataset.i)].status='erledigt'; save(); ui.sess=id; ui.sessTab='ausgang'; go('sitzung'); toast('Nachkontrolle angelegt, Ausgangswerte aus Vorsitzung übernommen'); },
+  motionSide(el){ ui.motionSide=el.dataset.v; motion.range=null; render(); },
+  motionPlay(){ motion.playing=!motion.playing; motion.last=0; const b=document.getElementById('playBtn'); if(b) b.innerHTML=motion.playing?ic('pause')+'Pause':ic('play')+'Abspielen'; if(motion.playing) motion.raf=requestAnimationFrame(motionStep); },
+  motionMark(){ if(!motion.cur){toast('Noch kein Bild berechnet',true);return;} S.motionMarks.unshift({id:uid('mk'),sid:ui.motionSess,side:ui.motionSide,...motion.cur,time:nowStamp()}); save(); const was=motion.playing; render(); if(was) ACT.motionPlay(); toast('Zeitpunkt markiert (simulierte Werte)'); },
+  delMark(el){ S.motionMarks=S.motionMarks.filter(m=>m.id!==el.dataset.id); save(); render(); },
+  hwSel(el){ ui.hwSel=el.dataset.id; render(); },
+  cleatSys(el){ ui.cleatSys=el.dataset.v; render(); },
+  ai(el){ const s=sess(ui.aiSess); const a=AI.find(x=>x[0]===el.dataset.k); ui.aiOut={label:a[1],text:a[2](s)}; render(); },
+  aiAccept(){ const s=sess(ui.aiSess); const t=document.getElementById('aiText').value.trim(); if(!t){toast('Der Vorschlag ist leer',true);return;} s.notes=(s.notes?s.notes+'\n\n':'')+`[KI-Vorschlag geprüft, ${nowStamp()}]\n`+t; audit(`KI-Vorschlag „${ui.aiOut.label}“ nach Prüfung übernommen`,s.id); ui.aiOut=null; save(); render(); toast('In die Notizen der Sitzung übernommen'); },
+  aiCopy(){ copyText(document.getElementById('aiText').value); },
+  aiDiscard(){ ui.aiOut=null; render(); },
+  approve(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); const c=cust(w.customerId); w.approval={time:nowStamp(),by:c.name}; w.status='In Arbeit'; w.log.push({time:nowStamp(),text:`Kostenvoranschlag im Portal freigegeben von ${c.name} (simuliert)`}); audit(`Freigabe ${w.id} durch ${c.name}`); save(); render(); toast('Freigabe gespeichert – Auftrag ist jetzt in Arbeit'); },
+  decline(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); w.status='Kostenvoranschlag'; w.log.push({time:nowStamp(),text:'Kostenvoranschlag im Portal abgelehnt (simuliert)'}); audit(`Freigabe ${w.id} abgelehnt`); save(); render(); toast('Abgelehnt – Auftrag zurück auf Kostenvoranschlag'); },
+  woFilter(el){ ui.woFilter=el.dataset.v; render(); },
+  newWO(){ openDrawer('Werkstattauftrag anlegen',`<form class="form" data-form="newWO"><div class="field wide"><label for="nw_b">Fahrrad</label><select class="input" id="nw_b" name="bid">${S.bikes.map(b=>`<option value="${b.id}">${esc(cust(b.customerId).name)} · ${esc(b.brand+' '+b.model)}</option>`).join('')}</select></div><div class="field wide"><label for="nw_t">Auftrag</label><input class="input" id="nw_t" name="title" required placeholder="z. B. Schaltung einstellen"></div><div class="field"><label for="nw_d">Fällig</label><input class="input" type="date" id="nw_d" name="due" value="${dayOff(2)}"></div><div class="field"><label for="nw_m">Mechaniker</label><select class="input" id="nw_m" name="mechanic">${opts(S.team.filter(t=>/Mechaniker/.test(t.role)).map(t=>t.name))}</select></div><div class="wide"><button class="btn primary" type="submit">Auftrag anlegen</button></div></form>`); },
+  woNext(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); const i=WO_FLOW.indexOf(w.status); const n=WO_FLOW[i+1]; if(n==='In Arbeit'&&!w.approval&&w.positions.length){ toast('Ohne Kundenfreigabe weiter – bitte Freigabe dokumentieren',true); } w.status=n; w.log.push({time:nowStamp(),text:`Status: ${n}`}); audit(`${w.id}: ${WO_FLOW[i]} → ${n}`); save(); woDrawer(w.id); render(); },
+  woBack(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); const i=WO_FLOW.indexOf(w.status); w.status=WO_FLOW[i-1]; w.log.push({time:nowStamp(),text:`Status zurückgesetzt: ${w.status}`}); audit(`${w.id}: ${WO_FLOW[i]} → ${w.status}`); save(); woDrawer(w.id); render(); },
+  woSendKV(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); w.status='Freigabe ausstehend'; w.log.push({time:nowStamp(),text:'Kostenvoranschlag ins Kundenportal gestellt (simuliert, kein Versand)'}); audit(`${w.id}: Kostenvoranschlag gesendet`); save(); woDrawer(w.id); render(); toast('Im Kundenportal zur Freigabe sichtbar'); },
+  delPos(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); const p=w.positions.splice(Number(el.dataset.i),1)[0]; w.log.push({time:nowStamp(),text:`Position entfernt: ${p.t}`}); save(); woDrawer(w.id); render(); },
+  svcRemind(el){ const x=S.services[Number(el.dataset.i)]; audit(`Service-Erinnerung vorgemerkt: ${bike(x.bikeId).model}, ${x.task} (kein Versand)`); save(); toast('Erinnerung protokolliert – Versand braucht eine Integration'); },
+  stock(el){ const x=S.inventory.find(i=>i.sku===el.dataset.sku); const d=Number(el.dataset.d); if(x.stock+d<0){toast('Bestand kann nicht negativ sein',true);return;} x.stock+=d; audit(`Bestand ${x.name}: ${x.stock-d} → ${x.stock}`); save(); render(); },
+  newItem(){ itemDrawer(null); },
+  editItem(el){ itemDrawer(el.dataset.sku); },
+  delItem(el){ S.inventory=S.inventory.filter(i=>i.sku!==el.dataset.sku); audit(`Artikel gelöscht: ${el.dataset.sku}`); save(); closeDrawer(); render(); toast('Artikel gelöscht'); }
+};
+function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
+
+const FORMS = {
+  check(f,data){ const s=sess(f.dataset.id); const c=cust(s.customerId); const ch={};
+    CHECKS.forEach(t=>(t.side?['L','R']:['']).forEach(sd=>{ const v=data.get(t.k+sd); if(v!==null&&v!=='') ch[t.k+sd]=t.type==='num'?Number(v):v; }));
+    s.check=ch;
+    if(ch.hamstring!==undefined) c.flex.hamstring=ch.hamstring>10?`eingeschränkt (Finger-Boden ${ch.hamstring} cm)`:`unauffällig (Finger-Boden ${ch.hamstring} cm)`;
+    if(ch.hipFlexL||ch.hipFlexR) c.flex.hip=[ch.hipFlexL&&'links '+ch.hipFlexL,ch.hipFlexR&&'rechts '+ch.hipFlexR].filter(Boolean).join(', ');
+    if(ch.ankleL||ch.ankleR) c.flex.ankle=`Knie-zur-Wand L ${ch.ankleL??'–'} cm, R ${ch.ankleR??'–'} cm`;
+    if(ch.sitBone){ c.body.sitBone=ch.sitBone; c.est=(c.est||[]).filter(x=>x!=='sitBone'); }
+    if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit';
+    const n=checkFindings(s).filter(x=>x.lvl!=='ok').length; audit(`Körpercheck gespeichert: ${Object.keys(ch).length} Ergebnisse, ${n} Auffälligkeiten`,s.id); save(); render(); window.scrollTo({top:0,behavior:'smooth'}); toast(n?`${n} Punkte gefunden – siehe Ergebnis`:'Keine Auffälligkeiten gefunden'); },
+  body(f,data){ const c=cust(f.dataset.id); c.est=c.est||[]; BODY.forEach(([k])=>{ const v=data.get(k); const nv=v===''?null:Number(v); if(nv!==c.body[k]) c.est=c.est.filter(x=>x!==k); c.body[k]=nv; }); ['hamstring','hip','ankle'].forEach(k=>c.flex[k]=data.get(k)); audit(`Körpermaße aktualisiert: ${c.name}`); save(); toast('Körpermaße gespeichert'); if(f.dataset.ctx!=='session') customerDrawer(c.id); render(); },
+  anamnesis(f,data){ const s=sess(f.dataset.id); Object.keys(s.anamnesis).forEach(k=>{ if(data.has(k)) s.anamnesis[k]=data.get(k).trim(); }); s.notes=data.get('notes'); audit('Anamnese gespeichert',s.id); save(); render(); toast('Anamnese gespeichert'); },
+  measure(f,data){ const s=sess(f.dataset.id); const k=data.get('key'); const v=parseFloat(String(data.get('value')).replace(',','.')); if(isNaN(v)){toast('Bitte einen Zahlenwert eingeben',true);return;}
+    const old=s.before[k]; const unc=data.get('unc'); s.before[k]={key:k,value:v,method:data.get('method'),source:data.get('source'),unc:unc===''?null:Number(unc),time:nowStamp()};
+    if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit';
+    audit(old?`Ausgangswert korrigiert: ${MK[k].label} ${fmtNum(old.value)} → ${fmtNum(v)} ${MK[k].unit}`:`Ausgangswert erfasst: ${MK[k].label} ${fmtNum(v)} ${MK[k].unit}`,s.id); save(); render(); toast(`${MK[k].label} gespeichert`); },
+  change(f,data){ ui.prepKey=null; const s=sess(f.dataset.id); const k=data.get('key'); const v=parseFloat(String(data.get('value')).replace(',','.')); const reason=String(data.get('reason')||'').trim();
+    if(isNaN(v)){toast('Bitte einen Zahlenwert eingeben',true);return;} if(!reason){toast('Bitte eine Begründung angeben',true);return;}
+    const from=s.after[k]?s.after[k].value:(s.before[k]?s.before[k].value:null);
+    const unc=data.get('unc'); s.after[k]={key:k,value:v,method:data.get('method'),source:data.get('source'),unc:unc===''?null:Number(unc),time:nowStamp()};
+    s.changes.push({key:k,from,to:v,reason,time:nowStamp()}); if(s.status!=='abgeschlossen') s.status='in Arbeit'; else s.version++;
+    audit(`${MK[k].label}: ${fmtNum(from)} → ${fmtNum(v)} ${MK[k].unit}${s.status==='abgeschlossen'?` (neue Version ${s.version})`:''}`,s.id); save(); render(); toast(from==null?'Änderung dokumentiert – kein Ausgangswert vorhanden':'Änderung dokumentiert'); },
+  newSession(f,data){ const id=createSession({cid:data.get('cid'),bid:data.get('bid'),date:data.get('date'),time:data.get('time'),type:data.get('type'),fitter:data.get('fitter'),copy:data.get('copy')==='on'}); save(); closeDrawer(); ui.sess=id; ui.sessTab='anamnese'; go('sitzung'); toast('Sitzung angelegt'); },
+  followup(f,data){ const s=sess(data.get('sid')); const days=Number(data.get('days')); const due=new Date(s.date+'T12:00'); due.setDate(due.getDate()+days); s.followUps.push({days,due:iso(due),status:'offen'}); audit(`Nachkontrolle (${days} Tage) angelegt`,s.id); save(); render(); toast(`Nachkontrolle für ${fmtDate(iso(due))} angelegt`); },
+  feedback(f,data){ const s=sess(f.dataset.id); s.feedback.push({date:today(),score:Number(data.get('score')),text:String(data.get('text')).trim()}); if(data.get('done')==='on') s.followUps[Number(f.dataset.i)].status='erledigt'; audit(`Rückmeldung erfasst (${data.get('score')}/10)`,s.id); save(); closeDrawer(); render(); toast('Rückmeldung gespeichert'); },
+  cleatTransfer(f,data){ const s=sess(data.get('sid')); const fore=parseFloat(data.get('fore')); const rot=data.get('rot');
+    s.before.cleatFore=s.before.cleatFore||{...mv('cleatFore',fore,'CleatLab (Prototyp, nicht validiert)','manuell eingegeben',null),time:nowStamp()};
+    if(s.before.cleatFore.value!==fore){ s.after.cleatFore={...mv('cleatFore',fore,'CleatLab (Prototyp, nicht validiert)','manuell eingegeben',null),time:nowStamp()}; }
+    if(rot!==''){ s.after.cleatRotR={...mv('cleatRotR',Number(rot),'CleatLab (Prototyp, nicht validiert)','manuell eingegeben',null),time:nowStamp()}; }
+    audit(`CleatLab-Werte übergeben (${ui.cleatSys}, nicht validiert)`,s.id); save(); toast(`An Sitzung von ${cust(s.customerId).name} übergeben`); render(); },
+  message(f,data){ const t=String(data.get('text')).trim(); if(!t) return; (S.messages[f.dataset.id]=S.messages[f.dataset.id]||[]).push({from:'Kunde',time:nowStamp(),text:t}); save(); render(); toast('Nachricht gespeichert (kein echter Versand)'); },
+  customer(f,data){ const id=uid('c'); const num=k=>{const v=data.get(k);return v===''||v===null?null:Number(v);}; const c={id,name:data.get('name').trim(),email:data.get('email'),phone:data.get('phone'),since:today(),discipline:data.get('discipline'),consent:data.get('consent')==='on',body:{height:num('height'),inseam:num('inseam'),torso:num('torso'),arm:num('arm'),shoulder:null,footL:num('footR'),footR:num('footR'),sitBone:null},flex:{hamstring:data.get('hamstring'),hip:'',ankle:''},tags:['Neu'],est:[]};
+    if(data.get('est')==='on') estimateBody(c); S.customers.push(c); audit(`Kunde angelegt: ${c.name}`); save(); render(); customerDrawer(id); toast('Kunde angelegt – jetzt Fahrrad anlegen'); },
+  bike(f,data){ const id=uid('b'); const cid=f.dataset.cid; S.bikes.push({id,customerId:cid,name:data.get('model'),brand:data.get('brand'),model:data.get('model'),size:data.get('size'),year:new Date().getFullYear(),type:data.get('type'),frameNo:data.get('frameNo')||'–',pedal:data.get('pedal'),saddle:'–',km:0}); audit(`Fahrrad angelegt: ${data.get('brand')} ${data.get('model')}`); save(); customerDrawer(cid); render(); toast('Fahrrad angelegt'); },
+  woPos(f,data){ const w=S.workshop.find(x=>x.id===f.dataset.id); const price=Number(data.get('price')), qty=Number(data.get('qty')); if(!(price>=0)||!(qty>0)){toast('Menge und Preis prüfen',true);return;} w.positions.push({t:data.get('t'),kind:data.get('kind'),qty,price}); if(w.status==='Angenommen') w.status='Kostenvoranschlag'; w.log.push({time:nowStamp(),text:`Position hinzugefügt: ${data.get('t')}`}); save(); woDrawer(w.id); render(); },
+  newWO(f,data){ const b=bike(data.get('bid')); const n=Math.max(...S.workshop.map(w=>Number(w.id.split('-')[1])))+1; const id='WO-'+n; S.workshop.unshift({id,customerId:b.customerId,bikeId:b.id,title:data.get('title'),status:'Angenommen',created:today(),due:data.get('due'),mechanic:data.get('mechanic'),positions:[],log:[{time:nowStamp(),text:'Auftrag angenommen'}],approval:null}); audit(`Werkstattauftrag ${id} angelegt`); save(); render(); woDrawer(id); toast(`${id} angelegt`); },
+  item(f,data){ const sku=f.dataset.sku; const rec={sku:data.get('sku').trim(),name:data.get('name').trim(),cat:data.get('cat'),loc:data.get('loc'),stock:Number(data.get('stock')),min:Number(data.get('min')),price:Number(data.get('price'))};
+    if(!sku&&S.inventory.some(i=>i.sku===rec.sku)){toast('Diese Artikelnummer gibt es schon',true);return;}
+    if(sku){ Object.assign(S.inventory.find(i=>i.sku===sku),rec); audit(`Artikel bearbeitet: ${rec.name}`);} else { S.inventory.push(rec); audit(`Artikel angelegt: ${rec.name}`);} save(); closeDrawer(); render(); toast('Artikel gespeichert'); }
+};
+
+const CHG = {
+  compDone(el){ const s=sess(el.dataset.id); const cp=s.comp[Number(el.dataset.i)]; cp.status=el.checked?'umgesetzt':'geplant'; audit(`Ausgleich ${cp.status}: ${cp.t}`,s.id); save(); render(); },
+  sessStatus(el){ const s=sess(el.dataset.id); const old=s.status; s.status=el.value; if(el.value==='abgeschlossen'&&!s.followUps.length){ const due=new Date(s.date+'T12:00'); due.setDate(due.getDate()+30); s.followUps.push({days:30,due:iso(due),status:'offen'}); toast('Abgeschlossen – Nachkontrolle in 30 Tagen angelegt'); } else toast(`Status: ${el.value}`); audit(`Status ${cust(s.customerId).name}: ${old} → ${el.value}`,s.id); save(); render(); },
+  pickSession(el){ ui.sess=el.value; render(); },
+  onlyChanged(el){ ui.cmpChanged=el.checked; render(); },
+  share(el){ S.shared[el.dataset.id]=el.checked; audit(`Bericht ${el.checked?'im Portal freigegeben':'Freigabe entzogen'}`,el.dataset.id); save(); toast(el.checked?'Im Kundenportal sichtbar':'Nicht mehr im Kundenportal sichtbar'); },
+  cmpA(el){ ui.cmpA=el.value; render(); }, cmpB(el){ ui.cmpB=el.value; render(); },
+  motionSess(el){ ui.motionSess=el.value; motion.range=null; render(); },
+  aiSess(el){ ui.aiSess=el.value; ui.aiOut=null; render(); },
+  portalCust(el){ ui.portalCust=el.value; render(); },
+  invCat(el){ ui.invCat=el.value; render(); },
+  saleStatus(el){ const x=S.sales.find(s=>s.id===el.dataset.id); audit(`${x.id}: ${x.status} → ${el.value}`); x.status=el.value; save(); render(); toast('Status gespeichert'); },
+  warrStatus(el){ const x=S.warranty.find(s=>s.id===el.dataset.id); audit(`${x.id}: ${x.status} → ${el.value}`); x.status=el.value; save(); toast('Status gespeichert'); },
+  nsCust(el){ const sel=document.getElementById('ns_b'); sel.innerHTML=bikesOf(el.value).map(b=>`<option value="${b.id}">${esc(b.brand+' '+b.model)}</option>`).join('')||'<option value="">Kein Fahrrad – bitte zuerst anlegen</option>'; }
+};
+
+document.addEventListener('click',e=>{
+  const nav=e.target.closest('[data-nav]'); if(nav){ e.preventDefault(); closeDrawer(); go(nav.dataset.nav); return; }
+  const a=e.target.closest('[data-act]'); if(a&&ACT[a.dataset.act]){ e.preventDefault(); try{ ACT[a.dataset.act](a); }catch(err){ console.error(err); toast('Aktion fehlgeschlagen: '+err.message,true); } }
+});
+document.addEventListener('submit',e=>{
+  const f=e.target.closest('[data-form]'); if(!f) return; e.preventDefault();
+  if(f.dataset.form==='newSession' && !new FormData(f).get('bid')){ toast('Bitte zuerst ein Fahrrad für diesen Kunden anlegen',true); return; }
+  try{ FORMS[f.dataset.form](f,new FormData(f)); }catch(err){ console.error(err); toast('Speichern fehlgeschlagen: '+err.message,true); }
+});
+document.addEventListener('change',e=>{ const el=e.target.closest('[data-change]'); if(el&&CHG[el.dataset.change]){ try{ CHG[el.dataset.change](el); }catch(err){ console.error(err); toast('Fehler: '+err.message,true);} } });
+document.addEventListener('input',e=>{ const el=e.target.closest('[data-input]'); if(!el) return; ui[el.dataset.input]=el.value; ui.focus=el.id; render(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); closeMenu(); } });
+
+applyTheme();
+const start=(location.hash||'').slice(1);
+go(VIEWS[start]?start:'dashboard');
+window.__fitframe={S:()=>S,ui,go,ACT,VIEWS,quality};
+})();
+</script>
+</body>
+</html>
