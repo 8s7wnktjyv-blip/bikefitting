@@ -200,6 +200,9 @@ td.r,th.r{text-align:right}
 .plan-steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:12px}
 .tgt{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px;margin-top:4px;color:var(--muted)}
 .tgt b{color:var(--fg)} .tgt b.ok{color:var(--ok,#2f8f5b)} .tgt b.part,.tgt .part{color:var(--warn)}
+.hoodcard{display:flex;gap:12px;padding:14px;border-radius:14px;background:var(--accent-soft)}
+.hoodcard .hc-ico{width:38px;height:38px;border-radius:12px;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}
+.hc-big{font-size:28px;font-weight:700;line-height:1.1;margin:4px 0 2px;font-variant-numeric:tabular-nums}.hc-big span{font-size:14px;font-weight:500;color:var(--muted)}
 .acts{margin:6px 0 0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px}
 .acts li.info{color:var(--muted);list-style:circle}
 .plan-steps>li::marker{font-weight:700;color:var(--accent-strong)}
@@ -449,6 +452,10 @@ const MK = {
   drop:{label:'Überhöhung',unit:'mm',group:'Cockpit',def:'Satteloberfläche minus Lenkeroberseite'},
   stemLength:{label:'Vorbaulänge',unit:'mm',group:'Cockpit',def:'Herstellerangabe'},
   spacer:{label:'Spacer unter dem Vorbau',unit:'mm',group:'Cockpit',def:'Spacerhöhe unter dem Vorbau'},
+  hoodDrop:{label:'Überhöhung zu den Schalthebeln',unit:'mm',group:'Cockpit',def:'Satteloberfläche bis Oberkante Schalthebel, senkrecht gemessen'},
+  hoodRamp:{label:'Übergang Lenker–Schalthebel',unit:'°',group:'Cockpit',def:'Neigung von der Lenkeroberseite zur Schalthebel-Oberkante; 0 = flach'},
+  barRoll:{label:'Unterlenker-Neigung',unit:'°',group:'Cockpit',def:'Unterlenker-Enden zur Waagerechten; 0 = waagerecht, + = zeigen nach oben'},
+  bbHeight:{label:'Tretlagerhöhe über Boden',unit:'mm',group:'Rahmen',def:'Boden bis Mitte Tretlager'},
   spacerAbove:{label:'Spacer über dem Vorbau',unit:'mm',group:'Cockpit',def:'Spacer oberhalb des Vorbaus (0, wenn keine)'},
   stemAngle:{label:'Vorbauwinkel',unit:'°',group:'Cockpit',def:'Steht auf dem Vorbau, meist −6°; negativ = abfallend'},
   barWidth:{label:'Lenkerbreite',unit:'mm',group:'Cockpit',def:'Mitte–Mitte am Unterlenker'},
@@ -480,6 +487,12 @@ const HOW = {
   drop:{m:'Laser-Wasserwaage',tool:'Laser-Wasserwaage oder Wasserwaage mit Latte',steps:['Waagerechte Linie auf Höhe der Satteloberfläche.','Abstand von dieser Linie bis zur Oberseite des Lenkers am Vorbau messen.'],tip:'Lenker tiefer als Sattel = positiver Wert.'},
   stemLength:{m:'Herstellerangabe',tool:'Ablesen',steps:['Die Länge ist meist auf dem Vorbau eingraviert, in Millimetern.'],tip:''},
   spacer:{m:'Maßband',tool:'Maßband oder Messschieber',steps:['Alle Ringe unter dem Vorbau zusammen messen.'],tip:''},
+  spacerAbove:{m:'Maßband',tool:'Maßband oder Messschieber',steps:['Alle Ringe oberhalb des Vorbaus zusammen messen. Keine Ringe: 0 eintragen.'],tip:'Nur diese Ringe kann man nach unten setzen, um den Lenker höher zu stellen.'},
+  stemAngle:{m:'Herstellerangabe',tool:'Blick auf den Vorbau',steps:['Der Winkel steht meist auf dem Vorbau (z. B. „-6°“ oder „±6°“).','Zeigt der Vorbau nach unten, ist der Wert negativ.'],tip:''},
+  hoodDrop:{m:'Laser-Wasserwaage',tool:'Wasserwaage oder Laser',steps:['Rad waagerecht ausrichten.','Wasserwaage von der Satteloberfläche waagerecht nach vorn halten.','Senkrecht von der Unterkante der Wasserwaage bis zur Oberkante des Schalthebels messen.'],tip:'Einfacher: Höhe Sattel und Höhe Schalthebel jeweils vom Boden messen und abziehen.'},
+  hoodRamp:{m:'Digitaler Winkelmesser',tool:'Lineal und Winkelmesser',steps:['Lineal auf die Lenkeroberseite legen, nach vorn über den Schalthebel.','Liegt es flach auf beiden auf, ist der Übergang 0°.','Steigt es zum Schalthebel an, Winkel ablesen (positiv).'],tip:'Ziel: flacher Übergang, damit das Handgelenk gerade bleibt.'},
+  barRoll:{m:'Digitaler Winkelmesser',tool:'Digitaler Winkelmesser',steps:['Winkelmesser auf dem Boden auf 0 stellen.','Auf das untere, gerade Stück des Unterlenkers legen.','Wert ablesen: positiv heißt, die Enden zeigen nach oben.'],tip:'Üblich: waagerecht bis leicht nach unten, Richtung Hinterradachse.'},
+  bbHeight:{m:'Maßband',tool:'Maßband',steps:['Rad gerade hinstellen, Reifen mit Fahrdruck.','Vom Boden senkrecht bis zur Mitte der Tretlagerachse messen.'],tip:'Braucht man für Höhenangaben über dem Boden.'},
   barWidth:{m:'Herstellerangabe',tool:'Ablesen oder Maßband',steps:['Breite ist meist auf dem Lenker aufgedruckt.','Sonst: Mitte zu Mitte am Unterlenker messen.'],tip:''},
   crankLength:{m:'Herstellerangabe',tool:'Ablesen',steps:['Die Länge steht auf der Innenseite des Kurbelarms, z. B. 172.5.'],tip:''},
   cleatFore:{m:'Maßband',tool:'Maßband, Klebepunkt',steps:['Am Fuß den dicken Knochen innen am Großzeh (Großzehengrundgelenk) ertasten.','Die Stelle außen am Schuh markieren.','Schuh im Pedal, Kurbel waagerecht nach vorn.','Abstand zwischen Markierung und Pedalachse messen.'],tip:'Liegt die Pedalachse hinter der Markierung, ist der Wert positiv.'},
@@ -593,6 +606,10 @@ function measureRange(k,c,b){
     case 'stemLength': return t==='MTB'?{lo:30,hi:80,unit:'mm',basis:'übliche Vorbauten MTB'}:{lo:50,hi:140,unit:'mm',basis:'übliche Vorbauten'};
     case 'spacer': return {lo:0,hi:60,unit:'mm',basis:'üblicher Bereich'};
     case 'spacerAbove': return {lo:0,hi:40,unit:'mm',basis:'üblicher Bereich'};
+    case 'hoodDrop': return {lo:-120,hi:140,unit:'mm',basis:'plausibler Bereich'};
+    case 'hoodRamp': return {lo:-5,hi:15,unit:'°',basis:'plausibler Bereich; Ziel 0–5°'};
+    case 'barRoll': return {lo:-15,hi:10,unit:'°',basis:'plausibler Bereich; üblich −5 bis 0°'};
+    case 'bbHeight': return {lo:240,hi:360,unit:'mm',basis:'übliche Tretlagerhöhen'};
     case 'stemAngle': return {lo:-25,hi:25,unit:'°',basis:'übliche Vorbauten'};
     case 'barWidth': return t==='MTB'||t==='E-Bike'||t==='Trekking'?{lo:580,hi:820,unit:'mm',basis:'übliche Lenker'}:{lo:340,hi:500,unit:'mm',basis:'übliche Rennlenker'};
     case 'crankLength': return {lo:150,hi:180,unit:'mm',basis:'erhältliche Kurbellängen'};
@@ -1038,7 +1055,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-26.8';
+const APP_VER = '2026-10-26.9';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1675,6 +1692,30 @@ function computePlan(s){
   });
   return {steps,tg,A,body,final:cur};
 }
+/* Oberkante Schalthebel: Zielhöhe über dem Boden – eine Zahl, die man mit dem Zollstock prüfen kann */
+function hoodTarget(s){
+  const b=bike(s.bikeId); if(!b||!['Rennrad','Gravel'].includes(b.type)) return null;
+  const e={...s.before,...s.after}; const v=k=>e[k]?Number(e[k].value):null; const A=bikeAngles(s);
+  const g=b.geo&&geoById(b.geo.id); const gr=g&&geoRow(g,b.geo.size)||{};
+  const hd=v('hoodDrop'), h=v('saddleHeight'); if(h==null) return {need:['Sattelhöhe']};
+  let bb=v('bbHeight'), bbEst=false; if(bb==null){ bb=(b.type==='Gravel'?350:338)-(gr.bbDrop||72); bbEst=true; }
+  const P=computePlan(s); const hs=P.steps.filter(x=>x.key==='saddleHeight'&&x.d).reduce((a,x)=>a+x.d,0);
+  const dropStep=P.steps.find(x=>x.key==='drop'&&!x.info);
+  const saddleNow=bb+h*A.ss, saddleNew=bb+(h+hs)*A.ss;
+  const out={bbEst,saddleNow:Math.round(saddleNow),saddleNew:Math.round(saddleNew),ramp:v('hoodRamp'),roll:v('barRoll'),need:[]};
+  if(hd==null){ out.need.push('Überhöhung zu den Schalthebeln'); return out; }
+  const dDrop=dropStep?dropStep.target-dropStep.from:0, dDo=dropStep?dropStep.d:0;
+  out.now=Math.round(saddleNow-hd); out.target=Math.round(saddleNew-(hd+dDrop)); out.doable=Math.round(saddleNew-(hd+dDo));
+  return out;
+}
+function hoodHtml(s){ const t=hoodTarget(s); if(!t) return '';
+  const ramp=t.ramp==null?'':Math.abs(t.ramp)<=5?'<span class="chip c-ok nodot">Übergang flach</span>':`<span class="chip c-warn nodot">Übergang ${fmtNum(t.ramp)}°: Schalthebel ${t.ramp>0?'etwas nach unten':'etwas nach oben'} setzen</span>`;
+  const roll=t.roll==null?'':(t.roll<=0&&t.roll>=-8)?'<span class="chip c-ok nodot">Unterlenker passt</span>':`<span class="chip c-warn nodot">Unterlenker ${fmtNum(t.roll)}°: ${t.roll>0?'nach unten drehen':'etwas hochdrehen'}</span>`;
+  return `<div class="hoodcard"><div class="hc-ico">${ic('fit')}</div><div class="grow" style="min-width:0"><div class="t">Oberkante Schalthebel</div>
+  ${t.target!=null?`<div class="hc-big">${fmtNum(t.target)} <span>mm über dem Boden</span></div><div class="sub" style="white-space:normal">Jetzt ${fmtNum(t.now)} mm${t.doable!==t.target?` · mit den Vorschlägen erreichbar: ${fmtNum(t.doable)} mm`:''}. Mit dem Zollstock vom Boden zur Oberkante messen.</div>`:`<div class="sub" style="white-space:normal">Miss einmal die <b>Überhöhung zu den Schalthebeln</b> (Messen → Weitere Messpunkte). Dann zeigt FitFrame die Zielhöhe über dem Boden.</div>`}
+  <div class="row" style="margin-top:6px;gap:6px">${ramp}${roll}</div>
+  ${t.bbEst?'<p class="faint" style="font-size:12.5px;margin-top:4px">Tretlagerhöhe geschätzt. Für eine genaue Zahl „Tretlagerhöhe über Boden“ messen.</p>':''}
+  <details class="more" style="margin-top:4px"><summary style="font-size:13px">So stellen Profis die Schalthebel ein</summary><ol style="margin:6px 0 0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px"><li>Erst den Lenker drehen: Unterlenker-Enden waagerecht oder leicht Richtung Hinterradachse.</li><li>Dann die Schalthebel: flacher Übergang von Lenkeroberseite zum Hebel, Handgelenk gerade.</li><li>Zu tief: Druck auf Ringfinger und kleinen Finger. Zu hoch: Ellbogen stark gebeugt, Daumen und Zeigefinger werden taub.</li><li>Bremshebel mit dem ersten Fingerglied erreichbar.</li></ol></details></div></div>`; }
 function planHtml(s){
   const P=computePlan(s); const real=P.steps.filter(x=>!x.info);
   const bodyBox=P.body.length?`<div class="card"><div class="grow"><div class="t">Vor dem Einstellen: Ausgleich für den Körper</div><ul style="margin:6px 0 0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:4px">${P.body.map(f=>`<li><b>${esc(f.title)}.</b> <span class="muted">${esc(f.text)}</span></li>`).join('')}</ul><p class="faint" style="font-size:12.5px;margin-top:6px">Erst ausgleichen (Shim, Einlage, Keil), dann das Rad einstellen. Sonst stellst du das Rad auf eine Fehlstellung ein.</p></div></div>`:'';
@@ -1754,6 +1795,7 @@ SESSTAB.anpassung = s => { const planKeys=computePlan(s).steps.map(x=>x.key); co
   <p class="onlyline">Stell das Rad in kleinen Schritten um. Nach jeder Änderung kurz fahren lassen und nachfragen.</p>
   ${checksHtml(s,true)}
   ${top.length?`<div><div class="label" style="margin-bottom:8px">Weitere Hinweise ${st('s')}</div><div class="sugg">${top.map(card).join('')}</div>${rest.length?`<details class="more" style="margin-top:8px"><summary>${rest.length} weitere Vorschläge</summary><div class="sugg" style="margin-top:8px">${rest.map(card).join('')}</div></details>`:''}</div>`:computePlan(s).steps.length?'':'<div class="statusbox"><div><b>Keine Vorschläge</b><span class="muted" style="font-size:14px">Trag Beschwerden im Schritt „Ziel“ ein oder miss den Kniewinkel.</span></div></div>'}
+  ${hoodHtml(s)}
   ${planHtml(s)}
   ${targetHtml(s)}
   <section class="panel" style="box-shadow:none" id="changeHead"><div class="panel-b stack">
@@ -1849,7 +1891,7 @@ SESSTAB.bericht = s => `<div class="stack"><div class="row" style="justify-conte
 SESSTAB.ergebnis = s => {
   const q=quality(s), crit=q.filter(x=>x[0]!=='info').length; const t=ui.resTab||'vergleich';
   const tabs=[['vergleich','Vorher / Nachher'],['teile','Teile & Alternativen'],['groesse','Größe & Sattel'],['qualitaet',`Datenqualität${crit?` (${crit})`:''}`],['bericht','Bericht']];
-  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,teile:()=>checksHtml(s,false)+planHtml(s)+'<hr>'+partsPlanHtml(s),groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
+  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,teile:()=>checksHtml(s,false)+hoodHtml(s)+planHtml(s)+'<hr>'+partsPlanHtml(s),groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
   return `<div class="stack">
   <p class="onlyline">Prüfe das Ergebnis, erstelle den Bericht und schließ das Fitting ab.</p>
   <div class="tabsbar" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${t===k}" data-act="resTab" data-v="${k}">${l}</button>`).join('')}</div>
