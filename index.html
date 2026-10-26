@@ -228,6 +228,13 @@ td.r,th.r{text-align:right}
 .feel{display:flex;flex-direction:column;gap:8px}.feelbtn{flex:1;flex-direction:column;font-size:26px;padding:10px}.feelbtn span{font-size:13px}
 .bodylist{list-style:none;padding:0!important}.bodylist li{display:flex;flex-direction:column;padding:8px 10px;border-radius:10px;background:var(--surface-2)}.bodylist li.stop{border-left:4px solid var(--bad,#c4423a)}.bodylist li span{color:var(--muted);font-size:14px}
 @media (max-width:480px){.gc-nums{grid-template-columns:1fr 1fr 1fr;gap:6px}.gn{padding:8px}.gn b{font-size:19px}.gc-ill{width:80px}.gcard h2{font-size:20px}}
+.ckx{margin:0 0 10px 38px;padding:12px 14px;border-radius:12px;background:var(--surface-2);display:flex;flex-direction:column;gap:10px;font-size:14.5px;animation:ffUp .25s ease both}
+.ckx h4{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:3px}
+.ckx ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.ckx-f{display:flex;flex-direction:column;gap:2px;padding-left:10px;border-left:4px solid var(--info)}.ckx-f.warn{border-left-color:var(--warn)}.ckx-f.bad{border-left-color:var(--bad,#c4423a)}.ckx-f span{color:var(--muted)}
+.ckx-hl{padding:8px 10px;border-radius:10px;background:var(--accent-soft)}
+.st-ico.info{background:var(--info-soft,#e3edf9);color:var(--info);font-weight:700;font-style:italic}
+@media (max-width:480px){.ckx{margin-left:0}}
 .acts{margin:6px 0 0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px}
 .acts li.info{color:var(--muted);list-style:circle}
 .plan-steps>li::marker{font-weight:700;color:var(--accent-strong)}
@@ -1080,7 +1087,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-26.10';
+const APP_VER = '2026-10-26.11';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1456,6 +1463,37 @@ function ckSummary(s,c,it){
   return ckDone(s,c,it)?(it.side?`L ${f(chkVal(s,it.k,'L'))} · R ${f(chkVal(s,it.k,'R'))}`:f(chkVal(s,it.k,''))):'';
 }
 function ckFlag(s,it){ const w=it.label.split(' ')[0].toLowerCase(); return checkFindings(s).some(x=>x.lvl!=='ok'&&x.title.toLowerCase().includes(w)); }
+/* Erklärungen zu jedem Körpercheck-Punkt: Was ist los, was bedeutet es fürs Rad, was tun */
+const CK_KEYW={pain:'Schmerzen',legLen:'Beinlänge',pelvis:'Becken',shoulder:'Schultern',kneeTrack:'Knie ',arch:'Fußgewölbe',forefoot:'Vorfuß',hamstring:'Rückseite',hipFlex:'Hüfte',ankle:'Sprunggelenk',sitBone:'Sitzknochen'};
+const CK_KB={
+  pain:{mean:'Mit akuten Schmerzen lässt sich die richtige Position nicht sicher finden. Der Körper weicht dem Schmerz aus.',todo:['Fitting verschieben oder nur grob einstellen.','Erst ärztlich oder physiotherapeutisch abklären lassen.']},
+  legLen:{mean:'Ein kürzeres Bein lässt das Becken auf dem Sattel zur kurzen Seite kippen. Folge: einseitige Belastung von Knie, Hüfte und unterem Rücken, oft Sitzbeschwerden auf einer Seite.',
+    todo:['Erst nachmessen: im Liegen vom vorderen Hüftknochen zum Innenknöchel, 2–3 Mal, Mittelwert nehmen.','5–9 mm Unterschied: Unterlegplatte (Shim) unter den Cleat der kürzeren Seite, etwa die Hälfte des Unterschieds (z. B. 3 mm bei 6 mm). Dann fahren und fragen.','Ab 10 mm: erst Fachperson (Orthopädie, Physiotherapie). Ein Teil ist oft „funktional“ (verkipptes Becken) und lässt sich behandeln statt ausgleichen.','Nie den vollen Unterschied auf einmal ausgleichen.']},
+  pelvis:{mean:'Ein schiefes Becken im Stehen passt oft zu einem Beinlängenunterschied oder einseitig verspannten Muskeln. Auf dem Rad rutscht man dann zu einer Seite.',todo:['Zusammen mit der Beinlänge betrachten.','Beim Fahren von hinten schauen: Sitzt die Person mittig auf dem Sattel?','Bei deutlicher Schiefstellung: Fachperson.']},
+  shoulder:{mean:'Hängt eine Schulter, greift man den Lenker oft ungleich. Folge: Nacken und Hand auf einer Seite belastet.',todo:['Beim Fahren auf gleichmäßigen Griff achten.','Schalthebel beidseitig gleich hoch montieren (Lineal über beide Griffe).']},
+  kneeTrack:{mean:'Fällt das Knie bei der Kniebeuge nach innen, macht es das auch beim Treten. Das belastet Knie innen und Kniescheibe. Ursache ist meist der Fuß (flaches Gewölbe, schräger Vorfuß), manchmal schwache Hüftmuskeln.',todo:['Zuerst den Fuß versorgen: Einlage mit Gewölbestütze, ggf. Keil (siehe Fußgewölbe und Vorfuß).','Danach die Kniebeuge wiederholen: Läuft das Knie jetzt gerader?','Beim Fahren von vorn schauen: Knie sollte gerade über dem Fuß auf und ab laufen.','Bleibt es: Cleat etwas nach außen setzen (Fuß näher zur Kurbel) oder Pedalachsen-Verlängerung prüfen.']},
+  arch:{mean:'Ein hohes Gewölbe dämpft wenig: Druck konzentriert sich auf Ferse und Vorfuß, Zehen werden schnell taub oder brennen. Ein flaches Gewölbe knickt ein, das Knie fällt nach innen.',todo:['Radschuh-Einlage mit passender Gewölbestütze: hoch → mittlere bis hohe, gepolsterte Stütze; flach → stützende Einlage.','Schuhbreite prüfen: zu enge Schuhe verstärken Taubheit.','Cleat eher etwas weiter nach hinten (entlastet Vorfuß und Zehen).','Passt zu Beschwerden an Füßen und Zehen.']},
+  forefoot:{mean:'Steht der Vorfuß schräg, kippt der Fuß auf dem flachen Pedal. Das Knie weicht seitlich aus. Außenkante höher = Fuß kippt nach außen.',todo:['Keil (Wedge) zwischen Cleat und Schuh: Die dicke Seite kommt unter die höher stehende Kante, damit der Spalt zum Pedal gefüllt wird – bei „Außenkante höher“ also außen, bei „Innenkante höher“ innen.','Mit 1 Keil beginnen, Kniespur beim Fahren von vorn prüfen, ggf. 2.','Nur die betroffene Seite versorgen.']},
+  hamstring:{mean:'Eine steife Oberschenkelrückseite zieht das Becken nach hinten. Der Rücken muss sich dann stärker krümmen, um den Lenker zu erreichen. Folge: Rücken- und Nackenbeschwerden.',todo:['Wenig Überhöhung wählen (Lenker eher höher).','Sattel nicht zu hoch.','Dehnübungen empfehlen, nach einigen Wochen neu messen.']},
+  hipFlex:{mean:'Kann das Knie nicht weit zur Brust, wird der Hüftwinkel oben am Pedal zu eng. Das Becken weicht aus.',todo:['Überhöhung verringern.','Kürzere Kurbel prüfen (öffnet den Hüftwinkel oben).']},
+  ankle:{mean:'Ein steifes Sprunggelenk kann den Fuß unten am Pedal wenig strecken. Dann muss der Sattel etwas tiefer sein.',todo:['Cleat eher weiter hinten.','Sattel eher am unteren Ende des Bereichs.']},
+  sitBone:{mean:'Die Sattelbreite muss zu den Sitzknochen passen. Zu schmal: Druck auf Weichteile und Damm. Zu breit: Scheuern an den Oberschenkeln.',todo:['Sattelbreite = Sitzknochenabstand + 20–30 mm (sportlich) bzw. + 30–40 mm (aufrecht).','Breite des aktuellen Sattels messen und vergleichen.','Bei Sitzbeschwerden: Testsattel in passender Breite.']}
+};
+function ckItemFindings(s,it){ const w=CK_KEYW[it.k]; if(!w) return []; return checkFindings(s).filter(x=>x.lvl!=='ok'&&x.title.startsWith(w.trim())||x.lvl!=='ok'&&w==='Knie '&&/^Knie (links|rechts)/.test(x.title)); }
+function ckRow(s,c,it,i){
+  const d=ckDone(s,c,it); const fs=d?ckItemFindings(s,it):[]; const warn=fs.some(x=>x.lvl==='warn'||x.lvl==='bad'); const info=!warn&&fs.length;
+  const state=!d?'open':warn?'warn':info?'info':'done'; const open=ui.ckOpen===it.k;
+  const kb=CK_KB[it.k];
+  let extra='';
+  if(it.k==='sitBone'){ const p=partsAdvice(s); if(p.saddle) extra=`<p class="ckx-hl">Für diese Person: Sattelbreite etwa <b>${p.saddle.lo}–${p.saddle.hi} mm</b>.</p>`; }
+  const row=`<div class="li click ckrow ${open?'open':''}" data-act="${fs.length?'ckToggle':'wGo'}" data-k="${it.k}" data-i="${i}"><span class="st-ico ${state}">${state==='done'?ic('check','width="14" height="14"'):state==='warn'?'!':state==='info'?'i':i+1}</span><div class="grow"><div class="t">${esc(it.label)}</div>${fs.length&&!open?`<div class="sub" style="white-space:normal;color:${warn?'var(--warn)':'var(--muted)'}">${esc(fs[0].title)} – antippen für Erklärung</div>`:''}</div><span class="val">${esc(ckSummary(s,c,it)||'offen')}</span>${ic('arrow','width="16" height="16" style="color:var(--faint);flex:none'+(fs.length?(open?';transform:rotate(-90deg)':';transform:rotate(90deg)'):'')+'"')}</div>`;
+  if(!open||!fs.length) return row;
+  return row+`<div class="ckx">
+    ${fs.map(f=>`<div class="ckx-f ${f.lvl}"><b>${esc(f.title)}</b><span>${esc(f.text)}</span></div>`).join('')}
+    ${kb?`<div><h4>Was bedeutet das fürs Rad?</h4><p>${esc(kb.mean)}</p></div><div><h4>Was du tun kannst</h4><ol>${kb.todo.map(t=>`<li>${esc(t)}</li>`).join('')}</ol></div>`:''}${extra}
+    <div class="row">${fs.filter(f=>f.cat==='ausgleich'||f.cat==='arzt').map(f=>(s.comp||[]).some(cp=>cp.t.startsWith(f.title))?`<span class="chip c-ok nodot">eingeplant</span>`:`<button class="btn sm primary" data-act="addComp" data-id="${s.id}" data-t="${esc(f.title)}">Ausgleich einplanen</button>`).join('')}<button class="btn sm" data-act="wGo" data-i="${i}">Wert ändern</button></div></div>`;
+}
+
 SESSTAB.koerper = (s,c) => {
   const items=CK_ITEMS();
   if(ui.wIdx!=null&&items[ui.wIdx]) return ckWizard(s,c,items,ui.wIdx);
@@ -1466,10 +1504,10 @@ SESSTAB.koerper = (s,c) => {
   <p class="onlyline">Prüfe den Körper, bevor du das Rad einstellst. Ein Test pro Bildschirm, je 1–2 Minuten. Nicht jeder Test ist immer nötig.</p>
   <div class="camcard"><span class="ico">${ic('camera')}</span><div style="flex:1;min-width:0"><b>Körper-Scan mit Kamera</b><span class="muted" style="font-size:13.5px">${s.scan?`Gescannt am ${fmtDate(s.scan.date)}`:'Optional · Foto von vorn und von der Seite'}</span></div><button class="btn sm ${s.scan?'':'primary'}" data-act="scanOpen">${s.scan?'Ansehen':'Starten'}</button></div>
   <div class="statusbox ${cls}"><div style="flex:1;min-width:0"><b>${r[1]}</b><span class="muted" style="font-size:14px">${r[2]}</span></div><span class="num" style="font-weight:700">${done}/${items.length}</span></div>
-  ${f.length?`<div class="list">${f.slice(0,3).map(x=>{const taken=(s.comp||[]).some(cp=>cp.t.startsWith(x.title));return `<div class="li" style="padding:10px 0;align-items:flex-start"><div class="grow"><span class="chip ${x.lvl==='bad'?'c-bad':x.lvl==='warn'?'c-warn':'c-info'}" style="margin-bottom:4px">${x.cat==='arzt'?'Fachperson':x.cat==='ausgleich'?'Ausgleich':'Fitting'}</span><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal">${esc(x.text)}</div></div>${x.cat==='ausgleich'?(taken?'<span class="chip c-ok">eingeplant</span>':`<button class="btn sm" data-act="addComp" data-id="${s.id}" data-t="${esc(x.title)}">Einplanen</button>`):''}</div>`;}).join('')}</div>${f.length>3?`<details class="more"><summary>${f.length-3} weitere Hinweise</summary><div class="list">${f.slice(3).map(x=>`<div class="li" style="padding:10px 0;align-items:flex-start"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal">${esc(x.text)}</div></div></div>`).join('')}</div></details>`:''}`:''}
+  ${f.length?`<p class="muted" style="font-size:14px">Punkte mit <b>!</b> oder <b>i</b> antippen: Dann siehst du, was los ist, was es fürs Rad bedeutet und was du tun kannst.</p>`:''}
   ${(s.comp||[]).length?`<details class="more"><summary>Ausgleich vor dem Fitting (${s.comp.filter(x=>x.status==='umgesetzt').length}/${s.comp.length} erledigt)</summary>${s.comp.map((cp,i)=>`<label class="li" style="padding:8px 0;cursor:pointer"><input type="checkbox" data-change="compDone" data-id="${s.id}" data-i="${i}" ${cp.status==='umgesetzt'?'checked':''}><span class="grow">${esc(cp.t)}</span></label>`).join('')}</details>`:''}
   ${startBtn(first,done,first>=0?items[first].label:'')}
-  <div class="ovl">${items.map((it,i)=>{const d=ckDone(s,c,it);return ovItem(i,it.label,ckSummary(s,c,it),d?(ckFlag(s,it)?'warn':'done'):'open');}).join('')}</div>
+  <div class="ovl">${items.map((it,i)=>ckRow(s,c,it,i)).join('')}</div>
   <details class="more"><summary>Warum zuerst der Körpercheck?</summary><p class="muted" style="margin-top:6px">Das Rad wird an den Körper angepasst. Ist ein Bein kürzer oder steht ein Fuß schräg, gleichst du das zuerst aus. Sonst stellst du das Rad auf eine schiefe Haltung ein. FitFrame stellt keine Diagnosen. Bei Schmerzen oder großen Unterschieden: Fachleute hinzuziehen.</p></details>
   <button class="btn ghost" data-act="openCustomer" data-id="${c.id}" style="align-self:flex-start">Alle Körpermaße bearbeiten</button>
   </div>`;
@@ -2737,6 +2775,7 @@ function createSession(d){
 }
 
 const ACT = {
+  ckToggle(el){ ui.ckOpen=ui.ckOpen===el.dataset.k?null:el.dataset.k; render(); },
   planStart(){ const s=sess(ui.sess); freezePlan(s); ui.adjIdx=0; save(); render(); window.scrollTo({top:0}); },
   planGo(){ const s=sess(ui.sess); ui.adjIdx=s.plan.idx||0; render(); window.scrollTo({top:0}); },
   planExit(){ ui.adjIdx=null; render(); window.scrollTo({top:0}); },
