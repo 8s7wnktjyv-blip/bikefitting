@@ -203,6 +203,31 @@ td.r,th.r{text-align:right}
 .hoodcard{display:flex;gap:12px;padding:14px;border-radius:14px;background:var(--accent-soft)}
 .hoodcard .hc-ico{width:38px;height:38px;border-radius:12px;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}
 .hc-big{font-size:28px;font-weight:700;line-height:1.1;margin:4px 0 2px;font-variant-numeric:tabular-nums}.hc-big span{font-size:14px;font-weight:500;color:var(--muted)}
+.glance{display:flex;flex-direction:column;gap:8px}
+.gl{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--surface-2);border-left:5px solid var(--line)}
+.gl .dot{width:12px;height:12px;border-radius:50%;background:var(--faint);flex:none}
+.gl.ok{border-left-color:var(--ok,#2f8f5b)}.gl.ok .dot{background:var(--ok,#2f8f5b)}
+.gl.warn{border-left-color:var(--warn)}.gl.warn .dot{background:var(--warn)}
+.gl.bad{border-left-color:var(--bad,#c4423a)}.gl.bad .dot{background:var(--bad,#c4423a)}
+.gl .t{font-weight:600}.gl .gv{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.gl .gv b{font-size:18px}
+.gl .sub{font-size:12.5px;color:var(--muted)}
+.gstart{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:16px;border-radius:16px;background:var(--accent-soft)}
+.gstart>div:first-child{display:flex;flex-direction:column;gap:2px}
+.gcard{display:flex;flex-direction:column;gap:14px;animation:ffUp .35s ease both}
+.gc-head{display:flex;gap:14px;align-items:center}.gc-ill{width:110px;flex:none}.gc-ill svg{width:100%;height:auto}
+.gcard h2{font-size:24px;margin-top:2px}
+.gc-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gn{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;background:var(--surface-2);border-top:4px solid var(--line)}
+.gn span{font-size:12.5px;color:var(--muted)}.gn b{font-size:24px;font-variant-numeric:tabular-nums}.gn i{font-style:normal;font-size:12.5px;color:var(--muted)}
+.gn.ok{border-top-color:var(--ok,#2f8f5b)}.gn.warn{border-top-color:var(--warn)}.gn.bad{border-top-color:var(--bad,#c4423a)}.gn.tgt{border-top-color:var(--info)}
+.gc-sec h4{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:4px}
+.gc-sec ul,.gc-sec ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:15px}
+.gc-sec.err li{color:var(--muted)}.gc-sec.err h4{color:var(--warn)}
+.torque{margin-top:8px;font-size:14px;padding:8px 10px;border-radius:10px;background:var(--surface-2)}
+.gc-act{display:flex;flex-direction:column;gap:8px}.gc-act>.btn{width:100%;justify-content:center}
+.feel{display:flex;flex-direction:column;gap:8px}.feelbtn{flex:1;flex-direction:column;font-size:26px;padding:10px}.feelbtn span{font-size:13px}
+.bodylist{list-style:none;padding:0!important}.bodylist li{display:flex;flex-direction:column;padding:8px 10px;border-radius:10px;background:var(--surface-2)}.bodylist li.stop{border-left:4px solid var(--bad,#c4423a)}.bodylist li span{color:var(--muted);font-size:14px}
+@media (max-width:480px){.gc-nums{grid-template-columns:1fr 1fr 1fr;gap:6px}.gn{padding:8px}.gn b{font-size:19px}.gc-ill{width:80px}.gcard h2{font-size:20px}}
 .acts{margin:6px 0 0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px}
 .acts li.info{color:var(--muted);list-style:circle}
 .plan-steps>li::marker{font-weight:700;color:var(--accent-strong)}
@@ -1055,7 +1080,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-26.9';
+const APP_VER = '2026-10-26.10';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1679,7 +1704,7 @@ function computePlan(s){
   PLAN_ORDER.forEach(([k,order])=>{ if(cur[k]==null) return; const r=R[k]; const why=[];
     let d=0; const lo=r&&r.lo!=null?r.lo:null, hi=r&&r.hi!=null?r.hi:null;
     if(lo!=null&&(cur[k]<lo||cur[k]>hi)){ d=cur[k]<lo?lo-cur[k]:hi-cur[k]; why.push(`${fmtNum(Math.round(cur[k]))} ${MK[k].unit} liegt außerhalb des Bereichs ${fmtNum(Math.round(lo))}–${fmtNum(Math.round(hi))} (${r.basis}).`); }
-    const rs=reasons[k]||[]; if(rs.length){ rs.forEach(x=>why.push(x.why)); const x=rs.reduce((a,c)=>Math.abs(c.d)>Math.abs(a.d)?c:a);
+    const rs=(s.changes||[]).some(ch=>ch.plan&&ch.key===k)?[]:(reasons[k]||[]); if(rs.length){ rs.forEach(x=>why.push(x.why)); const x=rs.reduce((a,c)=>Math.abs(c.d)>Math.abs(a.d)?c:a);
       if(d!==0&&Math.sign(d)===Math.sign(x.d)){ if(Math.abs(x.d)>Math.abs(d)) d=x.d; }
       else { const nv=cur[k]+d+x.d; if(lo==null||(nv>=lo-0.01&&nv<=hi+0.01)) d+=x.d; else why.push('Liegt schon am Rand des Bereichs – hier nicht weiter verändern.'); } }
     if(k==='saddleHeight'){ if(Math.abs(hOffset)>=1.5&&!why.length) why.push('Ausgleich für die Cleat-Änderung (Faustregel: halbe Verschiebung).'); d+=hOffset; }
@@ -1789,13 +1814,105 @@ function partsPlanHtml(s){
   <p class="faint" style="font-size:12.5px">Startwerte sind Faustregeln, nicht validiert. Richtwerte: Bremsgriffe und Lenkerdrehung je etwa 10 mm, Sattelgestell etwa ±15 mm, Vorbau umdrehen ±6° ergibt je nach Länge 15–30 mm Höhe.</p></div>`;
 }
 
-SESSTAB.anpassung = s => { const planKeys=computePlan(s).steps.map(x=>x.key); const sg=fitSuggestions(s,true).filter(x=>!x.key||!planKeys.includes(x.key)); const top=sg.slice(0,3), rest=sg.slice(3); const pp=partsPlan(s);
+/* ---------- Geführte Anpassung: eine Karte pro Änderung, alles mit Zahlen und Begründung ---------- */
+const DO={
+  cleatFore:{tool:'Inbus 4 mm, Stift, Drehmomentschlüssel',torque:'meist 5–6 Nm, Angabe auf Schuh oder Cleat-Packung',
+    steps:['Umriss des Cleats auf der Sohle mit Stift nachzeichnen, damit der Winkel erhalten bleibt.','Die drei Schrauben lösen, nicht ganz herausdrehen.','Cleat {d} mm {dir} schieben (Skala auf der Sohle nutzen).','Winkel am alten Umriss ausrichten, Schrauben über Kreuz festziehen.','Beide Schuhe gleich einstellen, außer der Plan sagt etwas anderes.'],
+    check:['Kunde fährt 2–3 Minuten locker.','Fragen: Druck unter dem Vorfuß weniger? Wade entspannter?','Ferse darf beim Treten die Kurbel nicht berühren.'],
+    errors:['Winkel verdreht sich beim Verschieben: immer am Umriss ausrichten.','Nur einen Schuh geändert.','Schrauben nicht nachgezogen – Cleat wandert.']},
+  saddleHeight:{tool:'Inbus 4–5 mm (Sattelklemme), Maßband, Isolierband, Drehmomentschlüssel',torque:'Angabe auf der Sattelklemme oder am Rahmen, bei Carbon meist 5–7 Nm, Carbon-Montagepaste verwenden',
+    steps:['Isolierband als Markierung an der Sattelstütze direkt über der Klemme anbringen.','Sattelklemme lösen.','Stütze {d} mm {dir} – am besten in 2–3-mm-Schritten mit kurzer Probefahrt dazwischen.','Sattelspitze gerade in Linie mit dem Oberrohr ausrichten.','Mit dem Drehmomentschlüssel festziehen, Sattelhöhe nachmessen.'],
+    check:['Kunde fährt 2–3 Minuten.','Von hinten schauen: Becken muss ruhig bleiben, kein seitliches Kippen (dann zu hoch).','Knie darf unten nicht ganz durchgestreckt sein; ideal Kniewinkel 140–150° (Kamera).','Fragen: Druck vorn am Knie (zu tief) oder in der Kniekehle (zu hoch)?'],
+    errors:['Mindesteinstecktiefe überschritten (Markierung auf der Stütze).','Sattel beim Verstellen verdreht.','Carbon-Stütze ohne Montagepaste oder zu fest angezogen.']},
+  saddleSetback:{tool:'Inbus 5–6 mm (Sattelkopf), Lot oder Laser, Wasserwaage',torque:'Angabe am Sattelkopf der Stütze, meist 5–12 Nm',
+    steps:['Sattelneigung vorher mit der Wasserwaage messen und notieren.','Schraube(n) am Sattelkopf lösen.','Sattel {d} mm {dir} auf den Streben schieben – nicht über die Markierung am Gestell hinaus.','Neigung wieder auf den notierten Wert stellen.','Festziehen und Versatz neu messen (Lot durch Tretlagermitte bis Sattelspitze).'],
+    check:['Sattelhöhe neu messen: Sie ändert sich mit (nächste Karte gleicht das aus).','Fragen: weniger Druck auf den Händen? Fühlt sich das Treten runder an?'],
+    errors:['Neigung beim Verschieben verstellt.','Über die Markierung am Sattelgestell geschoben (Bruchgefahr).','Sattelhöhe danach nicht angepasst.']},
+  drop:{tool:'Inbus 4–5 mm, Drehmomentschlüssel',torque:'Klemmschrauben am Vorbau laut Aufdruck, meist 5–6 Nm; Deckelschraube nur handfest für das Lagerspiel',
+    steps:['Klemmschrauben des Vorbaus am Gabelschaft lösen, Deckelschraube oben herausdrehen.','Vorbau mit Lenker vorsichtig nach oben abziehen, Züge und Leitungen nicht knicken.','{acts}','Vorbau wieder aufsetzen, Deckelschraube anziehen, bis das Lager kein Spiel mehr hat (Vorderbremse ziehen und Rad vor und zurück ruckeln).','Vorbau gerade zum Vorderrad ausrichten, Klemmschrauben abwechselnd mit Drehmoment festziehen.'],
+    check:['Gabelschaft muss 2–3 mm unter der Oberkante des obersten Rings oder Vorbaus enden – sonst klemmt der Deckel nicht.','Lenkung frei drehen lassen, kein Spiel, nichts klemmt.','Überhöhung neu messen.','Fragen: Nacken und Rücken entspannter?'],
+    errors:['Lagerspiel nicht eingestellt.','Vorbau schief zum Vorderrad.','Hydraulikleitungen oder Züge werden zu kurz (bei integrierten Cockpits besonders prüfen).']},
+  reach:{tool:'Inbus 4–5 mm, Drehmomentschlüssel; bei Bremsgriffen neues Lenkerband',torque:'Vorbau-Frontplatte und Schalthebel laut Aufdruck, meist 5–6 Nm',
+    steps:['{acts}','Bei Bremsgriffen: Lenkerband abwickeln, Klemmschraube unter der Griffgummi-Lasche lösen, verschieben, Lineal über beide Griffe legen – beide gleich hoch.','Bei neuem Vorbau: Lenker an der Frontplatte lösen, Vorbau tauschen wie bei der Lenkerhöhe, Lenker mittig und mit gleicher Neigung wieder einbauen.','Alles mit Drehmoment festziehen, Sattel–Lenker neu messen.'],
+    check:['Ellbogen leicht gebeugt, Schultern locker.','Beim Blick nach unten verdeckt der Lenker etwa die Vorderradnabe (grobe Kontrolle).','Fragen: Hände und Nacken entspannter?'],
+    errors:['Bremsgriffe links und rechts unterschiedlich hoch.','Lenker beim Vorbautausch verdreht (Unterlenker-Neigung prüfen).','Frontplatten-Schrauben nicht gleichmäßig angezogen.']}
+};
+const DIRT={cleatFore:[ 'Richtung Ferse','Richtung Zehen'],saddleHeight:['herausziehen','versenken'],saddleSetback:['nach hinten','nach vorn']};
+function ampel(k,v,r){ if(v==null) return {c:'none',t:'nicht gemessen'}; if(!r||r.lo==null) return {c:'none',t:'kein Bereich'};
+  const tol=Math.max(5,(r.hi-r.lo)*0.15); if(v>=r.lo&&v<=r.hi) return {c:'ok',t:'passt'}; const off=v<r.lo?r.lo-v:v-r.hi;
+  return off<=tol?{c:'warn',t:v<r.lo?'etwas niedrig':'etwas hoch'}:{c:'bad',t:v<r.lo?'zu niedrig':'zu hoch'}; }
+function glanceHtml(s){
+  const tg=targetFit(s); const R=Object.fromEntries(tg.rows.map(r=>[r.key,r])); const e={...s.before,...s.after};
+  const keys=['saddleHeight','saddleSetback','reach','drop','cleatFore'];
+  return `<div class="glance">${keys.map(k=>{ const v=e[k]?Number(e[k].value):null; const r=R[k]; const a=ampel(k,v,r); const m=MK[k];
+    return `<div class="gl ${a.c}"><span class="dot"></span><div class="grow" style="min-width:0"><div class="t">${m.label}</div><div class="sub">${r&&r.lo!=null?`Bereich ${fmtNum(Math.round(r.lo))}–${fmtNum(Math.round(r.hi))} ${m.unit}`:r&&r.need?`fehlt: ${esc(r.need)}`:''}</div></div><div class="gv"><b>${v!=null?fmtNum(Math.round(v)):'–'}</b> ${m.unit}<div class="sub">${a.t}</div></div></div>`; }).join('')}</div>`;
+}
+function freezePlan(s){ const P=computePlan(s); const cards=[];
+  if(P.body.length) cards.push({type:'body',items:P.body.map(f=>({title:f.title,text:f.text,arzt:f.cat==='arzt'}))});
+  P.steps.filter(x=>!x.info&&x.d).forEach(x=>cards.push({type:'step',key:x.key,from:x.from,to:Math.round(x.to*10)/10,target:x.target,d:x.d,why:x.why,acts:x.acts,alt:x.alt,need:x.need,comp:!!x.comp,effects:(x.effects||[]).filter(e=>e.delta!=null&&MK[e.key]&&!e.comp).map(e=>({key:e.key,delta:e.delta}))}));
+  P.steps.filter(x=>!x.info&&!x.d).forEach(x=>cards.push({type:'step',key:x.key,from:x.from,to:x.from,target:x.target,d:0,why:x.why,acts:x.acts,alt:x.alt,need:x.need,blocked:true}));
+  s.plan={created:nowStamp(),cards,idx:0,res:{}}; }
+function stepCard(s,c,i,n){
+  const m=MK[c.key], u=m.unit, nn=v=>fmtNum(Math.round(v)); const kb=DO[c.key]||{steps:[],check:[],errors:[]};
+  const dir=DIRT[c.key]?(c.d>0?DIRT[c.key][0]:DIRT[c.key][1]):''; const actsTxt=c.acts.filter(a=>!a.info).map(a=>a.t).join(' ');
+  const steps=kb.steps.map(t=>t.replace('{d}',nn(Math.abs(c.d))).replace('{dir}',dir).replace('{acts}',actsTxt||'Änderung wie oben beschrieben umsetzen.'));
+  const tr=targetFit(s).rows.find(r=>r.key===c.key); const aNow=ampel(c.key,c.from,tr), aNew=ampel(c.key,c.to,tr);
+  const res=s.plan.res[i];
+  return `<div class="gcard">
+    <div class="gc-head">${IL(c.key)?`<div class="gc-ill">${IL(c.key)}</div>`:''}<div class="grow" style="min-width:0"><div class="label">Schritt ${i+1} von ${n}${c.comp?' · Ausgleich':''}</div><h2>${esc(m.label)} ${c.blocked?'– so nicht machbar':`${c.d>0?'+':''}${nn(c.d)} ${u}`}</h2></div></div>
+    <div class="gc-nums"><div class="gn ${aNow.c}"><span>Jetzt</span><b>${nn(c.from)}</b><i>${aNow.t}</i></div><div class="gn tgt"><span>Ziel</span><b>${nn(c.target)}</b><i>${tr&&tr.lo!=null?`Bereich ${nn(tr.lo)}–${nn(tr.hi)}`:''}</i></div><div class="gn ${c.blocked?'bad':aNew.c}"><span>Am Rad machbar</span><b>${c.blocked?'–':nn(c.to)}</b><i>${c.blocked?'neues Teil nötig':aNew.t}</i></div></div>
+    <div class="gc-sec"><h4>Warum</h4><p>${esc(c.why)}</p></div>
+    ${c.acts.length?`<div class="gc-sec"><h4>Was genau</h4><ul>${c.acts.map(a=>`<li>${a.part?'<span class="chip c-acc nodot">neues Teil</span> ':''}${esc(a.t)}</li>`).join('')}</ul>${c.alt.length?`<p class="muted" style="margin-top:4px"><b>Alternative:</b> ${c.alt.map(a=>esc(a.t)).join(' ')}</p>`:''}</div>`:''}
+    ${!c.blocked?`<div class="gc-sec"><h4>So geht’s</h4><p class="muted" style="margin-bottom:4px">${ic('wrench','width="14" height="14"')} ${esc(kb.tool||'')}</p><ol>${steps.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>${kb.torque?`<p class="torque">${ic('warn','width="14" height="14"')} Drehmoment: ${esc(kb.torque)}. Nie raten – der Wert steht auf dem Bauteil.</p>`:''}</div>`:''}
+    ${!c.blocked?`<div class="gc-sec"><h4>Danach prüfen</h4><ul>${kb.check.map(t=>`<li>${esc(t)}</li>`).join('')}${c.effects&&c.effects.length?`<li>Ändert sich mit: ${c.effects.map(e=>`${MK[e.key].label} ${e.delta>0?'+':''}${fmtNum(Math.round(e.delta))} ${MK[e.key].unit}`).join(', ')} (wird automatisch eingetragen).</li>`:''}</ul></div>
+    <div class="gc-sec err"><h4>Häufige Fehler</h4><ul>${kb.errors.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`:''}
+    ${c.need&&c.need.length?`<div class="notice">${ic('info')}<div>Für einen genaueren Vorschlag fehlt: ${esc(c.need.join(', '))}. Unter Messen → Weitere Messpunkte eintragen und Plan neu berechnen.</div></div>`:''}
+    <div class="gc-act">${res&&res.status==='done'&&!res.feel?`<div class="feel"><b>Kurz fahren lassen. Wie fühlt es sich an?</b><div class="row">${[['better','😊','besser'],['same','😐','gleich'],['worse','😣','schlechter']].map(([v,e,l])=>`<button class="btn feelbtn" data-act="planFeel" data-v="${v}">${e}<span>${l}</span></button>`).join('')}</div></div>`
+      :res&&res.feel?`<div class="statusbox ${res.feel==='worse'?'warn':'ok'}"><div style="flex:1"><b>${res.feel==='better'?'Besser – super!':res.feel==='same'?'Gleich – passt, weiter.':'Schlechter'}</b>${res.feel==='worse'?'<span class="muted" style="font-size:14px">Am besten zurückstellen und den nächsten Schritt prüfen.</span>':''}</div>${res.feel==='worse'?'<button class="btn sm" data-act="planUndo">Zurückstellen</button>':''}<button class="btn sm primary" data-act="planNext">Weiter</button></div>`
+      :c.blocked?`<button class="btn" data-act="planSkip">Verstanden, weiter</button>`
+      :`<button class="btn primary big" data-act="planDo">${ic('check')}Erledigt – auf ${nn(c.to)} ${u} eingestellt</button><button class="btn ghost" data-act="planSkip">Überspringen</button>`}</div>
+  </div>`;
+}
+function bodyCard(s,c,i,n){ const res=s.plan.res[i]; const stop=c.items.some(x=>x.arzt);
+  return `<div class="gcard"><div class="label">Schritt ${i+1} von ${n}</div><h2>Erst den Körper ausgleichen</h2>
+  <div class="gc-sec"><h4>Warum</h4><p>Fehlstellungen zuerst ausgleichen (Shim, Einlage, Keil). Sonst stellst du das Rad auf eine Fehlstellung ein und musst später alles neu machen.</p></div>
+  <div class="gc-sec"><ul class="bodylist">${c.items.map(x=>`<li class="${x.arzt?'stop':''}"><b>${esc(x.title)}</b><span>${esc(x.text)}</span></li>`).join('')}</ul></div>
+  ${stop?`<div class="notice warn">${ic('warn')}<div><b>Sicherheitsstopp:</b> Mindestens ein Punkt sollte von einer Fachperson (Arzt, Physiotherapie, Orthopädie) angeschaut werden. Ausgleich am Rad nur nach Rücksprache.</div></div>`:''}
+  <div class="gc-act">${res?`<div class="statusbox ok"><div style="flex:1"><b>Erledigt</b></div><button class="btn sm primary" data-act="planNext">Weiter</button></div>`:`<button class="btn primary big" data-act="planBody" data-v="done">${ic('check')}${stop?'Abgeklärt bzw. Kunde informiert – weiter':'Ausgleich erledigt'}</button><button class="btn ghost" data-act="planBody" data-v="later">Später, erst Rad einstellen</button>`}</div></div>`; }
+function guidedHtml(s){
+  const P=computePlan(s); const open=P.steps.filter(x=>!x.info&&x.d).length;
+  if(!s.plan||ui.adjIdx==null){
+    const done=s.plan?Object.values(s.plan.res).filter(r=>r.status==='done').length:0;
+    return `<div class="stack">
+    <div><h3>Deine Position auf einen Blick</h3><p class="muted" style="font-size:14px">Grün passt, Gelb knapp daneben, Rot außerhalb des Bereichs.</p></div>
+    ${glanceHtml(s)}
+    ${hoodHtml(s)}
+    <div class="gstart">${s.plan&&done<s.plan.cards.length?`<div><b>Geführte Anpassung läuft</b><span class="muted">${done} von ${s.plan.cards.length} erledigt</span></div><div class="row"><button class="btn primary big" data-act="planGo">Weiter mit Schritt ${Math.min(s.plan.idx+1,s.plan.cards.length)}${ic('arrow')}</button><button class="btn ghost" data-act="planStart">Neu berechnen</button></div>`
+      :open||P.body.length?`<div><b>${open} Änderung${open===1?'':'en'}${P.body.length?' + Körperausgleich':''}</b><span class="muted">Schritt für Schritt, mit Anleitung, Drehmoment und Kontrolle</span></div><button class="btn primary big" data-act="planStart">Geführte Anpassung starten${ic('arrow')}</button>`
+      :`<div><b>Alles im Bereich</b><span class="muted">Ohne Beschwerden, die dagegen sprechen, nichts verändern.</span></div>`}</div>
+    </div>`; }
+  const n=s.plan.cards.length, i=Math.min(ui.adjIdx,n-1), c=s.plan.cards[i];
+  if(!c) return '';
+  const pct=Math.round((Object.keys(s.plan.res).length)/n*100);
+  return `<div class="stack"><div class="wiz-top"><button class="btn sm ghost" data-act="planExit">${ic('back')}Übersicht</button><div class="wiz-bar"><i style="width:${pct}%"></i></div><span class="wiz-count">${i+1} von ${n}</span></div>
+  ${c.type==='body'?bodyCard(s,c,i,n):stepCard(s,c,i,n)}
+  <div class="row" style="justify-content:space-between">${i>0?`<button class="btn sm ghost" data-act="planPrev">${ic('back')}Vorheriger Schritt</button>`:'<span></span>'}</div></div>`;
+}
+function planApply(s,c){
+  const from=s.after[c.key]?Number(s.after[c.key].value):(s.before[c.key]?Number(s.before[c.key].value):null);
+  s.after[c.key]={key:c.key,value:c.to,method:'Eingestellt nach Plan',source:'manuell eingegeben',unc:null,time:nowStamp()};
+  s.changes.push({key:c.key,from,to:c.to,reason:(c.comp?'Ausgleich: ':'')+c.why.slice(0,160),time:nowStamp(),plan:true});
+  (c.effects||[]).forEach(e=>{ if(e.key===c.key) return; const base=s.after[e.key]||s.before[e.key]; if(!base) return; const nv=Math.round((Number(base.value)+e.delta)*10)/10; s.after[e.key]={key:e.key,value:nv,method:'Berechnet',source:'berechnet',unc:3,time:nowStamp()}; });
+  if(s.status==='geplant') s.status='in Arbeit'; audit(`Plan: ${MK[c.key].label} ${fmtNum(from)} → ${fmtNum(c.to)} ${MK[c.key].unit}`,s.id);
+}
+
+SESSTAB.anpassung = s => { if(s.plan&&ui.adjIdx!=null) return guidedHtml(s); const planKeys=computePlan(s).steps.map(x=>x.key); const sg=fitSuggestions(s,true).filter(x=>!x.key||!planKeys.includes(x.key)); const top=sg.slice(0,3), rest=sg.slice(3); const pp=partsPlan(s);
   const card=x=>`<div class="card"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal;font-size:14px">${esc(x.how)}</div><details class="more" style="margin-top:4px"><summary style="font-size:13px">Warum?</summary><p class="muted" style="font-size:13.5px">${esc(x.why)}</p></details>${(()=>{ const q=pp.find(y=>y.key===x.key); return q?`<details class="more" style="margin-top:2px"><summary style="font-size:13px">Kunde will keine neuen Teile?</summary><ul class="muted" style="font-size:13.5px;margin:4px 0 0;padding-left:18px">${q.noParts.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>${q.parts.length?`<p class="muted" style="font-size:13.5px;margin-top:4px"><b>Mit Teilen:</b> ${q.parts.map(esc).join(' ')}</p>`:''}</details>`:''; })()}</div>${x.key?`<button class="btn sm primary" data-act="prepChange" data-key="${x.key}" data-v="${x.v??''}" data-reason="${esc(x.reason||x.title)}">Ändern</button>`:''}</div>`;
   return `<div class="stack">
-  <p class="onlyline">Stell das Rad in kleinen Schritten um. Nach jeder Änderung kurz fahren lassen und nachfragen.</p>
+  ${guidedHtml(s)}
   ${checksHtml(s,true)}
   ${top.length?`<div><div class="label" style="margin-bottom:8px">Weitere Hinweise ${st('s')}</div><div class="sugg">${top.map(card).join('')}</div>${rest.length?`<details class="more" style="margin-top:8px"><summary>${rest.length} weitere Vorschläge</summary><div class="sugg" style="margin-top:8px">${rest.map(card).join('')}</div></details>`:''}</div>`:computePlan(s).steps.length?'':'<div class="statusbox"><div><b>Keine Vorschläge</b><span class="muted" style="font-size:14px">Trag Beschwerden im Schritt „Ziel“ ein oder miss den Kniewinkel.</span></div></div>'}
-  ${hoodHtml(s)}
+  <details class="more" ${ui.prepKey?'open':''}><summary>Alle Empfehlungen als Liste, selbst eintragen, Verlauf</summary><div class="stack" style="margin-top:10px">
   ${planHtml(s)}
   ${targetHtml(s)}
   <section class="panel" style="box-shadow:none" id="changeHead"><div class="panel-b stack">
@@ -1809,6 +1926,7 @@ SESSTAB.anpassung = s => { const planKeys=computePlan(s).steps.map(x=>x.key); co
       <div><button class="btn primary" type="submit">Änderung speichern</button></div>
     </form></div></section>
   ${s.changes.length?`<div><div class="label" style="margin-bottom:4px">Bisher geändert (${s.changes.length})</div><div class="chg">${s.changes.slice().reverse().map(ch=>{const m=MK[ch.key], d=(ch.from!=null&&ch.to!=null)?ch.to-ch.from:null;return `<div class="li"><div class="grow"><div class="t">${m.label}: ${fmtNum(ch.from)} → ${fmtNum(ch.to)} ${m.unit} <span class="${d>0?'up':d<0?'down':''} num" style="font-size:13px">${d===null?'':(d>0?'+':'')+fmtNum(d)}</span></div><div class="sub" style="white-space:normal">${esc(ch.reason)}</div></div></div>`;}).join('')}</div></div>`:''}
+  </div></details>
   <div class="camcard"><span class="ico">${ic('camera')}</span><div style="flex:1;min-width:0"><b>Fahr-Analyse mit Kamera</b><span class="muted" style="font-size:13.5px">Optional · neue Position beim Fahren filmen und Winkel messen</span></div></div>
   <details class="more" ${vid.src?'open':''}><summary>Fahr-Analyse öffnen</summary><div style="margin-top:10px">${vidPanel(s,'after')}</div></details>
   </div>`; };
@@ -2619,6 +2737,18 @@ function createSession(d){
 }
 
 const ACT = {
+  planStart(){ const s=sess(ui.sess); freezePlan(s); ui.adjIdx=0; save(); render(); window.scrollTo({top:0}); },
+  planGo(){ const s=sess(ui.sess); ui.adjIdx=s.plan.idx||0; render(); window.scrollTo({top:0}); },
+  planExit(){ ui.adjIdx=null; render(); window.scrollTo({top:0}); },
+  planPrev(){ ui.adjIdx=Math.max(0,ui.adjIdx-1); render(); window.scrollTo({top:0}); },
+  planNext(){ const s=sess(ui.sess); const n=s.plan.cards.length; const nx=ui.adjIdx+1; s.plan.idx=Math.min(nx,n); save(); if(nx>=n){ ui.adjIdx=null; render(); toast('Alle Schritte erledigt – jetzt zum Ergebnis'); } else { ui.adjIdx=nx; render(); } window.scrollTo({top:0}); },
+  planDo(){ const s=sess(ui.sess); const i=ui.adjIdx, c=s.plan.cards[i]; const keys=[c.key,...(c.effects||[]).map(e=>e.key)]; const prev={}; keys.forEach(k=>prev[k]=s.after[k]?{...s.after[k]}:null);
+    planApply(s,c); s.plan.res[i]={status:'done',prev,nChanges:1}; save(); render(); toast(`${MK[c.key].label} eingetragen`); },
+  planFeel(el){ const s=sess(ui.sess); const r=s.plan.res[ui.adjIdx]; r.feel=el.dataset.v; const c=s.plan.cards[ui.adjIdx]; const ch=[...s.changes].reverse().find(x=>x.key===c.key&&x.plan); if(ch) ch.feel=r.feel; save(); render(); },
+  planUndo(){ const s=sess(ui.sess); const i=ui.adjIdx, r=s.plan.res[i], c=s.plan.cards[i]; Object.entries(r.prev||{}).forEach(([k,v])=>{ if(v) s.after[k]=v; else delete s.after[k]; });
+    s.changes.push({key:c.key,from:c.to,to:r.prev[c.key]?Number(r.prev[c.key].value):c.from,reason:'Zurückgestellt: Kunde fühlte sich schlechter',time:nowStamp()}); r.status='undone'; save(); render(); toast('Zurückgestellt'); },
+  planSkip(){ const s=sess(ui.sess); s.plan.res[ui.adjIdx]={status:'skip'}; ACT.planNext(); },
+  planBody(el){ const s=sess(ui.sess); const c=s.plan.cards[ui.adjIdx]; s.plan.res[ui.adjIdx]={status:el.dataset.v}; if(el.dataset.v==='done') c.items.forEach(x=>{ if(!(s.comp||[]).some(cp=>cp.t.startsWith(x.title))) (s.comp=s.comp||[]).push({t:x.title,status:x.arzt?'abgeklärt':'erledigt'}); }); save(); ACT.planNext(); },
   liveCam(el){ liveOpen(el.dataset.id,'cam',el.dataset.side); },
   liveFile(el){ if(!vid.src||vid.kind!=='video'){ toast('Bitte zuerst ein Video laden',true); return; } liveOpen(el.dataset.id,'file',el.dataset.side); },
   liveReset(){ liveReset(); },
