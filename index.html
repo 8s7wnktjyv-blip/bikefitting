@@ -70,6 +70,7 @@ p{margin:0}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
 .topbar .crumb{font-size:13px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .topbar .spacer{flex:1}
+.savepill{font-size:12px;font-weight:600;border-radius:99px;padding:4px 10px;white-space:nowrap;border:0;cursor:pointer;background:var(--surface-2);color:var(--muted)}.savepill.ok{color:var(--ok,#2f8f5b)}.savepill.bad{background:#fbe3e1;color:#b3261e}
 .demo-pill{font-size:12px;font-weight:600;color:var(--accent-strong);background:var(--accent-soft);border-radius:99px;padding:4px 10px;white-space:nowrap}
 .content{padding-block:24px 48px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px;max-width:1180px;width:100%}
 .pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
@@ -404,6 +405,7 @@ canvas{max-width:100%;display:block}
       <button class="iconbtn menu-btn" data-act="menu" aria-label="Menü öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <div class="crumb" id="crumb">FitFrame</div>
       <div class="spacer"></div>
+      <button class="savepill" id="savePill" data-act="saveInfo" aria-label="Speicherstatus"></button>
       <span class="demo-pill" title="Alle Daten sind fiktiv">Demo</span>
       <button class="iconbtn" data-act="theme" id="themeBtn" aria-label="Hell oder dunkel"></button>
     </header>
@@ -1067,7 +1069,7 @@ function permanentData(){
       anamnesis:{goal:'Beschwerden loswerden, Längere Touren, Neues Rad richtig einstellen',complaints:'Füße / Zehen, Nacken, Rücken',training:'unter 2 h pro Woche',experience:'1–3 Jahre',previous:'Fitting bei anderem Anbieter',limits:'Keine',comfort:'Ausgewogen'},
       before:{saddleHeight:m('saddleHeight',750,'Maßband','gemessen'),saddleSetback:m('saddleSetback',13,'Maßband','gemessen'),reach:m('reach',545,'Maßband','gemessen'),drop:m('drop',100,'Maßband','gemessen'),cleatFore:m('cleatFore',15,'Maßband','gemessen'),
         stemLength:m('stemLength',80,'Herstellerangabe','vom Hersteller'),barWidth:m('barWidth',440,'Herstellerangabe','vom Hersteller'),crankLength:m('crankLength',172.5,'Herstellerangabe','vom Hersteller')},
-      after:{},changes:[],notes:'',feedback:[],followUps:[],check:{pain:'nein',legLenL:92,legLenR:93,pelvis:'rechts höher',shoulder:'gerade',kneeTrackL:'gerade',kneeTrackR:'fällt nach innen',archL:'hoch',archR:'hoch',forefootL:'neutral',forefootR:'Außenkante höher',hamstring:31,hipFlexL:'frei',hipFlexR:'frei',ankleL:13.5,ankleR:13,sitBone:130},comp:[]}]
+      after:{},changes:[],notes:'',feedback:[],followUps:[],check:{pain:'nein',legLenL:92,legLenR:93,pelvis:'rechts höher',shoulder:'gerade',kneeTrackL:'gerade',kneeTrackR:'fällt nach innen',archL:'hoch',archR:'hoch',forefootL:'neutral',forefootR:'Außenkante höher',hamstring:10,hipFlexL:'frei',hipFlexR:'frei',ankleL:13.5,ankleR:13,sitBone:130},comp:[]}]
   };
 }
 function ensurePermanent(){
@@ -1087,7 +1089,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-26.11';
+const APP_VER = '2026-10-26.12';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1116,7 +1118,11 @@ function mergeData(d){
   S.shared={...(d.shared||{}),...(S.shared||{})};
   return n;
 }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ storageOk=false; } }
+let lastSave=null;
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); const back=JSON.parse(localStorage.getItem(KEY)); storageOk=!!(back&&back.customers&&back.customers.length===S.customers.length); lastSave=new Date(); }catch(e){ storageOk=false; } savePill(); }
+function savePill(){ const b=document.getElementById('savePill'); if(!b) return; b.className='savepill '+(storageOk?'ok':'bad'); b.textContent=storageOk?(lastSave?`✓ gespeichert ${lastSave.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`:'✓ Speicher bereit'):'⚠ Nicht gespeichert'; }
+function storageTest(){ try{ const k='fitframe-test'; localStorage.setItem(k,'1'); const ok=localStorage.getItem(k)==='1'; localStorage.removeItem(k); return ok; }catch(e){ return false; } }
+const inAppBrowser=/iPhone|iPad/.test(navigator.userAgent)&&!/Safari\//.test(navigator.userAgent)&&!navigator.standalone;
 function audit(what,ref){ S.audit.unshift({time:nowStamp(),who:'Demo-Nutzer',what,ref:ref||''}); }
 S = load(); try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){} S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; }); S.geoCustom=S.geoCustom||[]; S.bikes.forEach(b=>{ if(!b.geo&&b.brand==='Canyon'&&b.model==='Endurace CF 7'&&b.size==='M') b.geo={id:'canyon-endurace-cf-7',size:'M'}; }); (function(){ const sd=seed(); sd.sessions.forEach(d=>{ const x=S.sessions.find(y=>y.id===d.id); if(x&&!Object.keys(x.check).length&&Object.keys(d.check||{}).length&&x.customerId===d.customerId){ x.check=d.check; x.comp=d.comp; } }); })();
 
@@ -1267,6 +1273,7 @@ VIEWS.dashboard = () => {
   S.inventory.filter(x=>x.stock<x.min).forEach(x=>att.push({icon:'box',t:`${x.name} nachbestellen`,sub:`noch ${x.stock}, Minimum ${x.min}`,a:'data-nav="lager"',chip:'<span class="chip c-warn">knapp</span>'})); }
   const appt=s=>{const c=cust(s.customerId),b=bike(s.bikeId);return `<div class="li"><span class="time">${esc(s.time)}</span><div class="avatar">${initials(c.name)}</div><div class="grow"><div class="t">${esc(c.name)}</div><div class="sub">${esc(s.type)} · ${esc(b.brand+' '+b.model)}</div></div>${sessChip(s.status)}${s.status==='geplant'||s.status==='eingetroffen'?`<button class="btn sm primary" data-act="startSession" data-id="${s.id}">Starten</button>`:`<button class="btn sm" data-act="openSession" data-id="${s.id}">Öffnen</button>`}</div>`;};
   return `
+  ${!storageOk||inAppBrowser?`<div class="notice warn">${ic('warn')}<div><b>${!storageOk?'Achtung: Hier wird nichts gespeichert.':'Achtung: eingebetteter Browser.'}</b> ${!storageOk?'Wahrscheinlich privater Modus.':'Daten können verloren gehen.'} Öffne den Link direkt in Safari. <button class="btn sm" data-act="saveInfo">Mehr dazu</button></div></div>`:''}
   ${loadIssue?`<div class="notice warn">${ic('warn')}<div><b>${esc(loadIssue)}</b> Eine Kopie wurde gesichert. Unter Mehr → Deine Daten sichern kannst du sie wiederherstellen.</div></div>`:''}
   <div class="pagehead"><div><h1>${greet}!</h1><p>${new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})} · ${todays.length?`Heute ${todays.length===1?'steht 1 Fitting':'stehen '+todays.length+' Fittings'} an.`:'Heute ist kein Fitting geplant.'}</p></div></div>
   <div class="tiles">
@@ -2775,6 +2782,23 @@ function createSession(d){
 }
 
 const ACT = {
+  saveInfo(){ const own=S.customers.filter(c=>!isDemoCust(c.id)).length;
+    openDrawer('Wo sind meine Daten?',`<div class="stack">
+    <div class="statusbox ${storageOk?'ok':'warn'}"><div><b>${storageOk?'Alles gespeichert':'Speichern funktioniert hier nicht'}</b><span class="muted" style="font-size:14px">${storageOk?`${S.customers.length} Kunden, davon ${own} selbst angelegt${lastSave?', zuletzt gespeichert um '+lastSave.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):''}.`:'Wahrscheinlich privater Modus oder ein eingebetteter Browser. Öffne den Link direkt in Safari.'}</span></div></div>
+    ${inAppBrowser?'<div class="notice warn">'+ic('warn')+'<div><b>Du bist in einem eingebetteten Browser</b> (z. B. aus einer App heraus geöffnet). Dort werden Daten oft gelöscht. Tippe auf „In Safari öffnen“ und arbeite nur dort.</div></div>':''}
+    <div><h3>Warum Daten „weg“ sein können</h3><ol style="margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px">
+      <li><b>Anderes Gerät:</b> PC und iPhone haben jeweils eigene Daten. Was du am PC einträgst, ist nicht auf dem iPhone.</li>
+      <li><b>Anderer Browser oder anders geöffnet:</b> Safari, Chrome, der Link aus der Claude-App und das Symbol auf dem Home-Bildschirm haben <b>jeweils eigene</b> Speicher.</li>
+      <li><b>Privater Modus:</b> Safari löscht alles, sobald der Tab geschlossen wird.</li>
+      <li><b>Safari löscht Daten</b> von Seiten, die 7 Tage nicht geöffnet wurden.</li>
+      <li><b>Claude-Vorschau und GitHub-Link</b> sind zwei verschiedene Adressen mit eigenen Daten.</li></ol></div>
+    <div><h3>So geht nichts mehr verloren</h3><ol style="margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px">
+      <li>Immer auf <b>einem</b> Weg öffnen: in Safari den GitHub-Link als Lesezeichen speichern und nur darüber öffnen.</li>
+      <li>Nach jedem Fitting: <b>Sicherung herunterladen</b> (unten) und in iCloud Drive ablegen.</li>
+      <li>Auf einem anderen Gerät: Sicherung dort über Mehr → Sicherung laden einspielen.</li>
+      <li>Dauerhafte Lösung: Speicherung in der Cloud mit Anmeldung (Punkt 5 aus dem Plan, braucht deine Freigabe).</li></ol></div>
+    <div class="row"><button class="btn primary" data-act="exportData">Sicherung herunterladen</button><button class="btn" data-act="exportCopy">${ic('copy')}Als Text kopieren</button></div>
+    <p class="faint" style="font-size:12.5px">Adresse: ${esc(location.host||'lokale Datei')} · Speichertest: ${storageTest()?'funktioniert':'fehlgeschlagen'}</p></div>`); },
   ckToggle(el){ ui.ckOpen=ui.ckOpen===el.dataset.k?null:el.dataset.k; render(); },
   planStart(){ const s=sess(ui.sess); freezePlan(s); ui.adjIdx=0; save(); render(); window.scrollTo({top:0}); },
   planGo(){ const s=sess(ui.sess); ui.adjIdx=s.plan.idx||0; render(); window.scrollTo({top:0}); },
@@ -3055,7 +3079,7 @@ document.addEventListener('change',e=>{ if(e.target&&e.target.id==='m_key_after'
 document.addEventListener('input',e=>{ if(e.target&&(e.target.id==='m_val_after')) changePreview(); if(e.target&&e.target.dataset&&e.target.dataset.lo!==undefined) liveRange(e.target); const el=e.target.closest('[data-input]'); if(!el) return; ui[el.dataset.input]=el.value; ui.focus=el.id; render(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); closeMenu(); } });
 
-applyTheme();
+applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
 go(VIEWS[start]?start:'dashboard');
 window.__fitframe={live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
