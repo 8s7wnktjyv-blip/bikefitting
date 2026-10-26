@@ -1004,7 +1004,7 @@ function seed(){
 function permanentData(){
   const t='2026-10-26 00:30', m=(k,v,meth,src)=>({...mv(k,v,meth,src,null),time:t});
   return {
-    customers:[{id:'p-dominik-boehm',name:'Dominik Böhm',email:'',phone:'',since:'2026-10-26',discipline:'Gravel',consent:true,body:{height:180,inseam:88,torso:null,arm:null,shoulder:null,footL:null,footR:null,sitBone:null},flex:{hamstring:'',hip:'',ankle:''},tags:['Fest gespeichert'],est:[]}],
+    customers:[{id:'p-dominik-boehm',name:'Dominik Böhm',email:'',phone:'',since:'2026-10-26',discipline:'Gravel',consent:true,body:{height:180,inseam:88,torso:null,arm:null,shoulder:null,footL:null,footR:null,sitBone:130},flex:{hamstring:'',hip:'',ankle:''},tags:['Fest gespeichert'],est:[]}],
     bikes:[{id:'p-bike-grizl',customerId:'p-dominik-boehm',name:'Gravel',brand:'Canyon',model:'Grizl CF SL 7',size:'M',year:null,type:'Gravel',frameNo:'',geo:{id:'canyon-grizl-cf-sl-7',size:'M'},pedal:'',saddle:'',km:null}],
     sessions:[{id:'p-sess-dominik-1',customerId:'p-dominik-boehm',bikeId:'p-bike-grizl',date:'2026-10-26',time:'',type:'Erstfitting',status:'in Arbeit',fitter:'Dominik Böhm',version:1,
       anamnesis:{goal:'Beschwerden loswerden, Längere Touren, Neues Rad richtig einstellen',complaints:'',training:'unter 2 h pro Woche',experience:'1–3 Jahre',previous:'Fitting bei anderem Anbieter',limits:'Keine',comfort:'Ausgewogen'},
@@ -1025,7 +1025,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-26.6';
+const APP_VER = '2026-10-26.7';
 let loadIssue = null;
 function load(){
   let raw=null;
