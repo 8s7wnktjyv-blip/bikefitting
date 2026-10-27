@@ -659,6 +659,9 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 .offnum{display:flex;gap:8px;align-items:flex-end}.offnum label{display:flex;flex-direction:column;font-size:11.5px;color:var(--muted);font-weight:600}
 .offnum .input{width:72px;min-height:36px;padding:6px 8px}.offnum b{min-width:76px;text-align:right}
 @media (max-width:560px){.offrow{grid-template-columns:auto 1fr}.offnum{grid-column:1/-1;justify-content:flex-end}}
+
+.catlist{display:flex;flex-direction:column;gap:6px}
+.catrow{display:flex;gap:8px;align-items:center}.catrow .input.num{width:92px!important;flex:none}.catrow>.btn{flex:none}.catrow>.input:first-child{flex:1;min-width:0}
 </style>
 </head>
 <body>
@@ -1419,7 +1422,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.32';
+const APP_VER = '2026-10-27.33';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1670,7 +1673,7 @@ VIEWS.mehr = () => `
   ${head('Mehr','Alle weiteren Bereiche von FitFrame.')}
   ${moreNav().map(([g,items])=>`<div class="stack"><h2>${g}</h2><div class="tiles">${items.map(([r,l,i,d])=>`<button class="tile" data-nav="${r}"><span class="ti">${ic(i)}</span><b>${l}</b><span>${d}</span></button>`).join('')}</div></div>`).join('')}
   ${shopHtml()}
-  ${pricesHtml()}
+  ${catalogHtml()}
   ${dataPanel()}
   ${statsHtml()}
   ${panel('Einstellungen',`<div class="stack"><div class="row" style="justify-content:space-between"><span>Darstellung</span><div class="seg"><button data-act="setTheme" data-v="light" aria-pressed="${theme==='light'}">Hell</button><button data-act="setTheme" data-v="dark" aria-pressed="${theme==='dark'}">Dunkel</button></div></div>
@@ -2873,41 +2876,93 @@ const PRICE_DEFAULT={stem:49,unit:189,spacer:6.5,insole:49,wedge:12,shim:9,saddl
 function price(k){ return S.prices&&S.prices[k]!=null?S.prices[k]:PRICE_DEFAULT[k]; }
 function pricesHtml(){ return panel('Deine Preise',`<div class="stack"><p class="muted" style="font-size:14px">Für das Angebot aus dem Fitting. Steht ein Teil mit Preis im Lager, gilt der Lagerpreis.</p><form class="form" data-form="prices">${Object.keys(PRICE_DEFAULT).map(k=>`<div class="field"><label for="pr_${k}">${PRICE_LABEL[k]} (€)</label><input class="input num" id="pr_${k}" name="${k}" type="number" step="0.5" min="0" inputmode="decimal" value="${price(k)}"></div>`).join('')}<div class="wide"><button class="btn primary" type="submit">Preise speichern</button></div></form></div>`); }
 function invFind(re){ return (S.inventory||[]).find(x=>re.test(x.name)); }
+/* ---------- Fitting-Pakete und eigener Produktkatalog (vom Fitter pflegbar) ---------- */
+const PROD_CATS=['Einlage','Keil','Shim','Sattel','Vorbau','Cockpit','Lenkerband','Cleats','Spacer','Sonstiges'];
+const FIT_PACK_DEFAULT=[{id:'basis',name:'Basis-Fitting (Sattel, Lenker, Cleats)',price:149},{id:'komplett',name:'Komplett-Fitting inkl. Körpercheck und Video',price:249},{id:'nach',name:'Nachkontrolle',price:0}];
+// Startliste: bekannte Produkte, Preise ca. (Stand 10/2026) – bitte an den eigenen Verkaufspreis anpassen
+const PROD_DEFAULT=[
+  {id:'ins-bg-red',cat:'Einlage',name:'Specialized Body Geometry SL Footbed Rot (+)',price:39.9,arch:['flach'],note:'wenig Stütze'},
+  {id:'ins-bg-blue',cat:'Einlage',name:'Specialized Body Geometry SL Footbed Blau (++)',price:39.9,arch:['flach','normal'],note:'mittlere Stütze'},
+  {id:'ins-bg-green',cat:'Einlage',name:'Specialized Body Geometry SL Footbed Grün (+++)',price:39.9,arch:['normal','hoch'],note:'starke Stütze'},
+  {id:'ins-currex-lo',cat:'Einlage',name:'Currex BikePro Low (rot)',price:49.95,arch:['flach']},
+  {id:'ins-currex-mid',cat:'Einlage',name:'Currex BikePro Medium (orange)',price:49.95,arch:['normal']},
+  {id:'ins-currex-hi',cat:'Einlage',name:'Currex BikePro High (blau)',price:49.95,arch:['hoch']},
+  {id:'wd-form-3',cat:'Keil',name:'FORM Cleat-Keile 1°, 3-Loch (SPD-SL/Look), 4er-Set',price:19.95,system:'3-Loch',pack:4},
+  {id:'wd-form-3-1',cat:'Keil',name:'FORM Cleat-Keil 1°, 3-Loch, einzeln',price:3,system:'3-Loch',pack:1},
+  {id:'wd-bikefit-spd',cat:'Keil',name:'BikeFit Cleat-Keil 1°, SPD 2-Loch, einzeln',price:4.9,system:'2-Loch',pack:1,note:'Preis prüfen'},
+  {id:'sh-form-3',cat:'Shim',name:'FORM Leg Length Shim, 3-Loch',price:9,system:'3-Loch'},
+  {id:'sh-bikefit-spd',cat:'Shim',name:'BikeFit Leg Length Shim 3 mm, SPD 2-Loch',price:9.9,system:'2-Loch',note:'Preis prüfen'},
+  {id:'sad-sq-611-130',cat:'Sattel',name:'SQlab 611 Ergowave 13 cm',price:117.99,width:130},
+  {id:'sad-sq-611-140',cat:'Sattel',name:'SQlab 611 Ergowave 14 cm',price:117.99,width:140},
+  {id:'sad-sq-611-150',cat:'Sattel',name:'SQlab 611 Ergowave 15 cm',price:117.99,width:150},
+  {id:'sad-power-143',cat:'Sattel',name:'Specialized Power Expert 143 mm',price:159,width:143,note:'Preis prüfen'},
+  {id:'sad-power-155',cat:'Sattel',name:'Specialized Power Expert 155 mm',price:159,width:155,note:'Preis prüfen'},
+  {id:'sad-power-168',cat:'Sattel',name:'Specialized Power Expert 168 mm',price:159,width:168,note:'Preis prüfen'},
+  {id:'stem-gen',cat:'Vorbau',name:'Vorbau (Länge/Winkel laut Empfehlung)',price:49},
+  {id:'ck-gen',cat:'Cockpit',name:'Lenker-Vorbau-Einheit (laut Empfehlung)',price:0,note:'Preis eintragen'},
+  {id:'tape-gen',cat:'Lenkerband',name:'Lenkerband',price:24.9},
+  {id:'cl-spd',cat:'Cleats',name:'Shimano SPD Cleats SM-SH51',price:19.95,system:'2-Loch',note:'Preis prüfen'},
+  {id:'cl-spdsl',cat:'Cleats',name:'Shimano SPD-SL Cleats SM-SH11 (gelb, 6°)',price:24.95,system:'3-Loch',note:'Preis prüfen'},
+  {id:'sp-set',cat:'Spacer',name:'Spacer-Set 5 mm',price:9.95}
+];
+function products(){ if(!S.products) S.products=JSON.parse(JSON.stringify(PROD_DEFAULT)); return S.products; }
+function fitPacks(){ if(!S.fitPacks) S.fitPacks=JSON.parse(JSON.stringify(FIT_PACK_DEFAULT)); return S.fitPacks; }
+function pedalSystem(b){ const p=(b&&b.pedal)||''; return /SPD-SL|Look|Keo|Time|3/.test(p)&&!/^Shimano SPD$/.test(p)?'3-Loch':/SPD/.test(p)?'2-Loch':(b&&['MTB','Gravel'].includes(b.type)?'2-Loch':'3-Loch'); }
+function prodChoices(cat,match){ const all=products().filter(p=>p.cat===cat); const m=match?all.filter(match):[]; return {best:m[0]||all[0]||null,list:[...m,...all.filter(p=>!m.includes(p))]}; }
+function catalogHtml(){
+  const P=products(), F=fitPacks();
+  return panel('Fitting-Preise und Produkte',`<div class="stack">
+  <p class="muted" style="font-size:14px">Fitting-Pakete enthalten alle Einstellarbeiten. Material wird extra berechnet: FitFrame schlägt im Angebot passende Produkte aus deiner Liste vor. Trag ein, was du verkaufst und zu welchem Preis.</p>
+  <h4 style="margin:4px 0 0">Fitting-Pakete</h4>
+  <div class="catlist">${F.map((p,i)=>`<div class="catrow"><input class="input" value="${esc(p.name)}" data-change="packEdit" data-i="${i}" data-f="name" aria-label="Paketname"><input class="input num" type="number" step="1" min="0" value="${p.price}" data-change="packEdit" data-i="${i}" data-f="price" aria-label="Preis" style="width:96px"><button class="btn sm ghost" data-act="packDel" data-i="${i}" aria-label="Paket löschen">${ic('x')}</button></div>`).join('')}</div>
+  <div><button class="btn sm" data-act="packAdd">${ic('plus')}Paket</button></div>
+  <h4 style="margin:8px 0 0">Deine Produkte</h4>
+  ${PROD_CATS.filter(c=>P.some(p=>p.cat===c)).map(c=>`<details class="more" ${c==='Einlage'?'open':''}><summary>${c} · ${P.filter(p=>p.cat===c).length}</summary><div class="catlist" style="margin-top:6px">${P.map((p,i)=>p.cat!==c?'':`<div class="catrow"><div class="grow" style="min-width:0;display:flex;flex-direction:column;gap:4px"><input class="input" value="${esc(p.name)}" data-change="prodEdit" data-i="${i}" data-f="name" aria-label="Produktname"><span class="faint" style="font-size:12px">${[p.arch?'für Gewölbe: '+p.arch.join(', '):'',p.system?'System: '+p.system:'',p.width?'Breite: '+p.width+' mm':'',p.pack&&p.pack>1?p.pack+' Stück je Packung':'',p.note||''].filter(Boolean).join(' · ')}</span></div><input class="input num" type="number" step="0.05" min="0" value="${p.price}" data-change="prodEdit" data-i="${i}" data-f="price" aria-label="Preis" style="width:96px"><button class="btn sm ghost" data-act="prodDel" data-i="${i}" aria-label="Produkt löschen">${ic('x')}</button></div>`).join('')}</div></details>`).join('')}
+  <form class="form" data-form="prodAdd" style="border-top:1px solid var(--line);padding-top:10px">
+    <div class="field"><label for="pa_c">Kategorie</label><select class="input" id="pa_c" name="cat">${opts(PROD_CATS)}</select></div>
+    <div class="field wide"><label for="pa_n">Produkt</label><input class="input" id="pa_n" name="name" required placeholder="z. B. Solestar Kontrol"></div>
+    <div class="field"><label for="pa_p">Preis (€)</label><input class="input num" id="pa_p" name="price" type="number" step="0.05" min="0" required></div>
+    <div class="field"><label for="pa_v">Passt für (optional)</label><select class="input" id="pa_v" name="variant"><option value="">alle</option><option value="arch:flach">Gewölbe flach</option><option value="arch:normal">Gewölbe normal</option><option value="arch:hoch">Gewölbe hoch</option><option value="system:2-Loch">SPD (2-Loch)</option><option value="system:3-Loch">SPD-SL/Look (3-Loch)</option></select></div>
+    <div class="field"><label for="pa_w">Sattelbreite mm (optional)</label><input class="input num" id="pa_w" name="width" type="number" min="100" max="200"></div>
+    <div class="field"><label for="pa_k">Stück je Packung</label><input class="input num" id="pa_k" name="pack" type="number" min="1" value="1"></div>
+    <div class="wide row" style="gap:6px"><button class="btn primary" type="submit">${ic('plus')}Produkt hinzufügen</button><button class="btn ghost" type="button" data-act="prodReset">Startliste wiederherstellen</button></div></form>
+  <p class="faint" style="font-size:12.5px">Startliste mit Richtpreisen (Stand 10/2026, ohne Gewähr) – bitte auf deine Verkaufspreise anpassen.</p></div>`); }
+
 function offerBuild(s){
-  const items=[]; const add=(id,name,qty,price,why,re)=>{ const inv=re?invFind(re):null; items.push({id,name:inv?inv.name:name,qty,price:inv&&inv.price?inv.price:price,why,on:true,sku:inv?inv.sku:null,stock:inv?inv.stock:null}); };
-  const P=computePlan(s); const b=bike(s.bikeId)||{};
-  // Cockpit / Vorbau aus der Cockpit-Empfehlung, wenn der Plan ein neues Teil braucht
+  const items=[]; const b=bike(s.bikeId)||{}; const sys=pedalSystem(b);
+  const add=(cat,ch,qty,why,nameOverride,fixed)=>{ if(fixed){ items.push({id:cat,cat,pid:fixed.id,name:fixed.name,qty,price:fixed.price,why,on:true}); return; } const p=ch&&ch.best; items.push({id:cat+items.length,cat,pid:p?p.id:null,name:nameOverride||(p?p.name:cat),qty,price:p?p.price:0,why,on:true,alts:ch?ch.list.map(x=>x.id):[],note:p&&p.note||''}); };
+  // Fitting-Paket (Einstellarbeiten inklusive)
+  const F=fitPacks(); const pk=/nachkontrolle/i.test(s.type||'')?F.find(x=>x.id==='nach'):Object.keys(s.check||{}).length>3?F.find(x=>x.id==='komplett'):F.find(x=>x.id==='basis'); const pk2=pk||F[0];
+  if(pk2) add('Paket',null,1,'inklusive aller Einstellarbeiten',null,pk2);
+  const P=computePlan(s);
   const needPart=P.steps.some(x=>(x.acts||[]).some(a=>a.part)||((x.alt||[]).some(a=>a.part)&&!x.d&&x.want));
   try{ const r=cockpitAdvice(s); if(r&&!Array.isArray(r.need)&&(Math.abs(r.need.dx)>=8||Math.abs(r.need.dy)>=8)&&needPart){ const u=r.units[0], a=r.best[0];
     const err0=Math.abs(r.need.dx)+Math.abs(r.need.dy); const better=x=>x&&x.err<=err0-8;
-    if(!(b.cockpit==='unit'?better(u):(better(a)||better(u)))) throw 0;
-    if(b.cockpit==='unit'&&u) add('unit',`${u.u.brand} ${u.u.model} ${u.L}×${u.w}`,1,price('unit'),'Cockpit-Empfehlung (gleiche Bauart)',null);
-    else if(a) add('stem',`Vorbau ${a.L} mm, ${a.a>0?'+':''}${a.a}°`,1,price('stem'),'Cockpit-Empfehlung',new RegExp(`Vorbau ${a.L} mm`));
-    add('lab1','Arbeit: Cockpit tauschen und einstellen',1,price('laborCockpit'),'Montage',null); } }catch(e){}
-  // Spacer, wenn mehr Spacer gebraucht werden als vorhanden (nur bei Vorbau, nicht Einheit)
-  const drop=P.steps.find(x=>x.key==='drop'&&x.parts&&x.parts.spacer!=null&&x.parts.spacer>((bikeParts(s).under||0)+(bikeParts(s).above||0)));
-  if(drop) add('sp','Spacer-Set 5 mm',Math.ceil((drop.parts.spacer-((bikeParts(s).under||0)+(bikeParts(s).above||0)))/5),price('spacer'),'Mehr Spacer nötig',/Spacer/);
-  // Schalthebel höher setzen (bei blockierter Lenkerhöhe)
-  if(P.steps.some(x=>x.key==='drop'&&!x.d&&(x.alt||[]).some(a=>/Schalthebel 5–10 mm höher/.test(a.t)))){ add('tape','Lenkerband',1,price('tape'),'Schalthebel höher setzen',/Lenkerband/); add('lab2','Arbeit: Schalthebel versetzen, Band wickeln',1,price('laborHoods'),'Montage',null); }
+    if(b.cockpit==='unit'?better(u):(better(a)||better(u))){
+      if(b.cockpit==='unit'&&u) add('Cockpit',prodChoices('Cockpit'),1,'Cockpit-Empfehlung (gleiche Bauart)',`${u.u.brand} ${u.u.model} ${u.L}×${u.w}`);
+      else if(a) add('Vorbau',prodChoices('Vorbau'),1,'Cockpit-Empfehlung',`Vorbau ${a.L} mm, ${a.a>0?'+':''}${a.a}°`); } } }catch(e){}
+  const pp=bikeParts(s); const have=(pp.under||0)+(pp.above||0);
+  const drop=P.steps.find(x=>x.key==='drop'&&x.parts&&x.parts.spacer!=null&&x.parts.spacer>have);
+  if(drop) add('Spacer',prodChoices('Spacer'),Math.ceil((drop.parts.spacer-have)/5),'Mehr Spacer nötig');
+  if(P.steps.some(x=>x.key==='drop'&&!x.d&&(x.alt||[]).some(a=>/Schalthebel 5–10 mm höher/.test(a.t)))) add('Lenkerband',prodChoices('Lenkerband'),1,'Schalthebel höher setzen, Band neu wickeln');
   // Füße
-  const f=footAdvice(s); const ins=['L','R'].filter(sd=>f.feet[sd].insole&&['ja','prüfen'].includes(f.feet[sd].insole.need));
-  if(ins.length){ add('ins',`Einlagen (${f.feet[ins[0]].insole.type.split(',')[0]})`,1,price('insole'),`Fußgewölbe ${ins.map(x=>x==='L'?'links':'rechts').join(' und ')}`,/Einlage/); add('lab3','Arbeit: Einlagen anpassen',1,price('laborInsole'),'Montage',null); }
+  const f=footAdvice(s); const archOf=sd=>{ const v=chkVal(s,'arch',sd); return v||'normal'; };
+  const ins=['L','R'].filter(sd=>f.feet[sd].insole&&['ja','prüfen'].includes(f.feet[sd].insole.need));
+  if(ins.length){ const ar=archOf(ins[0]); add('Einlage',prodChoices('Einlage',p=>(p.arch||[]).includes(ar)),1,`Fußgewölbe ${ins.map(x=>x==='L'?'links':'rechts').join(' und ')}: ${ar}${ins.length===2&&archOf('L')!==archOf('R')?' (Seiten unterschiedlich – prüfen)':''}`); }
   const wd=['L','R'].reduce((a,sd)=>a+((f.feet[sd].wedge&&f.feet[sd].wedge.need==='ja')?f.feet[sd].wedge.count:0),0);
-  if(wd) add('wd','Keile für Cleats (Wedges)',wd,price('wedge'),'Vorfuß schräg',/Keil|Wedge/);
-  if(f.shim&&f.shim.need==='ja') add('sh',`Unterlegplatte ${f.shim.mm} mm (${f.shim.side})`,1,price('shim'),'Beinlängenausgleich',/Unterleg|Shim/);
-  if(P.steps.some(x=>x.key==='cleatFore'&&x.d)||wd||(f.shim&&f.shim.need==='ja')) add('lab4','Arbeit: Cleats einstellen',1,price('laborCleat'),'Montage',null);
-  // Sattel bei Sitzbeschwerden
-  const pa=partsAdvice(s); if(pa.saddle&&/sitz/i.test((s.anamnesis&&s.anamnesis.complaints)||'')) add('sad',`Sattel ${pa.saddle.lo}–${pa.saddle.hi} mm breit`,1,price('saddle'),`Sitzknochen ${pa.saddle.sb} mm, Sitzbeschwerden`,/Sattel/);
+  if(wd){ const ch=prodChoices('Keil',p=>p.system===sys&&(p.pack||1)>=1); const pack=(ch.best&&ch.best.pack)||1; add('Keil',ch,Math.ceil(wd/pack),`${wd} Keil${wd>1?'e':''} nötig, Pedal ${sys==='2-Loch'?'SPD (2-Loch)':'SPD-SL/Look (3-Loch)'}`); }
+  if(f.shim&&f.shim.need==='ja') add('Shim',prodChoices('Shim',p=>p.system===sys),1,`Beinlänge: ${f.shim.mm} mm ${f.shim.side}`);
+  const pa=partsAdvice(s); if(pa.saddle&&/sitz/i.test((s.anamnesis&&s.anamnesis.complaints)||'')){ const mid=(pa.saddle.lo+pa.saddle.hi)/2; const ch=prodChoices('Sattel',p=>p.width&&p.width>=pa.saddle.lo-5&&p.width<=pa.saddle.hi+5); ch.list.sort((x,y)=>Math.abs((x.width||999)-mid)-Math.abs((y.width||999)-mid)); ch.best=ch.list[0]; add('Sattel',ch,1,`Sitzknochen ${pa.saddle.sb} mm → Breite ${pa.saddle.lo}–${pa.saddle.hi} mm`); }
   return items;
 }
 function offerHtml(s){
-  if(!s.offer||!s.offer.items) { s.offer={items:offerBuild(s),date:today()}; }
+  if(!s.offer||!s.offer.items||s.offer.items.some(x=>!x.cat)) { s.offer={items:offerBuild(s),date:today()}; }
   const it=s.offer.items; const sum=it.filter(x=>x.on).reduce((a,x)=>a+x.qty*x.price,0);
   return `<div class="offer"><div class="row" style="justify-content:space-between"><h3>Angebot aus dem Fitting</h3><button class="btn sm ghost" data-act="offerRebuild" data-id="${s.id}">Neu berechnen</button></div>
-  ${it.length?`<div class="offlist">${it.map((x,i)=>`<div class="offrow ${x.on?'':'off'}"><input type="checkbox" ${x.on?'checked':''} data-change="offerOn" data-id="${s.id}" data-i="${i}" aria-label="Position übernehmen"><div class="offname"><b>${esc(x.name)}</b><span class="faint">${esc(x.why)}${x.sku?` · Lager: ${x.stock} Stk.`:x.id.startsWith('lab')?'':' · nicht im Lager'}</span></div><div class="offnum"><label><span>Menge</span><input class="input num" type="number" min="0" value="${x.qty}" data-change="offerQty" data-id="${s.id}" data-i="${i}"></label><label><span>Preis €</span><input class="input num" type="number" step="0.5" min="0" value="${x.price}" data-change="offerPrice" data-id="${s.id}" data-i="${i}"></label><b class="num">${eur(x.on?x.qty*x.price:0)}</b></div></div>`).join('')}</div>
+  ${it.length?`<div class="offlist">${it.map((x,i)=>`<div class="offrow ${x.on?'':'off'}"><input type="checkbox" ${x.on?'checked':''} data-change="offerOn" data-id="${s.id}" data-i="${i}" aria-label="Position übernehmen"><div class="offname">${x.cat==="Paket"?`<select class="input" style="min-height:36px" data-change="offerProd" data-id="${s.id}" data-i="${i}" aria-label="Fitting-Paket">${fitPacks().map(p=>`<option value="${p.id}" ${p.id===x.pid?"selected":""}>${esc(p.name)}</option>`).join("")}</select>`:(x.alts&&x.alts.length>1)?`<b>${esc(x.name)}</b><select class="input" style="min-height:34px;margin-top:4px;font-size:13.5px" data-change="offerProd" data-id="${s.id}" data-i="${i}" aria-label="Anderes Produkt wählen">${x.alts.map(id=>{ const p=products().find(z=>z.id===id); return p?`<option value="${p.id}" ${p.id===x.pid?"selected":""}>${esc(p.name)} – ${eur(p.price)}</option>`:""; }).join("")}</select>`:`<b>${esc(x.name)}</b>`}<span class="faint">${esc(x.cat)} · ${esc(x.why)}${x.note?` · ${esc(x.note)}`:""}</span></div><div class="offnum"><label><span>Menge</span><input class="input num" type="number" min="0" value="${x.qty}" data-change="offerQty" data-id="${s.id}" data-i="${i}"></label><label><span>Preis €</span><input class="input num" type="number" step="0.5" min="0" value="${x.price}" data-change="offerPrice" data-id="${s.id}" data-i="${i}"></label><b class="num">${eur(x.on?x.qty*x.price:0)}</b></div></div>`).join('')}</div>
   <div class="row" style="justify-content:space-between"><b class="num" style="font-size:18px">Summe ${eur(sum)}</b><div class="row" style="gap:6px"><button class="btn" data-act="offerCopy" data-id="${s.id}">Text kopieren</button><button class="btn primary" data-act="offerSale" data-id="${s.id}">Als Auftrag anlegen</button></div></div>
-  <p class="faint" style="font-size:12.5px">Preise aus deinem Lager, sonst Richtpreise. Antippen zum Ändern. Positionen ohne Haken kommen nicht ins Angebot.</p>`
-  :'<p class="muted">Laut Plan sind keine neuen Teile nötig. Alles lässt sich mit den vorhandenen Teilen einstellen.</p>'}</div>`;
+  <p class="faint" style="font-size:12.5px">Einstellarbeiten sind im Fitting-Paket enthalten. Produkte und Preise aus deiner Liste (Mehr → Fitting-Preise und Produkte). Preise hier für diesen Kunden änderbar, Positionen ohne Haken kommen nicht ins Angebot.</p>`
+  :'<p class="muted">Laut Plan sind keine neuen Teile nötig.</p>'}</div>`;
 }
 function offerText(s){ const c=cust(s.customerId); const it=(s.offer&&s.offer.items||[]).filter(x=>x.on); const sum=it.reduce((a,x)=>a+x.qty*x.price,0);
   return [`Angebot – ${c.name} – ${fmtDate(today())}`,shopName()||'','',...it.map(x=>`${x.qty}× ${x.name} – ${eur(x.qty*x.price)} (${x.why})`),'',`Summe: ${eur(sum)}`].join('\n'); }
@@ -4115,6 +4170,10 @@ const ACT = {
   nbOpen(el){ ui.nb=ui.nb||{type:'Rennrad',style:'',brand:''}; openDrawer('Passendes Neurad finden',newBikeHtml(el.dataset.id)); },
   nbSet(el){ ui.nb=ui.nb||{}; ui.nb[el.dataset.k]=el.dataset.v; if(el.dataset.k==='type') ui.nb.brand=''; openDrawer('Passendes Neurad finden',newBikeHtml(el.dataset.id)); },
   setCockpit(el){ const b=bike(el.dataset.id); if(!b) return; b.cockpit=el.dataset.v; save(); render(); },
+  packAdd(){ fitPacks().push({id:uid('pk'),name:'Neues Paket',price:0}); save(); render(); },
+  packDel(el){ const F=fitPacks(); if(F.length<=1){ toast('Mindestens ein Paket nötig',true); return; } F.splice(+el.dataset.i,1); save(); render(); },
+  prodDel(el){ products().splice(+el.dataset.i,1); save(); render(); },
+  prodReset(){ if(!confirm('Startliste wiederherstellen? Deine eigenen Produkte bleiben erhalten, gelöschte Standardprodukte kommen zurück.')) return; const P=products(); PROD_DEFAULT.forEach(d=>{ if(!P.some(p=>p.id===d.id)) P.push(JSON.parse(JSON.stringify(d))); }); save(); render(); },
   offerRebuild(el){ const s=sess(el.dataset.id); s.offer={items:offerBuild(s),date:today()}; save(); render(); toast('Angebot neu berechnet'); },
   offerCopy(el){ copyText(offerText(sess(el.dataset.id))); },
   offerSale(el){ const s=sess(el.dataset.id); const it=(s.offer&&s.offer.items||[]).filter(x=>x.on&&x.qty>0); if(!it.length){ toast('Keine Position ausgewählt',true); return; } S.sales=S.sales||[]; const id='VK-'+(300+S.sales.length+1); S.sales.unshift({id,customerId:s.customerId,bikeId:s.bikeId,date:today(),items:it.map(x=>`${x.qty}× ${x.name}`).join(', '),total:Math.round(it.reduce((a,x)=>a+x.qty*x.price,0)*100)/100,status:'Angebot'}); audit(`Angebot ${id} aus Fitting angelegt`,s.id); save(); render(); toast(`Auftrag ${id} angelegt (Lager & Verkauf)`); },
@@ -4220,6 +4279,7 @@ function importJson(t){
 function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
 
 const FORMS = {
+  prodAdd(f,data){ const v=String(data.get('variant')||''); const p={id:uid('pr'),cat:data.get('cat'),name:String(data.get('name')||'').trim(),price:Math.max(0,Number(String(data.get('price')).replace(',','.'))||0)}; if(v.startsWith('arch:')) p.arch=[v.slice(5)]; if(v.startsWith('system:')) p.system=v.slice(7); const w=Number(data.get('width')); if(w) p.width=w; const k=Number(data.get('pack')); if(k>1) p.pack=k; products().push(p); save(); render(); toast('Produkt hinzugefügt'); },
   prices(f,data){ S.prices=S.prices||{}; Object.keys(PRICE_DEFAULT).forEach(k=>{ const v=parseFloat(String(data.get(k)||'').replace(',','.')); if(isFinite(v)&&v>=0) S.prices[k]=v; }); save(); render(); toast('Preise gespeichert – gilt ab dem nächsten Angebot (oder „Neu berechnen“)'); },
   shop(f,data){ S.shop=S.shop||{}; ['name','addr','phone','email','web'].forEach(k=>S.shop[k]=String(data.get(k)||'').trim()); save(); render(); toast('Ladendaten gespeichert'); },
   anaOne(f,data){ const s=sess(f.dataset.id); const i=Number(f.dataset.i); const k=ANA_Q[i][0]; s.anamnesis[k]=String(data.get(k)||'').trim(); if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit'; audit(`Ziel/Anamnese: ${ANA_Q[i][1]}`,s.id); save();
@@ -4294,6 +4354,9 @@ const FORMS = {
 };
 
 const CHG = {
+  offerProd(el){ const s=sess(el.dataset.id); const x=s.offer.items[+el.dataset.i]; const p=x.cat==='Paket'?fitPacks().find(z=>z.id===el.value):products().find(z=>z.id===el.value); if(!p) return; x.pid=p.id; if(x.cat==='Paket'||!/^(Vorbau|Cockpit)$/.test(x.cat)) x.name=p.name; x.price=p.price; x.note=p.note||''; save(); render(); },
+  packEdit(el){ const p=fitPacks()[+el.dataset.i]; if(!p) return; p[el.dataset.f]=el.dataset.f==='price'?Math.max(0,Number(el.value)||0):el.value; save(); },
+  prodEdit(el){ const p=products()[+el.dataset.i]; if(!p) return; p[el.dataset.f]=el.dataset.f==='price'?Math.max(0,Number(String(el.value).replace(',','.'))||0):el.value; save(); },
   offerOn(el){ const s=sess(el.dataset.id); s.offer.items[+el.dataset.i].on=el.checked; save(); render(); },
   offerQty(el){ const s=sess(el.dataset.id); s.offer.items[+el.dataset.i].qty=Math.max(0,Number(el.value)||0); save(); render(); },
   offerPrice(el){ const s=sess(el.dataset.id); s.offer.items[+el.dataset.i].price=Math.max(0,Number(String(el.value).replace(',','.'))||0); save(); render(); },
