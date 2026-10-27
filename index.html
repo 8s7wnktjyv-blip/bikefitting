@@ -236,6 +236,12 @@ td.r,th.r{text-align:right}
 .ckx-hl{padding:8px 10px;border-radius:10px;background:var(--accent-soft)}
 .st-ico.info{background:var(--info-soft,#e3edf9);color:var(--info);font-weight:700;font-style:italic}
 @media (max-width:480px){.ckx{margin-left:0}}
+.cockpit{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:16px;border:1px solid var(--line)}
+.ck2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:760px){.ck2{grid-template-columns:1fr}}
+.ckc{display:flex;flex-direction:column;gap:8px}.ckc h4{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.ckc ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:15px}.ckc .sub{font-size:13px;color:var(--muted);white-space:normal}
+.ckparts{display:flex;flex-direction:column;gap:6px}.ckparts>div{display:grid;grid-template-columns:110px 1fr;gap:2px 10px;padding:8px 10px;border-radius:10px;background:var(--surface-2)}
+.ckparts span{color:var(--muted);font-size:13px}.ckparts i{grid-column:2;font-style:normal;font-size:12.5px;color:var(--muted)}
 .acts{margin:6px 0 0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px}
 .acts li.info{color:var(--muted);list-style:circle}
 .plan-steps>li::marker{font-weight:700;color:var(--accent-strong)}
@@ -1089,7 +1095,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-26.12';
+const APP_VER = '2026-10-27.1';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1924,6 +1930,68 @@ function bodyCard(s,c,i,n){ const res=s.plan.res[i]; const stop=c.items.some(x=>
   <div class="gc-sec"><ul class="bodylist">${c.items.map(x=>`<li class="${x.arzt?'stop':''}"><b>${esc(x.title)}</b><span>${esc(x.text)}</span></li>`).join('')}</ul></div>
   ${stop?`<div class="notice warn">${ic('warn')}<div><b>Sicherheitsstopp:</b> Mindestens ein Punkt sollte von einer Fachperson (Arzt, Physiotherapie, Orthopädie) angeschaut werden. Ausgleich am Rad nur nach Rücksprache.</div></div>`:''}
   <div class="gc-act">${res?`<div class="statusbox ok"><div style="flex:1"><b>Erledigt</b></div><button class="btn sm primary" data-act="planNext">Weiter</button></div>`:`<button class="btn primary big" data-act="planBody" data-v="done">${ic('check')}${stop?'Abgeklärt bzw. Kunde informiert – weiter':'Ausgleich erledigt'}</button><button class="btn ghost" data-act="planBody" data-v="later">Später, erst Rad einstellen</button>`}</div></div>`; }
+/* ---------- Cockpit: passende Lenker-Vorbau-Einheit oder optimale Einzelteile ---------- */
+// Katalog: echte Produkte, Daten von Händler- bzw. Herstellerseiten (abgerufen 27.10.2026). Kompatibilität mit dem Rahmen immer beim Hersteller prüfen.
+const COCKPITS=[
+  {brand:'Canyon',model:'CP0039 1 1/8" CF Cockpit',type:'Gravel',ang:null,drop:115,reach:69,flare:16,sizes:[[60,400],[60,420],[70,420],[70,440],[80,460]],note:'Laut Canyon für die Grail-Plattform entwickelt.',src:'https://www.canyon.com/en-ch/gear/bike-parts/handlebars-and-stems/canyon-cp0039-1-1%2F8-cf-cockpit/9102162.html'},
+  {brand:'Canyon',model:'CP0050 1 1/8" CF Full Mounty Gravel Cockpit',type:'Gravel',ang:-6,drop:115,reach:69,flare:16,sizes:[[50,420],[60,420],[60,440],[70,440]],note:'Größenangaben auf der Herstellerseite teils widersprüchlich.',src:'https://app.canyon.com/en-us/gear/components/handlebars-and-stems/canyon-cp0050-1-1%2F8%22-cf-full-mounty-gravel-cockpit/9102423.html'},
+  {brand:'Deda',model:'Alanera RS',type:'Rennrad',ang:-8,drop:120,reach:75,flare:0,sizes:[80,90,100,110,120,130,140].flatMap(l=>[380,400,420,440].map(w=>[l,w])),note:'Händlerseite nennt teils weniger Größen.',src:'https://racycles.com/products/deda-alanera-rs-integrated-handlebar'},
+  {brand:'Vision',model:'Metron 5D ACR',type:'Rennrad',ang:-6,drop:null,reach:null,flare:0,sizes:[[100,400],[110,400],[110,420],[120,400],[120,420],[130,400],[130,440]],note:'',src:'https://racycles.com/collections/handlebars/products/vision-metron-5d-acr-integrated-handlebar'}
+];
+const STEM_ANGLES=[-17,-10,-6,0,6,10,17];
+function cockpitNeed(s){
+  const P=computePlan(s); const dr=P.steps.find(x=>x.key==='drop'&&!x.info), rr=P.steps.find(x=>x.key==='reach'&&!x.info);
+  return {dx:rr?rr.target-rr.from:0, dy:dr?-(dr.target-dr.from):0, P}; // dx: Lenker weiter weg (+), dy: Lenker höher (+)
+}
+function stemVec(L,a,ha){ const th=(a+(90-ha))*Math.PI/180; return {x:L*Math.cos(th),y:L*Math.sin(th)}; }
+function cockpitAdvice(s){
+  const b=bike(s.bikeId); const c=cust(s.customerId); const A=bikeAngles(s); const p=bikeParts(s); const need=cockpitNeed(s);
+  const L0=p.L, a0=p.ang; if(!L0) return {need:['Vorbaulänge']};
+  const base=stemVec(L0,a0,A.ha); const ha=A.ha*Math.PI/180;
+  const mtb=b.type==='MTB'; const Ls=mtb?[30,40,50,60,70,80]:[50,60,70,80,90,100,110,120,130];
+  const spMin=-(p.under??0), spMax=(p.above??0);
+  const combos=[];
+  Ls.forEach(L=>STEM_ANGLES.forEach(a=>{ for(let sp=spMin;sp<=spMax;sp+=5){ // sp>0: Spacer unter den Vorbau (Lenker höher)
+    const v=stemVec(L,a,A.ha); const dx=v.x-base.x - sp*Math.cos(ha), dy=v.y-base.y + sp*Math.sin(ha);
+    const err=Math.abs(need.dx-dx)+Math.abs(need.dy-dy); const pen=(Math.abs(a)>10?4:0)+(sp?2:0)+(L!==L0?0:0);
+    combos.push({L,a,sp,dx,dy,err,score:err+pen}); } }));
+  combos.sort((x,y)=>x.score-y.score);
+  const best=[]; combos.forEach(cb=>{ if(best.length<3&&!best.some(b2=>b2.L===cb.L&&b2.a===cb.a)) best.push(cb); });
+  // Lenkerbreite aus Schulterbreite
+  const sh=Number(c.body.shoulder)||null, shEst=!sh; const shw=(sh||Number(c.body.height)*RATIO.shoulder)*10;
+  const gravel=b.type==='Gravel';
+  const wIdeal=Math.round(shw/20)*20; const width={ideal:wIdeal,lo:wIdeal-20,hi:wIdeal+(gravel?20:0),est:shEst,shw:Math.round(shw)};
+  const ham=Number((s.check&&s.check.hamstring)||0); const comfort=/Komfort/.test(s.anamnesis.comfort||'');
+  const barDrop=(ham>20||comfort)?'flach: 100–115 mm':'normal: 120–130 mm';
+  const barReach=need.dx<-8?'kurz: 65–75 mm (holt die Schalthebel näher)':need.dx>8?'normal bis lang: 80–90 mm':'normal: 75–80 mm';
+  // Einheiten aus dem Katalog
+  const target=best[0]; const units=[];
+  COCKPITS.filter(u=>u.type===b.type||(b.type==='Gravel'&&u.type==='Gravel')).forEach(u=>{ u.sizes.forEach(([L,w])=>{ const a=u.ang??-6; let bestSp=null;
+      for(let sp=spMin;sp<=spMax;sp+=5){ const v=stemVec(L,a,A.ha); const dx=v.x-base.x-sp*Math.cos(ha), dy=v.y-base.y+sp*Math.sin(ha); const err=Math.abs(need.dx-dx)+Math.abs(need.dy-dy); if(!bestSp||err<bestSp.err) bestSp={sp,dx,dy,err}; }
+      units.push({u,L,w,a,...bestSp,wOff:Math.abs(w-width.ideal)}); }); });
+  const fitW=units.filter(x=>x.w>=width.lo&&x.w<=width.hi+20); const pool=fitW.length?fitW:units; pool.sort((x,y)=>(x.err+x.wOff/4)-(y.err+y.wOff/4)); units.length=0; units.push(...pool);
+  return {need,best,width,barDrop,barReach,units:units.slice(0,3),L0,a0,p,A};
+}
+function cockpitHtml(s){
+  const b=bike(s.bikeId); if(!b||!['Rennrad','Gravel'].includes(b.type)) return '';
+  const r=cockpitAdvice(s); if(r.need&&Array.isArray(r.need)) return `<div class="notice">${ic('info')}<div>Für die Cockpit-Empfehlung fehlt: ${esc(r.need.join(', '))}.</div></div>`;
+  const n=v=>fmtNum(Math.round(v)); const sg=v=>(v>0?'+':'')+n(v);
+  if(Math.abs(r.need.dx)<5&&Math.abs(r.need.dy)<5) return `<div class="cockpit"><h3>Cockpit</h3><p class="muted">Lenkerposition passt. Kein neues Cockpit nötig.</p></div>`;
+  const spTxt=sp=>sp>0?`${sp} mm Spacer von oben unter den Vorbau`:sp<0?`${-sp} mm Spacer von unten nach oben`:'Spacer bleiben';
+  return `<div class="cockpit"><h3>Cockpit-Empfehlung</h3>
+  <p class="muted" style="font-size:14px">Ziel: Lenker <b>${sg(r.need.dy)} mm ${r.need.dy>=0?'höher':'tiefer'}</b> und <b>${sg(r.need.dx)} mm ${r.need.dx>=0?'weiter weg':'näher'}</b>. Jetzt: Vorbau ${r.L0} mm, ${fmtNum(r.a0)}°${r.p.angKnown?'':' (Winkel angenommen)'}.</p>
+  ${(()=>{ const a=r.best[0], u=r.units[0]; const useA=!u||a.err+5<u.err; return `<div class="statusbox ok"><div><b>Empfehlung: ${useA?`Variante A – Vorbau ${a.L} mm, ${a.a>0?'+':''}${a.a}°`:`Variante B – ${esc(u.u.brand+' '+u.u.model)} ${u.L}×${u.w}`}</b><span class="muted" style="font-size:14px">${useA?(u?`Eine Einheit hat einen festen Winkel und bleibt hier ${n(u.err)} mm vom Ziel entfernt. Einzelteile treffen es besser.`:'Keine passende Einheit im Katalog.'):'Die Einheit trifft das Ziel fast so gut wie Einzelteile und ist aufgeräumter.'}</span></div></div>`; })()}
+  <div class="ck2"><div class="ckc"><h4>Variante A: Einzelteile</h4>
+    <ol>${r.best.map((x,i)=>`<li><b>Vorbau ${x.L} mm, ${x.a>0?'+':''}${x.a}°</b> · ${spTxt(x.sp)}<div class="sub">ergibt ${sg(x.dy)} mm Höhe, ${sg(x.dx)} mm Länge${x.err>8?` · noch ${n(x.err)} mm vom Ziel entfernt`:' · trifft das Ziel'}</div></li>`).join('')}</ol>
+    <div class="ckparts"><div><span>Lenkerbreite</span><b>${r.width.lo}–${r.width.hi} mm</b><i>ideal ${r.width.ideal} mm · Schulterbreite ${r.width.shw} mm${r.width.est?' (geschätzt – messen!)':''}${b.type==='Gravel'?' · Gravel: mit Flare 12–16°':''}</i></div>
+    <div><span>Lenker-Reach</span><b>${esc(r.barReach.split(':')[0])}</b><i>${esc(r.barReach.split(':')[1]||'')}</i></div>
+    <div><span>Lenker-Drop</span><b>${esc(r.barDrop.split(':')[0])}</b><i>${esc(r.barDrop.split(':')[1]||'')}${r.barDrop.startsWith('flach')?' · Unterlenker gut erreichbar trotz eingeschränkter Beweglichkeit':''}</i></div></div></div>
+  <div class="ckc"><h4>Variante B: Lenker-Vorbau-Einheit</h4>
+    ${r.units.length?`<ol>${r.units.map(x=>`<li><b>${esc(x.u.brand)} ${esc(x.u.model)}</b> · ${x.L} mm × ${x.w} mm${x.u.ang!=null?`, ${x.u.ang}°`:''}<div class="sub">${spTxt(x.sp)} · ergibt ${sg(x.dy)} mm Höhe, ${sg(x.dx)} mm Länge${x.err>8?` · noch ${n(x.err)} mm vom Ziel`:''}${x.u.reach?` · Reach ${x.u.reach}, Drop ${x.u.drop} mm`:''}${x.u.flare?`, Flare ${x.u.flare}°`:''}</div><div class="sub">${x.u.ang==null?'Winkel nicht angegeben, −6° angenommen. ':''}${esc(x.u.note)} <a href="${esc(x.u.src)}" target="_blank" rel="noopener">Quelle</a></div></li>`).join('')}</ol>`:'<p class="muted">Keine passende Einheit im Katalog.</p>'}
+    <div class="notice warn" style="font-size:13.5px">${ic('warn')}<div>Einheiten passen nicht an jeden Rahmen (Gabelschaft, Steuersatz-Abdeckung, Leitungsführung). Vor dem Kauf beim Hersteller „Kompatibilität prüfen“. Längen nur in festen Größen, Feineinstellung über Spacer.</div></div></div></div>
+  <p class="faint" style="font-size:12.5px">Berechnung über Lenkwinkel ${fmtNum(r.A.ha)}° und Vorbauwinkel. Katalog: ${COCKPITS.length} Einheiten (Stand 27.10.2026). Preise und Verfügbarkeit beim Händler prüfen.</p></div>`;
+}
+
 function guidedHtml(s){
   const P=computePlan(s); const open=P.steps.filter(x=>!x.info&&x.d).length;
   if(!s.plan||ui.adjIdx==null){
@@ -1932,6 +2000,7 @@ function guidedHtml(s){
     <div><h3>Deine Position auf einen Blick</h3><p class="muted" style="font-size:14px">Grün passt, Gelb knapp daneben, Rot außerhalb des Bereichs.</p></div>
     ${glanceHtml(s)}
     ${hoodHtml(s)}
+    ${cockpitHtml(s)}
     <div class="gstart">${s.plan&&done<s.plan.cards.length?`<div><b>Geführte Anpassung läuft</b><span class="muted">${done} von ${s.plan.cards.length} erledigt</span></div><div class="row"><button class="btn primary big" data-act="planGo">Weiter mit Schritt ${Math.min(s.plan.idx+1,s.plan.cards.length)}${ic('arrow')}</button><button class="btn ghost" data-act="planStart">Neu berechnen</button></div>`
       :open||P.body.length?`<div><b>${open} Änderung${open===1?'':'en'}${P.body.length?' + Körperausgleich':''}</b><span class="muted">Schritt für Schritt, mit Anleitung, Drehmoment und Kontrolle</span></div><button class="btn primary big" data-act="planStart">Geführte Anpassung starten${ic('arrow')}</button>`
       :`<div><b>Alles im Bereich</b><span class="muted">Ohne Beschwerden, die dagegen sprechen, nichts verändern.</span></div>`}</div>
@@ -2054,7 +2123,7 @@ SESSTAB.bericht = s => `<div class="stack"><div class="row" style="justify-conte
 SESSTAB.ergebnis = s => {
   const q=quality(s), crit=q.filter(x=>x[0]!=='info').length; const t=ui.resTab||'vergleich';
   const tabs=[['vergleich','Vorher / Nachher'],['teile','Teile & Alternativen'],['groesse','Größe & Sattel'],['qualitaet',`Datenqualität${crit?` (${crit})`:''}`],['bericht','Bericht']];
-  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,teile:()=>checksHtml(s,false)+hoodHtml(s)+planHtml(s)+'<hr>'+partsPlanHtml(s),groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
+  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,teile:()=>checksHtml(s,false)+hoodHtml(s)+cockpitHtml(s)+planHtml(s)+'<hr>'+partsPlanHtml(s),groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
   return `<div class="stack">
   <p class="onlyline">Prüfe das Ergebnis, erstelle den Bericht und schließ das Fitting ab.</p>
   <div class="tabsbar" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${t===k}" data-act="resTab" data-v="${k}">${l}</button>`).join('')}</div>
