@@ -634,6 +634,10 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 .gp-i{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-strong);font-weight:800}
 .gp-a{font-family:var(--f-head);font-weight:700;color:var(--accent-strong);white-space:nowrap}
 :root[data-theme="dark"] .gp-a,:root[data-theme="dark"] .gp-i{color:var(--accent)}
+
+.calbox{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px}
+
+.tiltbig{font-family:var(--f-head);font-size:64px;font-weight:800;letter-spacing:-.02em;line-height:1;padding:10px 0;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -751,7 +755,12 @@ const MK = {
   shoulderAngle:{label:'Schulterwinkel',unit:'°',group:'Bewegung',def:'Hüfte–Schulter–Ellbogen, Mittel über die Umdrehung'},
   elbowAngle:{label:'Ellbogenwinkel',unit:'°',group:'Bewegung',def:'Schulter–Ellbogen–Handgelenk, Mittel über die Umdrehung'},
   ankleRange:{label:'Fußgelenk-Bewegung',unit:'°',group:'Bewegung',def:'Spanne des Winkels Knie–Knöchel–Zehen über eine Umdrehung'},
-  hipRock:{label:'Becken wippt',unit:'mm',group:'Bewegung',def:'Auf und ab der Hüfte pro Umdrehung'}
+  hipRock:{label:'Becken wippt',unit:'mm',group:'Bewegung',def:'Auf und ab der Hüfte pro Umdrehung'},
+  kneeSwayL:{label:'Knie links pendelt',unit:'mm',group:'Bewegung',def:'Seitliches Pendeln des linken Knies, Video von vorn'},
+  kneeSwayR:{label:'Knie rechts pendelt',unit:'mm',group:'Bewegung',def:'Seitliches Pendeln des rechten Knies, Video von vorn'},
+  kneeInL:{label:'Knie links innen/außen',unit:'mm',group:'Bewegung',def:'Mittlere Lage zur Linie Hüfte–Knöchel; + = innen (Richtung Rahmen)'},
+  kneeInR:{label:'Knie rechts innen/außen',unit:'mm',group:'Bewegung',def:'Mittlere Lage zur Linie Hüfte–Knöchel; + = innen (Richtung Rahmen)'},
+  pelvisRock:{label:'Becken kippt (von vorn)',unit:'°',group:'Bewegung',def:'Seitliches Kippen der Hüfte pro Umdrehung'}
 };
 const REQUIRED = ['saddleHeight','saddleSetback','reach','drop','crankLength','cleatFore']; // Kurbel meist vom Hersteller
 const METHODS = ['Maßband','Laser-Wasserwaage','Digitaler Winkelmesser','Goniometer','2D-Video (unkalibriert)','2D-Video (kalibriert)','2D-Video live (automatisch)','Herstellerangabe','Berechnet','CleatLab (Prototyp, nicht validiert)'];
@@ -923,6 +932,9 @@ function measureRange(k,c,b){
     case 'elbowAngle': return {lo:70,hi:180,unit:'°',basis:'plausibler Bereich'};
     case 'ankleRange': return {lo:5,hi:50,unit:'°',basis:'plausibler Bereich'};
     case 'hipRock': return {lo:0,hi:40,unit:'mm',basis:'plausibler Bereich; ruhig ≤ 10 mm'};
+    case 'kneeSwayL': case 'kneeSwayR': return {lo:0,hi:60,unit:'mm',basis:'plausibler Bereich; ruhig ≤ 10 mm'};
+    case 'kneeInL': case 'kneeInR': return {lo:-60,hi:60,unit:'mm',basis:'plausibler Bereich'};
+    case 'pelvisRock': return {lo:0,hi:20,unit:'°',basis:'plausibler Bereich; ruhig ≤ 3°'};
   }
   return null;
 }
@@ -1386,7 +1398,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.28';
+const APP_VER = '2026-10-27.30';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1509,7 +1521,7 @@ function openDrawer(title,body,actions){
   document.getElementById('overlay').innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="drawer-h"><h2>${esc(title)}</h2>${actions||''}<button class="iconbtn" data-act="close" aria-label="Schließen">${ic('x')}</button></div><div class="drawer-b" id="drawerBody">${body}</div></aside>`;
   labelTables(document.getElementById('overlay')); const d=document.querySelector('.drawer'); d && d.querySelector('.iconbtn').focus();
 }
-function closeDrawer(){ if(typeof liveStop==='function') liveStop(); document.getElementById('overlay').innerHTML=''; drawerCtx=null; }
+function closeDrawer(){ if(typeof liveStop==='function') liveStop(); if(typeof tiltStop==='function') tiltStop(); document.getElementById('overlay').innerHTML=''; drawerCtx=null; }
 let drawerCtx = null;
 function closeMenu(){ document.getElementById('side').classList.remove('open'); }
 
@@ -1751,6 +1763,21 @@ const PRESET={
 };
 const splitVals=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean);
 const ANA_Q=[['goal','Was ist das Ziel des Fittings?','Mehrere Antworten möglich.'],['complaints','Gibt es Beschwerden beim Fahren?','Mehrere möglich. Wo genau und seit wann, kannst du unten ergänzen.'],['training','Wie viel fährt die Person pro Woche?',''],['experience','Seit wann fährt die Person Rad?',''],['previous','Gab es schon ein Fitting?',''],['limits','Gibt es körperliche Einschränkungen?','Mehrere möglich.'],['comfort','Was ist wichtiger?','']];
+/* ---------- iPhone als digitaler Winkelmesser (Neigungssensor) ---------- */
+const TILT_KEYS={
+  saddleTilt:{how:'iPhone flach der Länge nach auf den Sattel legen, Oberkante zeigt zur Sattelnase. Am besten auf ein gerades Lineal über den Sattel.',sign:1},
+  stemAngle:{how:'iPhone flach auf den Vorbau legen, Oberkante zeigt nach vorn. FitFrame rechnet den Lenkwinkel heraus.',sign:1,stem:true},
+  barRoll:{how:'iPhone an das gerade Stück des Unterlenkers halten, Oberkante zeigt nach hinten zu den Lenkerenden.',sign:1},
+  hoodRamp:{how:'iPhone von der Lenkeroberseite zur Schalthebel-Oberkante legen, Oberkante zeigt nach vorn zu den Schalthebeln.',sign:1},
+  torsoAngle:{how:'Kunde in Fahrposition (Hände an den Schalthebeln). iPhone flach auf den Rücken legen, zwischen Becken und Schulterblatt, Oberkante zeigt zum Kopf.',sign:1,abs:true}
+};
+const tilt={on:false,v:null,buf:[],k:null,target:null};
+function tiltHandler(e){ if(e.beta==null) return; const z=(S.tiltZero||0); let v=e.beta-z; tilt.buf.push(v); if(tilt.buf.length>25) tilt.buf.shift(); const m=tilt.buf.reduce((a,b)=>a+b,0)/tilt.buf.length; tilt.v=m;
+  const sd=Math.sqrt(tilt.buf.reduce((a,b)=>a+(b-m)**2,0)/tilt.buf.length); const el=document.getElementById('tiltVal'), st=document.getElementById('tiltStable'); if(el) el.textContent=fmtNum(Math.round(tiltValue()*10)/10)+'°'; if(st){ st.textContent=sd<0.3?'stabil – jetzt übernehmen':'ruhig halten …'; st.className='chip nodot '+(sd<0.3?'c-ok':'c-warn'); } }
+function tiltValue(){ const d=TILT_KEYS[tilt.k]||{}; let v=(tilt.v||0)*(d.sign||1); if(d.stem){ const s=sess(ui.sess); const A=s?bikeAngles(s):{ha:72}; v=v-(90-A.ha); } if(d.abs) v=Math.abs(v); return v; }
+async function tiltStart(){ try{ if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){ const r=await DeviceOrientationEvent.requestPermission(); if(r!=='granted'){ toast('Zugriff auf den Neigungssensor wurde nicht erlaubt',true); return; } }
+  if(!tilt.on){ window.addEventListener('deviceorientation',tiltHandler); tilt.on=true; } const b=document.getElementById('tiltGo'); if(b) b.hidden=true; setTimeout(()=>{ if(tilt.v==null){ const el=document.getElementById('tiltVal'); if(el) el.textContent='kein Sensor'; } },1500); }catch(e){ toast('Neigungssensor nicht verfügbar. Am iPhone in Safari über den GitHub-Link öffnen.',true); } }
+function tiltStop(){ if(tilt.on){ window.removeEventListener('deviceorientation',tiltHandler); tilt.on=false; } tilt.buf=[]; tilt.v=null; }
 /* ---------- Körperbau: Proportionen verständlich erklären ---------- */
 function bodyType(c){
   const H=Number(c.body.height)||null, I=Number(c.body.inseam)||null; if(!H||!I) return null;
@@ -2050,6 +2077,8 @@ function footAdvice(s){
     else if(ff==='neutral'&&outward) f.wedge={need:'erst prüfen',count:0,side:'außen',why:'Vorfuß gerade, Knie fällt nach außen: zuerst seitliche Cleat-Position prüfen, dann 1 Keil außen testen.'};
     else if(ff) f.wedge={need:'nein',count:0,side:'',why:'Vorfuß gerade, Kniespur gerade.'};
     if(f.wedge&&f.wedge.need==='ja'&&((f.wedge.side==='außen'&&inward)||(f.wedge.side==='innen'&&outward))){ f.wedge={need:'erst prüfen',count:1,side:f.wedge.side,why:`Widerspruch: Der Vorfuß spricht für einen Keil ${f.wedge.side}, die Kniespur (${inward?'nach innen':'nach außen'}) eher für das Gegenteil. Erst die Einlage, dann die Vorfußstellung in Bauchlage noch einmal prüfen. Danach 1 Keil ${f.wedge.side} testweise einbauen und die Kniespur beim Fahren mit und ohne Keil vergleichen.`}; }
+    { const e={...s.before,...s.after}; const sw=e['kneeSway'+sd], kin=e['kneeIn'+sd]; if(sw){ const v=Number(sw.value), m=kin?Number(kin.value):null; f.video=`Video von vorn: Knie pendelt ${fmtNum(v)} mm${m!=null?`, läuft ${Math.abs(m)} mm ${m>=0?'innen':'außen'}`:''} – ${v<=10?'ruhig':v<=20?'leicht':'deutlich'}.`;
+      if(v>20&&f.wedge&&f.wedge.need==='nein') f.wedge={need:'prüfen',count:0,side:m!=null&&m<0?'außen':'innen',why:'Im Körpercheck unauffällig, aber im Video pendelt das Knie deutlich. Erst Cleat-Position und Einlage prüfen, dann 1 Keil testen und neu filmen.'}; } }
     f.check=['Nach dem Einbau die einbeinige Kniebeuge wiederholen: Läuft das Knie jetzt gerade über den 2. Zeh?','Beim Fahren von vorn filmen: Knie soll gerade auf und ab laufen, nicht pendeln.','Nach 20–30 Minuten fragen: Druckstellen, Taubheit, Brennen?'];
     out.feet[sd]=f; });
   const L=Number(v('legLen','L')), R=Number(v('legLen','R'));
@@ -2063,7 +2092,7 @@ function footHtml(s){
   const a=footAdvice(s); const tag=x=>x==='ja'?'c-warn':x==='nein'?'c-ok':'c-info';
   const foot=(sd,lab)=>{ const f=a.feet[sd]; return `<div class="footcol"><h4>${lab}</h4>
     <div class="fitem"><div class="row" style="gap:6px"><b>Einlage</b>${f.insole?`<span class="chip nodot ${tag(f.insole.need)}">${esc(f.insole.need)}</span>`:'<span class="chip nodot">noch nicht geprüft</span>'}</div>${f.insole&&f.insole.type?`<div>${esc(f.insole.type)}</div>`:''}${f.insole?`<div class="sub">${esc(f.insole.why)}</div>`:''}</div>
-    <div class="fitem"><div class="row" style="gap:6px"><b>Keil</b>${f.wedge?`<span class="chip nodot ${tag(f.wedge.need)}">${esc(f.wedge.need)}</span>`:'<span class="chip nodot">noch nicht geprüft</span>'}</div>${f.wedge&&f.wedge.count?`<div>${f.wedge.count} Keil${f.wedge.count>1?'e':''}, <b>dicke Seite ${f.wedge.side}</b></div>`:''}${f.wedge?`<div class="sub">${esc(f.wedge.why)}</div>`:''}</div></div>`; };
+    <div class="fitem"><div class="row" style="gap:6px"><b>Keil</b>${f.wedge?`<span class="chip nodot ${tag(f.wedge.need)}">${esc(f.wedge.need)}</span>`:'<span class="chip nodot">noch nicht geprüft</span>'}</div>${f.wedge&&f.wedge.count?`<div>${f.wedge.count} Keil${f.wedge.count>1?'e':''}, <b>dicke Seite ${f.wedge.side}</b></div>`:''}${f.wedge?`<div class="sub">${esc(f.wedge.why)}</div>`:''}</div>${f.video?`<div class="fitem"><div class="sub">${esc(f.video)}</div></div>`:''}</div>`; };
   return `<div class="footcard"><div class="row" style="justify-content:space-between"><h3>Füße: Einlage, Keil, Unterlegplatte</h3></div>
   <div class="footgrid">${foot('L','Linker Fuß')}${foot('R','Rechter Fuß')}</div>
   ${a.shim?`<div class="fitem"><div class="row" style="gap:6px"><b>Unterlegplatte (Beinlänge)</b><span class="chip nodot ${a.shim.need==='Fachperson'?'c-bad':tag(a.shim.need)}">${esc(a.shim.need)}</span></div><div class="sub">${esc(a.shim.why)}</div></div>`:''}
@@ -2138,6 +2167,7 @@ function measureCard(s,side,k,c,b){
     <form class="stack" style="gap:8px" data-form="measure" data-id="${s.id}" data-side="${side}"><input type="hidden" name="key" value="${k}"><input type="hidden" name="source" value="gemessen">
       <div class="row" style="flex-wrap:nowrap;align-items:flex-start"><div class="field" style="flex:1"><label for="mc_${k}">Wert (${m.unit})</label><input class="input num" id="mc_${k}" name="value" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" value="${cur?cur.value:''}" required ${rangeAttr(rg,'mc_'+k)}>${rangeHint(rg,'mc_'+k,cur?cur.value:'')}</div>
       <button class="btn" type="submit" style="margin-top:23px">${cur?'Ändern':'Speichern'}</button></div>
+      ${TILT_KEYS[k]?`<button type="button" class="btn sm" style="align-self:flex-start" data-act="tiltOpen" data-k="${k}" data-t="mc_${k}">${ic('fit')}iPhone als Winkelmesser</button>`:''}
       <details class="more"><summary>Methode und Genauigkeit</summary><div class="form" style="margin-top:8px"><div class="field"><label for="mm_${k}">Methode</label><select class="input" id="mm_${k}" name="method">${opts(METHODS,cur?cur.method:h.m)}</select></div>
       <div class="field"><label for="mu_${k}">± Genauigkeit (${m.unit})</label><input class="input num" id="mu_${k}" name="unc" type="number" step="0.1" min="0" inputmode="decimal" value="${cur&&cur.unc!=null?cur.unc:''}" placeholder="optional"></div></div></details>
     </form></div></section>`;
@@ -2146,7 +2176,7 @@ SESSTAB.ausgang = s => {
   const c=cust(s.customerId), b=bike(s.bikeId), mk=makerValues(s);
   if(ui.wIdx!=null&&MEASURE_NOW[ui.wIdx]){ const i=ui.wIdx, k=MEASURE_NOW[i], m=MK[k], cur=s.before[k], h=HOW[k]||{m:'Maßband',steps:[],tool:''}, rg=measureRange(k,c,b);
     return wizFrame(i,MEASURE_NOW.length,m.label,esc(m.def||''),`${IL(k)}<form id="wizForm" class="stack" data-form="measure" data-wiz="1" data-id="${s.id}" data-side="before" data-i="${i}"><input type="hidden" name="key" value="${k}"><input type="hidden" name="source" value="gemessen">
-        <div class="field"><label for="mc_${k}">1. Messung in ${m.unit}</label><input class="input num" id="mc_${k}" name="value" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" value="${cur?(cur.m1??cur.value):''}" required ${rangeAttr(rg,'mc_'+k)}>${rangeHint(rg,'mc_'+k,cur?cur.value:'')}</div>
+        ${TILT_KEYS[k]?`<button type="button" class="btn sm" style="align-self:flex-start" data-act="tiltOpen" data-k="${k}" data-t="mc_${k}">${ic('fit')}iPhone als Winkelmesser</button>`:''}<div class="field"><label for="mc_${k}">1. Messung in ${m.unit}</label><input class="input num" id="mc_${k}" name="value" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" value="${cur?(cur.m1??cur.value):''}" required ${rangeAttr(rg,'mc_'+k)}>${rangeHint(rg,'mc_'+k,cur?cur.value:'')}</div>
         <div class="field"><label for="mc2_${k}">2. Messung (Kontrolle) in ${m.unit}</label><input class="input num" id="mc2_${k}" name="value2" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" value="${cur&&cur.m2!=null?cur.m2:''}" placeholder="Maßband ab, neu anlegen, nochmal messen"><div class="hint">Weichen beide mehr als ${m.unit==='°'?'1°':'3 mm'} ab, misst du ein drittes Mal. FitFrame speichert den Mittelwert.</div></div>
         <details class="more"><summary>Methode und Genauigkeit</summary><div class="form" style="margin-top:8px"><div class="field"><label for="mm_${k}">Methode</label><select class="input" id="mm_${k}" name="method">${opts(METHODS,cur?cur.method:h.m)}</select></div><div class="field"><label for="mu_${k}">± Genauigkeit (${m.unit})</label><input class="input num" id="mu_${k}" name="unc" type="number" step="0.1" min="0" inputmode="decimal" value="${cur&&cur.unc!=null?cur.unc:''}" placeholder="optional"></div></div></details>
       </form>
@@ -3160,7 +3190,7 @@ function loadPoseVideo(full){
   return poseVideoPromise;
 }
 const LIVE_N=30;
-const live={on:false,src:null,stream:null,lm:null,raf:0,frames:[],all:[],cur:[],cycles:[],prevY:null,prevLeg:null,sideScore:0,lastTs:-1,sid:null,infoT:0,last:null,tried:0,okN:0,modelT:0};
+const live={view:'side',on:false,src:null,stream:null,lm:null,raf:0,frames:[],all:[],cur:[],cycles:[],prevY:null,prevLeg:null,sideScore:0,lastTs:-1,sid:null,infoT:0,last:null,tried:0,okN:0,modelT:0};
 const median=a=>{ const b=a.filter(x=>x!=null&&isFinite(x)).sort((x,y)=>x-y); if(!b.length) return null; const m=b.length>>1; return b.length%2?b[m]:(b[m-1]+b[m])/2; };
 const ang3=(a,b,c)=>{ const v1=[a.x-b.x,a.y-b.y], v2=[c.x-b.x,c.y-b.y]; return deg(Math.acos(clamp1((v1[0]*v2[0]+v1[1]*v2[1])/((Math.hypot(...v1)*Math.hypot(...v2))||1)))); };
 function crankOf(s){ const r=s.after.crankLength||s.before.crankLength; if(r) return Number(r.value); const mk=makerValues(s); return mk&&mk.r&&mk.r.crank?Number(mk.r.crank):172.5; }
@@ -3276,6 +3306,7 @@ function fitHarm(th,y,K=4){
 function liveModel(fr,s){
   if(fr.length<40) return null; fixLegSwaps(fr);
   const C=fitCircle(fr.map(f=>f.ball)); if(!C) return null;
+  const yaw=(()=>{ let sxx=0,syy=0,sxy=0; fr.forEach(f=>{ const dx=f.ball.x-C.cx, dy=f.ball.y-C.cy; sxx+=dx*dx; syy+=dy*dy; sxy+=dx*dy; }); const tr=sxx+syy, det=sxx*syy-sxy*sxy; const l1=tr/2+Math.sqrt(Math.max(tr*tr/4-det,0)), l2=tr/2-Math.sqrt(Math.max(tr*tr/4-det,0)); const ratio=Math.sqrt(Math.max(l2,0)/(l1||1)); return Math.round(deg(Math.acos(Math.min(1,ratio)))); })();
   const fwd=median(fr.map(f=>f.fwd))>=0?1:-1;
   let th=fr.map(f=>((deg(Math.atan2(fwd*(f.ball.x-C.cx),-(f.ball.y-C.cy)))%360)+360)%360);
   // Laufrichtung prüfen: Winkel muss vorwärts laufen, sonst Seite spiegeln
@@ -3305,6 +3336,7 @@ function liveModel(fr,s){
   const sideOn=median(g('sideOn')), swaps=fr.filter(f=>f.swapped).length/fr.length, det=live.tried?Math.min(1,live.okN/live.tried):1;
   const issues=[];
   if(sideOn>0.35) issues.push('Kamera nicht genau seitlich: Stativ so drehen, dass die Schultern fast übereinander liegen.');
+  else if(yaw>=15) issues.push(`Kamera steht etwa ${yaw}° schräg zum Rad: Der Kreis der Fußbewegung sieht oval aus. Stativ drehen, bis er rund wirkt (genau 90° zum Rad).`);
   if(knee.scatter>3.5) issues.push('Werte springen stark: heller ausleuchten, enge Kleidung, Kamera ruhig auf Hüfthöhe.');
   if(det<0.8) issues.push('Person oft nicht erkannt: ganze Person und Pedal ins Bild, 2–3 m Abstand.');
   if(ns<10) issues.push('Noch zu wenige Umdrehungen: mindestens 10, besser 20.');
@@ -3313,14 +3345,16 @@ function liveModel(fr,s){
   const r1=v=>v==null?null:Math.round(v*10)/10;
   return {n:ns,knee:r1(knee.max),kneeTop:r1(knee.min),hip:hip?r1(hip.min):null,torso:torso?r1(torso.mean):null,shoulder:sho?r1(sho.mean):null,elbow:elb?r1(elb.mean):null,
     ankle:ank?r1(ank.max-ank.min):null,kops:dx?Math.round(dx.ev(90)*mmPx):null,hipRock:hy?Math.round((hy.max-hy.min)*mmPx):null,
-    cad:cadM,ci,scatter:r1(knee.scatter),sideOn:Math.round(sideOn*100)/100,det:Math.round(det*100),swaps:Math.round(swaps*100),grade,issues,crank,scaleSrc,mmPx,
+    cad:cadM,yaw,ci,scatter:r1(knee.scatter),sideOn:Math.round(sideOn*100)/100,det:Math.round(det*100),swaps:Math.round(swaps*100),grade,issues,crank,scaleSrc,mmPx,
     kneeCurve:knee.curve.filter((_,i)=>i%10===0).map(v=>Math.round(v))};
 }
 function liveResult(){
   const cs=live.cycles.slice(-LIVE_N); if(!cs.length) return null; const s=sess(live.sid);
   const t0=cs[0].t0; const fr=live.all.filter(f=>f.t>=t0);
   const m=liveModel(fr,s); if(!m) return null;
-  if(m.cad==null) m.cad=Math.round(60000/median(cs.map(c=>c.dur))); return m;
+  if(m.cad==null) m.cad=Math.round(60000/median(cs.map(c=>c.dur)));
+  if(S.calib&&S.calib.knee!=null){ m.kneeRaw=m.knee; m.knee=Math.round((m.knee+S.calib.knee)*10)/10; m.calib=S.calib; }
+  return m;
 }
 /* Rechenmodell: Wie viele Millimeter Sattelhöhe ändern den Kniewinkel unten um 1°? */
 function kneeMaxAt(P,h){ let m=0; for(let d=0;d<360;d+=2) m=Math.max(m,kin({...P,h:{v:h,src:''}},d*Math.PI/180).kneeAng); return m; }
@@ -3334,6 +3368,49 @@ function saddleAdvice(s,knee){
 const sAdvText=a=>!a?'':a.inRange?`Kniewinkel im Zielbereich (${a.lo}–${a.hi}°, ${a.label}). Sattelhöhe passt.`:`Sattel ${a.edge>0?'+':''}${a.edge} mm ${a.edge>0?'höher':'tiefer'}, dann liegt das Knie knapp im Zielbereich ${a.lo}–${a.hi}° (${a.label}). Bis zur Mitte (${fmtNum(a.mid)}°): ${a.delta>0?'+':''}${a.delta} mm.${Math.abs(a.edge)>15?' Mehr als 15 mm: in zwei Schritten ändern und dazwischen fahren.':''}`;
 function kopsText(v){ if(v==null) return ''; const a=Math.abs(v); return a<=10?`Knie etwa über der Pedalachse (${v>0?'+':''}${v} mm).`:`Knie ${a} mm ${v>0?'vor':'hinter'} der Pedalachse.`; }
 function rangeChip(v,r){ if(v==null||!r) return ''; const ok=v>=r[0]&&v<=r[1], near=!ok&&(v>=r[0]-3&&v<=r[1]+3); return `<span class="chip nodot ${ok?'c-ok':near?'c-warn':'c-bad'}">${ok?'im Ziel':near?'knapp':'anpassen'} · ${r[0]}–${r[1]}°</span>`; }
+/* ---------- Video von vorn: Kniespur und Beckenkippen ---------- */
+function frontFrame(lmk,W,H,t){
+  const P=i=>({x:lmk[i].x*W,y:lmk[i].y*H,v:lmk[i].visibility??1});
+  const hL=P(23),hR=P(24),kL=P(25),kR=P(26),aL=P(27),aR=P(28);
+  if(Math.min(hL.v,hR.v,kL.v,kR.v,aL.v,aR.v)<0.4) return null;
+  const midX=(hL.x+hR.x)/2;
+  const off=(h,k,a)=>{ const u=(k.y-h.y)/((a.y-h.y)||1); const lx=h.x+(a.x-h.x)*u; const dir=Math.sign(midX-h.x)||1; return (k.x-lx)*dir; }; // + = Knie Richtung Rahmen (innen)
+  const tiltDeg=deg(Math.atan2(hR.y-hL.y,hR.x-hL.x)); const tilt=((tiltDeg+90)%180+180)%180-90; // ~0 bei waagerecht
+  return {t,hL,hR,kL,kR,aL,aR,offL:off(hL,kL,aL),offR:off(hR,kR,aR),tilt,lenL:Math.hypot(hL.x-aL.x,hL.y-aL.y),lenR:Math.hypot(hR.x-aR.x,hR.y-aR.y)};
+}
+function frontTrack(f){ live.all.push(f); if(live.all.length>3600) live.all.shift();
+  const ys=live.all.slice(-90).map(x=>x.aL.y), mid=(Math.min(...ys)+Math.max(...ys))/2; const prev=live.prevY; live.prevY=f.aL.y;
+  if(prev!=null&&prev<mid&&f.aL.y>=mid&&Math.max(...ys)-Math.min(...ys)>10){ live.cycles.push({t0:live.lastCycleT||f.t,t1:f.t,dur:f.t-(live.lastCycleT||f.t)}); live.lastCycleT=f.t; if(live.cycles.length>80) live.cycles.shift(); } }
+const pct=(a,p)=>{ const b=a.filter(x=>x!=null&&isFinite(x)).sort((x,y)=>x-y); if(!b.length) return null; const i=Math.min(b.length-1,Math.max(0,Math.round((b.length-1)*p))); return b[i]; };
+function frontResult(){
+  const fr=live.all; if(fr.length<40) return null; const s=sess(live.sid); const c=cust(s.customerId); const Hh=Number(c.body&&c.body.height)||null;
+  const len=Math.max(pct(fr.map(f=>f.lenL),0.95),pct(fr.map(f=>f.lenR),0.95));
+  const mmPx=Hh&&len?(0.491*Hh*10*0.97)/len:null;
+  const side=k=>{ const o=fr.map(f=>f[k]); const sw=(pct(o,0.95)-pct(o,0.05)), mean=median(o); return {sway:mmPx?Math.round(sw*mmPx):null,mean:mmPx?Math.round(mean*mmPx):null,swayPx:sw}; };
+  const L=side('offL'), R=side('offR'); const tl=fr.map(f=>f.tilt);
+  const rock=Math.round((pct(tl,0.95)-pct(tl,0.05))*10)/10, tiltMean=Math.round(median(tl)*10)/10;
+  const n=live.cycles.length; const durs=live.cycles.slice(1).map(x=>x.dur).filter(d=>d>300&&d<3000); const cad=durs.length?Math.round(60000/median(durs)):null;
+  return {view:'front',n,cad,L,R,rock,tiltMean,mmPx,scaleNeed:!Hh};
+}
+function frontDraw(ctx,f){
+  const lw=Math.max(3,ctx.canvas.width/220), r=lw*1.8; ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height); ctx.lineWidth=lw; ctx.lineCap='round';
+  const line=(col,...p)=>{ ctx.strokeStyle=col; ctx.beginPath(); ctx.moveTo(p[0].x,p[0].y); p.slice(1).forEach(q=>ctx.lineTo(q.x,q.y)); ctx.stroke(); };
+  line('#ff8030',f.hL,f.kL,f.aL); line('#ff8030',f.hR,f.kR,f.aR); line('#5ad1ff',f.hL,f.hR);
+  ctx.setLineDash([lw*3,lw*2]); line('rgba(255,255,255,.7)',f.hL,f.aL); line('rgba(255,255,255,.7)',f.hR,f.aR); ctx.setLineDash([]);
+  ctx.fillStyle='#ff8030'; [f.hL,f.hR,f.kL,f.kR,f.aL,f.aR].forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2); ctx.fill(); });
+}
+function frontLevel(v,a,b){ return v==null?'':v<=a?'ruhig':v<=b?'leicht':'deutlich'; }
+function frontInfo(){
+  const box=document.getElementById('liveInfo'); if(!box) return; const r=frontResult();
+  if(!r){ box.innerHTML=`<div class="statusbox"><div><b>${live.status||'Warte auf Bewegung …'}</b><span class="muted" style="font-size:14px">Kamera genau von vorn auf Kniehöhe, 2–3 m vor dem Rad. Beide Beine ganz im Bild.</span></div></div>`; return; }
+  live.last=r; phoneStatus();
+  const chip=(t)=>t?`<span class="chip nodot ${t==='ruhig'?'c-ok':t==='leicht'?'c-warn':'c-bad'}">${t}</span>`:'';
+  const kneeRow=(lab,x)=>`<div class="li"><div class="grow"><div class="t">Knie ${lab}</div><div class="sub" style="white-space:normal">${x.sway==null?'Für Millimeter fehlt die Körpergröße.':`Pendelt ${x.sway} mm seitlich. ${Math.abs(x.mean)<3?'Läuft im Mittel gerade.':`Läuft im Mittel ${Math.abs(x.mean)} mm ${x.mean>0?'innen (Richtung Rahmen)':'außen'} der Linie Hüfte–Knöchel.`}`}</div></div><span class="v" style="text-align:right"><b>${x.sway!=null?x.sway+' mm':'–'}</b><div>${chip(frontLevel(x.sway,10,20))}</div></span></div>`;
+  box.innerHTML=`<div class="statusbox ${r.n>=15?'ok':''}"><div><b>${r.n} Umdrehungen von vorn</b><span class="muted" style="font-size:14px">${r.cad?`Trittfrequenz etwa ${r.cad} U/min · `:''}mindestens 15 Umdrehungen für einen stabilen Wert</span></div></div>
+  <div class="cmp">${kneeRow('links',r.L)}${kneeRow('rechts',r.R)}
+  <div class="li"><div class="grow"><div class="t">Becken kippt</div><div class="sub" style="white-space:normal">Seitliches Kippen der Hüfte pro Umdrehung. Mehr als 5°: Sattel oft zu hoch oder Beinlängenunterschied.${Math.abs(r.tiltMean)>=2?` Im Mittel ${Math.abs(r.tiltMean)}° schief – eine Seite sitzt tiefer.`:''}</div></div><span class="v" style="text-align:right"><b>${fmtNum(r.rock)}°</b><div>${chip(frontLevel(r.rock,3,5))}</div></span></div></div>
+  <p class="faint" style="font-size:12.5px;margin:0">Was das heißt: Pendelt ein Knie deutlich oder läuft es nach innen, helfen oft Einlage oder Keil (siehe Körper → Füße). Nach dem Einbau neu filmen und vergleichen.</p>`;
+}
 function liveDraw(ctx,f){
   const lw=Math.max(3,ctx.canvas.width/220), r=lw*1.8; ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
   ctx.lineWidth=lw; ctx.strokeStyle='#ff8030'; ctx.fillStyle='#ff8030'; ctx.lineCap='round';
@@ -3344,11 +3421,14 @@ function liveDraw(ctx,f){
   ctx.font=`700 ${Math.round(r*4)}px Figtree, sans-serif`; ctx.lineWidth=4; ctx.strokeStyle='rgba(0,0,0,.65)'; ctx.fillStyle='#fff';
   const t=Math.round(f.knee)+'°'; ctx.strokeText(t,f.kn.x+r*2.5,f.kn.y); ctx.fillText(t,f.kn.x+r*2.5,f.kn.y);
 }
+function calState(){ const el=document.getElementById('calState'), cl=document.getElementById('calClear'); if(!el) return; const c=S.calib; const r=live.last;
+  el.textContent=c&&c.knee!=null?`Kamera abgeglichen: Kniewinkel ${c.knee>0?'+':''}${fmtNum(c.knee)}° (Winkelmesser vom ${fmtDate(c.date)})${r&&r.kneeRaw!=null?`, Kamerawert ohne Abgleich ${fmtNum(r.kneeRaw)}°`:''}.`:'Genauer: Kurbel ganz unten anhalten, Kniewinkel mit dem Winkelmesser messen und hier eintragen. FitFrame merkt sich den Unterschied zur Kamera für alle weiteren Messungen.'; if(cl) cl.hidden=!(c&&c.knee!=null); }
 function liveInfo(final){
+  if(live.view==='front'){ const nw=performance.now(); if(!final&&nw-live.infoT<900) return; live.infoT=nw; frontInfo(); return; }
   const box=document.getElementById('liveInfo'); if(!box) return; const now=performance.now(); if(!final&&now-live.infoT<900) return; live.infoT=now;
   const r=liveResult(); const s=sess(live.sid);
   if(!r){ box.innerHTML=`<div class="statusbox"><div><b>${live.status||'Warte auf Bewegung …'}</b><span class="muted" style="font-size:14px">Ganze Person und Pedal müssen im Bild sein. Gezählt wird ab der ersten vollen Umdrehung, ausgewertet ab etwa 3 Umdrehungen.</span></div></div>`; return; }
-  const a=saddleAdvice(s,r.knee); live.last=r; phoneStatus(); const P=fitProfile(s);
+  const a=saddleAdvice(s,r.knee); live.last=r; phoneStatus(); calState(); const P=fitProfile(s);
   const pm=v=>v!=null?` <span class="faint" style="font-weight:500">±${fmtNum(Math.round(v*10)/10)}°</span>`:'';
   const row=(t,v,unit,sub,chip,extra)=>v==null?'':`<div class="li"><div class="grow"><div class="t">${t}</div>${sub?`<div class="sub" style="white-space:normal">${sub}</div>`:''}</div><span class="v" style="text-align:right"><b>${fmtNum(v)}${unit}</b>${extra||''}${chip?`<div>${chip}</div>`:''}</span></div>`;
   const gcol=r.grade==='gut'?'ok':r.grade==='mittel'?'warn':'bad';
@@ -3372,25 +3452,27 @@ async function liveLoop(){
     if(cv.width!==el.videoWidth){ cv.width=el.videoWidth; cv.height=el.videoHeight; }
     const ts=live.src==='file'?el.currentTime*1000:performance.now();
     if(ts>live.lastTs){ live.lastTs=ts; try{ const r=live.lm.detectForVideo(el,ts); const lmk=r&&r.landmarks&&r.landmarks[0];
-      live.tried++; if(lmk){ const f=liveFrame(lmk,cv.width,cv.height,ts); if(f){ live.okN++; live.status=''; liveTrack(f); liveDraw(cv.getContext('2d'),f); } else live.status='Hüfte, Knie oder Knöchel nicht sicher erkannt'; } else { live.status='Keine Person erkannt'; cv.getContext('2d').clearRect(0,0,cv.width,cv.height); } }catch(e){ live.status='Erkennung fehlgeschlagen'; } }
+      live.tried++; if(lmk){ const fv=live.view==='front'; const f=fv?frontFrame(lmk,cv.width,cv.height,ts):liveFrame(lmk,cv.width,cv.height,ts); if(f){ live.okN++; live.status=''; if(fv){ frontTrack(f); frontDraw(cv.getContext('2d'),f); } else { liveTrack(f); liveDraw(cv.getContext('2d'),f); } } else live.status=fv?'Hüften, Knie oder Knöchel nicht sicher erkannt – beide Beine ganz ins Bild':'Hüfte, Knie oder Knöchel nicht sicher erkannt'; } else { live.status='Keine Person erkannt'; cv.getContext('2d').clearRect(0,0,cv.width,cv.height); } }catch(e){ live.status='Erkennung fehlgeschlagen'; } }
     liveInfo();
   }
   if(live.src==='file'&&el.ended){ live.on=false; liveInfo(true); const b=document.getElementById('liveState'); if(b) b.textContent='Video fertig ausgewertet.'; return; }
   live.raf=requestAnimationFrame(liveLoop);
 }
 function liveStop(){ live.on=false; cancelAnimationFrame(live.raf); try{ live.call&&live.call.close(); live.conn&&live.conn.close(); live.peer&&live.peer.destroy(); }catch(e){} live.call=live.conn=live.peer=null; if(live.stream){ live.stream.getTracks().forEach(t=>t.stop()); live.stream=null; } const el=document.getElementById('liveVideo'); if(el){ try{ el.pause(); }catch(e){} } }
-function liveReset(){ live.frames=[]; live.all=[]; live.cur=[]; live.cycles=[]; live.prevY=null; live.prevLeg=null; live.last=null; live.lastTs=-1; live.tried=0; live.okN=0; liveInfo(true); }
+function liveReset(){ live.lastCycleT=null; live.frames=[]; live.all=[]; live.cur=[]; live.cycles=[]; live.prevY=null; live.prevLeg=null; live.last=null; live.lastTs=-1; live.tried=0; live.okN=0; liveInfo(true); }
 async function liveOpen(sid,src,side){
   liveStop(); live.sid=sid; live.src=src; liveReset(); live.status='Erkennung wird geladen …';
   openDrawer('Live-Analyse (Beta)',`<div class="stack">
     <p class="muted" style="font-size:14px">${src==='phone'?'Das iPhone filmt, dieser PC rechnet. Das Video geht direkt vom iPhone hierher und wird nicht gespeichert. Gespeichert werden nur die Werte, wenn du auf „Werte speichern“ tippst.':src==='cam'?'iPhone quer auf ein Stativ, genau seitlich auf Hüfthöhe, 2–3 m Abstand. Ganze Person mit Pedal im Bild. Kunde fährt locker. Die App erkennt Schulter, Hüfte, Knie, Knöchel und Fuß selbst und bildet den Mittelwert über '+LIVE_N+' Umdrehungen.':'Das geladene Video wird abgespielt und Bild für Bild ausgewertet.'}</p>
+    <div class="seg" role="group" aria-label="Ansicht"><button data-act="liveView" data-v="side" aria-pressed="${live.view!=='front'}">Von der Seite (Winkel)</button><button data-act="liveView" data-v="front" aria-pressed="${live.view==='front'}">Von vorn (Kniespur, Becken)</button></div>
     ${markerGuideHtml(false)}
     ${src==='phone'?'<div id="phoneQR" class="phoneqr" hidden></div>':''}<div class="livewrap"><video id="liveVideo" playsinline muted autoplay></video><canvas id="liveCanvas" aria-hidden="true"></canvas></div>
     <p id="liveState" class="faint" style="font-size:13px">Erkennung wird geladen (beim ersten Mal etwa 6 MB) …</p>
     <div id="liveInfo"></div>
+    <div class="calbox" id="calBox" ${live.view==='front'?'hidden':''}><span id="calState"></span><div class="row" style="gap:6px;margin-top:6px"><input class="input num" id="calKnee" type="number" step="0.5" inputmode="decimal" placeholder="Winkelmesser, z. B. 144" style="width:170px"><button class="btn sm" data-act="calibKnee">Mit Winkelmesser abgleichen</button><button class="btn sm ghost" data-act="calibClear" id="calClear" hidden>Abgleich löschen</button></div></div>
     <div class="row"><select class="input" style="width:auto" id="liveSide" aria-label="Speichern als"><option value="before">als Ausgangswert</option><option value="after" ${side==='after'?'selected':''}>als Endwert</option></select><button class="btn primary" data-act="liveSave">Werte speichern</button><button class="btn" data-act="liveReset">Neu zählen</button></div>
     <p class="faint" style="font-size:12.5px">Beta. Braucht beim Start Internet und läuft nur über den GitHub-Link. Die Erkennung (Google MediaPipe) rechnet auf diesem Gerät, das Video wird nicht hochgeladen. 2D-Kamera: Ein schräger Kamerawinkel verfälscht die Werte um einige Grad. Das Knielot ist eine verbreitete Faustregel, keine feste Vorgabe.</p></div>`);
-  liveInfo(true);
+  liveInfo(true); calState();
   const st=t=>{ const b=document.getElementById('liveState'); if(b) b.hidden=true; live.status=t; liveInfo(true); };
   if(src==='phone'){ phoneConnect(st); }
   try{ live.lm=await loadPoseVideo(src==='phone'); }catch(e){ st(POSE_FAIL); return; }
@@ -3823,7 +3905,8 @@ const ACT = {
   copyCamLink(el){ copyText(el.dataset.url); },
   liveFile(el){ if(!vid.src||vid.kind!=='video'){ toast('Bitte zuerst ein Video laden',true); return; } liveOpen(el.dataset.id,'file',el.dataset.side); },
   liveReset(){ liveReset(); },
-  liveSave(){ const r=live.last||liveResult(); if(!r){ toast('Noch keine vollständige Umdrehung erkannt',true); return; } const s=sess(live.sid); const side=document.getElementById('liveSide').value; const meth=`2D-Video live (automatisch)`;
+  liveSave(){ if(live.view==='front'){ const r=frontResult(); if(!r||r.L.sway==null){ toast(r?'Für Millimeter fehlt die Körpergröße':'Noch zu wenig Bewegung erkannt',true); return; } const s=sess(live.sid); const side=document.getElementById('liveSide').value; const meth='2D-Video von vorn (automatisch)'; [['kneeSwayL',r.L.sway],['kneeSwayR',r.R.sway],['kneeInL',r.L.mean],['kneeInR',r.R.mean],['pelvisRock',r.rock]].forEach(([k,v])=>{ s[side][k]={...mv(k,v,meth,'gemessen',k==='pelvisRock'?1:5),time:nowStamp(),note:`${r.n} Umdrehungen`}; }); if(s.status==='geplant') s.status='in Arbeit'; audit(`Video von vorn: Knie L ${r.L.sway} mm, R ${r.R.sway} mm, Becken ${r.rock}°`,s.id); save(); closeDrawer(); render(); toast(`Gespeichert: Knie pendelt L ${r.L.sway} / R ${r.R.sway} mm, Becken ${fmtNum(r.rock)}°`); return; }
+    const r=live.last||liveResult(); if(!r){ toast('Noch keine vollständige Umdrehung erkannt',true); return; } const s=sess(live.sid); const side=document.getElementById('liveSide').value; const meth=`2D-Video live (automatisch)${r.calib?' · mit Winkelmesser abgeglichen':''}`;
     [['kneeBDC',r.knee],['kneeTDC',r.kneeTop],['hipAngle',r.hip],['torsoAngle',r.torso],['shoulderAngle',r.shoulder],['elbowAngle',r.elbow],['ankleRange',r.ankle],['hipRock',r.hipRock],['kneeOverPedal',r.kops]].filter(([k,v])=>v!=null).forEach(([k,v])=>{ const tol=k==='kneeOverPedal'?10:k==='hipRock'?3:k==='kneeBDC'&&r.ci&&r.ci.knee!=null?Math.max(1,Math.round(r.ci.knee*10)/10):3; s[side][k]={...mv(k,Math.round(v*10)/10,meth,'gemessen',tol),time:nowStamp(),note:`Kurve über ${r.n} Umdrehungen · Aufnahme ${r.grade}`}; });
     if(s.status==='geplant') s.status='in Arbeit'; audit(`Live-Analyse (${r.n} Umdrehungen): Knie ${r.knee}°, Knielot ${r.kops} mm (${side==='before'?'Ausgangswert':'Endwert'})`,s.id); save(); closeDrawer(); render(); toast(`Gespeichert: Knie ${fmtNum(r.knee)}°, Knielot ${r.kops>0?'+':''}${r.kops} mm und ${[r.shoulder,r.elbow,r.ankle,r.hipRock].filter(x=>x!=null).length} weitere Werte`); },
   finderPick(el){ ui.advGeo=el.dataset.id; render(); window.scrollTo({top:0,behavior:'smooth'}); },
@@ -3895,6 +3978,18 @@ const ACT = {
   nbOpen(el){ ui.nb=ui.nb||{type:'Rennrad',style:'',brand:''}; openDrawer('Passendes Neurad finden',newBikeHtml(el.dataset.id)); },
   nbSet(el){ ui.nb=ui.nb||{}; ui.nb[el.dataset.k]=el.dataset.v; if(el.dataset.k==='type') ui.nb.brand=''; openDrawer('Passendes Neurad finden',newBikeHtml(el.dataset.id)); },
   setCockpit(el){ const b=bike(el.dataset.id); if(!b) return; b.cockpit=el.dataset.v; save(); render(); },
+  liveView(el){ live.view=el.dataset.v; liveReset(); document.querySelectorAll('[data-act=liveView]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===live.view))); const cb=document.getElementById('calBox'); if(cb) cb.hidden=live.view==='front'; const c=document.getElementById('liveCanvas'); if(c) c.getContext('2d').clearRect(0,0,c.width,c.height); },
+  calibKnee(){ const el=document.getElementById('calKnee'); const v=el&&parseFloat(String(el.value).replace(',','.')); const r=live.last; if(!r||!(v>100&&v<180)){ toast('Erst Kamera laufen lassen und einen Winkel zwischen 100 und 180° eintragen',true); return; } const raw=r.kneeRaw??r.knee; const off=Math.round((v-raw)*10)/10; if(Math.abs(off)>10){ toast(`Unterschied ${fmtNum(off)}° ist zu groß – Kamera wirklich seitlich? Punkte richtig?`,true); return; } S.calib={knee:off,date:today()}; save(); live.infoT=0; liveInfo(true); calState(); el.value=''; toast(`Abgeglichen: Kamera ${off>0?'+':''}${fmtNum(off)}°`); },
+  calibClear(){ delete S.calib; save(); live.infoT=0; liveInfo(true); calState(); toast('Abgleich gelöscht'); },
+  tiltOpen(el){ tiltStop(); tilt.k=el.dataset.k; tilt.target=el.dataset.t; const d=TILT_KEYS[tilt.k];
+    openDrawer('iPhone als Winkelmesser',`<div class="stack" style="align-items:stretch;text-align:center"><p class="muted" style="font-size:14px;text-align:left">${esc(d.how)}</p>
+    <div class="tiltbig" id="tiltVal">–</div><span id="tiltStable" class="chip nodot" style="align-self:center">Sensor starten</span>
+    <button class="btn primary big" id="tiltGo" data-act="tiltGo">Sensor starten</button>
+    <div class="row" style="justify-content:center;gap:8px"><button class="btn" data-act="tiltZero">Nullen (iPhone flach auf den Boden)</button><button class="btn primary" data-act="tiltTake">Wert übernehmen</button></div>
+    <p class="faint" style="font-size:12.5px;text-align:left">Zum Nullen das iPhone flach auf einen ebenen Boden legen (vorher mit der Wasserwaage prüfen). Das gleicht Fehler des Sensors aus. Hülle abnehmen, wenn sie uneben ist. Genauigkeit etwa ±0,5°.${S.tiltZero!=null?` Aktuelle Nullung: ${fmtNum(Math.round(S.tiltZero*10)/10)}°.`:''}</p></div>`); },
+  tiltGo(){ tiltStart(); },
+  tiltZero(){ if(tilt.v==null){ toast('Erst „Sensor starten“',true); return; } S.tiltZero=(S.tiltZero||0)+tilt.v; tilt.buf=[]; save(); toast('Genullt'); },
+  tiltTake(){ if(tilt.v==null){ toast('Kein Messwert – Sensor starten',true); return; } const v=Math.round(tiltValue()*10)/10; const t=document.getElementById(tilt.target); tiltStop(); closeDrawer(); if(t){ t.value=v; t.dispatchEvent(new Event('input',{bubbles:true})); t.focus(); } toast(`${fmtNum(v)}° übernommen`); },
   measureJump(el){ ui.sessTab='ausgang'; ui.editMaker=null; ui.wIdx=MEASURE_NOW.indexOf(el.dataset.k); render(); window.scrollTo({top:0}); },
   sessTab(el){ ui.sessTab=el.dataset.v; ui.editMaker=null; ui.wIdx=null; if(el.dataset.v==='ausgang'){ const s=sess(ui.sess); const n=s?applyMaker(s):0; if(n){ save(); setTimeout(()=>toast(`${n} Serienwerte vom Hersteller übernommen – bitte kurz prüfen`),60); } } render(); },
   applyMaker(el){ const s=sess(el.dataset.id); const n=applyMaker(s); save(); render(); toast(n?`${n} Serienwerte übernommen`:'Keine Herstellerwerte vorhanden'); },
@@ -4100,7 +4195,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); cl
 applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
 go(VIEWS[start]?start:'dashboard');
-window.__fitframe={bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
