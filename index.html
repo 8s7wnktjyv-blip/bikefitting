@@ -255,6 +255,9 @@ td.r,th.r{text-align:right}
 .card.plan .t{margin-bottom:6px}
 .planrow{display:flex;flex-direction:column;gap:4px;margin-top:8px;align-items:flex-start}
 .planrow ul{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px}
+.phoneqr{display:flex;gap:14px;align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:12px}
+.phoneqr .qrbox{width:170px;flex:none;background:#fff;border-radius:10px;padding:6px}.phoneqr .qrbox svg{display:block;width:100%;height:auto}
+@media (max-width:520px){.phoneqr{flex-direction:column;align-items:flex-start}}
 .livewrap{position:relative;border-radius:12px;overflow:hidden;background:#000;min-height:120px}
 .livewrap video{display:block;width:100%;height:auto}
 .livewrap canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
@@ -648,6 +651,7 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 <script>
 (function(){
 "use strict";
+if((location.hash||"").indexOf("#cam=")===0){ camMode(decodeURIComponent(location.hash.slice(5))); return; }
 
 /* ---------- Icons ---------- */
 const I = {
@@ -1373,7 +1377,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.16';
+const APP_VER = '2026-10-27.17';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2786,7 +2790,7 @@ function vidPanel(s,side){
     ${markerGuideHtml(false)}
     <details class="more" ${vid.src?'':'open'}><summary>So nimmst du richtig auf</summary><ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">
       <li>iPhone quer halten oder auf ein Stativ, auf Hüfthöhe, genau seitlich zum Rad, etwa 2–3 m Abstand.</li><li>Rad steht gerade im Rollentrainer. Kunde trägt enge Kleidung.</li><li>Tipp: Klebepunkte auf Hüfte, Knie und Außenknöchel machen das Antippen genauer.</li><li>5–10 Sekunden locker fahren lassen und filmen.</li></ol></details>
-    <div class="livecta"><button class="btn primary big" data-act="liveCam" data-id="${s.id}" data-side="${side||ui.motionSide||'after'}">${ic('camera')}Live-Analyse starten</button><span class="muted" style="font-size:13.5px">Automatisch, Mittelwert über ${LIVE_N} Kurbelumdrehungen, mit Knielot und Empfehlung in mm (Beta)</span></div>
+    <div class="livecta"><button class="btn primary big" data-act="liveCam" data-id="${s.id}" data-side="${side||ui.motionSide||'after'}">${ic('camera')}Live-Analyse starten</button><button class="btn big" data-act="livePhone" data-id="${s.id}" data-side="${side||ui.motionSide||'after'}">${ic('camera')}iPhone als Kamera, PC rechnet</button><span class="muted" style="font-size:13.5px">Automatisch über ${LIVE_N} Kurbelumdrehungen, mit Knielot, ±-Bereich und Empfehlung in mm (Beta). Am PC: „iPhone als Kamera“ und QR-Code scannen.</span></div>
     <div class="label">Oder selbst antippen</div>
     <div class="row"><label class="btn" for="vidCam">${ic('camera')}Mit Kamera filmen</label><input class="vh" type="file" id="vidCam" accept="video/*" capture="environment" data-change="vidFile"><label class="btn" for="vidFile">Aus Mediathek</label><input class="vh" type="file" id="vidFile" accept="video/*,image/*" data-change="vidFile"></div>
     <div class="seg" role="group" aria-label="Was messen">${Object.entries(VMODES).map(([k,v])=>`<button data-act="vidMode" data-v="${k}" aria-pressed="${vid.mode===k}">${v.label}</button>`).join('')}</div>
@@ -2801,8 +2805,83 @@ function vidPanel(s,side){
 }
 
 /* --- Live-Analyse: Punkte automatisch erkennen, Mittel über viele Kurbelumdrehungen --- */
-let poseVideoPromise=null;
-function loadPoseVideo(){
+let poseVideoPromise=null, poseFullPromise=null;
+function loadPoseFull(){
+  if(poseFullPromise) return poseFullPromise; const V='0.10.14';
+  poseFullPromise=(async()=>{ const m=await import(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${V}/vision_bundle.mjs`);
+    const fs=await m.FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${V}/wasm`);
+    const opt=d=>({baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task',delegate:d},runningMode:'VIDEO',numPoses:1});
+    try{ return await m.PoseLandmarker.createFromOptions(fs,opt('GPU')); }catch(e){ return await m.PoseLandmarker.createFromOptions(fs,opt('CPU')); } })();
+  poseFullPromise.catch(()=>{ poseFullPromise=null; }); return poseFullPromise; }
+/* ---------- Handy als Kamera: Video direkt vom iPhone zum PC (WebRTC), nichts wird gespeichert ---------- */
+function PEER_JS(){ return 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'; }
+function QR_JS(){ return 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'; }
+function loadScript(src){ const scriptCache=(window.__ffsc=window.__ffsc||{}); if(scriptCache[src]) return scriptCache[src]; scriptCache[src]=new Promise((res,rej)=>{ const t=document.createElement('script'); t.src=src; t.async=true; t.onload=()=>res(); t.onerror=()=>{ delete scriptCache[src]; t.remove(); rej(new Error('load')); }; document.head.appendChild(t); }); return scriptCache[src]; }
+function PeerCls(){ return window.Peer||(window.peerjs&&window.peerjs.Peer)||null; }
+async function needPeer(){ if(!PeerCls()) await loadScript(PEER_JS()); if(!PeerCls()) throw new Error('peer'); return PeerCls(); }
+function qrSvg(text){ const q=window.qrcode(0,'M'); q.addData(text); q.make(); return q.createSvgTag({cellSize:6,margin:2,scalable:true}); }
+function camLink(id){ return location.origin+location.pathname+'#cam='+encodeURIComponent(id); }
+function peerErrText(e){ const t=e&&e.type||''; return t==='peer-unavailable'?'PC nicht erreichbar. QR-Code am PC neu öffnen.':t==='network'||t==='server-error'||t==='socket-error'?'Vermittlungs-Server nicht erreichbar. Internet prüfen.':t==='browser-incompatible'?'Dieser Browser kann keine Direktverbindung. Safari oder Chrome nutzen.':'Verbindung fehlgeschlagen ('+(t||'unbekannt')+'). Gleiches WLAN? Sonst Hotspot vom Handy nutzen.'; }
+function phoneStatus(){ if(!live.conn||!live.conn.open) return; const r=live.last; try{ live.conn.send({n:r?r.n:0,need:LIVE_N,grade:r?r.grade:'',knee:r?r.knee:null,issues:r?r.issues.slice(0,2):[],status:live.status||''}); }catch(e){} }
+async function phoneConnect(st){
+  const el=document.getElementById('liveVideo'), box=document.getElementById('phoneQR');
+  try{ await Promise.all([needPeer(),window.qrcode?null:loadScript(QR_JS())]); }catch(e){ st('Verbindungsbaustein konnte nicht geladen werden. Internet am PC prüfen.'); return; }
+  const P=PeerCls(); const peer=new P(); live.peer=peer;
+  peer.on('open',id=>{ if(live.peer!==peer) return; const url=camLink(id);
+    if(box){ box.hidden=false; box.innerHTML=`<div class="qrbox">${qrSvg(url)}</div><div class="stack" style="gap:6px;min-width:0"><b>Mit dem iPhone scannen</b><ol style="margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px"><li>iPhone-Kamera auf den Code halten, Link antippen.</li><li>„Kamera starten“ tippen und Zugriff erlauben.</li><li>iPhone quer aufs Stativ, seitlich auf Hüfthöhe.</li></ol><span class="faint" style="font-size:12.5px;word-break:break-all">${esc(url)}</span><button class="btn sm" data-act="copyCamLink" data-url="${esc(url)}">Link kopieren</button></div>`; }
+    st('Warte auf das iPhone …'); });
+  peer.on('connection',c=>{ live.conn=c; c.on('open',phoneStatus); });
+  peer.on('call',call=>{ if(live.call){ try{ live.call.close(); }catch(e){} } live.call=call; call.answer();
+    call.on('stream',stream=>{ if(!el) return; el.srcObject=stream; el.muted=true; el.play().catch(()=>{}); if(box) box.hidden=true; liveReset(); st('Verbunden. Kunde soll locker treten.'); if(!live.on){ live.on=true; live.raf=requestAnimationFrame(liveLoop); } });
+    call.on('close',()=>{ if(live.call!==call) return; live.on=false; if(box) box.hidden=false; st('iPhone getrennt. Code erneut scannen oder auf dem iPhone „Neu verbinden“ tippen.'); });
+    call.on('error',e=>st(peerErrText(e))); });
+  peer.on('disconnected',()=>{ try{ if(!peer.destroyed) peer.reconnect(); }catch(e){} });
+  peer.on('error',e=>st(peerErrText(e)));
+}
+/* Seite auf dem iPhone: nur Kamera, keine Kundendaten, nichts wird gespeichert */
+function camMode(pcId){
+  document.title='FitFrame · Kamera';
+  const css=`.cm{position:fixed;inset:0;background:#1f1c1a;color:#f4eee8;display:flex;flex-direction:column;font:15px/1.5 Figtree,system-ui,sans-serif;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom))}
+  .cm h1{font:700 20px/1.2 Archivo,Figtree,sans-serif;margin:0}.cm .vw{flex:1;min-height:0;display:grid;place-items:center;margin:12px 0;border-radius:16px;overflow:hidden;background:#000}
+  .cm video{width:100%;height:100%;object-fit:contain}.cm .st{background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;font-size:14px}
+  .cm .st{color:rgba(244,238,232,.85)}.cm .st b{display:block;font-size:16px;color:#fff}.cm .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .cm button{flex:1;min-height:48px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font:600 15px Figtree,sans-serif}
+  .cm button.go{background:linear-gradient(135deg,#b9481f,#d9642c 45%,#e98f45);border:0}.cm .tip{font-size:13px;color:rgba(244,238,232,.7);margin-top:8px}
+  .cm .badge{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:700;margin-left:6px}.g-gut{background:#2f8f63}.g-mittel{background:#a8780e}.g-schlecht{background:#c8402f}`;
+  document.body.innerHTML=`<style>${css}</style><div class="cm"><h1>FitFrame · Kamera</h1><div class="vw"><video id="cv" playsinline muted autoplay></video></div>
+    <div class="st" id="cs"><b>Bereit</b>Tippe auf „Kamera starten“. Das Bild geht direkt an den PC und wird nirgends gespeichert.</div>
+    <div class="row"><button class="go" id="cgo">Kamera starten</button><button id="cflip" hidden>Kamera wechseln</button><button id="cagain" hidden>Neu verbinden</button><button id="cend" hidden>Beenden</button></div>
+    <div class="tip" id="ctip">iPhone quer aufs Stativ, genau seitlich zum Rad auf Hüfthöhe, 2–3 m Abstand. Ganze Person und Pedal im Bild.</div></div>`;
+  const $=id=>document.getElementById(id); const v=$('cv'), cs=$('cs');
+  const say=(b,t)=>{ cs.innerHTML=`<b>${b}</b>${t||''}`; };
+  let stream=null, peer=null, call=null, conn=null, facing='environment', lock=null;
+  const getCam=()=>navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:60}},audio:false});
+  const keepAwake=async()=>{ try{ if('wakeLock' in navigator){ lock=await navigator.wakeLock.request('screen'); } }catch(e){} };
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&stream) keepAwake(); });
+  const orient=()=>{ $('ctip').textContent=innerHeight>innerWidth?'Tipp: iPhone quer drehen, dann passt die ganze Person ins Bild.':'iPhone genau seitlich zum Rad auf Hüfthöhe, 2–3 m Abstand. Ganze Person und Pedal im Bild.'; };
+  addEventListener('resize',orient);
+  const connect=()=>{ if(call){ try{ call.close(); }catch(e){} } call=peer.call(pcId,stream); conn=peer.connect(pcId,{reliable:true});
+    conn.on('data',d=>{ if(!d) return; const g=d.grade?`<span class="badge g-${d.grade}">${d.grade}</span>`:''; say(`Verbunden · ${d.n} von ${d.need} Umdrehungen${g}`,d.knee!=null?`Knie unten ${String(d.knee).replace('.',',')}°${d.issues&&d.issues.length?' · '+d.issues[0]:''}`:(d.status||'Kunde soll locker treten.')); });
+    call.on('close',()=>{ say('Getrennt','Tippe auf „Neu verbinden“.'); $('cagain').hidden=false; });
+    call.on('error',()=>{ say('Verbindung fehlgeschlagen','PC und iPhone im selben WLAN? Sonst Hotspot vom iPhone nutzen.'); $('cagain').hidden=false; });
+    say('Verbinde mit dem PC …',''); $('cagain').hidden=true; };
+  $('cgo').onclick=async()=>{ $('cgo').disabled=true; say('Kamera wird gestartet …','');
+    try{ stream=await getCam(); v.srcObject=stream; await v.play().catch(()=>{}); }catch(e){ $('cgo').disabled=false; say('Kein Kamerazugriff','In Safari: aA → Website-Einstellungen → Kamera → Erlauben. Dann neu laden.'); return; }
+    keepAwake(); orient();
+    try{ if(!PeerCls()) await loadScript(PEER_JS()); }catch(e){ say('Keine Internetverbindung','Der Verbindungsbaustein konnte nicht geladen werden.'); return; }
+    const P=PeerCls(); peer=new P();
+    peer.on('open',()=>connect());
+    peer.on('error',e=>{ say('Verbindung fehlgeschlagen',peerErrText(e)); $('cagain').hidden=false; });
+    peer.on('disconnected',()=>{ try{ peer.reconnect(); }catch(e){} });
+    $('cgo').hidden=true; $('cflip').hidden=false; $('cend').hidden=false; };
+  $('cagain').onclick=()=>{ if(peer&&!peer.destroyed) connect(); else location.reload(); };
+  $('cflip').onclick=async()=>{ facing=facing==='environment'?'user':'environment'; try{ const ns=await getCam(); const tr=ns.getVideoTracks()[0];
+      const snd=call&&call.peerConnection&&call.peerConnection.getSenders().find(x=>x.track&&x.track.kind==='video'); if(snd) await snd.replaceTrack(tr);
+      stream.getTracks().forEach(t=>t.stop()); stream=ns; v.srcObject=ns; }catch(e){ say('Kamera wechseln nicht möglich',''); } };
+  $('cend').onclick=()=>{ try{ call&&call.close(); conn&&conn.close(); peer&&peer.destroy(); }catch(e){} if(stream) stream.getTracks().forEach(t=>t.stop()); try{ lock&&lock.release(); }catch(e){} v.srcObject=null; say('Beendet','Du kannst diese Seite schließen. Es wurde nichts gespeichert.'); ['cflip','cend','cagain'].forEach(i=>$(i).hidden=true); };
+}
+function loadPoseVideo(full){
+  if(full) return loadPoseFull();
   if(poseVideoPromise) return poseVideoPromise;
   const V='0.10.14';
   poseVideoPromise=(async()=>{
@@ -3003,7 +3082,7 @@ function liveInfo(final){
   const box=document.getElementById('liveInfo'); if(!box) return; const now=performance.now(); if(!final&&now-live.infoT<900) return; live.infoT=now;
   const r=liveResult(); const s=sess(live.sid);
   if(!r){ box.innerHTML=`<div class="statusbox"><div><b>${live.status||'Warte auf Bewegung …'}</b><span class="muted" style="font-size:14px">Ganze Person und Pedal müssen im Bild sein. Gezählt wird ab der ersten vollen Umdrehung, ausgewertet ab etwa 3 Umdrehungen.</span></div></div>`; return; }
-  const a=saddleAdvice(s,r.knee); live.last=r; const P=fitProfile(s);
+  const a=saddleAdvice(s,r.knee); live.last=r; phoneStatus(); const P=fitProfile(s);
   const pm=v=>v!=null?` <span class="faint" style="font-weight:500">±${fmtNum(Math.round(v*10)/10)}°</span>`:'';
   const row=(t,v,unit,sub,chip,extra)=>v==null?'':`<div class="li"><div class="grow"><div class="t">${t}</div>${sub?`<div class="sub" style="white-space:normal">${sub}</div>`:''}</div><span class="v" style="text-align:right"><b>${fmtNum(v)}${unit}</b>${extra||''}${chip?`<div>${chip}</div>`:''}</span></div>`;
   const gcol=r.grade==='gut'?'ok':r.grade==='mittel'?'warn':'bad';
@@ -3033,21 +3112,23 @@ async function liveLoop(){
   if(live.src==='file'&&el.ended){ live.on=false; liveInfo(true); const b=document.getElementById('liveState'); if(b) b.textContent='Video fertig ausgewertet.'; return; }
   live.raf=requestAnimationFrame(liveLoop);
 }
-function liveStop(){ live.on=false; cancelAnimationFrame(live.raf); if(live.stream){ live.stream.getTracks().forEach(t=>t.stop()); live.stream=null; } const el=document.getElementById('liveVideo'); if(el){ try{ el.pause(); }catch(e){} } }
+function liveStop(){ live.on=false; cancelAnimationFrame(live.raf); try{ live.call&&live.call.close(); live.conn&&live.conn.close(); live.peer&&live.peer.destroy(); }catch(e){} live.call=live.conn=live.peer=null; if(live.stream){ live.stream.getTracks().forEach(t=>t.stop()); live.stream=null; } const el=document.getElementById('liveVideo'); if(el){ try{ el.pause(); }catch(e){} } }
 function liveReset(){ live.frames=[]; live.all=[]; live.cur=[]; live.cycles=[]; live.prevY=null; live.prevLeg=null; live.last=null; live.lastTs=-1; live.tried=0; live.okN=0; liveInfo(true); }
 async function liveOpen(sid,src,side){
   liveStop(); live.sid=sid; live.src=src; liveReset(); live.status='Erkennung wird geladen …';
   openDrawer('Live-Analyse (Beta)',`<div class="stack">
-    <p class="muted" style="font-size:14px">${src==='cam'?'iPhone quer auf ein Stativ, genau seitlich auf Hüfthöhe, 2–3 m Abstand. Ganze Person mit Pedal im Bild. Kunde fährt locker. Die App erkennt Schulter, Hüfte, Knie, Knöchel und Fuß selbst und bildet den Mittelwert über '+LIVE_N+' Umdrehungen.':'Das geladene Video wird abgespielt und Bild für Bild ausgewertet.'}</p>
+    <p class="muted" style="font-size:14px">${src==='phone'?'Das iPhone filmt, dieser PC rechnet. Das Video geht direkt vom iPhone hierher und wird nicht gespeichert. Gespeichert werden nur die Werte, wenn du auf „Werte speichern“ tippst.':src==='cam'?'iPhone quer auf ein Stativ, genau seitlich auf Hüfthöhe, 2–3 m Abstand. Ganze Person mit Pedal im Bild. Kunde fährt locker. Die App erkennt Schulter, Hüfte, Knie, Knöchel und Fuß selbst und bildet den Mittelwert über '+LIVE_N+' Umdrehungen.':'Das geladene Video wird abgespielt und Bild für Bild ausgewertet.'}</p>
     ${markerGuideHtml(false)}
-    <div class="livewrap"><video id="liveVideo" playsinline muted autoplay></video><canvas id="liveCanvas" aria-hidden="true"></canvas></div>
+    ${src==='phone'?'<div id="phoneQR" class="phoneqr" hidden></div>':''}<div class="livewrap"><video id="liveVideo" playsinline muted autoplay></video><canvas id="liveCanvas" aria-hidden="true"></canvas></div>
     <p id="liveState" class="faint" style="font-size:13px">Erkennung wird geladen (beim ersten Mal etwa 6 MB) …</p>
     <div id="liveInfo"></div>
     <div class="row"><select class="input" style="width:auto" id="liveSide" aria-label="Speichern als"><option value="before">als Ausgangswert</option><option value="after" ${side==='after'?'selected':''}>als Endwert</option></select><button class="btn primary" data-act="liveSave">Werte speichern</button><button class="btn" data-act="liveReset">Neu zählen</button></div>
     <p class="faint" style="font-size:12.5px">Beta. Braucht beim Start Internet und läuft nur über den GitHub-Link. Die Erkennung (Google MediaPipe) rechnet auf diesem Gerät, das Video wird nicht hochgeladen. 2D-Kamera: Ein schräger Kamerawinkel verfälscht die Werte um einige Grad. Das Knielot ist eine verbreitete Faustregel, keine feste Vorgabe.</p></div>`);
   liveInfo(true);
   const st=t=>{ const b=document.getElementById('liveState'); if(b) b.hidden=true; live.status=t; liveInfo(true); };
-  try{ live.lm=await loadPoseVideo(); }catch(e){ st(POSE_FAIL); return; }
+  if(src==='phone'){ phoneConnect(st); }
+  try{ live.lm=await loadPoseVideo(src==='phone'); }catch(e){ st(POSE_FAIL); return; }
+  if(src==='phone') return;
   const el=document.getElementById('liveVideo'); if(!el) return;
   try{
     if(src==='cam'){ live.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},audio:false}); el.srcObject=live.stream; }
@@ -3472,6 +3553,8 @@ const ACT = {
   planSkip(){ const s=sess(ui.sess); s.plan.res[ui.adjIdx]={status:'skip'}; ACT.planNext(); },
   planBody(el){ const s=sess(ui.sess); const c=s.plan.cards[ui.adjIdx]; s.plan.res[ui.adjIdx]={status:el.dataset.v}; if(el.dataset.v==='done') c.items.forEach(x=>{ if(!(s.comp||[]).some(cp=>cp.t.startsWith(x.title))) (s.comp=s.comp||[]).push({t:x.title,status:x.arzt?'abgeklärt':'erledigt'}); }); save(); ACT.planNext(); },
   liveCam(el){ liveOpen(el.dataset.id,'cam',el.dataset.side); },
+  livePhone(el){ liveOpen(el.dataset.id,'phone',el.dataset.side); },
+  copyCamLink(el){ copyText(el.dataset.url); },
   liveFile(el){ if(!vid.src||vid.kind!=='video'){ toast('Bitte zuerst ein Video laden',true); return; } liveOpen(el.dataset.id,'file',el.dataset.side); },
   liveReset(){ liveReset(); },
   liveSave(){ const r=live.last||liveResult(); if(!r){ toast('Noch keine vollständige Umdrehung erkannt',true); return; } const s=sess(live.sid); const side=document.getElementById('liveSide').value; const meth=`2D-Video live (automatisch)`;
