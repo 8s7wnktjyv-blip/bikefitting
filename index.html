@@ -237,6 +237,7 @@ td.r,th.r{text-align:right}
 .st-ico.info{background:var(--info-soft,#e3edf9);color:var(--info);font-weight:700;font-style:italic}
 @media (max-width:480px){.ckx{margin-left:0}}
 .cockpit{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:16px;border:1px solid var(--line)}
+.simbox{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:16px;border:1px solid var(--line)}.simbox h3{margin:0}
 .ck2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:760px){.ck2{grid-template-columns:1fr}}
 .ckc{display:flex;flex-direction:column;gap:8px}.ckc h4{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .ckc ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:15px}.ckc .sub{font-size:13px;color:var(--muted);white-space:normal}
@@ -1429,7 +1430,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.37';
+const APP_VER = '2026-10-27.38';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2230,6 +2231,7 @@ SESSTAB.ausgang = s => {
   const optional=Object.keys(MK).filter(k=>!MEASURE_NOW.includes(k)&&!fromMaker.includes(k));
   return `<div class="stack">
   <p class="onlyline">Miss das Rad so, wie die Person es mitgebracht hat. ${MEASURE_NOW.length} Punkte, je mit Skizze und Anleitung.</p>
+  ${trainerHtml(s)}
   <div class="statusbox ${done===MEASURE_NOW.length?'ok':''}"><div style="flex:1;min-width:0"><b>${done===MEASURE_NOW.length?'Alle Pflichtwerte erfasst':'Noch '+(MEASURE_NOW.length-done)+' Werte offen'}</b>${mk&&fromMaker.length?`<span class="muted" style="font-size:14px">${fromMaker.length} Serienwerte vom Hersteller übernommen</span>`:''}</div><span class="num" style="font-weight:700">${done}/${MEASURE_NOW.length}</span></div>
   ${bodySetupHtml(s)}
   ${startBtn(first,done,first>=0?MK[MEASURE_NOW[first]].label:'')}
@@ -2690,6 +2692,116 @@ function cockpitHtml(s){
   <p class="faint" style="font-size:12.5px">Berechnung über Lenkwinkel ${fmtNum(r.A.ha)}° und Vorbauwinkel. Katalog: ${COCKPITS.length} Einheiten (Stand 27.10.2026). Preise und Verfügbarkeit beim Händler prüfen.</p></div>`;
 }
 
+/* ---------- Umbau-Simulator: Teile wählen, Wirkung sehen, nach dem Umbau übernehmen ---------- */
+function simState(s){ if(!s.sim) s.sim={mode:'none',unit:'',L:null,a:null,w:null,reachOld:null,reachNew:null,sp:0,crank:null,post:0,log:[]}; if(!s.sim.log) s.sim.log=[]; return s.sim; }
+function simUnits(s){ const b=bike(s.bikeId)||{}; const g=b.geo&&geoById(b.geo.id); const isGrail=g&&/canyon/i.test(g.brand)&&/grail/i.test(g.model);
+  return COCKPITS.filter(u=>u.type===b.type).flatMap(u=>u.sizes.map(([L,w])=>({id:u.model+'|'+L+'|'+w,u,L,w,fit:u.brand==='Canyon'&&isGrail&&/Grail/.test(u.note||'')?'laut Canyon für die Grail-Plattform':null}))); }
+function simCalc(s){
+  const st=simState(s); const b=bike(s.bikeId)||{}; const E={...s.before,...s.after}; const v=k=>E[k]?Number(E[k].value):null; const A=bikeAngles(s); const p=bikeParts(s);
+  const out={rows:[],notes:[],parts:[],warn:[]}; const ha=A.ha*Math.PI/180;
+  const L0=p.L, a0=p.ang; let L1=L0, a1=a0, w1=v('barWidth'), rNew=null, unit=null;
+  if(st.mode==='unit'){ unit=simUnits(s).find(x=>x.id===st.unit); if(unit){ L1=unit.L; a1=unit.u.ang??-6; w1=unit.w; rNew=unit.u.reach; out.parts.push({cat:'Cockpit',name:`${unit.u.brand} ${unit.u.model} ${unit.L}×${unit.w}`}); if(unit.u.ang==null) out.notes.push('Winkel des neuen Cockpits nicht angegeben – −6° angenommen.'); } }
+  if(st.mode==='stem'){ if(st.L) L1=Number(st.L); if(st.a!=null&&st.a!=='') a1=Number(st.a); if(st.w) w1=Number(st.w); if(st.reachNew) rNew=Number(st.reachNew); if(L1!==L0||a1!==a0) out.parts.push({cat:'Vorbau',name:`Vorbau ${L1} mm, ${a1>0?'+':''}${a1}°`}); if(st.w&&Number(st.w)!==v('barWidth')) out.parts.push({cat:'Sonstiges',name:`Lenker ${st.w} mm`}); }
+  if(!p.angKnown&&st.mode!=='none') out.notes.push(`Winkel des jetzigen Vorbaus nicht gemessen – ${fmtNum(a0)}° angenommen.`);
+  // Spacer: + = von oben unter den Vorbau (Lenker höher)
+  const under=v('spacer'), above=v('spacerAbove'); let sp=Number(st.sp)||0;
+  if(sp>0&&above!=null&&sp>above){ out.warn.push(`Über dem Vorbau liegen nur ${fmtNum(above)} mm Spacer – mehr geht nicht, der Gabelschaft lässt sich nicht verlängern.`); sp=above; }
+  if(sp<0&&under!=null&&-sp>under){ out.warn.push(`Unter dem Vorbau liegen nur ${fmtNum(under)} mm Spacer.`); sp=-under; }
+  if(sp&&(under==null||above==null)) out.notes.push('Spacer unter/über dem Vorbau nicht gemessen – bitte am Rad prüfen, ob so viele vorhanden sind.');
+  // Lenker-Verschiebung (Klemmmitte)
+  let dx=0, dy=0; if(L0&&L1){ const v0=stemVec(L0,a0,A.ha), v1=stemVec(L1,a1,A.ha); dx=v1.x-v0.x-sp*Math.cos(ha); dy=v1.y-v0.y+sp*Math.sin(ha); } else if(st.mode!=='none') out.warn.push('Vorbaulänge fehlt – unter Messen „Vorbaulänge“ eintragen oder Modell zuordnen.');
+  // Sattel: Kurbel und Stützenversatz
+  const c0=v('crankLength'), c1=st.crank?Number(st.crank):c0; const dH=c0&&c1?c0-c1:0; if(c1&&c0&&c1!==c0) out.parts.push({cat:'Sonstiges',name:`Kurbel ${fmtNum(c1)} mm`});
+  const dPost=Number(st.post)||0; if(dPost) out.parts.push({cat:'Sonstiges',name:`Sattelstütze ${dPost>0?'mehr':'weniger'} Versatz (${dPost>0?'+':''}${dPost} mm)`});
+  if(dPost) out.notes.push('Erst prüfen, ob der Sattel auf dem Gestell noch Weg hat – Verschieben kostet nichts.');
+  const C=coords(s); const h0=v('saddleHeight'), sb0=v('saddleSetback'), r0=v('reach'), d0=v('drop');
+  const h1=h0!=null?h0+dH:null, sb1=sb0!=null?sb0+dPost:null; const dSY=dH*A.ss;
+  let r1=r0; if(r0!=null&&C.SX!=null&&C.SY!=null&&C.BX!=null&&C.BY!=null){ const bx0=C.BX-C.SX, by0=C.BY-C.SY; const k=r0/Math.hypot(bx0,by0); r1=Math.hypot(bx0+dx+dPost, by0+dy-dSY)*k; }
+  else if(r0!=null) r1=r0+dx+dPost;
+  const d1=d0!=null?d0-dy+dSY:null;
+  const T={}; try{ targetFit(s).rows.forEach(r=>T[r.key]=r); }catch(e){}
+  const row=(k,label,a,b2,unit2,dec)=>{ if(a==null&&b2==null) return; const t=T[k]; const dist=x=>t&&t.lo!=null&&x!=null?(x<t.lo?t.lo-x:x>t.hi?x-t.hi:0):null; const da=dist(a), db=dist(b2);
+    const diff=a!=null&&b2!=null?Math.round((b2-a)*(dec?10:1))/(dec?10:1):null; const amp=da==null||db==null||Math.abs(diff||0)<1?'':db<da-1?'besser':db>da+1?'schlechter':db===0?'im Bereich':'gleich';
+    out.rows.push({k,label,a,b:b2,unit:unit2,diff,amp,range:t&&t.lo!=null?`${fmtNum(t.lo)}–${fmtNum(t.hi)}`:''}); };
+  row('saddleHeight','Sattelhöhe',h0,h1,'mm'); row('saddleSetback','Sattelversatz',sb0,sb1,'mm'); row('reach','Sattel–Lenker',r0,r1!=null?Math.round(r1):null,'mm'); row('drop','Überhöhung',d0,d1!=null?Math.round(d1):null,'mm');
+  row('stemLength','Vorbaulänge',L0,L1,'mm'); row('stemAngle','Vorbauwinkel',a0,a1,'°'); row('barWidth','Lenkerbreite',v('barWidth'),w1,'mm');
+  row('spacer','Spacer unter dem Vorbau',under,under!=null?under+sp:null,'mm'); row('spacerAbove','Spacer über dem Vorbau',above,above!=null?above-sp:null,'mm'); row('crankLength','Kurbellänge',c0,c1,'mm');
+  // Schalthebel
+  const rOld=st.reachOld?Number(st.reachOld):null; const dReach=rNew!=null&&rOld!=null?rNew-rOld:0;
+  if(rNew!=null&&rOld==null) out.notes.push('Reach des alten Lenkers unbekannt – für die Schalthebel gleich angenommen. Trag ihn ein, wenn du ihn kennst (steht beim Hersteller).');
+  out.hood={dx:Math.round(dx+dReach), dy:Math.round(dy), inward:w1&&v('barWidth')?Math.round((v('barWidth')-w1)/2):0};
+  if(C.HX!=null) out.rows.push({k:'_hx',label:'Schalthebel vor Tretlager',a:Math.round(C.HX),b:Math.round(C.HX+dx+dReach),unit:'mm',diff:Math.round(dx+dReach),amp:'',range:''});
+  // Breite
+  try{ const ca=cockpitAdvice(s); if(ca&&ca.width&&w1){ out.width=ca.width; const wr=out.rows.find(x=>x.k==='barWidth'); if(wr&&wr.diff){ const dist=x=>x<ca.width.lo?ca.width.lo-x:x>ca.width.hi?x-ca.width.hi:0; wr.range=`${ca.width.lo}–${ca.width.hi}`; wr.amp=dist(w1)<dist(wr.a)?'besser':dist(w1)>dist(wr.a)?'schlechter':dist(w1)===0?'im Bereich':'gleich'; } } }catch(e){}
+  out.dx=dx; out.dy=dy; out.changed=out.rows.filter(r=>r.diff); out.unit=unit; out.st=st;
+  return out;
+}
+function simHtml(s){
+  const b=bike(s.bikeId); if(!b) return ''; const st=simState(s); const r=simCalc(s); const E={...s.before,...s.after}; const v=k=>E[k]?Number(E[k].value):null; const p=bikeParts(s);
+  const units=simUnits(s); const sel=(f,list,cur)=>`<select class="input" data-change="simSet" data-id="${s.id}" data-f="${f}">${list.map(([val,lab])=>`<option value="${esc(String(val))}" ${String(cur??'')===String(val)?'selected':''}>${esc(lab)}</option>`).join('')}</select>`;
+  const n=x=>fmtNum(Math.round(x)); const sg=x=>(x>0?'+':x<0?'−':'±')+fmtNum(Math.abs(Math.round(x)));
+  const Ls=(b.type==='MTB'?[30,40,50,60,70,80]:[50,60,70,80,90,100,110,120,130]);
+  const spOpts=[]; for(let x=-30;x<=30;x+=5) spOpts.push([x,x===0?'Spacer bleiben':x>0?`${x} mm von oben unter den Vorbau (höher)`:`${-x} mm von unten nach oben (tiefer)`]);
+  const chip=a=>a==='besser'?'<span class="chip c-ok nodot">näher am Ziel</span>':a==='im Bereich'?'<span class="chip c-ok nodot">im Bereich</span>':a==='schlechter'?'<span class="chip c-bad nodot">weiter weg</span>':a==='gleich'?'<span class="chip nodot">unverändert gut/schlecht</span>':'';
+  const last=st.log[st.log.length-1];
+  return `<div class="simbox"><h3>Teile tauschen – was ändert sich?</h3>
+  <p class="muted" style="font-size:14px">Teil auswählen, Wirkung ansehen. Nach dem Umbau „Umgebaut“ tippen – dann rechnet FitFrame alle Werte neu.</p>
+  <div class="form">
+    <div class="field wide"><label>Cockpit</label><div class="seg" role="group" aria-label="Was wird getauscht"><button data-act="simMode" data-id="${s.id}" data-v="none" aria-pressed="${st.mode==='none'}">Nichts</button><button data-act="simMode" data-id="${s.id}" data-v="unit" aria-pressed="${st.mode==='unit'}">Einheit</button><button data-act="simMode" data-id="${s.id}" data-v="stem" aria-pressed="${st.mode==='stem'}">Vorbau/Lenker</button></div></div>
+    ${st.mode==='unit'?`<div class="field wide"><label>Lenker-Vorbau-Einheit (passend zu ${esc(b.type)})</label>${units.length?sel('unit',[['','Bitte wählen …'],...units.map(x=>[x.id,`${x.u.brand} ${x.u.model.replace(/ 1 1\/8" /,' ')} · ${x.L}×${x.w}${x.fit?' ✓':''}`])],st.unit):'<p class="muted">Keine Einheit für diesen Radtyp im Katalog.</p>'}${r.unit&&r.unit.fit?`<span class="faint" style="font-size:12.5px">✓ ${esc(r.unit.fit)}</span>`:''}</div>
+      <div class="field"><label>Reach alter Lenker (mm, optional)</label><input class="input num" type="number" min="50" max="110" value="${st.reachOld??''}" data-change="simSet" data-id="${s.id}" data-f="reachOld" placeholder="unbekannt"></div>`:''}
+    ${st.mode==='stem'?`<div class="field"><label>Vorbaulänge</label>${sel('L',Ls.map(x=>[x,x+' mm'+(x===p.L?' (jetzt)':'')]),st.L??p.L)}</div>
+      <div class="field"><label>Vorbauwinkel</label>${sel('a',STEM_ANGLES.map(x=>[x,(x>0?'+':'')+x+'°'+(x===p.ang?' (jetzt)':'')]),st.a??p.ang)}</div>
+      <div class="field"><label>Lenkerbreite</label>${sel('w',[380,400,420,440,460,480].map(x=>[x,x+' mm'+(x===v('barWidth')?' (jetzt)':'')]),st.w??v('barWidth'))}</div>
+      <div class="field"><label>Reach alter / neuer Lenker (optional)</label><div class="row" style="gap:6px"><input class="input num" type="number" min="50" max="110" value="${st.reachOld??''}" data-change="simSet" data-id="${s.id}" data-f="reachOld" placeholder="alt" style="width:80px"><input class="input num" type="number" min="50" max="110" value="${st.reachNew??''}" data-change="simSet" data-id="${s.id}" data-f="reachNew" placeholder="neu" style="width:80px"></div></div>`:''}
+    <div class="field wide"><label>Spacer (jetzt ${v('spacer')??'?'} mm unter, ${v('spacerAbove')??'?'} mm über dem Vorbau)</label>${sel('sp',spOpts,st.sp||0)}</div>
+    <div class="field"><label>Kurbellänge</label>${sel('crank',[['','bleibt'+(v('crankLength')?' ('+fmtNum(v('crankLength'))+' mm)':'')],...[160,162.5,165,167.5,170,172.5,175].map(x=>[x,fmtNum(x)+' mm'])],st.crank||'')}</div>
+    <div class="field"><label>Sattelstütze Versatz</label>${sel('post',[[-25,'25 mm weniger'],[-15,'15 mm weniger'],[0,'bleibt'],[15,'15 mm mehr'],[25,'25 mm mehr']],st.post||0)}</div>
+  </div>
+  ${r.warn.map(w=>`<div class="notice warn" style="font-size:13.5px">${ic('warn')}<div>${esc(w)}</div></div>`).join('')}
+  ${r.changed.length?`<div class="statusbox ok"><div><b>Gesamtwirkung: Lenker ${sg(r.dy)} mm ${r.dy>=0?'höher':'tiefer'}, ${sg(r.dx)} mm ${r.dx>=0?'weiter weg':'näher'}</b><span class="muted" style="font-size:14px">${[r.hood.dx||r.hood.dy?`Schalthebel ${sg(r.hood.dx)} mm nach vorn/hinten, ${sg(r.hood.dy)} mm Höhe`:'',r.hood.inward?`Schalthebel je Seite ${n(Math.abs(r.hood.inward))} mm ${r.hood.inward>0?'weiter innen':'weiter außen'}`:''].filter(Boolean).join(' · ')||'Lenker bleibt, wo er ist'}</span></div></div>
+  <div class="cmp">${r.rows.filter(x=>x.diff).map(x=>`<div class="li"><div class="grow"><div class="t">${esc(x.label)}</div><div class="sub">${fmtNum(x.a)} → <b>${fmtNum(x.b)} ${x.unit}</b>${x.range?` · Ziel ${x.range} ${x.unit}`:''}</div></div><span class="v" style="text-align:right"><b>${x.diff>0?'+':'−'}${fmtNum(Math.abs(x.diff))} ${x.unit}</b><div>${chip(x.amp)}</div></span></div>`).join('')}</div>
+  ${r.notes.length?`<ul class="faint" style="font-size:12.5px;margin:0;padding-left:18px">${r.notes.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
+  <p class="faint" style="font-size:12.5px;margin:0">Warum kürzer oft minimal tiefer heißt: Der Gabelschaft steht schräg, der Vorbau zeigt dadurch leicht nach oben. Die Lenkerbreite ändert Sattel–Lenker und Überhöhung praktisch nicht, nur Schulter- und Armstellung.</p>
+  <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn primary" data-act="simApply" data-id="${s.id}">${ic('check')}Umgebaut – Werte übernehmen</button>${r.parts.length?`<button class="btn" data-act="simOffer" data-id="${s.id}">${ic('plus')}Ins Angebot</button>`:''}<button class="btn ghost" data-act="simReset" data-id="${s.id}">Auswahl zurücksetzen</button></div>`
+  :`<p class="faint" style="font-size:13.5px;margin:0">Noch nichts ausgewählt.</p>`}
+  ${last?`<div class="notice" style="font-size:13.5px">${ic('info')}<div>Zuletzt übernommen: ${esc(last.what)} (${esc(last.time)}). <button class="btn sm ghost" data-act="simUndo" data-id="${s.id}">Rückgängig</button></div></div>`:''}
+  </div>`;
+}
+function simApply(s){
+  const r=simCalc(s); if(!r.changed.length) return 0; const st=simState(s);
+  const snap=JSON.parse(JSON.stringify(s.after||{})); const what=r.parts.map(x=>x.name).concat(st.sp?[`Spacer ${st.sp>0?'+':''}${st.sp} mm`]:[]).join(', ')||'Umbau';
+  r.rows.filter(x=>x.diff&&MK[x.k]).forEach(x=>{ s.after[x.k]={key:x.k,value:x.b,method:'Umbau berechnet',source:'berechnet',unc:x.k==='reach'||x.k==='drop'?3:null,time:nowStamp(),why:'Umbau: '+what}; });
+  const b=bike(s.bikeId); if(b&&st.mode==='unit') b.cockpit='unit'; if(b&&st.mode==='stem') b.cockpit='stem';
+  st.log.push({time:nowStamp(),what,snap}); audit(`Umbau übernommen: ${what} – ${r.changed.length} Werte neu berechnet`,s.id);
+  Object.assign(st,{mode:'none',unit:'',L:null,a:null,w:null,reachNew:null,sp:0,crank:null,post:0});
+  return r.changed.length;
+}
+/* ---------- Rad im Rollentrainer gerade ausrichten (wie auf Laufrädern) ---------- */
+function trainerHtml(s){
+  const t=s.trainer||{}; const f=Number(t.front)||null, r=Number(t.rear)||null; const b=bike(s.bikeId)||{}; const g=b.geo&&geoById(b.geo.id); const row=g&&geoRow(g,b.geo.size); const wb=(row&&row.wheelbase)||1020;
+  let res=''; if(f&&r){ const d=r-f; const ang=Math.atan2(d,wb)*180/Math.PI; const err=Math.round(Math.abs(Math.sin(ang*Math.PI/180))*1000);
+    res=Math.abs(d)<=3?`<div class="statusbox ok"><div><b>Gerade – passt.</b><span class="muted" style="font-size:14px">Unterschied ${fmtNum(Math.abs(d))} mm (${fmtNum(Math.round(Math.abs(ang)*100)/100)}°). Jetzt messen.</span></div></div>`
+    :`<div class="statusbox warn"><div><b>Vorderrad ${fmtNum(Math.abs(d))} mm ${d>0?'anheben':'absenken'}</b><span class="muted" style="font-size:14px">Das Rad kippt jetzt ${fmtNum(Math.round(Math.abs(ang)*10)/10)}° ${d>0?'nach vorn':'nach hinten'}. Folge: Sattelversatz und Sattel–Lenker werden um bis zu ${err} mm falsch gemessen. ${d>0?'Vorderrad-Block oder feste Platten (Holzbrett, Fliese) unterlegen.':'Vorderrad-Block flacher oder weglassen; reicht das nicht, Trainer hinten unterlegen.'}</span></div></div>`; }
+  return `<details class="more" ${ui.trainerOpen?'open':''}><summary>Rad im Rollentrainer gerade ausrichten</summary><div class="stack" style="margin-top:10px">
+  <p class="muted" style="font-size:14px;margin:0">Ziel: Das Rad steht so wie auf seinen Laufrädern. Entscheidend ist, dass vordere und hintere Achse gleich hoch sind. Dann stimmen alle Winkel.</p>
+  <ol style="margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:4px">
+    <li>Trainer auf ebenen, festen Boden stellen. Wasserwaage quer und längs auf den Trainer: Er muss gerade stehen und darf nicht wackeln.</li>
+    <li>Rad einspannen (Schnellspanner oder Steckachse mit dem passenden Adapter). Kette auf das Ritzel – beim KICKR CORE 2 mit Zwift Cog gibt es nur eins.</li>
+    <li>Vorderrad auf einen Block stellen, damit es nicht wegrollt und gerade steht.</li>
+    <li><b>Hinten:</b> Höhe vom Boden bis zur Mitte der Hinterachse messen (Mitte des Schnellspanners bzw. der Steckachse).</li>
+    <li><b>Vorn:</b> Höhe vom Boden bis zur Mitte der Vorderachse messen.</li>
+    <li>Beide Werte unten eintragen. Die App sagt, wie viel du unterlegen musst. Ziel: höchstens 3 mm Unterschied.</li>
+    <li>Lenker gerade stellen (Vorderrad zeigt nach vorn). Erst dann messen.</li>
+  </ol>
+  <div class="form"><div class="field"><label for="tr_r">Hinterachse über Boden (mm)</label><input class="input num" id="tr_r" type="number" min="250" max="450" value="${t.rear??''}" data-change="trainerSet" data-id="${s.id}" data-f="rear"></div>
+  <div class="field"><label for="tr_f">Vorderachse über Boden (mm)</label><input class="input num" id="tr_f" type="number" min="250" max="450" value="${t.front??''}" data-change="trainerSet" data-id="${s.id}" data-f="front"></div></div>
+  ${res}
+  <ul class="faint" style="font-size:12.5px;margin:0;padding-left:18px"><li>Laut Wahoo ist der KICKR CORE für 700c ausgelegt. 700c und 29" stehen ohne Zubehör gerade, kleinere Räder brauchen einen höheren Vorderrad-Block. Eine „Standardhöhe“ für den Block gibt es nicht – deshalb messen.</li>
+  <li>Absolut ist das Rad im Trainer oft etwas höher oder tiefer als auf der Straße. Das ist egal, solange du <b>alle</b> Werte im Trainer misst, auch die Tretlagerhöhe. Werte von der Straße und aus dem Trainer nicht mischen.</li>
+  <li>Faustregel: 10 mm Höhenunterschied vorn/hinten ≈ 0,5° Neigung ≈ 5–10 mm Fehler beim Sattelversatz.</li></ul>
+  </div></details>`;
+}
 /* ---------- Koordinaten vom Tretlager, Querprüfung und 1:1-Übertragung ---------- */
 const MGROUPS=[['Grundmessung',['saddleHeight','saddleSetback','reach','drop','cleatFore']],['Sattel und Cockpit',['saddleTilt','spacer','spacerAbove','stemAngle']],['Koordinaten für die 1:1-Übertragung',['bbHeight','saddleFloor','barFloor','hoodFloor','saddleToHood']]];
 function coords(s){ // Endposition: gemessene Koordinaten (vorher) plus Änderungen aus dem Fitting
@@ -2783,6 +2895,7 @@ function guidedHtml(s){
     ${glanceHtml(s)}
     ${hoodHtml(s)}
     ${cockpitHtml(s)}
+    ${simHtml(s)}
     <div class="gstart">${s.plan&&done<s.plan.cards.length?`<div><b>Geführte Anpassung läuft</b><span class="muted">${done} von ${s.plan.cards.length} erledigt</span></div><div class="row"><button class="btn primary big" data-act="planGo">Weiter mit Schritt ${Math.min(s.plan.idx+1,s.plan.cards.length)}${ic('arrow')}</button><button class="btn ghost" data-act="planStart">Neu berechnen</button></div>`
       :open||P.body.length?`<div><b>${open} Änderung${open===1?'':'en'}${P.body.length?' + Körperausgleich':''}</b><span class="muted">Schritt für Schritt, mit Anleitung, Drehmoment und Kontrolle</span></div><button class="btn primary big" data-act="planStart">Geführte Anpassung starten${ic('arrow')}</button>`
       :`<div><b>Alles im Bereich</b><span class="muted">Ohne Beschwerden, die dagegen sprechen, nichts verändern.</span></div>`}</div>
@@ -4278,6 +4391,13 @@ const ACT = {
   nbSet(el){ ui.nb=ui.nb||{}; ui.nb[el.dataset.k]=el.dataset.v; if(el.dataset.k==='type') ui.nb.brand=''; openDrawer('Passendes Neurad finden',newBikeHtml(el.dataset.id)); },
   setupHide(){ S.setup=S.setup||{}; S.setup.hidden=true; save(); render(); },
   pricesOk(){ S.setup=S.setup||{}; S.setup.prices=true; save(); render(); toast('Prima – Preise und Produkte sind eingerichtet'); },
+  simMode(el){ const s=sess(el.dataset.id); simState(s).mode=el.dataset.v; save(); render(); },
+  simReset(el){ const s=sess(el.dataset.id); Object.assign(simState(s),{mode:'none',unit:'',L:null,a:null,w:null,reachOld:null,reachNew:null,sp:0,crank:null,post:0}); save(); render(); },
+  simApply(el){ const s=sess(el.dataset.id); const n=simApply(s); if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit'; save(); render(); toast(n?`${n} Werte neu berechnet – am Rad kurz nachmessen`:'Keine Änderung'); },
+  simUndo(el){ const s=sess(el.dataset.id); const st=simState(s); const l=st.log.pop(); if(!l) return; s.after=l.snap; audit(`Umbau rückgängig: ${l.what}`,s.id); save(); render(); toast('Umbau rückgängig gemacht'); },
+  simOffer(el){ const s=sess(el.dataset.id); const r=simCalc(s); if(!s.offer||!s.offer.items) s.offer={items:offerBuild(s),date:today()}; let n=0;
+    r.parts.forEach(x=>{ if(s.offer.items.some(i=>i.name===x.name)) return; const ch=prodChoices(x.cat); const pr=ch.best&&x.cat!=='Sonstiges'?ch.best.price:0; s.offer.items.push({id:'sim'+Date.now()+n,cat:x.cat,pid:ch.best&&x.cat!=='Sonstiges'?ch.best.id:null,name:x.name,qty:1,price:pr,why:'Umbau-Simulator',on:true}); n++; });
+    save(); toast(n?`${n} Teil${n>1?'e':''} im Angebot – Preis dort prüfen`:'Schon im Angebot'); },
   setCockpit(el){ const b=bike(el.dataset.id); if(!b) return; b.cockpit=el.dataset.v; save(); render(); },
   msgCopy(el){ copyText(el.dataset.t); },
   woCsv(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); try{ download(`${w.id}.csv`,'\ufeff'+woCsv(w),'text/csv;charset=utf-8'); toast('CSV erstellt'); }catch(e){ copyText(woCsv(w)); } },
@@ -4476,6 +4596,8 @@ const CHG = {
   guarantee(el){ S.settings=S.settings||{}; S.settings.guarantee=el.checked; save(); toast(el.checked?'Garantie im Bericht':'Garantie ausgeblendet'); },
   photoSet(el){ const f=el.files&&el.files[0]; if(!f) return; const s=sess(el.dataset.id); photoResize(f,url=>{ s.photos=s.photos||{}; s.photos[el.dataset.k]=url; try{ save(); toast('Foto gespeichert'); }catch(e){ toast('Speicher voll – ältere Fotos löschen',true); } render(); }); },
   offerProd(el){ const s=sess(el.dataset.id); const x=s.offer.items[+el.dataset.i]; const p=x.cat==='Paket'?fitPacks().find(z=>z.id===el.value):products().find(z=>z.id===el.value); if(!p) return; x.pid=p.id; if(x.cat==='Paket'||!/^(Vorbau|Cockpit)$/.test(x.cat)) x.name=p.name; x.price=p.price; x.note=p.note||''; save(); render(); },
+  simSet(el){ const s=sess(el.dataset.id); const st=simState(s); const f=el.dataset.f; st[f]=el.value===''?null:(f==='unit'?el.value:Number(el.value)); save(); render(); },
+  trainerSet(el){ const s=sess(el.dataset.id); if(!s.trainer) s.trainer={}; s.trainer[el.dataset.f]=el.value===''?null:Number(el.value); ui.trainerOpen=true; save(); render(); },
   packEdit(el){ const p=fitPacks()[+el.dataset.i]; if(!p) return; p[el.dataset.f]=el.dataset.f==='price'?Math.max(0,Number(el.value)||0):el.value; save(); },
   prodEdit(el){ const p=products()[+el.dataset.i]; if(!p) return; p[el.dataset.f]=el.dataset.f==='price'?Math.max(0,Number(String(el.value).replace(',','.'))||0):el.value; save(); },
   offerOn(el){ const s=sess(el.dataset.id); s.offer.items[+el.dataset.i].on=el.checked; save(); render(); },
@@ -4529,7 +4651,7 @@ applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
 if((location.hash||'').indexOf('#pass=')===0){ const ph=location.hash.slice(6); go('dashboard'); try{ ui.passData=JSON.parse(unb64u(ph)); setTimeout(()=>openDrawer('Fit-Pass übernehmen',passImportHtml(ui.passData)),50); }catch(e){ toast('Fit-Pass-Link ist beschädigt',true); } }
 else go(VIEWS[start]?start:'dashboard');
-window.__fitframe={hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
