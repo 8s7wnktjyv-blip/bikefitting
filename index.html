@@ -1377,7 +1377,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.17';
+const APP_VER = '2026-10-27.19';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2116,7 +2116,8 @@ function hoodTarget(s){
   const dropStep=P.steps.find(x=>x.key==='drop'&&!x.info);
   const saddleNow=bb+h*A.ss, saddleNew=bb+(h+hs)*A.ss;
   const out={bbEst,saddleNow:Math.round(saddleNow),saddleNew:Math.round(saddleNew),ramp:v('hoodRamp'),roll:v('barRoll'),need:[]};
-  if(hd==null){ out.need.push('Überhöhung zu den Schalthebeln'); return out; }
+  if(hd==null&&s.before.hoodFloor){ hd=Math.round(saddleNow-Number(s.before.hoodFloor.value)); if(s.after.drop&&s.before.drop) hd+=Number(s.after.drop.value)-Number(s.before.drop.value); out.hdEst=true; }
+  if(hd==null){ out.need.push('Schalthebel über Boden'); return out; }
   const dDrop=dropStep?dropStep.target-dropStep.from:0, dDo=dropStep?dropStep.d:0;
   out.now=Math.round(saddleNow-hd); out.target=Math.round(saddleNew-(hd+dDrop)); out.doable=Math.round(saddleNew-(hd+dDo));
   return out;
@@ -2125,7 +2126,7 @@ function hoodHtml(s){ const t=hoodTarget(s); if(!t) return '';
   const ramp=t.ramp==null?'':Math.abs(t.ramp)<=5?'<span class="chip c-ok nodot">Übergang flach</span>':`<span class="chip c-warn nodot">Übergang ${fmtNum(t.ramp)}°: Schalthebel ${t.ramp>0?'etwas nach unten':'etwas nach oben'} setzen</span>`;
   const roll=t.roll==null?'':(t.roll<=0&&t.roll>=-8)?'<span class="chip c-ok nodot">Unterlenker passt</span>':`<span class="chip c-warn nodot">Unterlenker ${fmtNum(t.roll)}°: ${t.roll>0?'nach unten drehen':'etwas hochdrehen'}</span>`;
   return `<div class="hoodcard"><div class="hc-ico">${ic('fit')}</div><div class="grow" style="min-width:0"><div class="t">Oberkante Schalthebel</div>
-  ${t.target!=null?`<div class="hc-big">${fmtNum(t.target)} <span>mm über dem Boden</span></div><div class="sub" style="white-space:normal">Jetzt ${fmtNum(t.now)} mm${t.doable!==t.target?` · mit den Vorschlägen erreichbar: ${fmtNum(t.doable)} mm`:''}. Mit dem Zollstock vom Boden zur Oberkante messen.</div>`:`<div class="sub" style="white-space:normal">Miss einmal die <b>Überhöhung zu den Schalthebeln</b> (Messen → Weitere Messpunkte). Dann zeigt FitFrame die Zielhöhe über dem Boden.</div>`}
+  ${t.target!=null?`<div class="hc-big">${fmtNum(t.target)} <span>mm über dem Boden</span></div><div class="sub" style="white-space:normal">Jetzt ${fmtNum(t.now)} mm${t.doable!==t.target?` · mit den Vorschlägen erreichbar: ${fmtNum(t.doable)} mm`:''}. Mit dem Zollstock vom Boden zur Oberkante messen.</div>`:`<div class="sub" style="white-space:normal">Dafür fehlt ein Messwert: <b>Schalthebel über Boden</b> (Zollstock vom Boden zur Oberkante des Schalthebels). Dauert 30 Sekunden.</div><button class="btn sm primary" style="margin-top:6px" data-act="measureJump" data-k="hoodFloor">Jetzt messen</button>`}
   <div class="row" style="margin-top:6px;gap:6px">${ramp}${roll}</div>
   ${t.bbEst?'<p class="faint" style="font-size:12.5px;margin-top:4px">Tretlagerhöhe geschätzt. Für eine genaue Zahl „Tretlagerhöhe über Boden“ messen.</p>':''}
   <details class="more" style="margin-top:4px"><summary style="font-size:13px">So stellen Profis die Schalthebel ein</summary><ol style="margin:6px 0 0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px"><li>Erst den Lenker drehen: Unterlenker-Enden waagerecht oder leicht Richtung Hinterradachse.</li><li>Dann die Schalthebel: flacher Übergang von Lenkeroberseite zum Hebel, Handgelenk gerade.</li><li>Zu tief: Druck auf Ringfinger und kleinen Finger. Zu hoch: Ellbogen stark gebeugt, Daumen und Zeigefinger werden taub.</li><li>Bremshebel mit dem ersten Fingerglied erreichbar.</li></ol></details></div></div>`; }
@@ -2229,6 +2230,7 @@ const DO={
 const DIRT={cleatFore:[ 'Richtung Ferse','Richtung Zehen'],saddleHeight:['herausziehen','versenken'],saddleSetback:['nach hinten','nach vorn']};
 function ampel(k,v,r){ if(v==null) return {c:'none',t:'nicht gemessen'}; if(!r||r.lo==null) return {c:'none',t:'kein Bereich'};
   const tol=Math.max(5,(r.hi-r.lo)*0.15); if(v>=r.lo&&v<=r.hi) return {c:'ok',t:'passt'}; const off=v<r.lo?r.lo-v:v-r.hi;
+  if(k==='drop') return off<=tol?{c:'warn',t:v<r.lo?'Lenker etwas hoch':'Lenker etwas tief'}:{c:'bad',t:v<r.lo?'Lenker zu hoch':'Lenker zu tief'};
   return off<=tol?{c:'warn',t:v<r.lo?'etwas niedrig':'etwas hoch'}:{c:'bad',t:v<r.lo?'zu niedrig':'zu hoch'}; }
 function glanceHtml(s){
   const tg=targetFit(s); const R=Object.fromEntries(tg.rows.map(r=>[r.key,r])); const e={...s.before,...s.after};
@@ -2248,7 +2250,7 @@ function stepCard(s,c,i,n){
   const tr=targetFit(s).rows.find(r=>r.key===c.key); const aNow=ampel(c.key,c.from,tr), aNew=ampel(c.key,c.to,tr);
   const res=s.plan.res[i];
   return `<div class="gcard">
-    <div class="gc-head">${IL(c.key)?`<div class="gc-ill">${IL(c.key)}</div>`:''}<div class="grow" style="min-width:0"><div class="label">Schritt ${i+1} von ${n}${c.comp?' · Ausgleich':''}</div><h2>${esc(m.label)} ${c.blocked?'– so nicht machbar':`${c.d>0?'+':''}${nn(c.d)} ${u}`}</h2></div></div>
+    <div class="gc-head">${IL(c.key)?`<div class="gc-ill">${IL(c.key)}</div>`:''}<div class="grow" style="min-width:0"><div class="label">Schritt ${i+1} von ${n}${c.comp?' · Ausgleich':''}</div><h2>${c.key==='drop'&&!c.blocked?`Lenker ${nn(Math.abs(c.d))} mm ${c.d<0?'höher':'tiefer'}`:`${esc(m.label)} ${c.blocked?'– so nicht machbar':`${c.d>0?'+':''}${nn(c.d)} ${u}`}`}</h2>${c.key==='drop'?`<p class="muted" style="margin:2px 0 0;font-size:14px">Überhöhung = Sattel minus Lenker. Weniger Überhöhung heißt: Lenker höher.</p>`:''}</div></div>
     <div class="gc-nums"><div class="gn ${aNow.c}"><span>Jetzt</span><b>${nn(c.from)}</b><i>${aNow.t}</i></div><div class="gn tgt"><span>Ziel</span><b>${nn(c.target)}</b><i>${tr&&tr.lo!=null?`Bereich ${nn(tr.lo)}–${nn(tr.hi)}`:''}</i></div><div class="gn ${c.blocked?'bad':aNew.c}"><span>Am Rad machbar</span><b>${c.blocked?'–':nn(c.to)}</b><i>${c.blocked?'neues Teil nötig':aNew.t}</i></div></div>
     <div class="gc-sec"><h4>Warum</h4><p>${esc(c.why)}</p></div>
     ${c.acts.length?`<div class="gc-sec"><h4>Was genau</h4><ul>${c.acts.map(a=>`<li>${a.part?'<span class="chip c-acc nodot">neues Teil</span> ':''}${esc(a.t)}</li>`).join('')}</ul>${c.alt.length?`<p class="muted" style="margin-top:4px"><b>Alternative:</b> ${c.alt.map(a=>esc(a.t)).join(' ')}</p>`:''}</div>`:''}
@@ -3626,6 +3628,7 @@ const ACT = {
   stInfo(el){ const k=STATUS[el.dataset.k]; toast(`${k[1]}: ${k[2]}`); },
   theme(){ theme=theme==='dark'?'light':'dark'; try{localStorage.setItem('fitframe-theme',theme);}catch(e){} applyTheme(); if(ui.route==='mehr') render(); },
   setTheme(el){ theme=el.dataset.v; try{localStorage.setItem('fitframe-theme',theme);}catch(e){} applyTheme(); render(); },
+  measureJump(el){ ui.sessTab='ausgang'; ui.editMaker=null; ui.wIdx=MEASURE_NOW.indexOf(el.dataset.k); render(); window.scrollTo({top:0}); },
   sessTab(el){ ui.sessTab=el.dataset.v; ui.editMaker=null; ui.wIdx=null; if(el.dataset.v==='ausgang'){ const s=sess(ui.sess); const n=s?applyMaker(s):0; if(n){ save(); setTimeout(()=>toast(`${n} Serienwerte vom Hersteller übernommen – bitte kurz prüfen`),60); } } render(); },
   applyMaker(el){ const s=sess(el.dataset.id); const n=applyMaker(s); save(); render(); toast(n?`${n} Serienwerte übernommen`:'Keine Herstellerwerte vorhanden'); },
   editMaker(el){ ui.editMaker=el.dataset.k; render(); const f=document.getElementById('mc_'+el.dataset.k); if(f){ f.scrollIntoView({behavior:'smooth',block:'center'}); f.focus({preventScroll:true}); } },
