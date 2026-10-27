@@ -626,6 +626,14 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 /* Seitenköpfe: Kupferpunkt als Verlauf */
 .pagehead:not(.hero) h1::before{background:var(--warm-grad)}
 .avatar{background:var(--t1);color:var(--t1i)}
+
+/* Vorschau Ziel */
+.gprev{border-radius:18px;padding:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 10%,var(--surface)),var(--surface));border:1px solid var(--accent-line)}
+.gprev-rows{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.gp{display:flex;gap:10px;align-items:flex-start}
+.gp-i{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-strong);font-weight:800}
+.gp-a{font-family:var(--f-head);font-weight:700;color:var(--accent-strong);white-space:nowrap}
+:root[data-theme="dark"] .gp-a,:root[data-theme="dark"] .gp-i{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -1377,7 +1385,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.20';
+const APP_VER = '2026-10-27.21';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1742,6 +1750,51 @@ const PRESET={
 };
 const splitVals=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean);
 const ANA_Q=[['goal','Was ist das Ziel des Fittings?','Mehrere Antworten möglich.'],['complaints','Gibt es Beschwerden beim Fahren?','Mehrere möglich. Wo genau und seit wann, kannst du unten ergänzen.'],['training','Wie viel fährt die Person pro Woche?',''],['experience','Seit wann fährt die Person Rad?',''],['previous','Gab es schon ein Fitting?',''],['limits','Gibt es körperliche Einschränkungen?','Mehrere möglich.'],['comfort','Was ist wichtiger?','']];
+/* ---------- Vorschau: Was sich durch Ziel und Bedürfnisse ungefähr an der Position ändert ---------- */
+function goalPreview(s){
+  const a=s.anamnesis||{}, b=bike(s.bikeId)||{}, t=b.type||'';
+  const goal=(a.goal||'').toLowerCase(), comp=(a.complaints||'').toLowerCase(), cf=a.comfort||'', lim=(a.limits||'').toLowerCase(), tr=a.training||'';
+  if(!goal&&!cf&&!comp) return null;
+  let sc=0; const why=[];
+  if(/aero|triathlon/.test(goal)){ sc+=2; why.push('Ziel Aerodynamik'); }
+  if(/rennen/.test(goal)){ sc+=1; why.push('Rennen fahren'); }
+  if(/leistung/.test(goal)){ sc+=1; why.push('mehr Leistung'); }
+  if(/längere touren/.test(goal)){ sc-=1; why.push('längere Touren'); }
+  if(/beschwerden/.test(goal)){ sc-=1; why.push('Beschwerden loswerden'); }
+  if(/komfort/i.test(cf)){ sc-=2; why.push('Komfort zuerst'); } else if(/aero|leistung/i.test(cf)){ sc+=2; why.push('Leistung/Aero zuerst'); }
+  const upper=/nacken|schulter|hände|handgelenk|rücken/.test(comp), back=/rücken/.test(comp)||/rücken/.test(lim), stiffL=/beweglichkeit/.test(lim);
+  if(upper) sc-=1; if(stiffL) sc-=1; if(/unter 2 h/.test(tr)) sc-=1;
+  const style=sc>=2?'aero':sc<=-2?'komfort':'mitte';
+  const P=fitProfile(s); const e={...s.before,...s.after}; const v=k=>e[k]?Number(e[k].value):null;
+  const rows=[]; const add=(k,label,dir,amount,txt)=>rows.push({k,label,dir,amount,txt});
+  const dropNow=v('drop');
+  if(style==='aero'){
+    add('drop','Lenker','tiefer','etwa 10–30 mm',`Flacherer Oberkörper, weniger Luftwiderstand.${upper?' Achtung: Nacken/Rücken/Hände – in kleinen Schritten.':''}`);
+    add('reach','Sattel–Lenker','etwas länger','0–20 mm','Gestreckter, damit der Rücken flach wird ohne die Hüfte zuzumachen.');
+    if(t==='Triathlon'||/triathlon/.test(goal)) add('saddleSetback','Sattel','weiter vorn','10–30 mm, dann 5–10 mm höher','Öffnet die Hüfte in der Aeroposition. Sattelhöhe danach über den Kniewinkel nachstellen.');
+  } else if(style==='komfort'){
+    add('drop','Lenker','höher','etwa 10–30 mm','Aufrechter Oberkörper entlastet Nacken, Rücken und Hände.');
+    add('reach','Sattel–Lenker','kürzer','etwa 10–20 mm','Weniger Gewicht auf den Händen, Arme leicht gebeugt.');
+  } else {
+    add('drop','Lenker',upper?'etwas höher':'bleibt etwa',upper?'etwa 5–15 mm':'±10 mm',upper?'Wegen der Beschwerden im Oberkörper etwas aufrechter.':'Ausgewogen: Lenkerhöhe nur anpassen, wenn Winkel oder Beschwerden es verlangen.');
+    add('reach','Sattel–Lenker',/nacken|schulter|hände/.test(comp)?'etwas kürzer':'bleibt etwa',/nacken|schulter|hände/.test(comp)?'etwa 5–10 mm':'±10 mm','Arme sollen leicht gebeugt sein.');
+  }
+  add('saddleHeight','Sattelhöhe','hängt nicht vom Ziel ab','über Kniewinkel','Wird über den gemessenen Kniewinkel eingestellt (Ziel '+P.knee[0]+'–'+P.knee[1]+'°), nicht über den Fahrstil.');
+  const angles=`Oberkörper ${P.torso[0]}–${P.torso[1]}° · Hüfte oben ${P.hip[0]}–${P.hip[1]}° · Schulter ${P.shoulder[0]}–${P.shoulder[1]}°`;
+  const warn=[];
+  if(style==='aero'&&upper) warn.push('Aero-Wunsch und Beschwerden im Oberkörper: erst beschwerdefrei, dann schrittweise tiefer.');
+  if(style==='aero'&&(stiffL||back)) warn.push('Eingeschränkte Beweglichkeit oder Rücken: eine tiefe Position wird meist nicht lange gehalten. Lieber moderat.');
+  if(style==='aero'&&/unter 2 h/.test(tr)) warn.push('Wenig Training pro Woche: eine sehr gestreckte Position ermüdet schnell.');
+  return {style,label:{aero:'Sportlich / Aero',komfort:'Komfortabel / aufrecht',mitte:'Ausgewogen'}[style],why,rows,angles,warn,profile:P.label,dropNow};
+}
+function goalPreviewHtml(s){ const g=goalPreview(s); if(!g) return '';
+  const ico={drop:'↕',reach:'↔',saddleSetback:'↔',saddleHeight:'↕'};
+  return `<div class="gprev"><div class="row" style="justify-content:space-between;gap:8px"><div><div class="label">Was sich ungefähr ändert</div><h3 style="margin:2px 0 0">${esc(g.label)}</h3></div><span class="chip nodot c-acc">${esc(g.profile)}</span></div>
+  ${g.why.length?`<p class="muted" style="font-size:13.5px;margin:4px 0 0">Wegen: ${esc(g.why.join(', '))}</p>`:''}
+  <div class="gprev-rows">${g.rows.map(r=>`<div class="gp"><span class="gp-i">${ico[r.k]||'•'}</span><div class="grow" style="min-width:0"><b>${esc(r.label)}: ${esc(r.dir)}</b> <span class="gp-a">${esc(r.amount)}</span><div class="sub">${esc(r.txt)}</div></div></div>`).join('')}</div>
+  <p style="font-size:13.5px;margin:6px 0 0"><b>Zielwinkel auf dem Rad:</b> ${esc(g.angles)}</p>
+  ${g.warn.map(w=>`<div class="notice warn" style="margin-top:6px;font-size:13.5px">${ic('warn')}<div>${esc(w)}</div></div>`).join('')}
+  <p class="faint" style="font-size:12.5px;margin:6px 0 0">Grobe Richtung vor dem Messen. Die genauen Millimeter berechnet FitFrame im Schritt Anpassen aus Messwerten, Rahmen und Körpercheck.</p></div>`; }
 SESSTAB.anamnese = (s,c) => {
   const a=s.anamnesis;
   if(ui.wIdx!=null&&ANA_Q[ui.wIdx]){ const i=ui.wIdx, [k,l,hint]=ANA_Q[i], p=PRESET[k], cur=a[k]||'', vals=splitVals(cur), multi=p.m==='multi';
@@ -1756,6 +1809,7 @@ SESSTAB.anamnese = (s,c) => {
   ${!c.consent?`<div class="statusbox warn"><div style="flex:1;min-width:0"><b>Einwilligung fehlt</b><span class="muted" style="font-size:14px">Vor Gesundheitsangaben einholen.</span></div><button class="btn sm" data-act="consent" data-id="${c.id}">Erfassen</button></div>`:''}
   ${startBtn(first,done,first>=0?ANA_Q[first][1]:'')}
   <div class="ovl">${ANA_Q.map(([k,l],i)=>ovItem(i,l,a[k],a[k]?'done':'open')).join('')}</div>
+  ${goalPreviewHtml(s)}
   <details class="more"><summary>Notizen</summary><form class="stack" style="margin-top:8px" data-form="anaNotes" data-id="${s.id}"><textarea class="input" id="a_notes" name="notes">${esc(s.notes)}</textarea><div><button class="btn" type="submit">Notizen speichern</button></div></form></details>
   </div>`;
 };
@@ -3836,7 +3890,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); cl
 applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
 go(VIEWS[start]?start:'dashboard');
-window.__fitframe={computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
