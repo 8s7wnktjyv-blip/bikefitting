@@ -614,7 +614,7 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 .tiles .tile:not(.main) span{color:var(--muted)}
 
 /* Fitting-Kopf: Verlauf wie die Tageskarte */
-.sesshead{background:var(--warm-grad);border:0;color:#fff;padding:20px 18px 34px}
+.sesshead{background:var(--warm-grad);border:0;color:#fff;padding:20px 18px 34px;overflow:hidden}
 .sesshead::after{content:"";position:absolute;width:300px;height:300px;right:-80px;top:-160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.2),rgba(255,255,255,0) 70%);pointer-events:none}
 .sesshead h1{color:#fff}.sesshead p{color:rgba(255,255,255,.88)}
 .sesshead .btn{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff;position:relative;z-index:1}
@@ -734,7 +734,12 @@ const MK = {
   kneeBDC:{label:'Kniewinkel unten',unit:'°',group:'Bewegung',def:'Kniewinkel am unteren Totpunkt'},
   hipAngle:{label:'Hüftwinkel oben',unit:'°',group:'Bewegung',def:'Minimaler Hüftwinkel am oberen Totpunkt'},
   torsoAngle:{label:'Oberkörperwinkel',unit:'°',group:'Bewegung',def:'Rumpf zur Waagerechten, Griff Bremsgriffe'},
-  kneeOverPedal:{label:'Knielot',unit:'mm',group:'Bewegung',def:'Knie vor (+) oder hinter (−) der Pedalachse bei waagerechter Kurbel vorn'}
+  kneeOverPedal:{label:'Knielot',unit:'mm',group:'Bewegung',def:'Knie vor (+) oder hinter (−) der Pedalachse bei waagerechter Kurbel vorn'},
+  kneeTDC:{label:'Kniewinkel oben',unit:'°',group:'Bewegung',def:'Kleinster Kniewinkel am oberen Totpunkt'},
+  shoulderAngle:{label:'Schulterwinkel',unit:'°',group:'Bewegung',def:'Hüfte–Schulter–Ellbogen, Mittel über die Umdrehung'},
+  elbowAngle:{label:'Ellbogenwinkel',unit:'°',group:'Bewegung',def:'Schulter–Ellbogen–Handgelenk, Mittel über die Umdrehung'},
+  ankleRange:{label:'Fußgelenk-Bewegung',unit:'°',group:'Bewegung',def:'Spanne des Winkels Knie–Knöchel–Zehen über eine Umdrehung'},
+  hipRock:{label:'Becken wippt',unit:'mm',group:'Bewegung',def:'Auf und ab der Hüfte pro Umdrehung'}
 };
 const REQUIRED = ['saddleHeight','saddleSetback','reach','drop','crankLength','cleatFore']; // Kurbel meist vom Hersteller
 const METHODS = ['Maßband','Laser-Wasserwaage','Digitaler Winkelmesser','Goniometer','2D-Video (unkalibriert)','2D-Video (kalibriert)','2D-Video live (automatisch)','Herstellerangabe','Berechnet','CleatLab (Prototyp, nicht validiert)'];
@@ -901,6 +906,11 @@ function measureRange(k,c,b){
     case 'kneeBDC': return {lo:125,hi:165,unit:'°',basis:'plausibler Bereich; häufig genannt: 140–150°'};
     case 'hipAngle': return {lo:30,hi:90,unit:'°',basis:'plausibler Bereich'};
     case 'torsoAngle': return {lo:5,hi:80,unit:'°',basis:'plausibler Bereich'};
+    case 'kneeTDC': return {lo:50,hi:95,unit:'°',basis:'plausibler Bereich; Richtwert 65–80°'};
+    case 'shoulderAngle': return {lo:60,hi:120,unit:'°',basis:'plausibler Bereich'};
+    case 'elbowAngle': return {lo:70,hi:180,unit:'°',basis:'plausibler Bereich'};
+    case 'ankleRange': return {lo:5,hi:50,unit:'°',basis:'plausibler Bereich'};
+    case 'hipRock': return {lo:0,hi:40,unit:'mm',basis:'plausibler Bereich; ruhig ≤ 10 mm'};
   }
   return null;
 }
@@ -1070,8 +1080,8 @@ function fitSuggestions(s,noTargets){
   if(/sitz|gesäß|druck|damm|sattel/.test(t)) add('saddleTilt','Sitzbeschwerden','Druck im Sitzbereich hängt an Neigung, Breite und Höhe des Sattels.','Sattelneigung in kleinen Schritten anpassen, Sattelbreite mit Sitzknochenabstand prüfen.');
   if(/rücken|lenden/.test(t)) add('drop','Rücken','Eine sehr gestreckte Haltung belastet den unteren Rücken.','Überhöhung und Sattel–Lenker-Abstand prüfen.');
   if(/wade|zeh|fuß|brennen/.test(t)) add('cleatFore','Füße und Waden','Weit vorn sitzende Cleats belasten Waden und Vorfuß.','Cleat weiter nach hinten setzen, Einlage und Schuhgröße prüfen.');
-  const k=(s.after.kneeBDC||s.before.kneeBDC); if(k&&(k.value<140||k.value>150)){ const a=saddleAdvice(s,Number(k.value)); const up=k.value<140;
-    add('saddleHeight',`Kniewinkel unten ${fmtNum(k.value)}°: Sattel ${a.delta>0?'+':''}${a.delta} mm`,`${up?'Unter':'Über'} dem häufig genannten Bereich von etwa 140–150°. Der Sattel ist vermutlich zu ${up?'tief':'hoch'}. Die Millimeter rechnet FitFrame mit einem Körpermodell aus Schritt- und Kurbellänge (etwa ${fmtNum(Math.round(1/a.slope*10)/10)} mm pro Grad). Das ist eine Schätzung, deshalb neu messen.`,`Sattel auf etwa ${a.newH} mm (${a.delta>0?'+':''}${a.delta} mm), in Schritten von 2–3 mm. Danach den Kniewinkel neu messen.`,a.newH,`Kniewinkel unten ${fmtNum(k.value)}°`); }
+  const k=(s.after.kneeBDC||s.before.kneeBDC); const KT=kneeTarget(s); if(k&&(k.value<KT.lo||k.value>KT.hi)){ const a=saddleAdvice(s,Number(k.value)); const up=k.value<KT.lo;
+    add('saddleHeight',`Kniewinkel unten ${fmtNum(k.value)}°: Sattel ${a.delta>0?'+':''}${a.delta} mm`,`${up?'Unter':'Über'} dem Zielbereich ${KT.lo}–${KT.hi}° (${KT.label}). Der Sattel ist vermutlich zu ${up?'tief':'hoch'}. Die Millimeter rechnet FitFrame mit einem Körpermodell aus Schritt- und Kurbellänge (etwa ${fmtNum(Math.round(1/a.slope*10)/10)} mm pro Grad). Das ist eine Schätzung, deshalb neu messen.`,`Sattel auf etwa ${a.newH} mm (${a.delta>0?'+':''}${a.delta} mm), in Schritten von 2–3 mm. Danach den Kniewinkel neu messen.`,a.newH,`Kniewinkel unten ${fmtNum(k.value)}°`); }
   const kp=(s.after.kneeOverPedal||s.before.kneeOverPedal); if(kp&&Math.abs(kp.value)>15){ const sb=val(s.after.saddleSetback)??val(s.before.saddleSetback); const d=Math.round(Number(kp.value));
     add('saddleSetback',`Knielot ${d>0?'+':''}${d} mm`,`Das Knie steht bei waagerechter Kurbel ${Math.abs(d)} mm ${d>0?'vor':'hinter'} der Pedalachse. Viele Fitter beginnen mit dem Knie etwa über der Achse. Das ist eine Faustregel, keine feste Vorgabe.`,`Sattel etwa ${Math.abs(d)} mm nach ${d>0?'hinten':'vorn'}, wenn Beschwerden dazu passen. Danach Sattelhöhe prüfen, weil sie sich mitverändert.`,sb!=null?sb+d:null,`Knielot ${d>0?'+':''}${d} mm`); }
   if(/hüfte/.test(t)) add('saddleHeight','Hüfte','Hüftbeschwerden passen oft zu einem zu hohen Sattel (Becken kippt seitlich) oder zu wenig Platz vorn.','Prüfen, ob das Becken beim Treten seitlich kippt. Wenn ja, Sattel in Schritten von 2–3 mm senken.');
@@ -1341,7 +1351,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.13';
+const APP_VER = '2026-10-27.15';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1972,7 +1982,7 @@ function targetFit(s){
   const I=Number(c.body.inseam)||null, ins=bodyVal(c,'inseam'); const comfort=s.anamnesis.comfort||'';
   const ham=Number((s.check&&s.check.hamstring)||0), stiff=ham>20||(!ham&&/eingeschränkt/.test(c.flex.hamstring||'')), mild=!stiff&&ham>10;
   const rows=[]; const R=(key,lo,hi,basis,need)=>{ const v=cur(key); const diff=v==null||lo==null?null:v<lo?Math.round((lo-v)*10)/10:v>hi?Math.round((hi-v)*10)/10:0; rows.push({key,lo:lo==null?null:Math.round(lo*10)/10,hi:hi==null?null:Math.round(hi*10)/10,cur:v,diff,basis,need}); };
-  const kb=e.kneeBDC; if(kb&&cur('saddleHeight')!=null){ const a=saddleAdvice(s,Number(kb.value)); const h=cur('saddleHeight'); R('saddleHeight',h+(140-kb.value)/a.slope,h+(150-kb.value)/a.slope,`gemessener Kniewinkel ${fmtNum(kb.value)}° (Ziel 140–150°)`); }
+  const kb=e.kneeBDC; if(kb&&cur('saddleHeight')!=null){ const a=saddleAdvice(s,Number(kb.value)); const h=cur('saddleHeight'); R('saddleHeight',h+(a.lo-kb.value)/a.slope,h+(a.hi-kb.value)/a.slope,`gemessener Kniewinkel ${fmtNum(kb.value)}° (Ziel ${a.lo}–${a.hi}°, ${a.label})`); }
   else if(I) R('saddleHeight',I*10*0.865,I*10*0.895,`86,5–89,5 % der Schrittlänge (${fmtNum(I)} cm${ins.src==='eingetragen'?'':', geschätzt'})`); else R('saddleHeight',null,null,'','Schrittlänge');
   const kp=e.kneeOverPedal, sb=cur('saddleSetback'), h=cur('saddleHeight');
   if(kp&&sb!=null) R('saddleSetback',sb+Number(kp.value)-15,sb+Number(kp.value)+15,`gemessenes Knielot ${fmtNum(kp.value)} mm (Ziel ±15 mm)`);
@@ -2783,52 +2793,180 @@ function loadPoseVideo(){
   return poseVideoPromise;
 }
 const LIVE_N=30;
-const live={on:false,src:null,stream:null,lm:null,raf:0,frames:[],cur:[],cycles:[],prevY:null,sideScore:0,lastTs:-1,sid:null,infoT:0,last:null};
+const live={on:false,src:null,stream:null,lm:null,raf:0,frames:[],all:[],cur:[],cycles:[],prevY:null,prevLeg:null,sideScore:0,lastTs:-1,sid:null,infoT:0,last:null,tried:0,okN:0,modelT:0};
 const median=a=>{ const b=a.filter(x=>x!=null&&isFinite(x)).sort((x,y)=>x-y); if(!b.length) return null; const m=b.length>>1; return b.length%2?b[m]:(b[m-1]+b[m])/2; };
 const ang3=(a,b,c)=>{ const v1=[a.x-b.x,a.y-b.y], v2=[c.x-b.x,c.y-b.y]; return deg(Math.acos(clamp1((v1[0]*v2[0]+v1[1]*v2[1])/((Math.hypot(...v1)*Math.hypot(...v2))||1)))); };
 function crankOf(s){ const r=s.after.crankLength||s.before.crankLength; if(r) return Number(r.value); const mk=makerValues(s); return mk&&mk.r&&mk.r.crank?Number(mk.r.crank):172.5; }
+/* ---------- Zielbereiche je Radtyp, Ziel und Beschwerden (Richtwerte aus der Fitting-Literatur) ---------- */
+const FIT_PROFILES={
+  endurance:{label:'Rennrad Komfort',knee:[140,150],kneeTop:[65,80],hip:[50,65],torso:[45,55],shoulder:[80,95],elbow:[150,165]},
+  race:{label:'Rennrad sportlich',knee:[140,150],kneeTop:[65,80],hip:[45,55],torso:[35,45],shoulder:[85,100],elbow:[150,165]},
+  tt:{label:'Triathlon / Zeitfahren',knee:[140,150],kneeTop:[65,80],hip:[40,55],torso:[10,28],shoulder:[80,100],elbow:[85,115]},
+  gravel:{label:'Gravel / MTB',knee:[138,148],kneeTop:[65,80],hip:[55,70],torso:[45,60],shoulder:[75,90],elbow:[140,160]}
+};
+function fitProfile(s){
+  const b=bike(s.bikeId)||{}; const t=b.type||''; const a=s.anamnesis||{}; const txt=((a.goal||'')+' '+(a.comfort||'')).toLowerCase();
+  let key=t==='Triathlon'||/zeitfahr|triathlon|aero/.test(txt)&&t==='Triathlon'?'tt':t==='Gravel'||t==='MTB'||t==='Cyclocross'?'gravel':/rennen|leistung|sportlich|race|schnell|wettkampf/.test(txt)?'race':'endurance';
+  if(t==='Triathlon') key='tt';
+  const P=JSON.parse(JSON.stringify(FIT_PROFILES[key])); const why=[];
+  const comp=(a.complaints||'').toLowerCase();
+  const ham=s.check&&s.check.hamstring!=null?Number(s.check.hamstring.value??s.check.hamstring):null;
+  if(ham!=null&&ham>20){ P.hip=P.hip.map(x=>x+5); P.torso=P.torso.map(x=>x+5); why.push('Rückseite Oberschenkel stark eingeschränkt: Hüft- und Oberkörperwinkel +5°'); }
+  else if(ham!=null&&ham>10){ P.hip=P.hip.map(x=>x+3); P.torso=P.torso.map(x=>x+3); why.push('Rückseite Oberschenkel leicht eingeschränkt: Hüft- und Oberkörperwinkel +3°'); }
+  if(/rücken|lws|kreuz/.test(comp)){ P.hip=P.hip.map(x=>x+3); P.torso=P.torso.map(x=>x+3); why.push('Rückenbeschwerden: Hüft- und Oberkörperwinkel +3°'); }
+  if(/knie vorn|kniescheibe|vorne am knie|knie vorne/.test(comp)){ P.knee=[Math.round((P.knee[0]+P.knee[1])/2),P.knee[1]]; why.push('Knie vorn: obere Hälfte des Kniebereichs (Sattel eher etwas höher)'); }
+  if(/kniekehle|knie hinten|hinten am knie/.test(comp)){ P.knee=[P.knee[0],P.knee[1]-3]; why.push('Kniekehle: Knie nicht ganz strecken, Obergrenze −3°'); }
+  if(/nacken|schulter|hand|taub|finger/.test(comp)){ P.shoulder=P.shoulder.map(x=>x-3); why.push('Nacken, Schulter oder Hände: Schulterwinkel −3° (kürzer, etwas höher)'); }
+  P.key=key; P.why=why; return P;
+}
+const kneeTarget=s=>{ const P=fitProfile(s); return {lo:P.knee[0],hi:P.knee[1],label:P.label,why:P.why}; };
+
+/* ---------- Live-Analyse: Bein-Verfolgung, Kurbelkreis, Kurve über alle Umdrehungen, ±-Bereich ---------- */
 function liveFrame(lmk,W,H,t){
-  const P=i=>({x:lmk[i].x*W,y:lmk[i].y*H,v:lmk[i].visibility??1});
-  const L=[11,23,25,27,29,31], R=[12,24,26,28,30,32]; const sc=ids=>ids.reduce((a,i)=>a+(lmk[i].visibility??0),0);
-  live.sideScore=live.sideScore*0.9+(sc(L)-sc(R));
-  const [sh,hip,kn,an,heel,toe]=(live.sideScore>=0?L:R).map(P);
-  if(Math.min(hip.v,kn.v,an.v)<0.35) return null;
+  const P=i=>({x:lmk[i].x*W,y:lmk[i].y*H,z:lmk[i].z??0,v:lmk[i].visibility??1});
+  const L={sh:11,el:13,wr:15,hip:23,kn:25,an:27,heel:29,toe:31}, R={sh:12,el:14,wr:16,hip:24,kn:26,an:28,heel:30,toe:32};
+  const sc=o=>[o.sh,o.hip,o.kn,o.an,o.heel,o.toe].reduce((a,i)=>a+(lmk[i].visibility??0),0);
+  const zs=o=>(lmk[o.hip].z??0)+(lmk[o.sh].z??0);
+  live.sideScore=live.sideScore*0.9+(sc(L)-sc(R))+(zs(R)-zs(L))*2; // sichtbarer und näher an der Kamera
+  const N=live.sideScore>=0?L:R, F=N===L?R:L;
+  const g=o=>({sh:P(o.sh),el:P(o.el),wr:P(o.wr),hip:P(o.hip),kn:P(o.kn),an:P(o.an),heel:P(o.heel),toe:P(o.toe)});
+  const n=g(N), f=g(F);
+  const legN={kn:n.kn,an:n.an,heel:n.heel,toe:n.toe}, legF={kn:f.kn,an:f.an,heel:f.heel,toe:f.toe,ok:f.kn.v>0.2&&f.an.v>0.2};
+  const {sh,el,wr,hip}=n;
+  if(Math.min(hip.v,n.kn.v,n.an.v)<0.35) return null;
   const fwd=sh.x>hip.x?1:-1;
-  const ball={x:heel.x+(toe.x-heel.x)*0.7,y:heel.y+(toe.y-heel.y)*0.7}; // Fußballen, etwa über der Pedalachse
-  return {t,knee:ang3(hip,kn,an),hipA:ang3(sh,hip,kn),torso:Math.abs(deg(Math.atan2(hip.y-sh.y,Math.abs(sh.x-hip.x)||0.001))),fwd,sh,hip,kn,an,heel,toe,ball};
+  const armOk=el.v>0.35&&wr.v>0.35;
+  const fr={t,fwd,sh,el,wr,hip,legs:[legN,legF],shoulder:armOk?ang3(hip,sh,el):null,elbow:armOk?ang3(sh,el,wr):null,
+    torso:Math.abs(deg(Math.atan2(hip.y-sh.y,Math.abs(sh.x-hip.x)||0.001))),
+    sideOn:Math.abs(P(L.sh).x-P(R.sh).x)/(Math.hypot(sh.x-hip.x,sh.y-hip.y)||1),swapped:false};
+  return useLeg(fr,0);
+}
+/* Werte eines Bildes für das gewählte Bein (0 = wie erkannt, 1 = Beine getauscht) */
+function useLeg(f,st){ const l=f.legs[st]; const {kn,an,heel,toe}=l, hip=f.hip, sh=f.sh;
+  f.kn=kn; f.an=an; f.heel=heel; f.toe=toe; f.swapped=st===1;
+  f.ball={x:heel.x+(toe.x-heel.x)*0.72,y:heel.y+(toe.y-heel.y)*0.72};
+  f.knee=ang3(hip,kn,an); f.hipA=ang3(sh,hip,kn); f.ankle=toe.v>0.3?ang3(kn,an,toe):null;
+  f.legLen=Math.hypot(hip.x-kn.x,hip.y-kn.y)+Math.hypot(kn.x-an.x,kn.y-an.y); return f; }
+/* Beintausch über die ganze Aufnahme reparieren (Viterbi, zwei Zustände) */
+function fixLegSwaps(fr){
+  const n=fr.length; if(n<3) return; const lam=0.12;
+  const th=median(fr.map(f=>Math.hypot(f.hip.x-f.legs[0].kn.x,f.hip.y-f.legs[0].kn.y)))||1;
+  const d=(a,b)=>(Math.hypot(a.kn.x-b.kn.x,a.kn.y-b.kn.y)+Math.hypot(a.an.x-b.an.x,a.an.y-b.an.y))/th;
+  let cost=[0,fr[0].legs[1].ok?lam:1e9]; const back=[];
+  for(let t=1;t<n;t++){ const nc=[0,0], bk=[0,0];
+    for(let s2=0;s2<2;s2++){ if(s2===1&&!fr[t].legs[1].ok){ nc[1]=1e9; continue; }
+      let best=1e18,arg=0; for(let s1=0;s1<2;s1++){ const c=cost[s1]+d(fr[t].legs[s2],fr[t-1].legs[s1]); if(c<best){best=c;arg=s1;} }
+      nc[s2]=best+(s2?lam:0); bk[s2]=arg; }
+    cost=nc; back.push(bk); }
+  let st=cost[1]<cost[0]?1:0; const states=Array(n); states[n-1]=st;
+  for(let t=n-2;t>=0;t--){ st=back[t][st]; states[t]=st; }
+  fr.forEach((f,i)=>useLeg(f,states[i]));
 }
 function liveTrack(f){
+  live.all.push(f); if(live.all.length>3600) live.all.shift();
   live.frames.push(f); while(live.frames.length&&live.frames[0].t<f.t-3000) live.frames.shift();
   const ys=live.frames.map(x=>x.ball.y), lo=Math.min(...ys), hi=Math.max(...ys), mid=(lo+hi)/2;
   live.cur.push(f); const prev=live.prevY; live.prevY=f.ball.y;
   if(prev==null||hi-lo<15) return;
-  if(prev<mid&&f.ball.y>=mid){ // Fuß geht nach unten durch die Mitte: eine Umdrehung ist vorbei
+  if(prev<mid&&f.ball.y>=mid){
     const c=live.cur; live.cur=[f]; if(c.length<6) return;
     const dur=c[c.length-1].t-c[0].t; if(dur<300||dur>3000) return;
     const cy=c.map(x=>x.ball.y), yr=Math.max(...cy)-Math.min(...cy); if(yr<15) return;
-    const fwd=median(c.map(x=>x.fwd))>=0?1:-1; const midC=(Math.max(...cy)+Math.min(...cy))/2;
-    // Kurbel waagerecht vorn = Fuß kreuzt auf dem Weg nach unten die Mitte. Zwischen den zwei Bildern davor und danach interpolieren.
-    let kops=null; for(let i=c.length-2;i>=0;i--){ const A=c[i],B=c[i+1]; if(A.ball.y<midC&&B.ball.y>=midC){ const u=(midC-A.ball.y)/((B.ball.y-A.ball.y)||1); kops=((A.kn.x+(B.kn.x-A.kn.x)*u)-(A.ball.x+(B.ball.x-A.ball.x)*u))*fwd; break; } }
-    live.cycles.push({knee:Math.max(...c.map(x=>x.knee)),knee2:Math.min(...c.map(x=>x.knee)),hip:Math.min(...c.map(x=>x.hipA)),torso:median(c.map(x=>x.torso)),kopsPx:kops,yr,dur});
+    live.cycles.push({t0:c[0].t,t1:c[c.length-1].t,knee:Math.max(...c.map(x=>x.knee)),yr,dur});
     if(live.cycles.length>80) live.cycles.shift();
   }
 }
+/* Kreis durch die Fußballen-Punkte (Kurbelkreis), robust: Kåsa-Ausgleich, Ausreißer weg, nochmal */
+function fitCircle(pts){
+  const solve=ps=>{ let Sx=0,Sy=0,Sxx=0,Syy=0,Sxy=0,Sxz=0,Syz=0,Sz=0; const n=ps.length;
+    ps.forEach(p=>{ const z=p.x*p.x+p.y*p.y; Sx+=p.x;Sy+=p.y;Sxx+=p.x*p.x;Syy+=p.y*p.y;Sxy+=p.x*p.y;Sxz+=p.x*z;Syz+=p.y*z;Sz+=z; });
+    const M=[[Sxx,Sxy,Sx],[Sxy,Syy,Sy],[Sx,Sy,n]], v=[-Sxz,-Syz,-Sz]; const r=linSolve(M,v); if(!r) return null;
+    const cx=-r[0]/2, cy=-r[1]/2, rr=Math.sqrt(Math.max(cx*cx+cy*cy-r[2],0)); return {cx,cy,r:rr}; };
+  let c=solve(pts); if(!c||!(c.r>5)) return null;
+  for(let k=0;k<2;k++){ const res=pts.map(p=>Math.abs(Math.hypot(p.x-c.cx,p.y-c.cy)-c.r)); const md=median(res)||1;
+    const keep=pts.filter((p,i)=>res[i]<=3*1.4826*md+1); if(keep.length<12) break; const c2=solve(keep); if(c2&&c2.r>5) c=c2; }
+  return c;
+}
+function linSolve(A,b){ const n=b.length, M=A.map((r,i)=>[...r,b[i]]);
+  for(let i=0;i<n;i++){ let p=i; for(let j=i+1;j<n;j++) if(Math.abs(M[j][i])>Math.abs(M[p][i])) p=j; [M[i],M[p]]=[M[p],M[i]]; if(Math.abs(M[i][i])<1e-9) return null;
+    for(let j=0;j<n;j++){ if(j===i) continue; const f=M[j][i]/M[i][i]; for(let k=i;k<=n;k++) M[j][k]-=f*M[i][k]; } }
+  return M.map((r,i)=>r[n]/r[i]); }
+/* Kurve y(θ) mit 4 Harmonischen, robust (Huber-Gewichte) */
+function fitHarm(th,y,K=4){
+  const idx=y.map((v,i)=>v!=null&&isFinite(v)?i:-1).filter(i=>i>=0); if(idx.length<20) return null;
+  const row=t=>{ const r=[1]; for(let k=1;k<=K;k++){ r.push(Math.cos(k*t),Math.sin(k*t)); } return r; };
+  const X=idx.map(i=>row(th[i]*Math.PI/180)), Y=idx.map(i=>y[i]); const p=X[0].length; let w=Y.map(()=>1), beta=null;
+  for(let it=0;it<6;it++){ const A=[...Array(p)].map(()=>Array(p).fill(0)), v=Array(p).fill(0);
+    X.forEach((r,n)=>{ for(let a=0;a<p;a++){ v[a]+=w[n]*r[a]*Y[n]; for(let b=0;b<p;b++) A[a][b]+=w[n]*r[a]*r[b]; } });
+    beta=linSolve(A,v); if(!beta) return null;
+    const res=X.map((r,n)=>Y[n]-r.reduce((s,x,j)=>s+x*beta[j],0)); const sd=1.4826*(median(res.map(Math.abs))||1e-6);
+    w=res.map(e=>Math.min(1,1.345*sd/(Math.abs(e)||1e-9))); }
+  const ev=t=>row(t*Math.PI/180).reduce((s,x,j)=>s+x*beta[j],0);
+  const curve=[...Array(360)].map((_,d)=>ev(d));
+  const res=X.map((r,n)=>Y[n]-r.reduce((s,x,j)=>s+x*beta[j],0));
+  return {beta,ev,curve,max:Math.max(...curve),min:Math.min(...curve),argmax:curve.indexOf(Math.max(...curve)),argmin:curve.indexOf(Math.min(...curve)),mean:beta[0],scatter:1.4826*(median(res.map(Math.abs))||0)};
+}
+function liveModel(fr,s){
+  if(fr.length<40) return null; fixLegSwaps(fr);
+  const C=fitCircle(fr.map(f=>f.ball)); if(!C) return null;
+  const fwd=median(fr.map(f=>f.fwd))>=0?1:-1;
+  let th=fr.map(f=>((deg(Math.atan2(fwd*(f.ball.x-C.cx),-(f.ball.y-C.cy)))%360)+360)%360);
+  // Laufrichtung prüfen: Winkel muss vorwärts laufen, sonst Seite spiegeln
+  let fw=0; for(let i=1;i<th.length;i++){ let d=th[i]-th[i-1]; if(d>180)d-=360; if(d<-180)d+=360; fw+=Math.sign(d); }
+  if(fw<0) th=th.map(t=>(360-t)%360);
+  let unw=0; for(let i=1;i<th.length;i++){ let d=th[i]-th[i-1]; if(d>180)d-=360; if(d<-180)d+=360; unw+=d; } const durMs=fr[fr.length-1].t-fr[0].t; const cadM=durMs>0?Math.round(unw/360/(durMs/60000)):null;
+  // ganze Umdrehungen zählen (für den ±-Bereich)
+  const stroke=[]; let k=0; for(let i=0;i<th.length;i++){ if(i&&th[i]<90&&th[i-1]>270) k++; stroke.push(k); }
+  const g=key=>fr.map(f=>f[key]);
+  const knee=fitHarm(th,g('knee')); if(!knee) return null;
+  const hip=fitHarm(th,g('hipA')), torso=fitHarm(th,g('torso')), sho=fitHarm(th,g('shoulder')), elb=fitHarm(th,g('elbow')), ank=fitHarm(th,g('ankle'));
+  const dx=fitHarm(th,fr.map(f=>(f.kn.x-f.ball.x)*fwd)), hy=fitHarm(th,fr.map(f=>f.hip.y),2);
+  // Maßstab: über Kurbellänge, gegengeprüft mit Körpergröße
+  const crank=crankOf(s), c=cust(s.customerId), H=Number(c.body&&c.body.height)||null;
+  const mmCrank=crank/C.r, leg=median(g('legLen'));
+  let mmPx=mmCrank, scaleSrc='Kurbellänge';
+  if(H&&leg){ const mmH=0.491*H*10/leg; const thighImpl=leg*mmCrank; if(thighImpl<0.491*H*10*0.85||thighImpl>0.491*H*10*1.15){ mmPx=mmH; scaleSrc='Körpergröße'; } }
+  // ±-Bereich: ganze Umdrehungen zufällig neu ziehen und neu rechnen
+  const ns=k+1; let ci=null;
+  if(ns>=6){ const vals={knee:[],hip:[]}; const byS=[...Array(ns)].map(()=>[]); stroke.forEach((sv,i)=>byS[sv].push(i));
+    for(let b=0;b<40;b++){ const ids=[]; for(let j=0;j<ns;j++) ids.push(...byS[Math.floor(Math.random()*ns)]);
+      const kk=fitHarm(ids.map(i=>th[i]),ids.map(i=>fr[i].knee)); const hh=fitHarm(ids.map(i=>th[i]),ids.map(i=>fr[i].hipA));
+      if(kk) vals.knee.push(kk.max); if(hh) vals.hip.push(hh.min); }
+    const half=a=>{ if(a.length<10) return null; a.sort((x,y)=>x-y); return (a[Math.floor(a.length*0.975)-1]-a[Math.floor(a.length*0.025)])/2; };
+    ci={knee:half(vals.knee),hip:half(vals.hip)}; }
+  // Aufnahme-Qualität
+  const sideOn=median(g('sideOn')), swaps=fr.filter(f=>f.swapped).length/fr.length, det=live.tried?Math.min(1,live.okN/live.tried):1;
+  const issues=[];
+  if(sideOn>0.35) issues.push('Kamera nicht genau seitlich: Stativ so drehen, dass die Schultern fast übereinander liegen.');
+  if(knee.scatter>3.5) issues.push('Werte springen stark: heller ausleuchten, enge Kleidung, Kamera ruhig auf Hüfthöhe.');
+  if(det<0.8) issues.push('Person oft nicht erkannt: ganze Person und Pedal ins Bild, 2–3 m Abstand.');
+  if(ns<10) issues.push('Noch zu wenige Umdrehungen: mindestens 10, besser 20.');
+  if(swaps>0.2) issues.push('Beine wurden sehr oft verwechselt (automatisch korrigiert): genau seitlich filmen, die Seite zur Kamera sollte frei sein.');
+  const grade=issues.length===0?'gut':issues.length===1&&ns>=10?'mittel':'schlecht';
+  const r1=v=>v==null?null:Math.round(v*10)/10;
+  return {n:ns,knee:r1(knee.max),kneeTop:r1(knee.min),hip:hip?r1(hip.min):null,torso:torso?r1(torso.mean):null,shoulder:sho?r1(sho.mean):null,elbow:elb?r1(elb.mean):null,
+    ankle:ank?r1(ank.max-ank.min):null,kops:dx?Math.round(dx.ev(90)*mmPx):null,hipRock:hy?Math.round((hy.max-hy.min)*mmPx):null,
+    cad:cadM,ci,scatter:r1(knee.scatter),sideOn:Math.round(sideOn*100)/100,det:Math.round(det*100),swaps:Math.round(swaps*100),grade,issues,crank,scaleSrc,mmPx,
+    kneeCurve:knee.curve.filter((_,i)=>i%10===0).map(v=>Math.round(v))};
+}
 function liveResult(){
-  const cs=live.cycles.slice(-LIVE_N); if(!cs.length) return null; const s=sess(live.sid); const crank=crankOf(s);
-  const k=median(cs.map(c=>c.knee)); const mmPx=2*crank/median(cs.map(c=>c.yr));
-  const sd=Math.sqrt(cs.reduce((a,c)=>a+(c.knee-k)**2,0)/cs.length);
-  return {n:cs.length,knee:Math.round(k),hip:Math.round(median(cs.map(c=>c.hip))),torso:Math.round(median(cs.map(c=>c.torso))),kops:Math.round(median(cs.map(c=>c.kopsPx))*mmPx),crank,sd:Math.round(sd*10)/10,cad:Math.round(60000/median(cs.map(c=>c.dur)))};
+  const cs=live.cycles.slice(-LIVE_N); if(!cs.length) return null; const s=sess(live.sid);
+  const t0=cs[0].t0; const fr=live.all.filter(f=>f.t>=t0);
+  const m=liveModel(fr,s); if(!m) return null;
+  if(m.cad==null) m.cad=Math.round(60000/median(cs.map(c=>c.dur))); return m;
 }
 /* Rechenmodell: Wie viele Millimeter Sattelhöhe ändern den Kniewinkel unten um 1°? */
 function kneeMaxAt(P,h){ let m=0; for(let d=0;d<360;d+=2) m=Math.max(m,kin({...P,h:{v:h,src:''}},d*Math.PI/180).kneeAng); return m; }
 function saddleAdvice(s,knee){
-  if(knee==null) return null; const P=simInputs(s,'after'); const h=P.h.v;
+  if(knee==null) return null; const P=simInputs(s,'after'); const h=P.h.v; const T=kneeTarget(s);
   let slope=(kneeMaxAt(P,h+10)-kneeMaxAt(P,h-10))/20; if(!(slope>0.1&&slope<1.5)) slope=0.45;
-  const inRange=knee>=140&&knee<=150; const delta=inRange?0:Math.round((145-knee)/slope);
-  return {inRange,delta,slope,cur:h,newH:Math.round(h+delta),edge:inRange?0:Math.round(((knee<140?140:150)-knee)/slope)};
+  const mid=(T.lo+T.hi)/2, inRange=knee>=T.lo&&knee<=T.hi; const delta=inRange?0:Math.round((mid-knee)/slope);
+  const edgeT=knee<T.lo?T.lo+1.5:T.hi-1.5; // knapp innerhalb der nächsten Grenze
+  return {inRange,delta,slope,cur:h,newH:Math.round(h+delta),edge:inRange?0:Math.round((edgeT-knee)/slope),lo:T.lo,hi:T.hi,mid,label:T.label,why:T.why};
 }
-const sAdvText=a=>!a?'':a.inRange?'Kniewinkel im üblichen Bereich (140–150°). Sattelhöhe passt.':`Sattel etwa ${a.delta>0?'+':''}${a.delta} mm ${a.delta>0?'höher':'tiefer'} (Mitte des Bereichs, 145°). Mindestens ${a.edge>0?'+':''}${a.edge} mm bis in den Bereich.`;
+const sAdvText=a=>!a?'':a.inRange?`Kniewinkel im Zielbereich (${a.lo}–${a.hi}°, ${a.label}). Sattelhöhe passt.`:`Sattel ${a.edge>0?'+':''}${a.edge} mm ${a.edge>0?'höher':'tiefer'}, dann liegt das Knie knapp im Zielbereich ${a.lo}–${a.hi}° (${a.label}). Bis zur Mitte (${fmtNum(a.mid)}°): ${a.delta>0?'+':''}${a.delta} mm.${Math.abs(a.edge)>15?' Mehr als 15 mm: in zwei Schritten ändern und dazwischen fahren.':''}`;
 function kopsText(v){ if(v==null) return ''; const a=Math.abs(v); return a<=10?`Knie etwa über der Pedalachse (${v>0?'+':''}${v} mm).`:`Knie ${a} mm ${v>0?'vor':'hinter'} der Pedalachse.`; }
+function rangeChip(v,r){ if(v==null||!r) return ''; const ok=v>=r[0]&&v<=r[1], near=!ok&&(v>=r[0]-3&&v<=r[1]+3); return `<span class="chip nodot ${ok?'c-ok':near?'c-warn':'c-bad'}">${ok?'im Ziel':near?'knapp':'anpassen'} · ${r[0]}–${r[1]}°</span>`; }
 function liveDraw(ctx,f){
   const lw=Math.max(3,ctx.canvas.width/220), r=lw*1.8; ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
   ctx.lineWidth=lw; ctx.strokeStyle='#ff8030'; ctx.fillStyle='#ff8030'; ctx.lineCap='round';
@@ -2840,15 +2978,26 @@ function liveDraw(ctx,f){
   const t=Math.round(f.knee)+'°'; ctx.strokeText(t,f.kn.x+r*2.5,f.kn.y); ctx.fillText(t,f.kn.x+r*2.5,f.kn.y);
 }
 function liveInfo(final){
-  const box=document.getElementById('liveInfo'); if(!box) return; const now=performance.now(); if(!final&&now-live.infoT<300) return; live.infoT=now;
+  const box=document.getElementById('liveInfo'); if(!box) return; const now=performance.now(); if(!final&&now-live.infoT<900) return; live.infoT=now;
   const r=liveResult(); const s=sess(live.sid);
-  if(!r){ box.innerHTML=`<div class="statusbox"><div><b>${live.status||'Warte auf Bewegung …'}</b><span class="muted" style="font-size:14px">Ganze Person und Pedal müssen im Bild sein. Gezählt wird ab der ersten vollen Umdrehung.</span></div></div>`; return; }
-  const a=saddleAdvice(s,r.knee); live.last=r;
-  box.innerHTML=`<div class="statusbox ${r.n>=LIVE_N?'ok':''}"><div style="flex:1;min-width:0"><b>${r.n>=LIVE_N?'Genug Umdrehungen für einen stabilen Mittelwert':`${r.n} von ${LIVE_N} Umdrehungen`}</b><span class="muted" style="font-size:14px">Trittfrequenz etwa ${r.cad} U/min · Streuung Kniewinkel ±${fmtNum(r.sd)}°</span></div></div>
-  <div class="cmp"><div class="li"><div class="grow"><div class="t">Kniewinkel unten</div><div class="sub" style="white-space:normal">${esc(sAdvText(a))}</div></div><span class="v"><b>${r.knee}°</b></span></div>
-  <div class="li"><div class="grow"><div class="t">Knielot (Kurbel waagerecht vorn)</div><div class="sub" style="white-space:normal">${esc(kopsText(r.kops))} Geschätzt über die Kurbellänge (${fmtNum(r.crank)} mm), etwa ±10 mm.</div></div><span class="v"><b>${r.kops>0?'+':''}${r.kops} mm</b></span></div>
-  <div class="li"><div class="grow"><div class="t">Hüftwinkel oben</div></div><span class="v"><b>${r.hip}°</b></span></div>
-  <div class="li"><div class="grow"><div class="t">Oberkörperwinkel</div></div><span class="v"><b>${r.torso}°</b></span></div></div>`;
+  if(!r){ box.innerHTML=`<div class="statusbox"><div><b>${live.status||'Warte auf Bewegung …'}</b><span class="muted" style="font-size:14px">Ganze Person und Pedal müssen im Bild sein. Gezählt wird ab der ersten vollen Umdrehung, ausgewertet ab etwa 3 Umdrehungen.</span></div></div>`; return; }
+  const a=saddleAdvice(s,r.knee); live.last=r; const P=fitProfile(s);
+  const pm=v=>v!=null?` <span class="faint" style="font-weight:500">±${fmtNum(Math.round(v*10)/10)}°</span>`:'';
+  const row=(t,v,unit,sub,chip,extra)=>v==null?'':`<div class="li"><div class="grow"><div class="t">${t}</div>${sub?`<div class="sub" style="white-space:normal">${sub}</div>`:''}</div><span class="v" style="text-align:right"><b>${fmtNum(v)}${unit}</b>${extra||''}${chip?`<div>${chip}</div>`:''}</span></div>`;
+  const gcol=r.grade==='gut'?'ok':r.grade==='mittel'?'warn':'bad';
+  box.innerHTML=`<div class="statusbox ${r.n>=LIVE_N&&r.grade==='gut'?'ok':''}"><div style="flex:1;min-width:0"><b>${r.n>=LIVE_N?'Genug Umdrehungen':`${r.n} von ${LIVE_N} Umdrehungen`} · Aufnahme <span class="chip nodot c-${gcol}">${r.grade}</span></b><span class="muted" style="font-size:14px">Trittfrequenz etwa ${r.cad} U/min · Streuung Knie ±${fmtNum(r.scatter)}° · erkannt ${r.det} % der Bilder · Maßstab über ${r.scaleSrc}</span>${r.issues.length?`<ul style="margin:6px 0 0;padding-left:18px;font-size:13.5px">${r.issues.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}</div></div>
+  <p class="faint" style="font-size:12.5px;margin:0">Zielbereiche: ${esc(P.label)}${P.why.length?' · '+esc(P.why.join(' · ')):''}</p>
+  <div class="cmp">
+  ${row('Kniewinkel unten (Streckung)',r.knee,'°',esc(sAdvText(a)),rangeChip(r.knee,[a.lo,a.hi]),r.ci&&r.ci.knee!=null?pm(r.ci.knee):'')}
+  ${row('Kniewinkel oben (Beugung)',r.kneeTop,'°','Sehr kleiner Winkel oben: Sattel zu tief oder Kurbel zu lang.',rangeChip(r.kneeTop,P.kneeTop))}
+  ${row('Knielot (Kurbel waagerecht vorn)',r.kops,' mm',esc(kopsText(r.kops))+' Etwa ±10 mm.','')}
+  ${row('Hüftwinkel oben',r.hip,'°','Kleinster Winkel Oberkörper–Oberschenkel.',rangeChip(r.hip,P.hip),r.ci&&r.ci.hip!=null?pm(r.ci.hip):'')}
+  ${row('Oberkörperwinkel',r.torso,'°','Rumpf zur Waagerechten.',rangeChip(r.torso,P.torso))}
+  ${row('Schulterwinkel',r.shoulder,'°','Hüfte–Schulter–Ellbogen. Zu groß: Lenker zu weit weg. Zu klein: zu nah.',rangeChip(r.shoulder,P.shoulder))}
+  ${row('Ellbogenwinkel',r.elbow,'°','Arme leicht gebeugt ist gut. Fast gestreckt: Lenker zu weit oder zu tief.',rangeChip(r.elbow,P.elbow))}
+  ${row('Fußgelenk-Bewegung',r.ankle,'°','Wie stark die Ferse beim Treten arbeitet. Sehr viel (über 30°): Sattel eher zu hoch oder Cleat zu weit vorn.','')}
+  ${row('Becken wippt',r.hipRock,' mm','Auf und ab der Hüfte pro Umdrehung. Über 10 mm: Sattel meist zu hoch.',r.hipRock!=null?`<span class="chip nodot ${r.hipRock<=10?'c-ok':r.hipRock<=15?'c-warn':'c-bad'}">${r.hipRock<=10?'ruhig':r.hipRock<=15?'leicht':'deutlich'}</span>`:'')}
+  </div>`;
 }
 async function liveLoop(){
   if(!live.on) return; const el=document.getElementById('liveVideo'), cv=document.getElementById('liveCanvas'); if(!el||!cv){ liveStop(); return; }
@@ -2856,14 +3005,14 @@ async function liveLoop(){
     if(cv.width!==el.videoWidth){ cv.width=el.videoWidth; cv.height=el.videoHeight; }
     const ts=live.src==='file'?el.currentTime*1000:performance.now();
     if(ts>live.lastTs){ live.lastTs=ts; try{ const r=live.lm.detectForVideo(el,ts); const lmk=r&&r.landmarks&&r.landmarks[0];
-      if(lmk){ const f=liveFrame(lmk,cv.width,cv.height,ts); if(f){ live.status=''; liveTrack(f); liveDraw(cv.getContext('2d'),f); } else live.status='Hüfte, Knie oder Knöchel nicht sicher erkannt'; } else { live.status='Keine Person erkannt'; cv.getContext('2d').clearRect(0,0,cv.width,cv.height); } }catch(e){ live.status='Erkennung fehlgeschlagen'; } }
+      live.tried++; if(lmk){ const f=liveFrame(lmk,cv.width,cv.height,ts); if(f){ live.okN++; live.status=''; liveTrack(f); liveDraw(cv.getContext('2d'),f); } else live.status='Hüfte, Knie oder Knöchel nicht sicher erkannt'; } else { live.status='Keine Person erkannt'; cv.getContext('2d').clearRect(0,0,cv.width,cv.height); } }catch(e){ live.status='Erkennung fehlgeschlagen'; } }
     liveInfo();
   }
   if(live.src==='file'&&el.ended){ live.on=false; liveInfo(true); const b=document.getElementById('liveState'); if(b) b.textContent='Video fertig ausgewertet.'; return; }
   live.raf=requestAnimationFrame(liveLoop);
 }
 function liveStop(){ live.on=false; cancelAnimationFrame(live.raf); if(live.stream){ live.stream.getTracks().forEach(t=>t.stop()); live.stream=null; } const el=document.getElementById('liveVideo'); if(el){ try{ el.pause(); }catch(e){} } }
-function liveReset(){ live.frames=[]; live.cur=[]; live.cycles=[]; live.prevY=null; live.last=null; live.lastTs=-1; liveInfo(true); }
+function liveReset(){ live.frames=[]; live.all=[]; live.cur=[]; live.cycles=[]; live.prevY=null; live.prevLeg=null; live.last=null; live.lastTs=-1; live.tried=0; live.okN=0; liveInfo(true); }
 async function liveOpen(sid,src,side){
   liveStop(); live.sid=sid; live.src=src; liveReset(); live.status='Erkennung wird geladen …';
   openDrawer('Live-Analyse (Beta)',`<div class="stack">
@@ -3304,8 +3453,8 @@ const ACT = {
   liveFile(el){ if(!vid.src||vid.kind!=='video'){ toast('Bitte zuerst ein Video laden',true); return; } liveOpen(el.dataset.id,'file',el.dataset.side); },
   liveReset(){ liveReset(); },
   liveSave(){ const r=live.last||liveResult(); if(!r){ toast('Noch keine vollständige Umdrehung erkannt',true); return; } const s=sess(live.sid); const side=document.getElementById('liveSide').value; const meth=`2D-Video live (automatisch)`;
-    [['kneeBDC',r.knee],['hipAngle',r.hip],['torsoAngle',r.torso],['kneeOverPedal',r.kops]].forEach(([k,v])=>{ s[side][k]={...mv(k,v,meth,'gemessen',k==='kneeOverPedal'?10:3),time:nowStamp(),note:`Mittel aus ${r.n} Umdrehungen`}; });
-    if(s.status==='geplant') s.status='in Arbeit'; audit(`Live-Analyse (${r.n} Umdrehungen): Knie ${r.knee}°, Knielot ${r.kops} mm (${side==='before'?'Ausgangswert':'Endwert'})`,s.id); save(); closeDrawer(); render(); toast(`Gespeichert: Kniewinkel ${r.knee}°, Knielot ${r.kops>0?'+':''}${r.kops} mm`); },
+    [['kneeBDC',r.knee],['kneeTDC',r.kneeTop],['hipAngle',r.hip],['torsoAngle',r.torso],['shoulderAngle',r.shoulder],['elbowAngle',r.elbow],['ankleRange',r.ankle],['hipRock',r.hipRock],['kneeOverPedal',r.kops]].filter(([k,v])=>v!=null).forEach(([k,v])=>{ const tol=k==='kneeOverPedal'?10:k==='hipRock'?3:k==='kneeBDC'&&r.ci&&r.ci.knee!=null?Math.max(1,Math.round(r.ci.knee*10)/10):3; s[side][k]={...mv(k,Math.round(v*10)/10,meth,'gemessen',tol),time:nowStamp(),note:`Kurve über ${r.n} Umdrehungen · Aufnahme ${r.grade}`}; });
+    if(s.status==='geplant') s.status='in Arbeit'; audit(`Live-Analyse (${r.n} Umdrehungen): Knie ${r.knee}°, Knielot ${r.kops} mm (${side==='before'?'Ausgangswert':'Endwert'})`,s.id); save(); closeDrawer(); render(); toast(`Gespeichert: Knie ${fmtNum(r.knee)}°, Knielot ${r.kops>0?'+':''}${r.kops} mm und ${[r.shoulder,r.elbow,r.ankle,r.hipRock].filter(x=>x!=null).length} weitere Werte`); },
   finderPick(el){ ui.advGeo=el.dataset.id; render(); window.scrollTo({top:0,behavior:'smooth'}); },
   shopLogoDel(){ if(S.shop){ delete S.shop.logo; save(); render(); } },
   exportCsv(){ try{ download(`fitframe-fittings-${today()}.csv`,sessionsCsv(),'text/csv;charset=utf-8'); toast('Tabelle erstellt'); }catch(e){ toast('Export nicht möglich',true); } },
@@ -3575,7 +3724,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); cl
 applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
 go(VIEWS[start]?start:'dashboard');
-window.__fitframe={transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
