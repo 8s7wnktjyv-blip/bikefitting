@@ -1386,7 +1386,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.25';
+const APP_VER = '2026-10-27.26';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1671,7 +1671,7 @@ function customerDrawer(id){
     <div class="stack"><div class="row" style="justify-content:space-between"><h3>Körpermaße</h3><button class="btn sm" type="button" data-act="estBody" data-id="${c.id}">Fehlende aus Körpergröße schätzen</button></div><p class="faint" style="font-size:12px">Diese Maße speisen die Simulation. Eingetragene Werte haben Vorrang vor Schätzungen.</p>
     ${bodyFormHtml(c,'drawer')}</div>
     <hr>
-    <div class="stack"><div class="row" style="justify-content:space-between"><h3>Fahrräder</h3><button class="btn sm" data-act="newBike" data-id="${c.id}">${ic('plus')}Fahrrad</button></div>
+    <div class="stack"><div class="row" style="justify-content:space-between"><h3>Fahrräder</h3><div class="row" style="gap:6px"><button class="btn sm" data-act="nbOpen" data-id="${c.id}">${ic('fit')}Passendes Neurad finden</button><button class="btn sm" data-act="newBike" data-id="${c.id}">${ic('plus')}Fahrrad</button></div></div>
     ${bikesOf(id).map(b=>`<div class="li click" style="padding:8px 0" data-act="openBike" data-id="${b.id}">${ic('bike','width="20" height="20"')}<div class="grow"><div class="t">${esc(b.brand+' '+b.model)}</div><div class="sub">${esc(b.type)} · Größe ${esc(b.size)} · ${fmtNum(b.km)} km</div></div></div>`).join('')||'<span class="muted">Noch kein Fahrrad.</span>'}</div>
     <hr>
     <div class="stack"><div class="row" style="justify-content:space-between"><h3>Fitting-Historie</h3><button class="btn sm" data-act="newSession" data-cust="${c.id}">${ic('plus')}Sitzung</button></div>
@@ -1802,11 +1802,11 @@ const SEAT_ANG={Rennrad:73.5,Gravel:73,Triathlon:78,MTB:74,'E-Bike':72,Trekking:
 /* Zielposition: Sattelhöhe, Versatz, Sattel–Lenker, Überhöhung + Koordinaten Lenkermitte ab Tretlager */
 function stockBar(x,L,ang,spacer){ const HA=x.headAngle*Math.PI/180; const ux=-Math.cos(HA), uy=Math.sin(HA); const Sp=(spacer??25)+30; const th=(90-x.headAngle+(ang??-6))*Math.PI/180;
   return {bx:x.reach+Sp*ux+L*Math.cos(th), by:x.stack+Sp*uy+L*Math.sin(th)}; }
-function bodyTarget(c,type,a,check,crank,frame){
+function bodyTarget(c,type,a,check,crank,frame,styleOverride){
   const H=Number(c.body.height)||null; if(!H) return {need:['Körpergröße']};
   const est=[]; const I=Number(c.body.inseam)||(est.push('Schrittlänge'),H*RATIO.inseam);
   const Tm=Number(c.body.torso)||null, Am=Number(c.body.arm)||null;
-  const style=(()=>{ try{ return goalPreviewRaw(a||{},type,check); }catch(e){ return 'mitte'; } })();
+  const style=styleOverride||(()=>{ try{ return goalPreviewRaw(a||{},type,check); }catch(e){ return 'mitte'; } })();
   const ham=Number((check&&check.hamstring)||0); const comp=((a&&a.complaints)||'').toLowerCase();
   const cr=crank||(I<78?165:I<84?170:I<90?172.5:175);
   const h=Math.round(I*10*0.883-(cr-172.5)*0.5);
@@ -1828,10 +1828,13 @@ function bodyTarget(c,type,a,check,crank,frame){
     if(Tm&&Am){ const k=(REACH_K[type]||.44); const rb=(Tm+Am)*10*k; r=Math.round((r+rb)/2); }
     basis={d:`Serienposition dieses Rahmens ${Math.round(dF)} mm${adjD?`, ${adjD>0?'+':''}${adjD} mm wegen ${[style!=='mitte'?({aero:'sportlichem',komfort:'komfortablem'}[style]+' Ziel'):null,...why].filter(Boolean).join(', ')}`:''}`,r:`Serienposition ${Math.round(rF)} mm${adjR?`, ${adjR>0?'+':''}${adjR} mm wegen Ziel/Beschwerden`:''}${Tm&&Am?', gemittelt mit Rumpf + Arm':''}`};
   } else {
-    const T=Tm||H*RATIO.torso, Ar=Am||H*RATIO.arm; if(!Tm) est.push('Rumpf'); if(!Am) est.push('Arm');
-    r=Math.round((T+Ar)*10*(REACH_K[type]||.44)+adjR);
-    const base={Rennrad:80,Gravel:65,Triathlon:100,MTB:30,'E-Bike':-40,Trekking:-40}[type]??60; d=Math.round((base>0?base*H/180:base)+adjD);
-    basis={d:`Richtwert ${type} bei ${fmtNum(H)} cm${adjD?`, ${adjD>0?'+':''}${adjD} mm wegen Ziel/Körper`:''}`,r:'aus Rumpf und Arm'};
+    // Ohne Rahmen: Richtwerte, die mit der Sattelhöhe wachsen (abgeglichen an Seriengeometrien)
+    const RK={Rennrad:.73,Gravel:.72,Triathlon:.75,MTB:.70,'E-Bike':.66,Trekking:.66}, DK={Rennrad:.62,Gravel:.55,Triathlon:.75,MTB:.25,'E-Bike':-.3,Trekking:-.3};
+    if(Tm&&Am){ const BK={Rennrad:.465,Gravel:.455,Triathlon:.48,MTB:.47,'E-Bike':.42,Trekking:.43}; r=Math.round(((Tm+Am)*10*(BK[type]||.45)+h*(RK[type]||.72))/2+adjR); }
+    else { r=Math.round(h*(RK[type]||.72)+adjR); est.push('Rumpf/Arm'); }
+    const neutral=(DK[type]??.55)*(h-600);
+    d=Math.round(neutral+adjD);
+    basis={d:`Richtwert ${type} bei ${fmtNum(h)} mm Sattelhöhe: ${Math.round(neutral)} mm${adjD?`, ${adjD>0?'+':''}${adjD} mm wegen Ziel/Körper`:''}`,r:Tm&&Am?'aus Rumpf, Arm und Sattelhöhe':'aus der Sattelhöhe (Rumpf/Arm messen macht es genauer)'};
   }
   const unc=est.includes('Schrittlänge')?15:10;
   const bx=-sb+Math.sqrt(Math.max(r*r-d*d,0)), by=Hs-d;
@@ -1890,6 +1893,52 @@ function bodySetupHtml(s){
   ${cock}
   ${now.sb!=null&&Math.abs(now.sb-P.sb)>40?`<div class="notice warn" style="font-size:13.5px">${ic('warn')}<div>Dein gemessener Sattelversatz (${n(now.sb)} mm) weicht stark vom Erwartungswert ab. Bitte nachmessen: waagerecht vom Lot durch die Tretlagermitte bis zur <b>Sattelspitze</b> (Kreuzlaser oder Lot hilft).</div></div>`:''}
   <div class="notice" style="font-size:13.5px">${ic('info')}<div>Aus Körpermaßen allein ist das etwa ±10–15 mm genau. Danach immer kurz auf dem Rad prüfen: Kniewinkel per iPhone-Kamera, dann höchstens ±5 mm nachstellen.</div></div></div></details>`;
+}
+/* ---------- Neurad: passendes Rad aus den Körpermaßen ---------- */
+function newBikeMatches(c,opt){
+  const type=opt.type||'Rennrad'; const last=S.sessions.filter(x=>x.customerId===c.id).sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+  const a={...(last?last.anamnesis:{})}; if(opt.style==='aero') a.comfort='Leistung / Aero zuerst'; else if(opt.style==='komfort') a.comfort='Komfort zuerst'; else if(opt.style==='mitte') a.comfort='Ausgewogen';
+  const check=last?last.check:{};
+  const P=bodyTarget(c,type,a,check,null,null,opt.style||null); if(P.need) return {need:P.need};
+  const I=Number(c.body.inseam)||null; const mtb=type==='MTB';
+  const out=[];
+  geoAll().filter(g=>g.type===type&&(!opt.brand||g.brand===opt.brand)).forEach(g=>{
+    const sizes=g.rows.map(row=>{ const x=geoRowObj(row); const Fs=[-6,6].map(a=>({a,F:frameSetup(P,x,{ang:a})})).filter(o=>o.F); if(!Fs.length) return null;
+      const pick=Fs.map(o=>({...o,bad:Math.max(0,o.F.spacerNeed-40)+Math.max(0,-5-o.F.spacerNeed)+(o.a!==-6?8:0)})).sort((p,q)=>p.bad-q.bad)[0]; const F=pick.F, ang=pick.a;
+      const stock=x.stem||null; const [lo,hi]=mtb?[35,80]:[60,130];
+      const sp=F.spacerNeed, L=F.stemNeed;
+      const spOk=sp>=-5&&sp<=40, stemOk=L>=lo&&L<=hi;
+      const stockOk=stock&&Math.abs(L-stock)<=10&&spOk;
+      const so=x.standover&&I?I*10-x.standover:null; const soOk=so==null||so>=20;
+      const cls=!soOk?'nein':stockOk?'serie':stemOk&&spOk?'vorbau':'nein';
+      const ideal=mtb?50:type==='Gravel'?80:100; const score=(cls==='serie'?0:cls==='vorbau'?10:100)+Math.abs(sp-20)/5+(stock?Math.abs(L-stock)/5:0)+Math.abs(L-ideal)/6;
+      const cls2=cls==='serie'&&ang!==-6?'vorbau':cls;
+      return {size:x.size,x,ang,L:Math.round(L/10)*10,Lraw:Math.round(L),sp:Math.max(0,Math.round(sp/5)*5),spRaw:Math.round(sp),stock,cls:cls2,score:score+(ang!==-6?5:0),so};
+    }).filter(Boolean);
+    const best=sizes.filter(z=>z.cls!=='nein').sort((p,q)=>p.score-q.score)[0];
+    if(best){ const bi=sizes.indexOf(best); out.push({g,best,alt:sizes.filter((z,i)=>z!==best&&z.cls!=='nein'&&Math.abs(i-bi)===1).sort((p,q)=>p.score-q.score)[0]||null}); }
+  });
+  out.sort((p,q)=>p.best.score-q.best.score);
+  return {P,list:out,type,crank:P.crank};
+}
+function newBikeHtml(cid){
+  const c=cust(cid); const o=ui.nb||(ui.nb={type:'Rennrad',style:'',brand:''});
+  const types=[...new Set(geoAll().map(g=>g.type))].filter(t=>['Rennrad','Gravel','Triathlon','MTB'].includes(t));
+  const brands=[...new Set(geoAll().filter(g=>g.type===o.type).map(g=>g.brand))].sort();
+  const R=newBikeMatches(c,o);
+  const head=`<div class="stack" style="gap:10px">
+    <div class="seg" role="group" aria-label="Radtyp">${types.map(t=>`<button data-act="nbSet" data-k="type" data-v="${t}" data-id="${cid}" aria-pressed="${o.type===t}">${t}</button>`).join('')}</div>
+    <div class="seg" role="group" aria-label="Fahrstil"><button data-act="nbSet" data-k="style" data-v="" data-id="${cid}" aria-pressed="${!o.style}">Aus Ziel-Fragen</button><button data-act="nbSet" data-k="style" data-v="komfort" data-id="${cid}" aria-pressed="${o.style==='komfort'}">Komfort</button><button data-act="nbSet" data-k="style" data-v="mitte" data-id="${cid}" aria-pressed="${o.style==='mitte'}">Ausgewogen</button><button data-act="nbSet" data-k="style" data-v="aero" data-id="${cid}" aria-pressed="${o.style==='aero'}">Sportlich</button></div>
+    <div class="field"><label for="nbBrand">Marke</label><select class="input" id="nbBrand" data-change="nbBrand" data-id="${cid}" style="width:auto"><option value="">Alle Marken</option>${brands.map(b=>`<option ${o.brand===b?'selected':''}>${esc(b)}</option>`).join('')}</select></div>`;
+  if(R.need) return head+`<div class="notice warn">${ic('warn')}<div>Dafür fehlt: ${esc(R.need.join(', '))}. Unter Kunde → Körpermaße eintragen.</div></div></div>`;
+  const P=R.P; const n=v=>fmtNum(Math.round(v));
+  const sh=Number(c.body.shoulder)||Number(c.body.height)*RATIO.shoulder; const bw=Math.round(sh*10/20)*20;
+  const sheet=(z)=>`<div class="ckparts" style="margin-top:6px"><div><span>Sattelhöhe</span><b>${n(P.h)} mm</b><i>Tretlagermitte bis Satteloberfläche</i></div><div><span>Sattelversatz</span><b>${n(P.sb)} mm</b><i>Lot Tretlager bis Sattelspitze</i></div><div><span>Vorbau</span><b>${z.L} mm, ${z.ang>0?'+':'−'}${Math.abs(z.ang)}°</b><i>${z.stock?`Serie ${z.stock} mm`:'Serie unbekannt'}</i></div><div><span>Spacer unter Vorbau</span><b>${z.sp} mm</b><i>plus Steuersatz-Abdeckung</i></div><div><span>Lenkerbreite</span><b>${bw} mm</b><i>aus Schulterbreite${c.body.shoulder?'':' (geschätzt)'}</i></div><div><span>Kurbel</span><b>${fmtNum(R.crank)} mm</b><i>aus Schrittlänge</i></div></div>`;
+  const tag=z=>z.cls==='serie'?'<span class="chip nodot c-ok">passt mit Serienteilen</span>':`<span class="chip nodot c-warn">passt mit ${z.L} mm Vorbau${z.ang>0?' (+6°)':''}</span>`;
+  return head+`<p class="muted" style="font-size:14px">Zielposition aus Körpermaßen (${esc({aero:'sportlich',mitte:'ausgewogen',komfort:'komfortabel'}[P.style])}): Sattelhöhe ${n(P.h)} mm, Sattel–Lenker ${n(P.r)} mm, Überhöhung ${n(P.d)} mm.${P.est.length?` Geschätzt: ${esc(P.est.join(', '))}.`:''} Für jedes Modell die beste Größe.</p>
+  ${R.list.length?`<div class="stack" style="gap:8px">${R.list.slice(0,12).map((h,i)=>`<details class="more nbhit" ${i===0?'open':''}><summary><b>${esc(h.g.brand)} ${esc(h.g.model)}</b> · Größe <b>${esc(h.best.size)}</b> ${tag(h.best)}</summary>
+    <p class="muted" style="font-size:13.5px;margin:6px 0 0">Stack ${n(h.best.x.stack)} · Reach ${n(h.best.x.reach)} mm${h.alt?` · Alternative: Größe ${esc(h.alt.size)} (${h.alt.cls==='serie'?'Serienteile':h.alt.L+' mm Vorbau'})`:''}${h.best.so!=null?` · Schrittfreiheit ${n(h.best.so)} mm`:''}</p>${sheet(h.best)}</details>`).join('')}</div>`:`<div class="empty">${ic('grid')}<span>Kein Modell dieses Typs passt mit üblichen Teilen. Andere Marke oder Radtyp wählen.</span></div>`}
+  <div class="notice" style="font-size:13.5px">${ic('info')}<div>Aus Körpermaßen etwa ±10–15 mm genau. Bei der Übergabe: Werte einstellen, dann kurz auf dem Rollentrainer prüfen (Kniewinkel per iPhone-Kamera) und höchstens ±5 mm nachstellen. Geometrie aus Herstellerangaben, ${geoAll().length} Modelle in der Bibliothek.</div></div></div>`;
 }
 SESSTAB.anamnese = (s,c) => {
   const a=s.anamnesis;
@@ -3800,6 +3849,8 @@ const ACT = {
   stInfo(el){ const k=STATUS[el.dataset.k]; toast(`${k[1]}: ${k[2]}`); },
   theme(){ theme=theme==='dark'?'light':'dark'; try{localStorage.setItem('fitframe-theme',theme);}catch(e){} applyTheme(); if(ui.route==='mehr') render(); },
   setTheme(el){ theme=el.dataset.v; try{localStorage.setItem('fitframe-theme',theme);}catch(e){} applyTheme(); render(); },
+  nbOpen(el){ ui.nb=ui.nb||{type:'Rennrad',style:'',brand:''}; openDrawer('Passendes Neurad finden',newBikeHtml(el.dataset.id)); },
+  nbSet(el){ ui.nb=ui.nb||{}; ui.nb[el.dataset.k]=el.dataset.v; if(el.dataset.k==='type') ui.nb.brand=''; openDrawer('Passendes Neurad finden',newBikeHtml(el.dataset.id)); },
   setCockpit(el){ const b=bike(el.dataset.id); if(!b) return; b.cockpit=el.dataset.v; save(); render(); },
   measureJump(el){ ui.sessTab='ausgang'; ui.editMaker=null; ui.wIdx=MEASURE_NOW.indexOf(el.dataset.k); render(); window.scrollTo({top:0}); },
   sessTab(el){ ui.sessTab=el.dataset.v; ui.editMaker=null; ui.wIdx=null; if(el.dataset.v==='ausgang'){ const s=sess(ui.sess); const n=s?applyMaker(s):0; if(n){ save(); setTimeout(()=>toast(`${n} Serienwerte vom Hersteller übernommen – bitte kurz prüfen`),60); } } render(); },
@@ -3960,6 +4011,7 @@ const FORMS = {
 };
 
 const CHG = {
+  nbBrand(el){ ui.nb=ui.nb||{}; ui.nb.brand=el.value; openDrawer('Passendes Neurad finden',newBikeHtml(el.dataset.id)); },
   trGeo(el){ ui.trGeo=el.value; ui.trSize=''; render(); },
   trSize(el){ ui.trSize=el.value; render(); },
   finderType(el){ ui.finderType=el.value; render(); },
@@ -4005,7 +4057,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); cl
 applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
 go(VIEWS[start]?start:'dashboard');
-window.__fitframe={bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
