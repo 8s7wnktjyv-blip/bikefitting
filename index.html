@@ -1386,7 +1386,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.27';
+const APP_VER = '2026-10-27.28';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1668,7 +1668,7 @@ function customerDrawer(id){
     <div class="row">${c.tags.map(t=>`<span class="chip nodot">${esc(t)}</span>`).join('')}${c.consent?'<span class="chip c-ok">Einwilligung liegt vor</span>':'<button class="btn sm" data-act="consent" data-id="'+c.id+'">Einwilligung erfassen</button>'}</div>
     <dl class="dl"><dt>E-Mail</dt><dd>${esc(c.email)}</dd><dt>Telefon</dt><dd class="mono">${esc(c.phone)}</dd><dt>Kunde seit</dt><dd>${fmtDate(c.since)}</dd><dt>Disziplin</dt><dd>${esc(c.discipline)}</dd></dl>
     <hr>
-    <div class="stack"><div class="row" style="justify-content:space-between"><h3>Körpermaße</h3><button class="btn sm" type="button" data-act="estBody" data-id="${c.id}">Fehlende aus Körpergröße schätzen</button></div><p class="faint" style="font-size:12px">Diese Maße speisen die Simulation. Eingetragene Werte haben Vorrang vor Schätzungen.</p>
+    ${bodyTypeHtml(c)}<div class="stack"><div class="row" style="justify-content:space-between"><h3>Körpermaße</h3><button class="btn sm" type="button" data-act="estBody" data-id="${c.id}">Fehlende aus Körpergröße schätzen</button></div><p class="faint" style="font-size:12px">Diese Maße speisen die Simulation. Eingetragene Werte haben Vorrang vor Schätzungen.</p>
     ${bodyFormHtml(c,'drawer')}</div>
     <hr>
     <div class="stack"><div class="row" style="justify-content:space-between"><h3>Fahrräder</h3><div class="row" style="gap:6px"><button class="btn sm" data-act="nbOpen" data-id="${c.id}">${ic('fit')}Passendes Neurad finden</button><button class="btn sm" data-act="newBike" data-id="${c.id}">${ic('plus')}Fahrrad</button></div></div>
@@ -1751,6 +1751,38 @@ const PRESET={
 };
 const splitVals=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean);
 const ANA_Q=[['goal','Was ist das Ziel des Fittings?','Mehrere Antworten möglich.'],['complaints','Gibt es Beschwerden beim Fahren?','Mehrere möglich. Wo genau und seit wann, kannst du unten ergänzen.'],['training','Wie viel fährt die Person pro Woche?',''],['experience','Seit wann fährt die Person Rad?',''],['previous','Gab es schon ein Fitting?',''],['limits','Gibt es körperliche Einschränkungen?','Mehrere möglich.'],['comfort','Was ist wichtiger?','']];
+/* ---------- Körperbau: Proportionen verständlich erklären ---------- */
+function bodyType(c){
+  const H=Number(c.body.height)||null, I=Number(c.body.inseam)||null; if(!H||!I) return null;
+  const T=Number(c.body.torso)||null, A=Number(c.body.arm)||null, Sh=Number(c.body.shoulder)||null;
+  const ri=I/H; const legs=ri>=0.48?'sehr lang':ri>0.47?'lang':ri<0.44?'kurz':ri<0.45?'eher kurz':'durchschnittlich';
+  const longLegs=ri>0.47, shortLegs=ri<0.45;
+  const rt=T?T/H:null, ra=A?A/H:null;
+  const torso=rt==null?(longLegs?'eher kurz (abgeleitet)':shortLegs?'eher lang (abgeleitet)':null):rt<0.29?'kurz':rt>0.32?'lang':'durchschnittlich';
+  const arms=ra==null?null:ra<0.35?'kurz':ra>0.38?'lang':'durchschnittlich';
+  const facts=[], bike=[];
+  facts.push(`Schrittlänge ${fmtNum(I)} cm = ${Math.round(ri*100)} % der Körpergröße (üblich 45–47 %): Beine ${legs}.`);
+  if(torso) facts.push(`Oberkörper ${torso}${rt!=null?` (Rumpf ${fmtNum(T)} cm = ${Math.round(rt*100)} %, üblich 29–32 %)`:''}.`);
+  if(arms) facts.push(`Arme ${arms} (${fmtNum(A)} cm = ${Math.round(ra*100)} %, üblich 35–38 %).`);
+  if(longLegs){ bike.push('Der Sattel steht im Verhältnis zur Körpergröße hoch. Dadurch wird die Überhöhung zum Lenker schnell groß – Nacken, Schultern und Hände bekommen mehr Last.');
+    bike.push('Größe nach Reach wählen, nicht nach Körpergröße: lieber ein Rahmen mit etwas mehr Stack und kürzerem Reach (Endurance-Geometrie) als ein großer Race-Rahmen.');
+    bike.push('Sattel–Lenker eher kurz halten (kürzerer Vorbau), damit der kurze Oberkörper nicht gestreckt wird.'); }
+  else if(shortLegs){ bike.push('Der Sattel steht im Verhältnis eher tief. Die Überhöhung bleibt klein, ein sportlicher Rahmen mit wenig Stack passt oft gut.');
+    bike.push('Der lange Oberkörper verträgt mehr Reach: eher längerer Vorbau oder Race-Geometrie.');
+    bike.push('Auf die Schrittfreiheit (Überstandshöhe) achten.'); }
+  else bike.push('Ausgewogene Proportionen: Die meisten Geometrien passen, die Größe nach Stack und Reach wählen.');
+  if(arms==='lang') bike.push('Lange Arme gleichen einen kurzen Oberkörper teilweise aus – Reach kann etwas länger sein.');
+  if(arms==='kurz') bike.push('Kurze Arme: Lenker mit kurzem Reach (65–75 mm) holt die Schalthebel näher.');
+  if(Sh) bike.push(`Schulterbreite ${fmtNum(Sh)} cm: Lenker etwa ${Math.round(Sh*10/20)*20} mm breit.`);
+  const head=longLegs?'Lange Beine, kurzer Oberkörper':shortLegs?'Kurze Beine, langer Oberkörper':'Ausgewogene Proportionen';
+  const need=[]; if(!T) need.push('Rumpf'); if(!A) need.push('Arm'); if(!Sh) need.push('Schulterbreite');
+  return {head,facts,bike,need,ri};
+}
+function bodyTypeHtml(c){ const t=bodyType(c); if(!t) return '';
+  return `<div class="gprev bodytype"><div class="label">Dein Körperbau</div><h3 style="margin:2px 0 6px">${esc(t.head)}</h3>
+  <ul style="margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px">${t.facts.map(f=>`<li>${esc(f)}</li>`).join('')}</ul>
+  <div style="margin-top:8px;font-size:14px"><b>Was das am Rad bedeutet</b><ul style="margin:4px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:3px">${t.bike.map(f=>`<li>${esc(f)}</li>`).join('')}</ul></div>
+  ${t.need.length?`<p class="faint" style="font-size:12.5px;margin:6px 0 0">Genauer mit gemessenen Werten: ${esc(t.need.join(', '))} (Körper → Grundmaße).</p>`:''}</div>`; }
 /* ---------- Vorschau: Was sich durch Ziel und Bedürfnisse ungefähr an der Position ändert ---------- */
 function goalPreview(s,typeOverride){
   const a=s.anamnesis||{}, b=bike(s.bikeId)||{}, t=typeOverride||b.type||'';
@@ -1935,7 +1967,7 @@ function newBikeHtml(cid){
   const sh=Number(c.body.shoulder)||Number(c.body.height)*RATIO.shoulder; const bw=Math.round(sh*10/20)*20;
   const sheet=(z)=>`<div class="ckparts" style="margin-top:6px"><div><span>Sattelhöhe</span><b>${n(P.h)} mm</b><i>Tretlagermitte bis Satteloberfläche</i></div><div><span>Sattelversatz</span><b>${n(P.sb)} mm</b><i>Lot Tretlager bis Sattelspitze</i></div><div><span>Vorbau</span><b>${z.L} mm, ${z.ang>0?'+':'−'}${Math.abs(z.ang)}°</b><i>${z.stock?`Serie ${z.stock} mm`:'Serie unbekannt'}</i></div><div><span>Spacer unter Vorbau</span><b>${z.sp} mm</b><i>plus Steuersatz-Abdeckung</i></div><div><span>Lenkerbreite</span><b>${bw} mm</b><i>aus Schulterbreite${c.body.shoulder?'':' (geschätzt)'}</i></div><div><span>Kurbel</span><b>${fmtNum(R.crank)} mm</b><i>aus Schrittlänge</i></div></div>`;
   const tag=z=>z.cls==='serie'?'<span class="chip nodot c-ok">passt mit Serienteilen</span>':`<span class="chip nodot c-warn">passt mit ${z.L} mm Vorbau${z.ang>0?' (+6°)':''}</span>`;
-  return head+`<p class="muted" style="font-size:14px">Zielposition aus Körpermaßen (${esc({aero:'sportlich',mitte:'ausgewogen',komfort:'komfortabel'}[P.style])}): Sattelhöhe ${n(P.h)} mm, Sattel–Lenker ${n(P.r)} mm, Überhöhung ${n(P.d)} mm.${P.est.length?` Geschätzt: ${esc(P.est.join(', '))}.`:''} Für jedes Modell die beste Größe.</p>
+  return head+bodyTypeHtml(c)+`<p class="muted" style="font-size:14px">Zielposition aus Körpermaßen (${esc({aero:'sportlich',mitte:'ausgewogen',komfort:'komfortabel'}[P.style])}): Sattelhöhe ${n(P.h)} mm, Sattel–Lenker ${n(P.r)} mm, Überhöhung ${n(P.d)} mm.${P.est.length?` Geschätzt: ${esc(P.est.join(', '))}.`:''} Für jedes Modell die beste Größe.</p>
   ${R.list.length?`<div class="stack" style="gap:8px">${R.list.slice(0,12).map((h,i)=>`<details class="more nbhit" ${i===0?'open':''}><summary><b>${esc(h.g.brand)} ${esc(h.g.model)}</b> · Größe <b>${esc(h.best.size)}</b> ${tag(h.best)}</summary>
     <p class="muted" style="font-size:13.5px;margin:6px 0 0">Stack ${n(h.best.x.stack)} · Reach ${n(h.best.x.reach)} mm${h.alt?` · Alternative: Größe ${esc(h.alt.size)} (${h.alt.cls==='serie'?'Serienteile':h.alt.L+' mm Vorbau'})`:''}${h.best.so!=null?` · Schrittfreiheit ${n(h.best.so)} mm`:''}</p>${sheet(h.best)}</details>`).join('')}</div>`:`<div class="empty">${ic('grid')}<span>Kein Modell dieses Typs passt mit üblichen Teilen. Andere Marke oder Radtyp wählen.</span></div>`}
   <div class="notice" style="font-size:13.5px">${ic('info')}<div>Aus Körpermaßen etwa ±10–15 mm genau. Bei der Übergabe: Werte einstellen, dann kurz auf dem Rollentrainer prüfen (Kniewinkel per iPhone-Kamera) und höchstens ±5 mm nachstellen. Geometrie aus Herstellerangaben, ${geoAll().length} Modelle in der Bibliothek.</div></div></div>`;
@@ -2052,6 +2084,7 @@ SESSTAB.koerper = (s,c) => {
   <div class="statusbox ${cls}"><div style="flex:1;min-width:0"><b>${r[1]}</b><span class="muted" style="font-size:14px">${r[2]}</span></div><span class="num" style="font-weight:700">${done}/${items.length}</span></div>
   ${f.length?`<p class="muted" style="font-size:14px">Punkte mit <b>!</b> oder <b>i</b> antippen: Dann siehst du, was los ist, was es fürs Rad bedeutet und was du tun kannst.</p>`:''}
   ${(s.comp||[]).length?`<details class="more"><summary>Ausgleich vor dem Fitting (${s.comp.filter(x=>x.status==='umgesetzt').length}/${s.comp.length} erledigt)</summary>${s.comp.map((cp,i)=>`<label class="li" style="padding:8px 0;cursor:pointer"><input type="checkbox" data-change="compDone" data-id="${s.id}" data-i="${i}" ${cp.status==='umgesetzt'?'checked':''}><span class="grow">${esc(cp.t)}</span></label>`).join('')}</details>`:''}
+  ${bodyTypeHtml(c)}
   ${startBtn(first,done,first>=0?items[first].label:'')}
   <div class="ovl">${items.map((it,i)=>ckRow(s,c,it,i)).join('')}</div>
   ${done>2?footHtml(s):''}
@@ -4067,7 +4100,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); cl
 applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
 go(VIEWS[start]?start:'dashboard');
-window.__fitframe={newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
