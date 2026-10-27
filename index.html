@@ -560,6 +560,69 @@ tbody tr:hover td{background:var(--surface-2)}
   .ovl .li>svg:last-child{position:absolute;right:12px;top:16px}
   .ovl .li{position:relative;padding-right:34px}
 }
+
+/* ===== Wärmer: Sand, Espresso-Seitenleiste, Kupfer-Verlauf, farbige Kacheln ===== */
+:root{--bg:#efe8de;--surface:#fffcf8;--surface-2:#f6efe6;--line:#e6dccf;
+  --warm-grad:linear-gradient(135deg,#b9481f 0%,#d9642c 38%,#e98f45 72%,#f2b768 100%);
+  --side-bg:#2b2622;--side-fg:#efe6dc;--side-mute:rgba(239,230,220,.6);
+  --t1:#fde3d3;--t1i:#b24c1d;--t2:#f7e8cf;--t2i:#9a6a12;--t3:#f6dede;--t3i:#a8423f;--t4:#e9e3f3;--t4i:#6a4fa0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--side-bg:#30363b;--warm-grad:linear-gradient(135deg,#a8461f 0%,#c75f2c 45%,#d98a4a 100%);
+  --t1:rgba(240,138,85,.18);--t1i:#f6a77c;--t2:rgba(232,190,110,.16);--t2i:#ecc479;--t3:rgba(232,120,120,.16);--t3i:#f0a0a0;--t4:rgba(170,150,220,.16);--t4i:#c3b3ee}}
+:root[data-theme="dark"]{--side-bg:#30363b;--warm-grad:linear-gradient(135deg,#a8461f 0%,#c75f2c 45%,#d98a4a 100%);
+  --t1:rgba(240,138,85,.18);--t1i:#f6a77c;--t2:rgba(232,190,110,.16);--t2i:#ecc479;--t3:rgba(232,120,120,.16);--t3i:#f0a0a0;--t4:rgba(170,150,220,.16);--t4i:#c3b3ee}
+body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 70%),var(--bg);background-attachment:fixed}
+
+/* Seitenleiste dunkel und edel */
+.side{background:var(--side-bg);border-right:0;color:var(--side-fg)}
+.side .brand b{color:#fff}.side .brand small{color:var(--side-mute)}
+.side .navgroup .label{color:var(--side-mute)}
+.side .navbtn{color:rgba(239,230,220,.86)}
+.side .navbtn svg{color:rgba(239,230,220,.7)}
+.side .navbtn:hover{background:rgba(255,255,255,.07);color:#fff}
+.side .navbtn[aria-current="page"]{background:var(--warm-grad);color:#fff;box-shadow:0 8px 20px -12px rgba(217,100,44,.9)}
+.side .navbtn[aria-current="page"] svg{color:#fff}
+.side .navbtn .cnt{background:rgba(255,255,255,.16);color:#fff}
+.side .navbtn[aria-current="page"] .cnt{background:rgba(0,0,0,.18)}
+.side .demo-note{border-top-color:rgba(255,255,255,.12);color:var(--side-mute)}
+.side .demo-note .btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.16);color:#fff}
+
+/* Tageskarte: Kupfer-Verlauf mit weichen Kreisen */
+.hero2{background:var(--warm-grad);border:0;color:#fff;box-shadow:0 18px 40px -22px rgba(185,72,31,.75)}
+.hero2::before,.hero2::after{content:"";position:absolute;border-radius:50%;pointer-events:none}
+.hero2::before{width:340px;height:340px;right:-90px;top:-150px;background:radial-gradient(circle,rgba(255,255,255,.22),rgba(255,255,255,0) 70%)}
+.hero2::after{width:260px;height:260px;left:-80px;bottom:-170px;background:radial-gradient(circle,rgba(255,236,200,.28),rgba(255,236,200,0) 70%)}
+.hero2>*{position:relative;z-index:1}
+.hero2 .eyebrow{color:rgba(255,255,255,.82)}
+.hero2 h1{color:#fff}.hero2 h1 span{color:#ffe1b8}
+.hero2 p{color:rgba(255,255,255,.9)}
+.hero2 .nextbox{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.hero2 .nextbox small{color:rgba(255,255,255,.75)}
+.hero2 .nextbox b{color:#fff}
+.hero2 .nextbox .btn{background:#fff;border-color:#fff;color:#b24c1d;box-shadow:none}
+.hero2 .art{color:#fff;opacity:1}.hero2 .art .wh{stroke:#fff;opacity:.55}
+
+/* Kacheln mit eigener Farbe */
+.tile.main{background:var(--side-bg);border-color:var(--side-bg);color:#fff}
+.tile.main .ti{background:var(--warm-grad);color:#fff}
+.tile.main span{color:rgba(255,255,255,.75)}
+:root[data-theme="dark"] .tile.main{background:#2b3035;color:#fff}:root[data-theme="dark"] .tile.main span{color:rgba(255,255,255,.75)}:root[data-theme="dark"] .tile.main .ti{color:#fff}
+.tiles .tile:nth-child(2){background:var(--t1);border-color:transparent}.tiles .tile:nth-child(2) .ti{background:rgba(255,255,255,.6);color:var(--t1i)}
+.tiles .tile:nth-child(3){background:var(--t2);border-color:transparent}.tiles .tile:nth-child(3) .ti{background:rgba(255,255,255,.6);color:var(--t2i)}
+.tiles .tile:nth-child(4){background:var(--t4);border-color:transparent}.tiles .tile:nth-child(4) .ti{background:rgba(255,255,255,.6);color:var(--t4i)}
+:root[data-theme="dark"] .tiles .tile:not(.main) .ti{background:rgba(255,255,255,.08)}
+.topbar{background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.tiles .tile:not(.main) span{color:var(--muted)}
+
+/* Fitting-Kopf: Verlauf wie die Tageskarte */
+.sesshead{background:var(--warm-grad);border:0;color:#fff;padding:20px 18px 34px}
+.sesshead::after{content:"";position:absolute;width:300px;height:300px;right:-80px;top:-160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.2),rgba(255,255,255,0) 70%);pointer-events:none}
+.sesshead h1{color:#fff}.sesshead p{color:rgba(255,255,255,.88)}
+.sesshead .btn{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff;position:relative;z-index:1}
+.sesshead+.panel{border-top-left-radius:20px;border-top-right-radius:20px;margin-top:-22px;position:relative;z-index:1;border-top:1px solid var(--line)}
+.sesshead+.panel .panel-h.stepbar{border-radius:20px 20px 0 0}
+/* Seitenköpfe: Kupferpunkt als Verlauf */
+.pagehead:not(.hero) h1::before{background:var(--warm-grad)}
+.avatar{background:var(--t1);color:var(--t1i)}
 </style>
 </head>
 <body>
@@ -1278,7 +1341,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.12';
+const APP_VER = '2026-10-27.13';
 let loadIssue = null;
 function load(){
   let raw=null;
