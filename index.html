@@ -1377,7 +1377,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.19';
+const APP_VER = '2026-10-27.20';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2095,7 +2095,11 @@ function computePlan(s){
     const rs=(s.changes||[]).some(ch=>ch.plan&&ch.key===k)?[]:(reasons[k]||[]); if(rs.length){ rs.forEach(x=>why.push(x.why)); const x=rs.reduce((a,c)=>Math.abs(c.d)>Math.abs(a.d)?c:a);
       if(d!==0&&Math.sign(d)===Math.sign(x.d)){ if(Math.abs(x.d)>Math.abs(d)) d=x.d; }
       else { const nv=cur[k]+d+x.d; if(lo==null||(nv>=lo-0.01&&nv<=hi+0.01)) d+=x.d; else why.push('Liegt schon am Rand des Bereichs – hier nicht weiter verändern.'); } }
-    if(k==='saddleHeight'){ if(Math.abs(hOffset)>=1.5&&!why.length) why.push('Ausgleich für die Cleat-Änderung (Faustregel: halbe Verschiebung).'); d+=hOffset; }
+    if(k==='saddleHeight'){ const kn=s.after.kneeBDC||s.before.kneeBDC;
+      if(!kn&&Math.abs(d)>=1.5){ const est=Math.round(d); why.length=0; why.push(`Laut Schrittlänge eher ${Math.abs(est)} mm ${est>0?'höher':'tiefer'}. Die Schrittlänge allein ist aber auf etwa ±10 mm ungenau (Schuhsohle, Pedal, Sattel, Messfehler). Deshalb hier noch keine Änderung: erst den Kniewinkel unten messen (Winkelmesser oder iPhone als Kamera). Dann rechnet FitFrame die Millimeter genau aus.`); d=0; }
+      else if(kn&&Math.abs(d)>5){ const full=Math.round(d); d=Math.sign(d)*5; why.push(`Insgesamt ${Math.abs(full)} mm. Profis ändern die Sattelhöhe in Schritten von höchstens 5 mm: erst ${d>0?'+':''}${d} mm, 10–15 Minuten fahren, Kniewinkel neu messen.`); }
+      if(Math.abs(hOffset)>=1.5) why.push(`${why.length?'Dazu':'Nur'} ${hOffset>0?'+':''}${Math.round(hOffset)} mm als Ausgleich für die Cleat-Änderung (Faustregel: halbe Verschiebung).`); d+=hOffset; }
+    if(k==='saddleSetback'&&!(s.after.kneeOverPedal||s.before.kneeOverPedal)&&Math.abs(d)>=1.5&&!/Triathlon/.test((bike(s.bikeId)||{}).type||'')){ const est=Math.round(d); why.length=0; why.push(`Laut Rahmengeometrie eher ${Math.abs(est)} mm ${est>0?'weiter hinten':'weiter vorn'}. Das ist nur eine Schätzung. Prüfe zuerst, ob der Versatz richtig gemessen ist (Lot durch die Tretlagermitte bis Sattelspitze), und miss das Knielot (Winkelmesser-Lot oder iPhone als Kamera). Erst dann ändert FitFrame den Versatz.`); d=0; }
     if(Math.abs(d)<1.5){ if(why.length) steps.push({key:k,want:0,d:0,from:cur[k],to:cur[k],target:cur[k],why:why.join(' '),acts:[],alt:[],need:[],info:true}); return; }
     const rz=realize(s,k,d,A);
     steps.push({key:k,want:Math.round(d),d:rz.d,from:cur[k],to:cur[k]+rz.d,target:cur[k]+d,why:order+' '+why.join(' '),parts:rz.parts||null,acts:rz.acts,alt:rz.alt,need:rz.need,left:rz.left,effects:rz.d?sideEffects(s,k,rz.d):[]});
@@ -3832,7 +3836,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); cl
 applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
 go(VIEWS[start]?start:'dashboard');
-window.__fitframe={liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
