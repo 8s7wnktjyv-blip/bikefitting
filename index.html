@@ -242,6 +242,10 @@ td.r,th.r{text-align:right}
 .ckc ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:15px}.ckc .sub{font-size:13px;color:var(--muted);white-space:normal}
 .ckparts{display:flex;flex-direction:column;gap:6px}.ckparts>div{display:grid;grid-template-columns:110px 1fr;gap:2px 10px;padding:8px 10px;border-radius:10px;background:var(--surface-2)}
 .ckparts span{color:var(--muted);font-size:13px}.ckparts i{grid-column:2;font-style:normal;font-size:12.5px;color:var(--muted)}
+.footcard{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:16px;border:1px solid var(--line)}
+.footgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:560px){.footgrid{grid-template-columns:1fr}}
+.footcol{display:flex;flex-direction:column;gap:8px}.footcol h4{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.fitem{display:flex;flex-direction:column;gap:3px;padding:10px 12px;border-radius:12px;background:var(--surface-2);font-size:14.5px}.fitem .sub{font-size:13px;color:var(--muted);white-space:normal}
 .mgroup{display:flex;flex-direction:column;gap:4px}
 .acts{margin:6px 0 0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px}
 .acts li.info{color:var(--muted);list-style:circle}
@@ -1116,7 +1120,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.2';
+const APP_VER = '2026-10-27.3';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1528,6 +1532,49 @@ function ckRow(s,c,it,i){
     <div class="row">${fs.filter(f=>f.cat==='ausgleich'||f.cat==='arzt').map(f=>(s.comp||[]).some(cp=>cp.t.startsWith(f.title))?`<span class="chip c-ok nodot">eingeplant</span>`:`<button class="btn sm primary" data-act="addComp" data-id="${s.id}" data-t="${esc(f.title)}">Ausgleich einplanen</button>`).join('')}<button class="btn sm" data-act="wGo" data-i="${i}">Wert ändern</button></div></div>`;
 }
 
+/* ---------- Fuß-Auswertung: Einlage, Keil, Unterlegplatte – pro Fuß mit Begründung ---------- */
+function footAdvice(s){
+  const v=(k,sd)=>chkVal(s,k,sd); const t=(s.anamnesis.complaints||'').toLowerCase();
+  const feetPain=/fuß|füße|zeh|brennen|taub/.test(t), kneeIn=/knie innen/.test(t), kneeOut=/knie außen/.test(t);
+  const sides={L:'links',R:'rechts'}; const out={feet:{},shim:null,missing:[]};
+  ['L','R'].forEach(sd=>{ const n=sides[sd]; const arch=v('arch',sd), ff=v('forefoot',sd), kt=v('kneeTrack',sd);
+    if(!arch) out.missing.push(`Fußgewölbe ${n}`); if(!ff) out.missing.push(`Vorfuß ${n}`); if(!kt) out.missing.push(`Kniespur ${n}`);
+    const f={insole:null,wedge:null,why:[],check:[]};
+    // Einlage
+    if(arch==='flach') { f.insole={need:'ja',type:'Stützende Einlage mit mittlerer bis hoher Gewölbestütze',why:'Flaches Gewölbe: Der Fuß knickt beim Treten nach innen ein und zieht das Knie mit.'}; }
+    else if(arch==='hoch') { f.insole={need:'ja',type:'Einlage mit hoher Gewölbestütze und Polsterung, ggf. Mittelfuß-Pelotte',why:'Hohes Gewölbe: Der Fuß liegt nur an Ferse und Ballen auf. Druckspitzen machen Zehen taub oder brennen.'}; }
+    else if(arch==='normal'&&feetPain) { f.insole={need:'prüfen',type:'Einlage mit mittlerer Stütze und Mittelfuß-Pelotte',why:'Gewölbe normal, aber Beschwerden an Füßen oder Zehen: Eine Pelotte hinter den Ballen verteilt den Druck.'}; }
+    else if(arch) f.insole={need:'nein',type:'',why:'Gewölbe normal, keine Fußbeschwerden.'};
+    // Keil
+    const inward=kt==='fällt nach innen', outward=kt==='fällt nach außen';
+    if(ff==='Innenkante höher'){ const n0=inward||kneeIn?2:1; f.wedge={need:'ja',count:n0,side:'innen',why:`Vorfuß steht schräg (Innenkante höher). Der Fuß kippt auf dem flachen Pedal nach innen${inward?', das Knie fällt in der Kniebeuge nach innen':''}.`}; }
+    else if(ff==='Außenkante höher'){ const n0=outward||kneeOut?2:1; f.wedge={need:'ja',count:n0,side:'außen',why:`Vorfuß steht schräg (Außenkante höher). Der Fuß kippt auf dem Pedal nach außen${outward?', das Knie fällt nach außen':''}.`}; }
+    else if(ff==='neutral'&&inward) f.wedge={need:'erst Einlage',count:0,side:'innen',why:'Vorfuß gerade, aber Knie fällt nach innen: Ursache ist eher das Gewölbe. Erst Einlage, dann Kniebeuge wiederholen. Nur wenn es bleibt: 1 Keil innen testen.'};
+    else if(ff==='neutral'&&outward) f.wedge={need:'erst prüfen',count:0,side:'außen',why:'Vorfuß gerade, Knie fällt nach außen: zuerst seitliche Cleat-Position prüfen, dann 1 Keil außen testen.'};
+    else if(ff) f.wedge={need:'nein',count:0,side:'',why:'Vorfuß gerade, Kniespur gerade.'};
+    if(f.wedge&&f.wedge.need==='ja'&&((f.wedge.side==='außen'&&inward)||(f.wedge.side==='innen'&&outward))){ f.wedge={need:'erst prüfen',count:1,side:f.wedge.side,why:`Widerspruch: Der Vorfuß spricht für einen Keil ${f.wedge.side}, die Kniespur (${inward?'nach innen':'nach außen'}) eher für das Gegenteil. Erst die Einlage, dann die Vorfußstellung in Bauchlage noch einmal prüfen. Danach 1 Keil ${f.wedge.side} testweise einbauen und die Kniespur beim Fahren mit und ohne Keil vergleichen.`}; }
+    f.check=['Nach dem Einbau die einbeinige Kniebeuge wiederholen: Läuft das Knie jetzt gerade über den 2. Zeh?','Beim Fahren von vorn filmen: Knie soll gerade auf und ab laufen, nicht pendeln.','Nach 20–30 Minuten fragen: Druckstellen, Taubheit, Brennen?'];
+    out.feet[sd]=f; });
+  const L=Number(v('legLen','L')), R=Number(v('legLen','R'));
+  if(L&&R){ const d=Math.round(Math.abs(L-R)*10); const short=L<R?'links':'rechts';
+    if(d>=10) out.shim={need:'Fachperson',side:short,mm:null,why:`${d} mm Unterschied, ${short} kürzer. Erst abklären lassen (anatomisch oder durch das Becken?). Danach ggf. Unterlegplatte unter den Cleat ${short}, höchstens die Hälfte (${Math.round(d/2)} mm), in Schritten.`};
+    else if(d>=5) out.shim={need:'ja',side:short,mm:Math.round(d/2),why:`${d} mm Unterschied, ${short} kürzer. Unterlegplatte (Shim) unter den Cleat ${short}: etwa ${Math.round(d/2)} mm.`};
+    else out.shim={need:'nein',why:`${d} mm Unterschied – kein Ausgleich nötig.`}; }
+  return out;
+}
+function footHtml(s){
+  const a=footAdvice(s); const tag=x=>x==='ja'?'c-warn':x==='nein'?'c-ok':'c-info';
+  const foot=(sd,lab)=>{ const f=a.feet[sd]; return `<div class="footcol"><h4>${lab}</h4>
+    <div class="fitem"><div class="row" style="gap:6px"><b>Einlage</b>${f.insole?`<span class="chip nodot ${tag(f.insole.need)}">${esc(f.insole.need)}</span>`:'<span class="chip nodot">noch nicht geprüft</span>'}</div>${f.insole&&f.insole.type?`<div>${esc(f.insole.type)}</div>`:''}${f.insole?`<div class="sub">${esc(f.insole.why)}</div>`:''}</div>
+    <div class="fitem"><div class="row" style="gap:6px"><b>Keil</b>${f.wedge?`<span class="chip nodot ${tag(f.wedge.need)}">${esc(f.wedge.need)}</span>`:'<span class="chip nodot">noch nicht geprüft</span>'}</div>${f.wedge&&f.wedge.count?`<div>${f.wedge.count} Keil${f.wedge.count>1?'e':''}, <b>dicke Seite ${f.wedge.side}</b></div>`:''}${f.wedge?`<div class="sub">${esc(f.wedge.why)}</div>`:''}</div></div>`; };
+  return `<div class="footcard"><div class="row" style="justify-content:space-between"><h3>Füße: Einlage, Keil, Unterlegplatte</h3></div>
+  <div class="footgrid">${foot('L','Linker Fuß')}${foot('R','Rechter Fuß')}</div>
+  ${a.shim?`<div class="fitem"><div class="row" style="gap:6px"><b>Unterlegplatte (Beinlänge)</b><span class="chip nodot ${a.shim.need==='Fachperson'?'c-bad':tag(a.shim.need)}">${esc(a.shim.need)}</span></div><div class="sub">${esc(a.shim.why)}</div></div>`:''}
+  ${a.missing.length?`<p class="faint" style="font-size:12.5px">Für eine vollständige Aussage fehlt im Körpercheck: ${esc(a.missing.join(', '))}.</p>`:''}
+  <details class="more"><summary>Reihenfolge und Kontrolle</summary><ol style="margin:6px 0 0;padding-left:20px;font-size:14px;display:flex;flex-direction:column;gap:4px"><li>Erst die Einlage, denn sie ändert oft schon die Kniespur.</li><li>Dann Kniebeuge wiederholen. Erst wenn das Knie noch abweicht: Keil.</li><li>Keile zwischen Cleat und Schuh oder als Keil-Einlage. Ein Keil hat meist 1–1,5°. Mit 1 beginnen, höchstens 3 pro Fuß.</li><li>Unterlegplatte erst zum Schluss, sie hebt den ganzen Fuß an. Danach Sattelhöhe prüfen.</li>${a.feet.L.check.map(c=>`<li>${esc(c)}</li>`).join('')}</ol></details>
+  <p class="faint" style="font-size:12.5px">Faustregeln aus der Fitting-Praxis, keine Diagnose. Bei Schmerzen oder starken Fehlstellungen: Orthopädie oder Podologie.</p></div>`;
+}
+
 SESSTAB.koerper = (s,c) => {
   const items=CK_ITEMS();
   if(ui.wIdx!=null&&items[ui.wIdx]) return ckWizard(s,c,items,ui.wIdx);
@@ -1542,6 +1589,7 @@ SESSTAB.koerper = (s,c) => {
   ${(s.comp||[]).length?`<details class="more"><summary>Ausgleich vor dem Fitting (${s.comp.filter(x=>x.status==='umgesetzt').length}/${s.comp.length} erledigt)</summary>${s.comp.map((cp,i)=>`<label class="li" style="padding:8px 0;cursor:pointer"><input type="checkbox" data-change="compDone" data-id="${s.id}" data-i="${i}" ${cp.status==='umgesetzt'?'checked':''}><span class="grow">${esc(cp.t)}</span></label>`).join('')}</details>`:''}
   ${startBtn(first,done,first>=0?items[first].label:'')}
   <div class="ovl">${items.map((it,i)=>ckRow(s,c,it,i)).join('')}</div>
+  ${done>2?footHtml(s):''}
   <details class="more"><summary>Warum zuerst der Körpercheck?</summary><p class="muted" style="margin-top:6px">Das Rad wird an den Körper angepasst. Ist ein Bein kürzer oder steht ein Fuß schräg, gleichst du das zuerst aus. Sonst stellst du das Rad auf eine schiefe Haltung ein. FitFrame stellt keine Diagnosen. Bei Schmerzen oder großen Unterschieden: Fachleute hinzuziehen.</p></details>
   <button class="btn ghost" data-act="openCustomer" data-id="${c.id}" style="align-self:flex-start">Alle Körpermaße bearbeiten</button>
   </div>`;
@@ -2213,7 +2261,7 @@ SESSTAB.bericht = s => `<div class="stack"><div class="row" style="justify-conte
 SESSTAB.ergebnis = s => {
   const q=quality(s), crit=q.filter(x=>x[0]!=='info').length; const t=ui.resTab||'vergleich';
   const tabs=[['vergleich','Vorher / Nachher'],['teile','Teile & Alternativen'],['uebertragen','Auf neues Rad'],['groesse','Größe & Sattel'],['qualitaet',`Datenqualität${crit?` (${crit})`:''}`],['bericht','Bericht']];
-  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,uebertragen:()=>transferHtml(s),teile:()=>checksHtml(s,false)+hoodHtml(s)+cockpitHtml(s)+planHtml(s)+'<hr>'+partsPlanHtml(s),groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
+  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,uebertragen:()=>transferHtml(s),teile:()=>checksHtml(s,false)+footHtml(s)+hoodHtml(s)+cockpitHtml(s)+planHtml(s)+'<hr>'+partsPlanHtml(s),groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
   return `<div class="stack">
   <p class="onlyline">Prüfe das Ergebnis, erstelle den Bericht und schließ das Fitting ab.</p>
   <div class="tabsbar" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${t===k}" data-act="resTab" data-v="${k}">${l}</button>`).join('')}</div>
@@ -2239,6 +2287,7 @@ function reportHtml(s){
   ${Object.keys(s.check||{}).length?`${s.scan?`<div class="sec"><h3>Körper-Scan (Kamera, Schätzung)</h3><p>${[s.scan.shDiff!=null?`Schultern: ${Math.abs(s.scan.shDiff)<8?'gerade':(s.scan.shDiff>0?'links':'rechts')+' '+Math.abs(s.scan.shDiff)+' mm tiefer'}`:'',s.scan.pelDiff!=null?`Becken: ${Math.abs(s.scan.pelDiff)<6?'gerade':(s.scan.pelDiff>0?'links':'rechts')+' '+Math.abs(s.scan.pelDiff)+' mm höher'}`:'',s.scan.kneeL?`Beinachse links: ${s.scan.kneeL.dir}`:'',s.scan.kneeR?`Beinachse rechts: ${s.scan.kneeR.dir}`:''].filter(Boolean).join(' · ')}</p></div>`:''}<div class="sec"><h3>Körpercheck</h3>${checkFindings(s).filter(x=>x.lvl!=='ok').map(x=>`<p><b>${esc(x.title)}.</b> ${esc(x.text)}</p>`).join('')||'<p>Keine Auffälligkeiten.</p>'}${(s.comp||[]).length?`<p><b>Ausgleich:</b> ${s.comp.map(cp=>esc(cp.t)+' ('+cp.status+')').join('; ')}</p>`:''}</div>`:''}
   <div class="sec"><h3>Vorgenommene Änderungen</h3>${s.changes.length?`<table><thead><tr><th>Einstellung</th><th style="text-align:right">Vorher</th><th style="text-align:right">Nachher</th><th>Grund</th></tr></thead><tbody>${s.changes.map(ch=>`<tr><td>${MK[ch.key].label}</td><td style="text-align:right">${fmtNum(ch.from)} ${MK[ch.key].unit}</td><td style="text-align:right">${fmtNum(ch.to)} ${MK[ch.key].unit}</td><td>${esc(ch.reason)}</td></tr>`).join('')}</tbody></table>`:'<p>Keine Änderungen.</p>'}</div>
   <div class="sec"><h3>Endposition</h3><table><tbody>${rows.filter(r=>r.a||r.b).map(r=>`<tr><td>${r.m.label}</td><td style="text-align:right">${fmtNum((r.a||r.b).value)} ${r.m.unit}</td><td class="fine">${esc((r.a||r.b).method)}${(r.a||r.b).source==='geschätzt'?' · geschätzt':''}</td></tr>`).join('')}</tbody></table></div>
+  ${(()=>{ const a=footAdvice(s); const l=[]; ['L','R'].forEach(sd=>{ const f=a.feet[sd], n=sd==='L'?'links':'rechts'; if(f.insole&&f.insole.need!=='nein') l.push(`Einlage ${n} (${f.insole.need}): ${f.insole.type}`); if(f.wedge&&f.wedge.need==='ja') l.push(`Keil ${n}: ${f.wedge.count}, dicke Seite ${f.wedge.side}`); }); if(a.shim&&a.shim.need!=='nein') l.push(`Unterlegplatte: ${a.shim.why}`); return l.length?`<div class="sec"><h3>Füße</h3><ul style="margin:0;padding-left:18px">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''; })()}
   ${(()=>{ const p=partsAdvice(s); const kp=s.after.kneeOverPedal||s.before.kneeOverPedal; const l=[]; if(p.saddle) l.push(`Sattelbreite etwa ${p.saddle.lo}–${p.saddle.hi} mm (Sitzknochenabstand ${p.saddle.sb} mm)`); if(p.shoe) l.push(`Schuhgröße etwa EU ${fmtNum(p.shoe.lo)}–${fmtNum(p.shoe.hi)} (Herstellertabelle prüfen)`); if(kp) l.push(kopsText(Math.round(kp.value))+' (Kamera, Schätzung)'); return l.length?`<div class="sec"><h3>Empfehlungen</h3><ul style="margin:0;padding-left:18px">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''; })()}
   ${(()=>{ const pl=partsPlan(s).filter(x=>x.key!=='saddle'); return pl.length?`<div class="sec"><h3>Mögliche weitere Anpassungen</h3>${pl.map(x=>`<p><b>${esc(x.title)}.</b> Ohne neue Teile: ${esc(x.noParts.join(' '))}${x.parts.length?` <br>Mit neuen Teilen: ${esc(x.parts.join(' '))}`:''}</p>`).join('')}<p class="fine">Aus Beschwerden, gemessenen Winkeln und Zielbereichen (Faustregeln).</p></div>`:''; })()}
   ${s.notes?`<div class="sec"><h3>Beobachtungen</h3><p>${esc(s.notes)}</p></div>`:''}
