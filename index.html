@@ -1357,7 +1357,7 @@ function permanentData(){
   const t='2026-10-26 00:30', m=(k,v,meth,src)=>({...mv(k,v,meth,src,null),time:t});
   return {
     customers:[{id:'p-dominik-boehm',name:'Dominik Böhm',email:'',phone:'',since:'2026-10-26',discipline:'Gravel',consent:true,body:{height:180,inseam:88,torso:null,arm:null,shoulder:null,footL:null,footR:null,sitBone:130},flex:{hamstring:'',hip:'',ankle:''},tags:['Fest gespeichert'],est:[]}],
-    bikes:[{id:'p-bike-grizl',customerId:'p-dominik-boehm',name:'Gravel',brand:'Canyon',model:'Grail CF 7',size:'M',year:null,type:'Gravel',frameNo:'',geo:{id:'canyon-grail-cf-sl-7-axs',size:'M'},pedal:'',saddle:'',km:null}],
+    bikes:[{id:'p-bike-grizl',customerId:'p-dominik-boehm',name:'Gravel',brand:'Canyon',model:'Grail CF 7',size:'M',year:null,type:'Gravel',cockpit:'unit',frameNo:'',geo:{id:'canyon-grail-cf-sl-7-axs',size:'M'},pedal:'',saddle:'',km:null}],
     sessions:[{id:'p-sess-dominik-1',customerId:'p-dominik-boehm',bikeId:'p-bike-grizl',date:'2026-10-26',time:'',type:'Erstfitting',status:'in Arbeit',fitter:'Dominik Böhm',version:1,
       anamnesis:{goal:'Beschwerden loswerden, Längere Touren, Neues Rad richtig einstellen',complaints:'Füße / Zehen, Nacken, Rücken',training:'unter 2 h pro Woche',experience:'1–3 Jahre',previous:'Fitting bei anderem Anbieter',limits:'Keine',comfort:'Ausgewogen'},
       before:{saddleHeight:m('saddleHeight',750,'Maßband','gemessen'),saddleSetback:m('saddleSetback',13,'Maßband','gemessen'),reach:m('reach',545,'Maßband','gemessen'),drop:m('drop',100,'Maßband','gemessen'),cleatFore:m('cleatFore',15,'Maßband','gemessen'),
@@ -1365,6 +1365,7 @@ function permanentData(){
       after:{},changes:[],notes:'',feedback:[],followUps:[],check:{pain:'nein',legLenL:92,legLenR:93,pelvis:'rechts höher',shoulder:'gerade',kneeTrackL:'gerade',kneeTrackR:'fällt nach innen',archL:'hoch',archR:'hoch',forefootL:'neutral',forefootR:'Außenkante höher',hamstring:10,hipFlexL:'frei',hipFlexR:'frei',ankleL:13.5,ankleR:13,sitBone:130},comp:[]}]
   };
 }
+function fixDominikCockpit(){ if(S.fixCockpit1) return; const c=S.customers.find(x=>x.name.trim().toLowerCase()==='dominik böhm'); if(c) S.bikes.filter(b=>b.customerId===c.id&&/Grail/.test(b.model||'')&&!b.cockpit).forEach(b=>{ b.cockpit='unit'; }); S.fixCockpit1=true; save(); }
 function fixDominikBike(){ if(S.fixGrail2) return; const c=S.customers.find(x=>x.name.trim().toLowerCase()==='dominik böhm'); if(c){ S.bikes.filter(b=>b.customerId===c.id&&/Grizl|Grail CF SL 7 AXS/.test(b.model||'')).forEach(b=>{ b.model='Grail CF 7'; b.geo={id:'canyon-grail-cf-sl-7-axs',size:b.size||'M'};
     S.sessions.filter(x=>x.bikeId===b.id).forEach(x=>{ const st=x.before.stemLength; if(st&&st.source==='vom Hersteller'&&Number(st.value)===80) st.value=70; }); }); }
   S.fixGrail2=true; save(); }
@@ -1385,7 +1386,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.21';
+const APP_VER = '2026-10-27.22';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1422,7 +1423,7 @@ const inAppBrowser=/iPhone|iPad/.test(navigator.userAgent)&&!/Safari\//.test(nav
 function audit(what,ref){ S.audit.unshift({time:nowStamp(),who:'Demo-Nutzer',what,ref:ref||''}); }
 S = load(); try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){} S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; }); S.geoCustom=S.geoCustom||[]; S.bikes.forEach(b=>{ if(!b.geo&&b.brand==='Canyon'&&b.model==='Endurace CF 7'&&b.size==='M') b.geo={id:'canyon-endurace-cf-7',size:'M'}; }); (function(){ const sd=seed(); sd.sessions.forEach(d=>{ const x=S.sessions.find(y=>y.id===d.id); if(x&&!Object.keys(x.check).length&&Object.keys(d.check||{}).length&&x.customerId===d.customerId){ x.check=d.check; x.comp=d.comp; } }); })();
 
-snapshotBeforeUpdate(); ensurePermanent(); fixDominikBike();
+snapshotBeforeUpdate(); ensurePermanent(); fixDominikBike(); fixDominikCockpit();
 const ui = {route:'dashboard', sess:'s4', sessTab:'anamnese', cust:null, search:'', bikeSearch:'', woFilter:'alle', invSearch:'', invCat:'alle', aiSess:'s1', aiOut:null, portalCust:'c1', motionSess:'s1', motionSide:'after', cmpA:'s1', cmpB:'s2', cmpChanged:true, fitView:'both', hwSel:'cleatlab', cleatSys:'SPD-SL', apptFilter:'heute', fuFilter:'offen'};
 
 const cust = id => S.customers.find(c=>c.id===id);
@@ -2339,7 +2340,8 @@ const COCKPITS=[
 const STEM_ANGLES=[-17,-10,-6,0,6,10,17];
 function cockpitNeed(s){
   const P=computePlan(s); const dr=P.steps.find(x=>x.key==='drop'&&!x.info), rr=P.steps.find(x=>x.key==='reach'&&!x.info);
-  return {dx:rr?rr.target-rr.from:0, dy:dr?-(dr.target-dr.from):0, P}; // dx: Lenker weiter weg (+), dy: Lenker höher (+)
+  const full=dr?-(dr.target-dr.from):0; const dy=Math.abs(full)>15?Math.sign(full)*15:full; // höchstens 15 mm pro Schritt
+  return {dx:rr?rr.target-rr.from:0, dy, full, P}; // dx: Lenker weiter weg (+), dy: Lenker höher (+)
 }
 function stemVec(L,a,ha){ const th=(a+(90-ha))*Math.PI/180; return {x:L*Math.cos(th),y:L*Math.sin(th)}; }
 function cockpitAdvice(s){
@@ -2375,17 +2377,24 @@ function cockpitHtml(s){
   const r=cockpitAdvice(s); if(r.need&&Array.isArray(r.need)) return `<div class="notice">${ic('info')}<div>Für die Cockpit-Empfehlung fehlt: ${esc(r.need.join(', '))}.</div></div>`;
   const n=v=>fmtNum(Math.round(v)); const sg=v=>(v>0?'+':'')+n(v);
   if(Math.abs(r.need.dx)<5&&Math.abs(r.need.dy)<5) return `<div class="cockpit"><h3>Cockpit</h3><p class="muted">Lenkerposition passt. Kein neues Cockpit nötig.</p></div>`;
+  const hTxt=dy=>Math.abs(dy)<3?`gleiche Höhe (rechnerisch ${sg(dy)} mm)`:`${sg(dy)} mm Höhe`;
+  const isUnit=b.cockpit==='unit';
   const spTxt=sp=>sp>0?`${sp} mm Spacer von oben unter den Vorbau`:sp<0?`${-sp} mm Spacer von unten nach oben`:'Spacer bleiben';
   return `<div class="cockpit"><h3>Cockpit-Empfehlung</h3>
-  <p class="muted" style="font-size:14px">Ziel: Lenker <b>${sg(r.need.dy)} mm ${r.need.dy>=0?'höher':'tiefer'}</b> und <b>${sg(r.need.dx)} mm ${r.need.dx>=0?'weiter weg':'näher'}</b>. Jetzt: Vorbau ${r.L0} mm, ${fmtNum(r.a0)}°${r.p.angKnown?'':' (Winkel angenommen)'}.</p>
-  ${(()=>{ const a=r.best[0], u=r.units[0]; const useA=!u||a.err+5<u.err; return `<div class="statusbox ok"><div><b>Empfehlung: ${useA?`Variante A – Vorbau ${a.L} mm, ${a.a>0?'+':''}${a.a}°`:`Variante B – ${esc(u.u.brand+' '+u.u.model)} ${u.L}×${u.w}`}</b><span class="muted" style="font-size:14px">${useA?(u?`Eine Einheit hat einen festen Winkel und bleibt hier ${n(u.err)} mm vom Ziel entfernt. Einzelteile treffen es besser.`:'Keine passende Einheit im Katalog.'):'Die Einheit trifft das Ziel fast so gut wie Einzelteile und ist aufgeräumter.'}</span></div></div>`; })()}
-  <div class="ck2"><div class="ckc"><h4>Variante A: Einzelteile</h4>
-    <ol>${r.best.map((x,i)=>`<li><b>Vorbau ${x.L} mm, ${x.a>0?'+':''}${x.a}°</b> · ${spTxt(x.sp)}<div class="sub">ergibt ${sg(x.dy)} mm Höhe, ${sg(x.dx)} mm Länge${x.err>8?` · noch ${n(x.err)} mm vom Ziel entfernt`:' · trifft das Ziel'}</div></li>`).join('')}</ol>
+  <p class="muted" style="font-size:14px">Ziel ${Math.abs(r.need.full||0)>15?'dieses Schritts':''}: Lenker <b>${sg(r.need.dy)} mm ${r.need.dy>=0?'höher':'tiefer'}</b>${Math.abs(r.need.full||0)>15?` (insgesamt ${sg(r.need.full)} mm, aber höchstens 15 mm pro Schritt: erst fahren, dann neu bewerten)`:''} und <b>${sg(r.need.dx)} mm ${r.need.dx>=0?'weiter weg':'näher'}</b>. Jetzt: Vorbau ${r.L0} mm, ${fmtNum(r.a0)}°${r.p.angKnown?'':' (Winkel angenommen)'}.</p>
+  <div class="row" style="gap:8px;align-items:center;margin:4px 0 8px"><span class="muted" style="font-size:13.5px">Am Rad jetzt:</span><div class="seg" role="group" aria-label="Cockpit am Rad"><button data-act="setCockpit" data-id="${b.id}" data-v="stem" aria-pressed="${!isUnit}">Vorbau + Lenker</button><button data-act="setCockpit" data-id="${b.id}" data-v="unit" aria-pressed="${isUnit}">Einheit (ein Teil)</button></div></div>
+  ${(()=>{ const a=r.best[0], u=r.units[0]; const useA=!u||(!isUnit&&a.err+5<u.err);
+    const reach=isUnit?(u?u.dy:0):Math.max(a?a.dy:0,u?u.dy:0); const short=r.need.dy-reach;
+    return `<div class="statusbox ok"><div><b>Empfehlung: ${useA?`Variante A – Vorbau ${a.L} mm, ${a.a>0?'+':''}${a.a}°`:`Variante B – ${esc(u.u.brand+' '+u.u.model)} ${u.L}×${u.w}`}</b><span class="muted" style="font-size:14px">${useA?(u?(isUnit?`Mit einer Einheit fehlen hier ${n(u.err)} mm. Dafür müsste das Cockpit auf Vorbau + Lenker umgebaut werden (aufwendig bei innen verlegten Leitungen).`:`Eine Einheit hat einen festen Winkel und bleibt hier ${n(u.err)} mm vom Ziel entfernt. Einzelteile treffen es besser.`):'Keine passende Einheit im Katalog.'):(isUnit?`Gleiche Bauart wie jetzt: kein Umbau der Leitungen, nur tauschen.${a&&a.err+5<u.err?` Mit Umbau auf Vorbau + Lenker (Variante A) ginge es genauer: ${hTxt(a.dy)}.`:''}`:'Die Einheit trifft das Ziel fast so gut wie Einzelteile und ist aufgeräumter.')}</span></div></div>
+    ${short>8&&r.need.dy>0?`<div class="notice warn" style="font-size:13.5px">${ic('warn')}<div><b>So viel höher geht mit diesem Cockpit nicht.</b> Erreichbar sind etwa ${sg(reach)} mm, gewünscht ${sg(r.need.dy)} mm. Mehr Höhe nur über zusätzliche Spacer (Gabelschaft muss lang genug sein, beim Händler prüfen) oder einen Lenker mit Rise. Sonst ist der Rahmen für diese Position sehr tief. Tipp: erst den ersten Schritt umsetzen, 2–3 Ausfahrten fahren, dann neu bewerten.</div></div>`:''}`; })()}
+  ${r.units.some(x=>x.L<r.L0&&Math.abs(x.dy)<3)?`<p class="faint" style="font-size:12.5px;margin:0">Warum ein kürzeres Cockpit rechnerisch 1–2 mm tiefer ist: Der Gabelschaft steht schräg, der Vorbau zeigt dadurch leicht nach oben. Kürzer heißt minimal tiefer. Spürbar ist das nicht.</p>`:''}
+  <div class="ck2"><div class="ckc"><h4>Variante A: Einzelteile${isUnit?' (Umbau)':''}</h4>
+    <ol>${r.best.map((x,i)=>`<li><b>Vorbau ${x.L} mm, ${x.a>0?'+':''}${x.a}°</b> · ${spTxt(x.sp)}<div class="sub">ergibt ${hTxt(x.dy)}, ${sg(x.dx)} mm Länge${x.err>8?` · noch ${n(x.err)} mm vom Ziel entfernt`:' · trifft das Ziel'}</div></li>`).join('')}</ol>
     <div class="ckparts"><div><span>Lenkerbreite</span><b>${r.width.lo}–${r.width.hi} mm</b><i>ideal ${r.width.ideal} mm · Schulterbreite ${r.width.shw} mm${r.width.est?' (geschätzt – messen!)':''}${b.type==='Gravel'?' · Gravel: mit Flare 12–16°':''}</i></div>
     <div><span>Lenker-Reach</span><b>${esc(r.barReach.split(':')[0])}</b><i>${esc(r.barReach.split(':')[1]||'')}</i></div>
     <div><span>Lenker-Drop</span><b>${esc(r.barDrop.split(':')[0])}</b><i>${esc(r.barDrop.split(':')[1]||'')}${r.barDrop.startsWith('flach')?' · Unterlenker gut erreichbar trotz eingeschränkter Beweglichkeit':''}</i></div></div></div>
   <div class="ckc"><h4>Variante B: Lenker-Vorbau-Einheit</h4>
-    ${r.units.length?`<ol>${r.units.map(x=>`<li><b>${esc(x.u.brand)} ${esc(x.u.model)}</b> · ${x.L} mm × ${x.w} mm${x.u.ang!=null?`, ${x.u.ang}°`:''}<div class="sub">${spTxt(x.sp)} · ergibt ${sg(x.dy)} mm Höhe, ${sg(x.dx)} mm Länge${x.err>8?` · noch ${n(x.err)} mm vom Ziel`:''}${x.u.reach?` · Reach ${x.u.reach}, Drop ${x.u.drop} mm`:''}${x.u.flare?`, Flare ${x.u.flare}°`:''}</div><div class="sub">${x.u.ang==null?'Winkel nicht angegeben, −6° angenommen. ':''}${esc(x.u.note)} <a href="${esc(x.u.src)}" target="_blank" rel="noopener">Quelle</a></div></li>`).join('')}</ol>`:'<p class="muted">Keine passende Einheit im Katalog.</p>'}
+    ${r.units.length?`<ol>${r.units.map(x=>`<li><b>${esc(x.u.brand)} ${esc(x.u.model)}</b> · ${x.L} mm × ${x.w} mm${x.u.ang!=null?`, ${x.u.ang}°`:''}<div class="sub">${spTxt(x.sp)} · ergibt ${hTxt(x.dy)}, ${sg(x.dx)} mm Länge${x.err>8?` · noch ${n(x.err)} mm vom Ziel`:''}${x.u.reach?` · Reach ${x.u.reach}, Drop ${x.u.drop} mm`:''}${x.u.flare?`, Flare ${x.u.flare}°`:''}</div><div class="sub">${x.u.ang==null?'Winkel nicht angegeben, −6° angenommen. ':''}${esc(x.u.note)} <a href="${esc(x.u.src)}" target="_blank" rel="noopener">Quelle</a></div></li>`).join('')}</ol>`:'<p class="muted">Keine passende Einheit im Katalog.</p>'}
     <div class="notice warn" style="font-size:13.5px">${ic('warn')}<div>Einheiten passen nicht an jeden Rahmen (Gabelschaft, Steuersatz-Abdeckung, Leitungsführung). Vor dem Kauf beim Hersteller „Kompatibilität prüfen“. Längen nur in festen Größen, Feineinstellung über Spacer.</div></div></div></div>
   <p class="faint" style="font-size:12.5px">Berechnung über Lenkwinkel ${fmtNum(r.A.ha)}° und Vorbauwinkel. Katalog: ${COCKPITS.length} Einheiten (Stand 27.10.2026). Preise und Verfügbarkeit beim Händler prüfen.</p></div>`;
 }
@@ -3686,6 +3695,7 @@ const ACT = {
   stInfo(el){ const k=STATUS[el.dataset.k]; toast(`${k[1]}: ${k[2]}`); },
   theme(){ theme=theme==='dark'?'light':'dark'; try{localStorage.setItem('fitframe-theme',theme);}catch(e){} applyTheme(); if(ui.route==='mehr') render(); },
   setTheme(el){ theme=el.dataset.v; try{localStorage.setItem('fitframe-theme',theme);}catch(e){} applyTheme(); render(); },
+  setCockpit(el){ const b=bike(el.dataset.id); if(!b) return; b.cockpit=el.dataset.v; save(); render(); },
   measureJump(el){ ui.sessTab='ausgang'; ui.editMaker=null; ui.wIdx=MEASURE_NOW.indexOf(el.dataset.k); render(); window.scrollTo({top:0}); },
   sessTab(el){ ui.sessTab=el.dataset.v; ui.editMaker=null; ui.wIdx=null; if(el.dataset.v==='ausgang'){ const s=sess(ui.sess); const n=s?applyMaker(s):0; if(n){ save(); setTimeout(()=>toast(`${n} Serienwerte vom Hersteller übernommen – bitte kurz prüfen`),60); } } render(); },
   applyMaker(el){ const s=sess(el.dataset.id); const n=applyMaker(s); save(); render(); toast(n?`${n} Serienwerte übernommen`:'Keine Herstellerwerte vorhanden'); },
@@ -3710,7 +3720,7 @@ const ACT = {
     <div class="field" id="nb_gs_wrap" hidden><label for="nb_gs">Rahmengröße</label><select class="input" id="nb_gs" name="geoSize"></select></div>
     <div class="field"><label for="nb_b">Marke</label><input class="input" id="nb_b" name="brand" required></div><div class="field"><label for="nb_m">Modell</label><input class="input" id="nb_m" name="model" required></div>
     <div class="field"><label for="nb_t">Typ</label><select class="input" id="nb_t" name="type">${opts(['Rennrad','Gravel','MTB','Triathlon','E-Bike','Trekking'])}</select></div><div class="field" id="nb_s_wrap"><label for="nb_s">Größe</label><input class="input" id="nb_s" name="size"></div>
-    <div class="field"><label for="nb_p">Pedalsystem</label><select class="input" id="nb_p" name="pedal">${opts(['Shimano SPD-SL','Shimano SPD','Look Keo','Wahoo Speedplay','Plattform'])}</select></div><div class="field"><label for="nb_f">Rahmennummer</label><input class="input mono" id="nb_f" name="frameNo" placeholder="steht meist unten am Tretlager"></div>
+    <div class="field"><label for="nb_ck">Cockpit</label><select class="input" id="nb_ck" name="cockpit"><option value="stem">Vorbau + Lenker</option><option value="unit">Einheit (ein Teil)</option></select></div><div class="field"><label for="nb_p">Pedalsystem</label><select class="input" id="nb_p" name="pedal">${opts(['Shimano SPD-SL','Shimano SPD','Look Keo','Wahoo Speedplay','Plattform'])}</select></div><div class="field"><label for="nb_f">Rahmennummer</label><input class="input mono" id="nb_f" name="frameNo" placeholder="steht meist unten am Tretlager"></div>
     <div class="wide notice">${ic('info')}Modell nicht in der Liste? Leer lassen und Marke und Modell selbst eintragen. Die Geometrie kannst du später in der Geometrie-Bibliothek ergänzen.</div>
     <div class="wide"><button class="btn primary" type="submit">Fahrrad speichern</button></div></form>`); },
   bikeGeo(el){ const b=bike(el.dataset.id); openDrawer('Geometrie zuordnen',`<form class="form" data-form="bikeGeo" data-id="${b.id}"><div class="field wide"><label for="bg_geo">Modell</label><select class="input" id="bg_geo" name="geo" data-change="geoPick" data-size="bg_gs" required><option value="">Modell wählen …</option>${geoOptions(b.geo&&b.geo.id)}</select></div><div class="field" id="bg_gs_wrap" ${b.geo?'':'hidden'}><label for="bg_gs">Rahmengröße</label><select class="input" id="bg_gs" name="geoSize">${b.geo?geoSizeOptions(b.geo.id,b.geo.size):''}</select></div><div class="wide row"><button class="btn primary" type="submit">Zuordnen</button><button class="btn" type="button" data-nav="geometrie">Modell fehlt? Zur Bibliothek</button></div></form>`); },
@@ -3836,7 +3846,7 @@ const FORMS = {
   message(f,data){ const t=String(data.get('text')).trim(); if(!t) return; (S.messages[f.dataset.id]=S.messages[f.dataset.id]||[]).push({from:'Kunde',time:nowStamp(),text:t}); save(); render(); toast('Nachricht gespeichert (kein echter Versand)'); },
   customer(f,data){ const id=uid('c'); const num=k=>{const v=data.get(k);return v===''||v===null?null:Number(v);}; const c={id,name:data.get('name').trim(),email:data.get('email'),phone:data.get('phone'),since:today(),discipline:data.get('discipline'),consent:data.get('consent')==='on',body:{height:num('height'),inseam:num('inseam'),torso:num('torso'),arm:num('arm'),shoulder:num('shoulder'),footL:num('footR'),footR:num('footR'),sitBone:null},flex:{hamstring:data.get('hamstring'),hip:'',ankle:''},tags:['Neu'],est:[]};
     if(data.get('est')==='on') estimateBody(c); S.customers.push(c); audit(`Kunde angelegt: ${c.name}`); save(); render(); customerDrawer(id); toast('Kunde angelegt – jetzt Fahrrad anlegen'); },
-  bike(f,data){ const id=uid('b'); const cid=f.dataset.cid; const gid=data.get('geo'), gs=data.get('geoSize'); S.bikes.push({id,customerId:cid,name:data.get('model'),brand:data.get('brand'),model:data.get('model'),geo:gid&&gs?{id:gid,size:gs}:null,size:gid&&gs?gs:data.get('size'),year:new Date().getFullYear(),type:data.get('type'),frameNo:data.get('frameNo')||'–',pedal:data.get('pedal'),saddle:'–',km:0}); audit(`Fahrrad angelegt: ${data.get('brand')} ${data.get('model')}`); save(); customerDrawer(cid); render(); toast('Fahrrad angelegt'); },
+  bike(f,data){ const id=uid('b'); const cid=f.dataset.cid; const gid=data.get('geo'), gs=data.get('geoSize'); S.bikes.push({id,customerId:cid,name:data.get('model'),brand:data.get('brand'),model:data.get('model'),geo:gid&&gs?{id:gid,size:gs}:null,size:gid&&gs?gs:data.get('size'),year:new Date().getFullYear(),type:data.get('type'),cockpit:data.get('cockpit')||'stem',frameNo:data.get('frameNo')||'–',pedal:data.get('pedal'),saddle:'–',km:0}); audit(`Fahrrad angelegt: ${data.get('brand')} ${data.get('model')}`); save(); customerDrawer(cid); render(); toast('Fahrrad angelegt'); },
   woPos(f,data){ const w=S.workshop.find(x=>x.id===f.dataset.id); const price=Number(data.get('price')), qty=Number(data.get('qty')); if(!(price>=0)||!(qty>0)){toast('Menge und Preis prüfen',true);return;} w.positions.push({t:data.get('t'),kind:data.get('kind'),qty,price}); if(w.status==='Angenommen') w.status='Kostenvoranschlag'; w.log.push({time:nowStamp(),text:`Position hinzugefügt: ${data.get('t')}`}); save(); woDrawer(w.id); render(); },
   newWO(f,data){ const b=bike(data.get('bid')); const n=Math.max(...S.workshop.map(w=>Number(w.id.split('-')[1])))+1; const id='WO-'+n; S.workshop.unshift({id,customerId:b.customerId,bikeId:b.id,title:data.get('title'),status:'Angenommen',created:today(),due:data.get('due'),mechanic:data.get('mechanic'),positions:[],log:[{time:nowStamp(),text:'Auftrag angenommen'}],approval:null}); audit(`Werkstattauftrag ${id} angelegt`); save(); render(); woDrawer(id); toast(`${id} angelegt`); },
   item(f,data){ const sku=f.dataset.sku; const rec={sku:data.get('sku').trim(),name:data.get('name').trim(),cat:data.get('cat'),loc:data.get('loc'),stock:Number(data.get('stock')),min:Number(data.get('min')),price:Number(data.get('price'))};
