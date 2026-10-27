@@ -639,7 +639,7 @@ const IL = (()=>{
 const BODY_RANGE = {
   height:{lo:120,hi:215,unit:'cm',basis:'Erwachsene'},
   inseam:{r:[0.43,0.50],unit:'cm',basis:'Schrittlänge etwa 43–50 % der Körpergröße'},
-  torso:{r:[0.26,0.34],unit:'cm',basis:'Rumpf etwa 26–34 % der Körpergröße'},
+  torso:{r:[0.26,0.37],unit:'cm',basis:'Rumpf etwa 26–37 % der Körpergröße'},
   arm:{r:[0.32,0.41],unit:'cm',basis:'Arm etwa 32–41 % der Körpergröße'},
   shoulder:{r:[0.20,0.27],unit:'cm',basis:'Schulterbreite etwa 20–27 % der Körpergröße'},
   footL:{r:[1.38,1.65],unit:'mm',basis:'Fuß etwa 14–16,5 % der Körpergröße'},
@@ -1125,7 +1125,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.6';
+const APP_VER = '2026-10-27.8';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1262,7 +1262,7 @@ const opts = (arr,sel) => arr.map(a=>{const [v,l]=Array.isArray(a)?a:[a,a]; retu
 
 /* ---------- Quality (FitQuality) ---------- */
 function quality(s){
-  const out=[];
+  const out=[]; { const n=Object.values(s.after).filter(a=>/Eingestellt nach Plan|Berechnet/.test(a.method)).length; if(n) out.push(['info',`${n} Wert${n>1?'e':''} nach Plan eingestellt oder berechnet – zum Abschluss am Rad nachmessen`,'Ergebnis']); }
   const c=cust(s.customerId);
   if(!c.consent) out.push(['bad','Einwilligung zur Datenverarbeitung fehlt','Vor Erfassung von Beschwerden einholen']);
   else if(c.consentInfo&&!c.consentInfo.health&&(s.anamnesis.complaints||Object.keys(s.check||{}).length)) out.push(['warn','Gesundheitsangaben gespeichert, aber keine Zustimmung dafür','Einwilligung ergänzen oder Angaben entfernen']);
@@ -1276,7 +1276,7 @@ function quality(s){
     if(m.source==='gemessen' && (m.unc===null||m.unc===undefined) && !/Herstellerangabe/.test(m.method)) out.push(['info',`Messunsicherheit fehlt: ${MK[m.key].label}`,m.method]);
     if(/unkalibriert/.test(m.method)) out.push(['warn',`${MK[m.key].label}: Video nicht kalibriert, Winkel nur als Orientierung`,m.method]);
   }));
-  Object.keys(s.after).forEach(k=>{ const b=s.before[k], a=s.after[k]; if(b && a && b.method!==a.method) out.push(['warn',`${MK[k].label}: Vorher und nachher mit unterschiedlicher Methode gemessen`,`${b.method} → ${a.method}`]); });
+  Object.keys(s.after).forEach(k=>{ const b=s.before[k], a=s.after[k]; if(b && a && b.method!==a.method && !/Eingestellt nach Plan|Berechnet/.test(a.method)) out.push(['warn',`${MK[k].label}: Vorher und nachher mit unterschiedlicher Methode gemessen`,`${b.method} → ${a.method}`]); });
   if(s.status!=='geplant'&&!Object.keys(s.check||{}).length) out.push(['warn','Körpercheck nicht durchgeführt','Schritt Körpercheck']);
   checkFindings(s).filter(x=>x.cat==='arzt').forEach(x=>out.push(['bad',`${x.title}: Fachperson hinzuziehen`,'Körpercheck']));
   BODY.forEach(([k,l])=>{ const rg=rangeFor(BODY_RANGE[k],c); const v=c.body[k]; if(rg&&rg.lo!=null&&v!=null&&v!==''&&(v<rg.lo||v>rg.hi)) out.push(['warn',`${l} ${fmtNum(v)} liegt außerhalb von ${fmtNum(rg.lo)}–${fmtNum(rg.hi)} ${rg.unit}: nachmessen`,'Körpermaße']); });
@@ -1602,7 +1602,7 @@ SESSTAB.koerper = (s,c) => {
 function ckWizard(s,c,items,i){
   const it=items[i]; let fields='', auto=false;
   if(it.k==='grund'){
-    fields=[['height','Körpergröße','cm',1],['inseam','Schrittlänge','cm',1],['torso','Rumpflänge (optional)','cm',0],['arm','Armlänge (optional)','cm',0]].map(([k,l,u,req])=>{ const id='g_'+k, rg=rangeFor(BODY_RANGE[k],c);
+    fields=[['height','Körpergröße','cm',1],['inseam','Schrittlänge','cm',1],['torso','Rumpflänge (optional)','cm',0],['arm','Armlänge (optional)','cm',0],['shoulder','Schulterbreite (optional, für die Lenkerbreite)','cm',0]].map(([k,l,u,req])=>{ const id='g_'+k, rg=rangeFor(BODY_RANGE[k],c);
       return `<div class="field"><label for="${id}">${l} in ${u}</label><input class="input num" id="${id}" name="${k}" type="number" step="0.5" inputmode="decimal" value="${c.body[k]??''}" ${req?'required':''} ${rangeAttr(rg,id)}>${rangeHint(rg,id,c.body[k])}</div>`; }).join('');
   } else {
     auto=it.type!=='num'&&!it.side;
@@ -1745,7 +1745,7 @@ function targetFit(s){
   const c=cust(s.customerId), b=bike(s.bikeId); if(!c||!b) return {rows:[]};
   const e={...s.before,...s.after}; const cur=k=>e[k]?Number(e[k].value):null; const A=bikeAngles(s);
   const I=Number(c.body.inseam)||null, ins=bodyVal(c,'inseam'); const comfort=s.anamnesis.comfort||'';
-  const ham=Number((s.check&&s.check.hamstring)||0), stiff=ham>20||/eingeschränkt/.test(c.flex.hamstring||'');
+  const ham=Number((s.check&&s.check.hamstring)||0), stiff=ham>20||(!ham&&/eingeschränkt/.test(c.flex.hamstring||'')), mild=!stiff&&ham>10;
   const rows=[]; const R=(key,lo,hi,basis,need)=>{ const v=cur(key); const diff=v==null||lo==null?null:v<lo?Math.round((lo-v)*10)/10:v>hi?Math.round((hi-v)*10)/10:0; rows.push({key,lo:lo==null?null:Math.round(lo*10)/10,hi:hi==null?null:Math.round(hi*10)/10,cur:v,diff,basis,need}); };
   const kb=e.kneeBDC; if(kb&&cur('saddleHeight')!=null){ const a=saddleAdvice(s,Number(kb.value)); const h=cur('saddleHeight'); R('saddleHeight',h+(140-kb.value)/a.slope,h+(150-kb.value)/a.slope,`gemessener Kniewinkel ${fmtNum(kb.value)}° (Ziel 140–150°)`); }
   else if(I) R('saddleHeight',I*10*0.865,I*10*0.895,`86,5–89,5 % der Schrittlänge (${fmtNum(I)} cm${ins.src==='eingetragen'?'':', geschätzt'})`); else R('saddleHeight',null,null,'','Schrittlänge');
@@ -1756,8 +1756,8 @@ function targetFit(s){
   const tor=Number(c.body.torso)||null, arm=Number(c.body.arm)||null, est=c.est||[];
   if(tor&&arm&&!est.includes('torso')&&!est.includes('arm')){ const k=(REACH_K[b.type]||.44)-(/Komfort/.test(comfort)?.02:/Leistung/.test(comfort)?-.01:0); R('reach',(tor+arm)*10*(k-.035),(tor+arm)*10*(k+.035),`Rumpf ${fmtNum(tor)} + Arm ${fmtNum(arm)} cm, Radtyp ${b.type}`); }
   else R('reach',null,null,'','Rumpf- und Armlänge');
-  let [dl,dh]=DROP_RANGE[b.type]||[0,90]; if(/Komfort/.test(comfort)) dh-=20; if(/Leistung|Aero/.test(comfort)) dl+=10; if(stiff) dh=Math.min(dh,Math.round(dl+(dh-dl)*0.5));
-  R('drop',dl,dh,`Radtyp ${b.type}${comfort?', '+comfort:''}${stiff?', eingeschränkte Beweglichkeit':''}`);
+  let [dl,dh]=DROP_RANGE[b.type]||[0,90]; if(/Komfort/.test(comfort)) dh-=20; if(/Leistung|Aero/.test(comfort)) dl+=10; if(stiff) dh=Math.min(dh,Math.round(dl+(dh-dl)*0.5)); else if(mild) dh=Math.min(dh,Math.round(dl+(dh-dl)*0.75));
+  R('drop',dl,dh,`Radtyp ${b.type}${comfort?', '+comfort:''}${stiff?', deutlich eingeschränkte Beweglichkeit':mild?', leicht eingeschränkte Beweglichkeit':''}`);
   if(I){ const t=I<78?165:I<84?170:I<90?172.5:175; R('crankLength',t-2.5,t+2.5,`Schrittlänge ${fmtNum(I)} cm`); }
   R('cleatFore',0,10,'Pedalachse 0–10 mm hinter dem Großzehengrundgelenk');
   return {rows,ins:ins.v,insSrc:ins.src,type:b.type,stiff};
@@ -1797,11 +1797,11 @@ function realize(s,k,want,A){
     const flip=p.L?2*p.L*Math.sin(Math.abs(p.ang)*Math.PI/180):0; const flipDir=p.ang<0?-1:1; // Umdrehen: abfallender Vorbau -> Lenker höher
     const cands=[{d:0,a:[]}];
     const maxLower=p.under??0, maxRaise=p.above??0;
-    for(let m=5;m<=Math.max(maxLower,maxRaise);m+=5){ if(m<=maxLower) cands.push({d:m,a:[{t:`${m} mm Spacer von unter dem Vorbau nach oben setzen.`}]}); if(m<=maxRaise) cands.push({d:-m,a:[{t:`${m} mm Spacer von oben unter den Vorbau setzen.`}]}); }
-    if(flip>=8){ cands.slice().forEach(c=>cands.push({d:c.d+flipDir*flip,a:[...c.a,{t:`Vorbau umdrehen (${fmtNum(p.ang)}° → ${fmtNum(-p.ang)}°): Lenker etwa ${r(flip)} mm ${flipDir<0?'höher':'tiefer'}.`}]})); }
+    for(let m=5;m<=Math.max(maxLower,maxRaise);m+=5){ if(m<=maxLower) cands.push({d:m,sp:-m,a:[{t:`${m} mm Spacer von unter dem Vorbau nach oben setzen.`}]}); if(m<=maxRaise) cands.push({d:-m,sp:m,a:[{t:`${m} mm Spacer von oben unter den Vorbau setzen.`}]}); }
+    if(flip>=8){ cands.slice().forEach(c=>cands.push({d:c.d+flipDir*flip,sp:c.sp||0,flip:true,a:[...c.a,{t:`Vorbau umdrehen (${fmtNum(p.ang)}° → ${fmtNum(-p.ang)}°): Lenker etwa ${r(flip)} mm ${flipDir<0?'höher':'tiefer'}.`}]})); }
     const ok=cands.filter(c=>Math.sign(c.d)===Math.sign(w)&&Math.abs(c.d)<=Math.abs(w)*1.5+3);
     const best=ok.sort((a,b)=>Math.abs(w-a.d)-Math.abs(w-b.d)||a.a.length-b.a.length)[0];
-    if(best){ out.d=r(best.d); out.acts=best.a; }
+    if(best){ out.d=r(best.d); out.acts=best.a; out.parts={}; if(best.sp){ out.parts.spacer=(p.under||0)+best.sp; out.parts.spacerAbove=(p.above||0)-best.sp; } if(best.flip) out.parts.stemAngle=-p.ang; }
     if(p.under==null) out.need.push('Spacer unter dem Vorbau'); if(p.above==null) out.need.push('Spacer über dem Vorbau'); if(!p.L) out.need.push('Vorbaulänge');
     out.left=r(w-out.d);
     if(Math.abs(out.left)>=5){ const L=p.L||100, curAng=(out.acts.some(a=>/umdrehen/.test(a.t))?-p.ang:p.ang), tgtAng=w<0?17:-17; const gain=Math.round(Math.abs(L*(Math.sin(tgtAng*Math.PI/180)-Math.sin(curAng*Math.PI/180))));
@@ -1814,7 +1814,7 @@ function realize(s,k,want,A){
     if(!p.L){ out.need.push('Vorbaulänge'); out.acts.push({t:'Vorbaulänge eintragen, dann rechnet FitFrame die passende Vorbaulänge aus.',info:1}); return out; }
     const lo=p.mtb?30:60, hi=p.mtb?80:140; const nl=Math.max(lo,Math.min(hi,Math.round((p.L+w)/10)*10)); const d=nl-p.L;
     if(!d){ out.acts.push({t:`Nächster Vorbau wäre gleich lang (${p.L} mm).`,info:1}); return out; }
-    out.d=d; out.acts.push({t:`Vorbau ${p.L} → ${nl} mm.`,part:1});
+    out.d=d; out.parts={stemLength:nl}; out.acts.push({t:`Vorbau ${p.L} → ${nl} mm.`,part:1});
     const rest=r(w-d); if(p.drops&&Math.abs(rest)>=3&&Math.abs(rest)<=10){ out.acts.push({t:`Feinabstimmung: Bremsgriffe ${Math.abs(rest)} mm ${rest>0?'nach vorn':'nach hinten'}.`}); out.d+=rest; }
     if(p.drops) out.alt.push({t:`Ohne neues Teil: Bremsgriffe und Lenker drehen bringen höchstens etwa 10 mm.`});
     if(nl===lo||nl===hi) out.alt.push({t:'Vorbau schon am Rand des Üblichen: Rahmengröße prüfen (Größe & Sattel → Rahmen-Finder).',info:1});
@@ -1837,7 +1837,7 @@ function computePlan(s){
     if(k==='saddleHeight'){ if(Math.abs(hOffset)>=1.5&&!why.length) why.push('Ausgleich für die Cleat-Änderung (Faustregel: halbe Verschiebung).'); d+=hOffset; }
     if(Math.abs(d)<1.5){ if(why.length) steps.push({key:k,want:0,d:0,from:cur[k],to:cur[k],target:cur[k],why:why.join(' '),acts:[],alt:[],need:[],info:true}); return; }
     const rz=realize(s,k,d,A);
-    steps.push({key:k,want:Math.round(d),d:rz.d,from:cur[k],to:cur[k]+rz.d,target:cur[k]+d,why:order+' '+why.join(' '),acts:rz.acts,alt:rz.alt,need:rz.need,left:rz.left,effects:rz.d?sideEffects(s,k,rz.d):[]});
+    steps.push({key:k,want:Math.round(d),d:rz.d,from:cur[k],to:cur[k]+rz.d,target:cur[k]+d,why:order+' '+why.join(' '),parts:rz.parts||null,acts:rz.acts,alt:rz.alt,need:rz.need,left:rz.left,effects:rz.d?sideEffects(s,k,rz.d):[]});
     if(!rz.d) return; const dd=rz.d; cur[k]+=dd;
     sideEffects(s,k,dd).filter(e=>e.delta!=null&&MK[e.key]).forEach(e=>{ if(e.comp){ if(e.key==='saddleHeight'&&k==='cleatFore') hOffset+=e.delta; return; } if(cur[e.key]!=null) cur[e.key]+=e.delta; });
     if(k==='saddleSetback'){ const comp=Math.round(-dd*A.cs); if(Math.abs(comp)>=2){ steps.push({key:'saddleHeight',want:comp,d:comp,from:cur.saddleHeight,to:cur.saddleHeight+comp,target:cur.saddleHeight+comp,why:'Ausgleich zum Versatz: Die Beinstreckung soll gleich bleiben.',acts:[{t:`Sattelstütze ${Math.abs(comp)} mm ${comp>0?'herausziehen':'versenken'}.`}],alt:[],need:[],comp:true,effects:[]}); cur.saddleHeight+=comp; if(cur.drop!=null) cur.drop+=comp*A.ss; } }
@@ -1849,8 +1849,8 @@ function hoodTarget(s){
   const b=bike(s.bikeId); if(!b||!['Rennrad','Gravel'].includes(b.type)) return null;
   const e={...s.before,...s.after}; const v=k=>e[k]?Number(e[k].value):null; const A=bikeAngles(s);
   const g=b.geo&&geoById(b.geo.id); const gr=g&&geoRow(g,b.geo.size)||{};
-  const hd=v('hoodDrop'), h=v('saddleHeight'); if(h==null) return {need:['Sattelhöhe']};
-  let bb=v('bbHeight'), bbEst=false; if(bb==null){ bb=(b.type==='Gravel'?350:338)-(gr.bbDrop||72); bbEst=true; }
+  const h=v('saddleHeight'); if(h==null) return {need:['Sattelhöhe']}; let hd=v('hoodDrop'); if(hd==null&&s.before.saddleFloor&&s.before.hoodFloor){ hd=Number(s.before.saddleFloor.value)-Number(s.before.hoodFloor.value); if(s.after.drop&&s.before.drop) hd+=Number(s.after.drop.value)-Number(s.before.drop.value); }
+  let bb=s.before.bbHeight?Number(s.before.bbHeight.value):null, bbEst=false; if(bb==null){ bb=(b.type==='Gravel'?350:338)-(gr.bbDrop||72); bbEst=true; }
   const P=computePlan(s); const hs=P.steps.filter(x=>x.key==='saddleHeight'&&x.d).reduce((a,x)=>a+x.d,0);
   const dropStep=P.steps.find(x=>x.key==='drop'&&!x.info);
   const saddleNow=bb+h*A.ss, saddleNew=bb+(h+hs)*A.ss;
@@ -1977,7 +1977,7 @@ function glanceHtml(s){
 }
 function freezePlan(s){ const P=computePlan(s); const cards=[];
   if(P.body.length) cards.push({type:'body',items:P.body.map(f=>({title:f.title,text:f.text,arzt:f.cat==='arzt'}))});
-  P.steps.filter(x=>!x.info&&x.d).forEach(x=>cards.push({type:'step',key:x.key,from:x.from,to:Math.round(x.to*10)/10,target:x.target,d:x.d,why:x.why,acts:x.acts,alt:x.alt,need:x.need,comp:!!x.comp,effects:(x.effects||[]).filter(e=>e.delta!=null&&MK[e.key]&&!e.comp).map(e=>({key:e.key,delta:e.delta}))}));
+  P.steps.filter(x=>!x.info&&x.d).forEach(x=>cards.push({type:'step',key:x.key,from:x.from,to:Math.round(x.to*10)/10,target:x.target,d:x.d,why:x.why,acts:x.acts,alt:x.alt,need:x.need,comp:!!x.comp,parts:x.parts||null,effects:(x.effects||[]).filter(e=>e.delta!=null&&MK[e.key]&&!e.comp).map(e=>({key:e.key,delta:e.delta}))}));
   P.steps.filter(x=>!x.info&&!x.d).forEach(x=>cards.push({type:'step',key:x.key,from:x.from,to:x.from,target:x.target,d:0,why:x.why,acts:x.acts,alt:x.alt,need:x.need,blocked:true}));
   s.plan={created:nowStamp(),cards,idx:0,res:{}}; }
 function stepCard(s,c,i,n){
@@ -2071,8 +2071,16 @@ function cockpitHtml(s){
 
 /* ---------- Koordinaten vom Tretlager, Querprüfung und 1:1-Übertragung ---------- */
 const MGROUPS=[['Grundmessung',['saddleHeight','saddleSetback','reach','drop','cleatFore']],['Sattel und Cockpit',['saddleTilt','spacer','spacerAbove','stemAngle']],['Koordinaten für die 1:1-Übertragung',['bbHeight','saddleFloor','barFloor','barX','hoodFloor','hoodX']]];
-function coords(s){ // X: + = vor dem Tretlager, Y: + = über dem Tretlager. Gemessene Werte haben Vorrang, sonst berechnet.
-  const e={...s.before,...s.after}; const v=k=>e[k]?Number(e[k].value):null; const A=bikeAngles(s);
+function coords(s){ // Endposition: gemessene Koordinaten (vorher) plus Änderungen aus dem Fitting
+  const o=coords0(s,s.before); const B=s.before, E={...s.before,...s.after}; const v=(r,k)=>r[k]?Number(r[k].value):null; const A=bikeAngles(s);
+  const ch=k=>v(B,k)!=null&&v(E,k)!=null&&Math.abs(v(E,k)-v(B,k))>0.05; if(!['saddleHeight','saddleSetback','reach','drop'].some(ch)) return o;
+  const dh=ch('saddleHeight')?v(E,'saddleHeight')-v(B,'saddleHeight'):0;
+  if(o.SY!=null) o.SY+=dh*A.ss; if(v(E,'saddleSetback')!=null) o.SX=-v(E,'saddleSetback');
+  if(o.BY!=null){ const BY0=o.BY, BX0=o.BX; if(ch('drop')||dh) o.BY=o.SY-v(E,'drop')-16; if(ch('reach')||ch('saddleSetback')||ch('drop')||dh){ const dy=o.SY-o.BY; o.BX=o.SX+Math.sqrt(Math.max(v(E,'reach')**2-dy*dy,0)); }
+    if(o.HY!=null){ o.HY+=o.BY-BY0; o.HX+=o.BX-BX0; } }
+  Object.keys(o.src).forEach(k=>o.src[k]=o.src[k]+' + Änderungen berechnet'); return o; }
+function coords0(s,rec){ // X: + = vor dem Tretlager, Y: + = über dem Tretlager. Gemessene Werte haben Vorrang, sonst berechnet.
+  const e=rec; const v=k=>e[k]?Number(e[k].value):null; const A=bikeAngles(s);
   const bb=v('bbHeight'), h=v('saddleHeight'), sb=v('saddleSetback'), r=v('reach'), d=v('drop');
   const o={src:{}};
   if(bb!=null&&v('saddleFloor')!=null){ o.SY=v('saddleFloor')-bb; o.src.S='gemessen'; } else if(h!=null){ o.SY=h*A.ss; o.src.S='berechnet'; }
@@ -2083,7 +2091,7 @@ function coords(s){ // X: + = vor dem Tretlager, Y: + = über dem Tretlager. Gem
   return o;
 }
 function coordChecks(s){
-  const e={...s.before,...s.after}; const v=k=>e[k]?Number(e[k].value):null; const A=bikeAngles(s); const out=[];
+  const e={...s.before}; const v=k=>e[k]?Number(e[k].value):null; const A=bikeAngles(s); const out=[];
   const add=(lvl,title,text)=>out.push({lvl,title,text,go:'ausgang'});
   const sf=v('saddleFloor'), bf=v('barFloor'), hf=v('hoodFloor'), bb=v('bbHeight');
   if(sf!=null&&bf!=null&&v('drop')!=null){ const dd=sf-bf; if(Math.abs(dd-v('drop'))>5) add('warn','Überhöhung passt nicht zu den Höhen über Boden',`Sattel ${fmtNum(sf)} − Lenker ${fmtNum(bf)} = ${fmtNum(dd)} mm, gemessen wurden ${fmtNum(v('drop'))} mm. Eine der Messungen stimmt nicht – beide wiederholen.`); }
@@ -2107,14 +2115,16 @@ function transferPlan(s,gid,size){
   if(crank&&crank2&&crank!==crank2){ h2+= (crank-crank2); out.lines.push({k:'Kurbel',v:`${fmtNum(crank2)} mm (Serie) statt ${fmtNum(crank)} mm`,note:`Sattelhöhe um ${fmtNum(Math.abs(crank-crank2))} mm ${crank>crank2?'erhöht':'gesenkt'} – oder eigene Kurbel ${fmtNum(crank)} mm montieren und den Ausgleich weglassen.`}); }
   const xNow=-v('saddleHeight')*A.cs, xNew=-h2*Math.cos(sa); const rail=Math.round(xNew-xNow); // + = Klemmpunkt weiter vorn
   out.saddleHeight=Math.round(h2); out.setback=v('saddleSetback');
-  out.lines.unshift({k:'Sattelhöhe',v:`${out.saddleHeight} mm`,note:`Tretlagermitte bis Satteloberfläche entlang Sitzrohr, gleicher Messpunkt wie bisher. Bisher ${fmtNum(v('saddleHeight'))} mm (Sitzwinkel ${fmtNum(row.seatAngle)}° statt ${fmtNum(A.sa)}°).`},
+  out.lines.unshift({k:'Sattelhöhe',v:`${out.saddleHeight} mm`,note:`Tretlagermitte bis Satteloberfläche entlang Sitzrohr, gleicher Messpunkt wie bisher. Bisher ${fmtNum(v('saddleHeight'))} mm${row.seatAngle!==A.sa?` (Sitzwinkel ${fmtNum(row.seatAngle)}° statt ${fmtNum(A.sa)}°)`:''}.`},
     {k:'Sattelversatz',v:`${fmtNum(out.setback)} mm`,note:Math.abs(rail)>=3?`Bleibt gleich. Dafür den Sattel auf dem Gestell etwa ${Math.abs(rail)} mm ${rail>0?'weiter nach hinten':'weiter nach vorn'} klemmen als bisher (gleiche Sattelstütze vorausgesetzt).`:'Bleibt gleich, Sattel auf dem Gestell wie bisher.'});
   if(v('saddleTilt')!=null) out.lines.push({k:'Sattelneigung',v:`${fmtNum(v('saddleTilt'))}°`,note:'1:1 übernehmen, gleicher Sattel.'});
   // Lenker: gleiche Lenkermitte
+  let cover=30, coverCal=false; { const bg=bike(s.bikeId), sg=bg&&bg.geo&&geoById(bg.geo.id), sr=sg&&geoRow(sg,bg.geo.size); const L=v('stemLength'), a=v('stemAngle')??-6, sp=v('spacer');
+    if(sr&&sr.stack&&sr.headAngle&&L&&sp!=null&&C.BY!=null){ const sha=sr.headAngle*Math.PI/180, th=(a+(90-sr.headAngle))*Math.PI/180; const predY=sr.stack+Math.sin(sha)*(30+sp+20)+L*Math.sin(th); const c2=30+(C.BY-predY)/Math.sin(sha); if(c2>0&&c2<80){ cover=c2; coverCal=true; } } }
   if(C.BX!=null){ const mtb=g.type==='MTB'; const Ls=mtb?[30,40,50,60,70,80]:[60,70,80,90,100,110,120,130,140]; const head={x:row.reach,y:row.stack}; const u={x:-Math.cos(ha),y:Math.sin(ha)};
-    let best=null; Ls.forEach(L=>STEM_ANGLES.forEach(a=>{ for(let sp=0;sp<=40;sp+=5){ const base=30+sp+20; const th=(a+(90-row.headAngle))*Math.PI/180; const bx=head.x+u.x*base+L*Math.cos(th), by=head.y+u.y*base+L*Math.sin(th);
-      const err=Math.hypot(bx-C.BX,by-C.BY); const sc=err+(Math.abs(a)>10?3:0)+sp/20; if(!best||sc<best.sc) best={L,a,sp,bx,by,err,sc}; } }));
-    out.stem=best; out.lines.push({k:'Vorbau',v:`${best.L} mm, ${best.a>0?'+':''}${best.a}°`,note:`Serie: ${row.stem?row.stem+' mm':'unbekannt'}.`},{k:'Spacer unter dem Vorbau',v:`${best.sp} mm`,note:'Plus Steuersatzdeckel (mit 30 mm angenommen, je nach Rad anders).'});
+    let best=null; Ls.forEach(L=>STEM_ANGLES.forEach(a=>{ for(let sp=0;sp<=40;sp+=5){ const base=cover+sp+20; const th=(a+(90-row.headAngle))*Math.PI/180; const bx=head.x+u.x*base+L*Math.cos(th), by=head.y+u.y*base+L*Math.sin(th);
+      const err=Math.hypot(bx-C.BX,by-C.BY); const sc=err+(Math.abs(a)>10?3:0)+sp/20+(L!==v('stemLength')?1.5:0)+(a!==(v('stemAngle')??-6)?1.5:0); if(!best||sc<best.sc) best={L,a,sp,bx,by,err,sc}; } }));
+    out.stem=best; out.lines.push({k:'Vorbau',v:`${best.L} mm, ${best.a>0?'+':''}${best.a}°`,note:`Serie: ${row.stem?row.stem+' mm':'unbekannt'}.`},{k:'Spacer unter dem Vorbau',v:`${best.sp} mm`,note:coverCal?`Steuersatz-Aufbau aus deinem jetzigen Rad errechnet (${Math.round(cover)} mm). Bei anderem Steuersatz abweichend.`:'Plus Steuersatzdeckel (mit 30 mm angenommen, je nach Rad anders).'});
     out.lines.push({k:'Lenkermitte',v:`${Math.round(best.err)} mm vom Ziel`,note:best.err<=5?'trifft die bisherige Position.':best.err<=12?'knapp – Feinabstimmung über Bremsgriffe und Lenkerdrehung.':'nicht erreichbar mit üblichen Teilen – Rahmengröße prüfen.'});
     out.checks.push(`Lenkermitte: ${Math.round(C.BX)} mm vor und ${Math.round(C.BY)} mm über der Tretlagermitte (bisher ${C.src.B==='gemessen'?'gemessen':'berechnet'})`); }
   ['barWidth','cleatFore','cleatRotL','cleatRotR'].forEach(k=>{ if(v(k)!=null) out.lines.push({k:MK[k].label,v:`${fmtNum(v(k))} ${MK[k].unit}`,note:'1:1 übernehmen.'}); });
@@ -2124,7 +2134,7 @@ function transferPlan(s,gid,size){
 }
 function transferHtml(s){
   const b=bike(s.bikeId); const sel=ui.trGeo||'', g=sel?geoById(sel):null; const size=ui.trSize||(g&&g.rows[0]?g.rows[0][0]:'');
-  const C=coords(s); const quality=[C.src.S==='gemessen',C.src.B==='gemessen',C.src.H==='gemessen'].filter(Boolean).length;
+  const C=coords(s); const quality=[C.src.S,C.src.B,C.src.H].filter(x=>x&&x.startsWith('gemessen')).length;
   const pick=`<div class="form"><div class="field"><label for="trGeo">Neues Rad (Modell)</label><select class="input" id="trGeo" data-change="trGeo"><option value="">Modell wählen …</option>${geoOptions(sel)}</select></div>${g?`<div class="field"><label for="trSize">Größe</label><select class="input" id="trSize" data-change="trSize">${geoSizeOptions(sel,size)}</select></div>`:''}</div>`;
   let body='';
   if(g){ const t=transferPlan(s,sel,size);
@@ -2160,6 +2170,7 @@ function planApply(s,c){
   s.after[c.key]={key:c.key,value:c.to,method:'Eingestellt nach Plan',source:'manuell eingegeben',unc:null,time:nowStamp()};
   s.changes.push({key:c.key,from,to:c.to,reason:(c.comp?'Ausgleich: ':'')+c.why.slice(0,160),time:nowStamp(),plan:true});
   (c.effects||[]).forEach(e=>{ if(e.key===c.key) return; const base=s.after[e.key]||s.before[e.key]; if(!base) return; const nv=Math.round((Number(base.value)+e.delta)*10)/10; s.after[e.key]={key:e.key,value:nv,method:'Berechnet',source:'berechnet',unc:3,time:nowStamp()}; });
+  Object.entries(c.parts||{}).forEach(([k,v])=>{ const old=s.after[k]||s.before[k]; s.after[k]={key:k,value:v,method:'Eingestellt nach Plan',source:'manuell eingegeben',unc:null,time:nowStamp()}; s.changes.push({key:k,from:old?Number(old.value):null,to:v,reason:`Teil der Änderung ${MK[c.key].label}`,time:nowStamp(),plan:true}); });
   if(s.status==='geplant') s.status='in Arbeit'; audit(`Plan: ${MK[c.key].label} ${fmtNum(from)} → ${fmtNum(c.to)} ${MK[c.key].unit}`,s.id);
 }
 
@@ -3019,7 +3030,7 @@ function newSessionDrawer(cid){
     <div class="field"><label for="ns_t">Art</label><select class="input" id="ns_t" name="type">${opts(['Erstfitting','Nachkontrolle','Neues Fahrrad','Cleat-Fitting','Sattelberatung'])}</select></div>
     <div class="field"><label for="ns_d">Datum</label><input class="input" type="date" id="ns_d" name="date" value="${today()}" required></div>
     <div class="field"><label for="ns_ti">Uhrzeit</label><input class="input" type="time" id="ns_ti" name="time" value="15:00"></div>
-    <div class="field"><label for="ns_f">Fitter</label><select class="input" id="ns_f" name="fitter">${opts(S.team.filter(t=>/fitter/i.test(t.role)).map(t=>t.name))}</select></div>
+    <div class="field"><label for="ns_f">Fitter</label><input class="input" id="ns_f" name="fitter" list="ns_fl" value="${esc(S.lastFitter||(S.team.find(t=>/fitter/i.test(t.role))||{}).name||'')}" placeholder="Dein Name"><datalist id="ns_fl">${[...new Set([S.lastFitter,...S.team.map(t=>t.name)].filter(Boolean))].map(n=>`<option value="${esc(n)}">`).join('')}</datalist></div>
     <div class="field wide"><label for="ns_copy"><input type="checkbox" id="ns_copy" name="copy" checked> Endwerte der letzten Sitzung mit diesem Fahrrad als Ausgangsposition übernehmen</label></div>
     <div class="wide"><button class="btn primary" type="submit">Sitzung anlegen</button></div></form>`);
 }
@@ -3057,7 +3068,7 @@ const ACT = {
   planExit(){ ui.adjIdx=null; render(); window.scrollTo({top:0}); },
   planPrev(){ ui.adjIdx=Math.max(0,ui.adjIdx-1); render(); window.scrollTo({top:0}); },
   planNext(){ const s=sess(ui.sess); const n=s.plan.cards.length; const nx=ui.adjIdx+1; s.plan.idx=Math.min(nx,n); save(); if(nx>=n){ ui.adjIdx=null; render(); toast('Alle Schritte erledigt – jetzt zum Ergebnis'); } else { ui.adjIdx=nx; render(); } window.scrollTo({top:0}); },
-  planDo(){ const s=sess(ui.sess); const i=ui.adjIdx, c=s.plan.cards[i]; const keys=[c.key,...(c.effects||[]).map(e=>e.key)]; const prev={}; keys.forEach(k=>prev[k]=s.after[k]?{...s.after[k]}:null);
+  planDo(){ const s=sess(ui.sess); const i=ui.adjIdx, c=s.plan.cards[i]; const keys=[c.key,...(c.effects||[]).map(e=>e.key),...Object.keys(c.parts||{})]; const prev={}; keys.forEach(k=>prev[k]=s.after[k]?{...s.after[k]}:null);
     planApply(s,c); s.plan.res[i]={status:'done',prev,nChanges:1}; save(); render(); toast(`${MK[c.key].label} eingetragen`); },
   planFeel(el){ const s=sess(ui.sess); const r=s.plan.res[ui.adjIdx]; r.feel=el.dataset.v; const c=s.plan.cards[ui.adjIdx]; const ch=[...s.changes].reverse().find(x=>x.key===c.key&&x.plan); if(ch) ch.feel=r.feel; save(); render(); },
   planUndo(){ const s=sess(ui.sess); const i=ui.adjIdx, r=s.plan.res[i], c=s.plan.cards[i]; Object.entries(r.prev||{}).forEach(([k,v])=>{ if(v) s.after[k]=v; else delete s.after[k]; });
@@ -3083,7 +3094,7 @@ const ACT = {
   resetConfirm(){ try{ localStorage.setItem('fitframe-rescue-'+Date.now(), JSON.stringify(S)); }catch(e){} S=seed(); S.appVer=APP_VER; ensurePermanent(); save(); closeDrawer(); ui.reportFor=null; ui.aiOut=null; render(); toast('Demo-Daten wiederhergestellt'); },
   apptFilter(el){ ui.apptFilter=el.dataset.v; render(); },
   fuFilter(el){ ui.fuFilter=el.dataset.v; render(); },
-  newSession(el){ newSessionDrawer(el.dataset.cust||S.customers[0].id); },
+  newSession(el){ if(!S.customers.length){ toast('Bitte zuerst einen Kunden anlegen',true); ACT.newCustomer(); return; } newSessionDrawer(el.dataset.cust||S.customers[0].id); },
   openSession(el){ ui.wIdx=null; ui.sess=el.dataset.id; ui.sessTab=TABALIAS[el.dataset.tab]||el.dataset.tab||'anamnese'; closeDrawer(); go('sitzung'); },
   startSession(el){ const s=sess(el.dataset.id); s.status='in Arbeit'; audit(`Fitting gestartet: ${cust(s.customerId).name}`,s.id); save(); ui.sess=s.id; ui.sessTab='anamnese'; go('sitzung'); toast('Fitting gestartet'); },
   finishSession(el){ const s=sess(el.dataset.id); const sel={value:'abgeschlossen',dataset:{id:s.id}}; CHG.sessStatus(sel); },
@@ -3153,7 +3164,7 @@ const ACT = {
       <div class="field"><label for="cs_name">Name der Kundin / des Kunden zur Bestätigung</label><input class="input" id="cs_name" name="name" required value="" placeholder="${esc(c.name)}"></div>
       <div><button class="btn primary" type="submit">Einwilligung speichern</button></div></form></div>`); },
   printReport(){ if(window.self!==window.top){ toast('Drucken geht hier nicht. Öffne die App über den GitHub-Link und tippe dort auf „Drucken“.',true); return; } try{ window.print(); }catch(e){ toast('Drucken nicht möglich',true); } },
-  newCustomer(){ openDrawer('Kunde anlegen',`<form class="form" data-form="customer"><div class="field wide"><label for="nc_n">Name</label><input class="input" id="nc_n" name="name" required placeholder="Vor- und Nachname (fiktiv)"></div><div class="field"><label for="nc_e">E-Mail</label><input class="input" id="nc_e" name="email" type="email" placeholder="name@example.com"></div><div class="field"><label for="nc_p">Telefon</label><input class="input" id="nc_p" name="phone" type="tel"></div><div class="field"><label for="nc_d">Disziplin</label><select class="input" id="nc_d" name="discipline">${opts(['Rennrad','Gravel','MTB','Triathlon','E-Bike Pendeln','Allroad'])}</select></div>${[["height","Körpergröße","cm"],["inseam","Schrittlänge","cm"],["torso","Rumpflänge","cm"],["arm","Armlänge","cm"],["footR","Fußlänge","mm"]].map(([k,l,u])=>`<div class="field"><label for="nc_${k}">${l} (${u})</label><input class="input num" id="nc_${k}" name="${k}" type="number" step="0.5" inputmode="decimal"></div>`).join("")}<div class="field"><label for="nc_ham">Hintere Oberschenkel</label><select class="input" id="nc_ham" name="hamstring">${opts(["unauffällig","eingeschränkt"])}</select></div><div class="field wide"><label><input type="checkbox" name="est" checked> Fehlende Maße aus der Körpergröße schätzen</label></div><div class="field wide"><label><input type="checkbox" name="consent"> Einwilligung zur Datenverarbeitung liegt vor</label></div><div class="wide notice">${ic('info')}Bitte keine echten Personendaten eingeben. Die Demo speichert nur unverschlüsselt im Browser.</div><div class="wide"><button class="btn primary" type="submit">Kunde anlegen</button></div></form>`); },
+  newCustomer(){ openDrawer('Kunde anlegen',`<form class="form" data-form="customer"><div class="field wide"><label for="nc_n">Name</label><input class="input" id="nc_n" name="name" required placeholder="Vor- und Nachname (fiktiv)"></div><div class="field"><label for="nc_e">E-Mail</label><input class="input" id="nc_e" name="email" type="email" placeholder="name@example.com"></div><div class="field"><label for="nc_p">Telefon</label><input class="input" id="nc_p" name="phone" type="tel"></div><div class="field"><label for="nc_d">Disziplin</label><select class="input" id="nc_d" name="discipline">${opts(['Rennrad','Gravel','MTB','Triathlon','E-Bike Pendeln','Allroad'])}</select></div>${[["height","Körpergröße","cm"],["inseam","Schrittlänge","cm"],["torso","Rumpflänge","cm"],["arm","Armlänge","cm"],["shoulder","Schulterbreite","cm"],["footR","Fußlänge","mm"]].map(([k,l,u])=>`<div class="field"><label for="nc_${k}">${l} (${u})</label><input class="input num" id="nc_${k}" name="${k}" type="number" step="0.5" inputmode="decimal"></div>`).join("")}<div class="field"><label for="nc_ham">Hintere Oberschenkel</label><select class="input" id="nc_ham" name="hamstring">${opts(["unauffällig","eingeschränkt"])}</select></div><div class="field wide"><label><input type="checkbox" name="est" checked> Fehlende Maße aus der Körpergröße schätzen</label></div><div class="field wide"><label><input type="checkbox" name="consent"> Einwilligung zur Datenverarbeitung liegt vor</label></div><div class="wide notice">${ic('info')}Bitte keine echten Personendaten eingeben. Die Demo speichert nur unverschlüsselt im Browser.</div><div class="wide"><button class="btn primary" type="submit">Kunde anlegen</button></div></form>`); },
   newBike(el){ openDrawer('Fahrrad anlegen',`<form class="form" data-form="bike" data-cid="${el.dataset.id}">
     <div class="field wide"><label for="nb_geo">Modell aus der Geometrie-Bibliothek</label><select class="input" id="nb_geo" name="geo" data-change="geoPick" data-size="nb_gs" data-fill="1"><option value="">Nicht in der Liste – selbst eintragen</option>${geoOptions('')}</select></div>
     <div class="field" id="nb_gs_wrap" hidden><label for="nb_gs">Rahmengröße</label><select class="input" id="nb_gs" name="geoSize"></select></div>
@@ -3171,7 +3182,7 @@ const ACT = {
     if(el.dataset.m==='set'){ inp.value=inp.value===v?'':v; }
     else { let p=splitVals(inp.value); if(p.includes(v)) p=p.filter(x=>x!==v); else { p.push(v); if(v==='Keine') p=['Keine']; else p=p.filter(x=>x!=='Keine'); } inp.value=p.join(', '); }
     el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
-    const fm=el.closest('form'); if(fm&&fm.dataset.auto==='1'&&el.dataset.m==='set'&&inp.value){ setTimeout(()=>fm.requestSubmit(),180); }
+    const fm=el.closest('form'); if(fm&&fm.dataset.auto==='1'&&el.dataset.m==='set'&&inp.value){ const w=ui.wIdx; setTimeout(()=>{ if(fm.isConnected&&ui.wIdx===w) fm.requestSubmit(); },180); }
     const vals=splitVals(inp.value); document.querySelectorAll(`[data-group="${el.dataset.t}"] .chipbtn`).forEach(b=>b.setAttribute('aria-pressed',el.dataset.m==='set'?String(inp.value===b.dataset.v):String(vals.includes(b.dataset.v)))); },
   saveKm(el){ const b=bike(el.dataset.id); const v=Number(document.getElementById('kmInput').value); if(!(v>=0)){toast('Bitte einen gültigen Kilometerstand eingeben',true);return;} audit(`Kilometerstand ${b.model}: ${b.km} → ${v}`); b.km=v; save(); toast('Kilometerstand gespeichert'); bikeDrawer(b.id); render(); },
   delMeasure(el){ const s=sess(el.dataset.id); const k=el.dataset.key; const side=el.dataset.side; const m=s[side][k]; delete s[side][k]; audit(`Wert entfernt (${side==='before'?'vorher':'nachher'}): ${MK[k].label} ${fmtNum(m.value)} ${MK[k].unit}`,s.id); save(); render(); toast('Wert entfernt, im Audit-Log protokolliert'); },
@@ -3226,7 +3237,7 @@ const FORMS = {
     ui.wIdx=i+1<ANA_Q.length?i+1:null; render(); window.scrollTo({top:0}); if(ui.wIdx==null) toast('Alle Fragen beantwortet'); },
   anaNotes(f,data){ const s=sess(f.dataset.id); s.notes=data.get('notes'); save(); toast('Notizen gespeichert'); },
   checkOne(f,data){ const s=sess(f.dataset.id); const c=cust(s.customerId); const items=CK_ITEMS(); const i=Number(f.dataset.i); const it=items[i];
-    if(it.k==='grund'){ c.est=c.est||[]; ['height','inseam','torso','arm'].forEach(k=>{ const v=data.get(k); const nv=v===''||v===null?null:Number(v); if(nv!==c.body[k]) c.est=c.est.filter(x=>x!==k); c.body[k]=nv; }); audit(`Grundmaße gespeichert: ${c.name}`); }
+    if(it.k==='grund'){ c.est=c.est||[]; ['height','inseam','torso','arm','shoulder'].forEach(k=>{ const v=data.get(k); const nv=v===''||v===null?null:Number(v); if(nv!==c.body[k]) c.est=c.est.filter(x=>x!==k); c.body[k]=nv; }); audit(`Grundmaße gespeichert: ${c.name}`); }
     else { s.check=s.check||{}; (it.side?['L','R']:['']).forEach(sd=>{ const v=data.get(it.k+sd); if(v===null||v==='') delete s.check[it.k+sd]; else s.check[it.k+sd]=it.type==='num'?Number(v):v; });
       const ch=s.check;
       if(it.k==='hamstring'&&ch.hamstring!==undefined) c.flex.hamstring=ch.hamstring>10?`eingeschränkt (Finger-Boden ${ch.hamstring} cm)`:`unauffällig (Finger-Boden ${ch.hamstring} cm)`;
@@ -3274,7 +3285,7 @@ const FORMS = {
     s.changes.push({key:k,from,to:v,reason,time:nowStamp()}); if(s.status!=='abgeschlossen') s.status='in Arbeit'; else s.version++;
     if(data.get('follow')&&from!=null){ const end={...s.before}; Object.assign(end,s.after); sideEffects(s,k,v-from).filter(e=>e.delta!=null&&MK[e.key]&&!e.comp&&['saddleSetback','reach','drop','saddleHeight'].includes(e.key)&&e.key!==k).forEach(e=>{ const base=s.after[e.key]||s.before[e.key]; if(!base) return; const nv=Math.round((Number(base.value)+e.delta)*10)/10; s.after[e.key]={key:e.key,value:nv,method:'Berechnet',source:'berechnet',unc:3,time:nowStamp()}; s.changes.push({key:e.key,from:Number(base.value),to:nv,reason:`Folge von ${MK[k].label} ${v-from>0?'+':''}${fmtNum(Math.round((v-from)*10)/10)} ${MK[k].unit} (berechnet)`,time:nowStamp()}); }); }
     audit(`${MK[k].label}: ${fmtNum(from)} → ${fmtNum(v)} ${MK[k].unit}${s.status==='abgeschlossen'?` (neue Version ${s.version})`:''}`,s.id); save(); render(); toast(from==null?'Änderung dokumentiert – kein Ausgangswert vorhanden':'Änderung dokumentiert'); },
-  newSession(f,data){ const id=createSession({cid:data.get('cid'),bid:data.get('bid'),date:data.get('date'),time:data.get('time'),type:data.get('type'),fitter:data.get('fitter'),copy:data.get('copy')==='on'}); save(); closeDrawer(); ui.sess=id; ui.sessTab='anamnese'; go('sitzung'); toast('Sitzung angelegt'); },
+  newSession(f,data){ S.lastFitter=String(data.get('fitter')||'').trim()||S.lastFitter; const id=createSession({cid:data.get('cid'),bid:data.get('bid'),date:data.get('date'),time:data.get('time'),type:data.get('type'),fitter:data.get('fitter'),copy:data.get('copy')==='on'}); save(); closeDrawer(); ui.sess=id; ui.sessTab='anamnese'; go('sitzung'); toast('Sitzung angelegt'); },
   followup(f,data){ const s=sess(data.get('sid')); const days=Number(data.get('days')); const due=new Date(s.date+'T12:00'); due.setDate(due.getDate()+days); s.followUps.push({days,due:iso(due),status:'offen'}); audit(`Nachkontrolle (${days} Tage) angelegt`,s.id); save(); render(); toast(`Nachkontrolle für ${fmtDate(iso(due))} angelegt`); },
   feedback(f,data){ const s=sess(f.dataset.id); s.feedback.push({date:today(),score:Number(data.get('score')),text:String(data.get('text')).trim()}); if(data.get('done')==='on') s.followUps[Number(f.dataset.i)].status='erledigt'; audit(`Rückmeldung erfasst (${data.get('score')}/10)`,s.id); save(); closeDrawer(); render(); toast('Rückmeldung gespeichert'); },
   cleatTransfer(f,data){ const s=sess(data.get('sid')); const fore=parseFloat(data.get('fore')); const rot=data.get('rot');
@@ -3283,7 +3294,7 @@ const FORMS = {
     if(rot!==''){ s.after.cleatRotR={...mv('cleatRotR',Number(rot),'CleatLab (Prototyp, nicht validiert)','manuell eingegeben',null),time:nowStamp()}; }
     audit(`CleatLab-Werte übergeben (${ui.cleatSys}, nicht validiert)`,s.id); save(); toast(`An Sitzung von ${cust(s.customerId).name} übergeben`); render(); },
   message(f,data){ const t=String(data.get('text')).trim(); if(!t) return; (S.messages[f.dataset.id]=S.messages[f.dataset.id]||[]).push({from:'Kunde',time:nowStamp(),text:t}); save(); render(); toast('Nachricht gespeichert (kein echter Versand)'); },
-  customer(f,data){ const id=uid('c'); const num=k=>{const v=data.get(k);return v===''||v===null?null:Number(v);}; const c={id,name:data.get('name').trim(),email:data.get('email'),phone:data.get('phone'),since:today(),discipline:data.get('discipline'),consent:data.get('consent')==='on',body:{height:num('height'),inseam:num('inseam'),torso:num('torso'),arm:num('arm'),shoulder:null,footL:num('footR'),footR:num('footR'),sitBone:null},flex:{hamstring:data.get('hamstring'),hip:'',ankle:''},tags:['Neu'],est:[]};
+  customer(f,data){ const id=uid('c'); const num=k=>{const v=data.get(k);return v===''||v===null?null:Number(v);}; const c={id,name:data.get('name').trim(),email:data.get('email'),phone:data.get('phone'),since:today(),discipline:data.get('discipline'),consent:data.get('consent')==='on',body:{height:num('height'),inseam:num('inseam'),torso:num('torso'),arm:num('arm'),shoulder:num('shoulder'),footL:num('footR'),footR:num('footR'),sitBone:null},flex:{hamstring:data.get('hamstring'),hip:'',ankle:''},tags:['Neu'],est:[]};
     if(data.get('est')==='on') estimateBody(c); S.customers.push(c); audit(`Kunde angelegt: ${c.name}`); save(); render(); customerDrawer(id); toast('Kunde angelegt – jetzt Fahrrad anlegen'); },
   bike(f,data){ const id=uid('b'); const cid=f.dataset.cid; const gid=data.get('geo'), gs=data.get('geoSize'); S.bikes.push({id,customerId:cid,name:data.get('model'),brand:data.get('brand'),model:data.get('model'),geo:gid&&gs?{id:gid,size:gs}:null,size:gid&&gs?gs:data.get('size'),year:new Date().getFullYear(),type:data.get('type'),frameNo:data.get('frameNo')||'–',pedal:data.get('pedal'),saddle:'–',km:0}); audit(`Fahrrad angelegt: ${data.get('brand')} ${data.get('model')}`); save(); customerDrawer(cid); render(); toast('Fahrrad angelegt'); },
   woPos(f,data){ const w=S.workshop.find(x=>x.id===f.dataset.id); const price=Number(data.get('price')), qty=Number(data.get('qty')); if(!(price>=0)||!(qty>0)){toast('Menge und Preis prüfen',true);return;} w.positions.push({t:data.get('t'),kind:data.get('kind'),qty,price}); if(w.status==='Angenommen') w.status='Kostenvoranschlag'; w.log.push({time:nowStamp(),text:`Position hinzugefügt: ${data.get('t')}`}); save(); woDrawer(w.id); render(); },

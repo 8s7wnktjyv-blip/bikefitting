@@ -32,6 +32,14 @@ Kamera seitlich aufs Rad richten: Google MediaPipe erkennt Schulter, Hüfte, Kni
 
 34 Modelle (Canyon, Giant, Rose und 24 Cube-Rahmenplattformen) mit allen Größen, am 25.10.2026 von den Herstellerseiten übernommen, jeweils mit Quellenlink. Beim Anlegen eines Fahrrads Modell und Größe wählen, die Geometrie wird übernommen. Eigene Modelle lassen sich ergänzen. Die Größenberatung berechnet näherungsweise (±10 mm) Vorbau und Spacer je Rahmengröße aus der gefitteten Position.
 
+## Genauigkeit und Übertragung
+
+- Jeder Messwert mit Kontrollmessung: Weichen beide mehr als 3 mm bzw. 1° ab, verlangt die App eine dritte Messung und speichert den Mittelwert.
+- 15 Messpunkte in drei Gruppen, davon 6 Koordinaten vom Tretlager (Höhen über Boden, Abstände vor dem Lot). Sie prüfen die anderen Werte gegen und erlauben die 1:1-Übertragung auf ein anderes Rad (Ergebnis → „Auf neues Rad“).
+- Geführte Anpassung: eine Karte pro Änderung mit Ampel, Zielwert, am Rad machbarem Wert, Anleitung, Drehmoment-Hinweis, Kontrolle und Rückmeldung. Spacer, Vorbauwinkel und Vorbaulänge werden beim Umsetzen mit eingetragen.
+- Fuß-Auswertung (Einlage, Keil, Unterlegplatte), Cockpit-Empfehlung (Vorbau, Lenker, Lenker-Vorbau-Einheiten), Oberkante Schalthebel über Boden.
+- End-to-End-Test: Kunde anlegen, Rad aus Bibliothek, Ziel, Körpercheck, 15 Messungen mit Kontrollmessung, geführte Anpassung, Ergebnis, Bericht, Übertragung – ohne Fehler (Chromium, Handygröße).
+
 ## Stand
 
 | Bereich | Stand |
