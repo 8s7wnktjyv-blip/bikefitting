@@ -7,7 +7,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..800&family=Figtree:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: freundliche Werkbank – helle Karten auf warmem Grund, 5 Hauptbereiche, Fitting als geführter Ablauf in Schritten */
 :root{
@@ -407,6 +407,154 @@ canvas{max-width:100%;display:block}
 .cal{display:grid;grid-template-columns:110px repeat(5,minmax(70px,1fr));gap:5px;min-width:520px;font-size:13px}
 .cal .cell{background:var(--surface-2);border-radius:8px;padding:7px;min-height:44px}
 .cal .over{outline:2px solid var(--bad)}
+
+/* ===== Design „Werkbank-Messblatt“: Schneidematte, Laserlinie, Papier ===== */
+:root{
+  --mat:#17463f; --mat-2:#1d564d; --mat-line:rgba(255,255,255,.07); --mat-line-2:rgba(255,255,255,.14); --laser:#ff4d1a;
+  --bg:#eef2ef; --surface:#ffffff; --surface-2:#f1f4f2; --line:#dbe3df; --fg:#142026; --muted:#4f5f63; --faint:#7d8b8e;
+  --accent:#ff4d1a; --accent-ink:#ffffff; --accent-strong:#c7360b; --accent-soft:#ffece4; --accent-line:#ffc2ab;
+  --ok:#1e9e6a; --ok-soft:#e1f4ea; --warn:#a9790a; --warn-soft:#fdf3d3; --bad:#d23a2f; --bad-soft:#fbe4e1; --info:#1f6fa8; --info-soft:#e2eef8;
+  --il-bg:#f1f4f2; --il-frame:#3e5257; --il-tire:#1f2c31; --il-body:#25343a; --il-soft:#cfdad6;
+  --f-head:"Archivo","Figtree",system-ui,sans-serif;
+  --shadow:0 1px 0 rgba(20,32,38,.04),0 8px 24px -12px rgba(20,32,38,.18); --r:12px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --mat:#1f4a43; --mat-2:#25554d; --bg:#2c3033; --surface:#373c40; --surface-2:#41474c; --line:#4d545a; --fg:#eef1f2; --muted:#b8c0c4; --faint:#8d969b; --glass:rgba(55,60,64,.92);
+  --accent:#ff6a3d; --accent-ink:#1b0700; --accent-strong:#ff8a63; --accent-soft:rgba(255,106,61,.14); --accent-line:rgba(255,106,61,.45);
+  --il-bg:#41474c; --il-frame:#b4c0c3; --il-tire:#e1e6e8; --il-body:#eef1f2; --il-soft:#565e64;}}
+:root[data-theme="dark"]{
+  --mat:#1f4a43; --mat-2:#25554d; --bg:#2c3033; --surface:#373c40; --surface-2:#41474c; --line:#4d545a; --fg:#eef1f2; --muted:#b8c0c4; --faint:#8d969b; --glass:rgba(55,60,64,.92);
+  --accent:#ff6a3d; --accent-ink:#1b0700; --accent-strong:#ff8a63; --accent-soft:rgba(255,106,61,.14); --accent-line:rgba(255,106,61,.45);
+  --il-bg:#41474c; --il-frame:#b4c0c3; --il-tire:#e1e6e8; --il-body:#eef1f2; --il-soft:#565e64;}
+
+/* Schrift: breite Archivo für Überschriften und Zahlen, Figtree für Text */
+h1,h2,.hc-big,.gn b,.gl .gv b,.brand b{font-family:var(--f-head);font-stretch:118%;letter-spacing:-.005em}
+h1{font-weight:800;font-size:30px} h2{font-weight:750} h3{font-family:var(--f-head);font-stretch:108%;font-weight:700;letter-spacing:0}
+.num,.mono{font-family:var(--f-head);font-stretch:100%;font-variant-numeric:tabular-nums}
+.gc-sec h4,.ckx h4,.ckc h4,.footcol h4{text-transform:none;letter-spacing:0;font-size:13.5px;color:var(--fg);font-weight:700}
+
+/* Schneidematte: das eine auffällige Element */
+.mat,.sesshead,.pagehead.hero{position:relative;overflow:hidden;color:#f3f7f5;background-color:var(--mat);
+  background-image:linear-gradient(var(--mat-line-2) 1px,transparent 1px),linear-gradient(90deg,var(--mat-line-2) 1px,transparent 1px),linear-gradient(var(--mat-line) 1px,transparent 1px),linear-gradient(90deg,var(--mat-line) 1px,transparent 1px);
+  background-size:50px 50px,50px 50px,10px 10px,10px 10px;background-position:-1px -1px}
+.sesshead::after,.pagehead.hero::after{content:"";position:absolute;left:-10%;right:-10%;bottom:9px;height:2px;background:var(--laser);box-shadow:0 0 10px 1px rgba(255,77,26,.7),0 0 2px rgba(255,255,255,.6);transform:rotate(-1deg);pointer-events:none;animation:laser 1.1s var(--ease) both}
+@keyframes laser{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@media (prefers-reduced-motion:reduce){.sesshead::after,.pagehead.hero::after{animation:none}}
+.sesshead{border-radius:18px 18px 0 0;padding:18px 18px 22px;margin-bottom:0}
+.sesshead h1{color:#fff;font-size:26px}
+.sesshead p{color:rgba(243,247,245,.75)}
+.sesshead .btn{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.22);color:#fff}
+.sesshead+.panel{border-top-left-radius:0;border-top-right-radius:0;border-top:0;margin-top:-20px}
+.sesshead+.panel .panel-h.stepbar{background:var(--mat-2);border-bottom:0;padding:8px 10px 10px!important;
+  background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 1px,transparent 1px 10px);background-size:100% 6px;background-repeat:no-repeat;background-position:0 0}
+.stepbar .step{color:rgba(243,247,245,.8);background:transparent;border-color:transparent}
+.stepbar .step i{background:rgba(255,255,255,.12);color:#fff}
+.stepbar .step.done i{background:rgba(30,158,106,.9);color:#fff}
+.stepbar .step[aria-current="step"]{background:var(--laser);color:#fff;border-color:var(--laser);box-shadow:0 4px 14px -4px rgba(255,77,26,.7)}
+.stepbar .step[aria-current="step"] i{background:#fff;color:var(--laser)}
+
+/* Start-Seite: Begrüßung auf der Matte */
+.pagehead.hero{border-radius:18px;padding:22px 20px 26px;margin-bottom:4px}
+.pagehead.hero h1{color:#fff;font-size:32px}
+.pagehead.hero p{color:rgba(243,247,245,.78)}
+.tile.main{background:var(--laser);border-color:var(--laser);color:#fff}
+.tile.main .ti{background:rgba(255,255,255,.18);color:#fff}
+.tile.main span{color:rgba(255,255,255,.88)}
+
+/* Ruhige Karten, klare Kanten */
+.panel{border-radius:16px;box-shadow:var(--shadow)}
+.btn.primary{background:var(--laser);border-color:var(--laser);box-shadow:0 6px 16px -8px rgba(255,77,26,.8)}
+.btn.primary:hover{filter:brightness(1.05)}
+.statusbox.ok{background:var(--ok-soft)}
+.gl{background:var(--surface);border:1px solid var(--line);border-left-width:6px}
+.gl .gv b{font-size:22px}
+.gn{background:var(--surface);border:1px solid var(--line);border-top-width:5px}
+.gn b{font-size:28px}
+.hoodcard{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--laser)}
+.hoodcard .hc-ico{background:var(--mat)}
+.gstart{background:var(--mat);color:#f3f7f5}
+.gstart .muted{color:rgba(243,247,245,.75)}
+.camcard{border-style:solid}
+.bottomnav button[aria-current="page"]{color:var(--laser)}
+.navbtn[aria-current="page"]{background:var(--accent-soft)}
+.brand svg rect{fill:var(--mat)!important}
+
+/* ===== Durchgängig auf allen Seiten ===== */
+/* Navigation links: Mattengrün, wie ein Werkzeugbrett */
+.side{background:var(--mat);border-right:0;color:#e9f1ee}
+.side .brand b{color:#fff} .side .brand small{color:rgba(233,241,238,.65)}
+.side .brand svg rect{fill:var(--laser)!important}
+.side .navgroup .label{color:rgba(233,241,238,.55)}
+.side .navbtn{color:rgba(233,241,238,.82)}
+.side .navbtn:hover{background:rgba(255,255,255,.08);color:#fff}
+.side .navbtn[aria-current="page"]{background:rgba(255,255,255,.12);color:#fff;box-shadow:inset 3px 0 0 var(--laser)}
+.side .navbtn[aria-current="page"] svg{color:var(--laser)}
+.side .navbtn .cnt{background:var(--laser);color:#fff}
+.side .demo-note{border-top-color:rgba(255,255,255,.12);color:rgba(233,241,238,.6)}
+.side .demo-note .btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff}
+
+/* Seitenköpfe: große breite Überschrift mit kurzer Laser-Markierung */
+.pagehead:not(.hero) h1{position:relative;padding-bottom:10px}
+.pagehead:not(.hero) h1::after{content:"";position:absolute;left:0;bottom:0;width:44px;height:3px;border-radius:2px;background:var(--laser)}
+
+/* Kopfleiste oben */
+.topbar{border-bottom-color:var(--line)}
+
+/* Kacheln */
+.tile{border-radius:16px;transition:transform .15s var(--ease),border-color .15s}
+.tile:hover{transform:translateY(-2px);border-color:var(--mat-2)}
+.tile .ti{background:color-mix(in srgb,var(--mat) 10%,transparent);color:var(--mat)}
+:root[data-theme="dark"] .tile:not(.main) .ti{background:rgba(255,255,255,.08);color:#9fd8c8}
+.tile b{font-family:var(--f-head);font-stretch:108%;font-weight:700}
+
+/* Listen, Avatare */
+.avatar{background:var(--mat);color:#fff;font-family:var(--f-head);font-stretch:110%}
+.list .li.click:hover,.li.click:hover{background:var(--surface-2)}
+.time{font-family:var(--f-head);font-stretch:105%;color:var(--laser)}
+
+/* Felder */
+.input{border-radius:10px;min-height:44px;border-color:var(--line);background:var(--surface)}
+.input:focus{border-color:var(--laser);box-shadow:0 0 0 3px color-mix(in srgb,var(--laser) 20%,transparent)}
+label{font-weight:600}
+
+/* Umschalter und Reiter */
+.seg,.tabsbar{background:var(--surface-2);border:1px solid var(--line)}
+.seg button[aria-pressed="true"],.tabsbar button[aria-selected="true"]{background:var(--mat);color:#fff;box-shadow:none}
+
+/* Auswahl-Chips im Ablauf */
+.chipbtn{border-radius:12px;border-width:1.5px}
+.chipbtn[aria-pressed="true"]{background:var(--mat);border-color:var(--mat);color:#fff}
+.chip{border-radius:8px}
+
+/* Fortschritt und Status */
+.wiz-bar{height:8px;border-radius:4px;background:color-mix(in srgb,var(--mat) 12%,transparent)}
+.wiz-bar i{background:var(--laser)}
+.st-ico.done{background:var(--ok);color:#fff}
+.st-ico.open{border:1.5px solid var(--line)}
+.ovl .li,.ovl>.li{border-radius:12px}
+
+/* Tabellen */
+table{border-collapse:separate;border-spacing:0}
+thead th{background:var(--surface-2);font-family:var(--f-head);font-stretch:105%;font-weight:700;color:var(--fg)}
+thead th:first-child{border-top-left-radius:10px} thead th:last-child{border-top-right-radius:10px}
+tbody tr:hover td{background:color-mix(in srgb,var(--mat) 4%,transparent)}
+
+/* Hinweise */
+.notice{border-left:4px solid var(--info)}
+.notice.warn{border-left-color:var(--warn)}
+.notice.acc{border-left-color:var(--laser)}
+
+/* Seitenleisten-Fenster (Drawer) */
+.drawer-h{border-bottom:3px solid var(--laser)}
+.drawer-h h2{font-family:var(--f-head);font-stretch:112%}
+
+/* Leere Zustände */
+.empty{border:1.5px dashed var(--line);border-radius:14px}
+
+/* Untere Navigation am Handy */
+.bottomnav{border-top:1px solid var(--line)}
+.bottomnav button[aria-current="page"] svg{color:var(--laser)}
+
 </style>
 </head>
 <body>
@@ -1125,7 +1273,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.8';
+const APP_VER = '2026-10-27.9';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1311,7 +1459,7 @@ VIEWS.dashboard = () => {
   return `
   ${!storageOk||inAppBrowser?`<div class="notice warn">${ic('warn')}<div><b>${!storageOk?'Achtung: Hier wird nichts gespeichert.':'Achtung: eingebetteter Browser.'}</b> ${!storageOk?'Wahrscheinlich privater Modus.':'Daten können verloren gehen.'} Öffne den Link direkt in Safari. <button class="btn sm" data-act="saveInfo">Mehr dazu</button></div></div>`:''}
   ${loadIssue?`<div class="notice warn">${ic('warn')}<div><b>${esc(loadIssue)}</b> Eine Kopie wurde gesichert. Unter Mehr → Deine Daten sichern kannst du sie wiederherstellen.</div></div>`:''}
-  <div class="pagehead"><div><h1>${greet}!</h1><p>${new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})} · ${todays.length?`Heute ${todays.length===1?'steht 1 Fitting':'stehen '+todays.length+' Fittings'} an.`:'Heute ist kein Fitting geplant.'}</p></div></div>
+  <div class="pagehead hero"><div><h1>${greet}!</h1><p>${new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})} · ${todays.length?`Heute ${todays.length===1?'steht 1 Fitting':'stehen '+todays.length+' Fittings'} an.`:'Heute ist kein Fitting geplant.'}</p></div></div>
   <div class="tiles">
     <button class="tile main" data-act="newSession"><span class="ti">${ic('plus')}</span><b>Neues Fitting</b><span>Kunde wählen und loslegen</span></button>
     <button class="tile" data-act="findCustomer"><span class="ti">${ic('users')}</span><b>Kunde suchen</b><span>${S.customers.length} Kunden gespeichert</span></button>
