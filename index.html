@@ -638,6 +638,27 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 .calbox{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px}
 
 .tiltbig{font-family:var(--f-head);font-size:64px;font-weight:800;letter-spacing:-.02em;line-height:1;padding:10px 0;font-variant-numeric:tabular-nums}
+
+.offer{display:flex;flex-direction:column;gap:10px}
+.pass{display:flex;flex-direction:column;gap:10px}
+.pass-card{border-radius:20px;overflow:hidden;border:1px solid var(--line);background:var(--surface);max-width:520px}
+.pass-head{background:var(--warm-grad);color:#fff;padding:16px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.pass-qr{width:112px;height:112px;background:#fff;border-radius:10px;padding:5px;flex:none;display:grid;place-items:center}.pass-qr svg{width:100%;height:100%}
+.pass-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line)}.pass-grid div{background:var(--surface);padding:10px 14px;display:flex;flex-direction:column}.pass-grid span{font-size:12px;color:var(--muted)}.pass-grid b{font-family:var(--f-head);font-size:18px}
+.pass-card>p{padding:0 14px 12px}
+.exc{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--surface)}
+.painrow{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
+.pbar{display:inline-block;width:110px;height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden;vertical-align:middle}.pbar i{display:block;height:100%}
+@media print{.pass-card,.pass-card *{visibility:visible!important}.pass-card{position:absolute;left:0;top:0;width:90mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+.offlist{display:flex;flex-direction:column;gap:8px}
+.offrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--surface)}
+.offrow.off{opacity:.55}
+.offrow input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent)}
+.offname{display:flex;flex-direction:column;min-width:0}.offname span{font-size:12.5px}
+.offnum{display:flex;gap:8px;align-items:flex-end}.offnum label{display:flex;flex-direction:column;font-size:11.5px;color:var(--muted);font-weight:600}
+.offnum .input{width:72px;min-height:36px;padding:6px 8px}.offnum b{min-width:76px;text-align:right}
+@media (max-width:560px){.offrow{grid-template-columns:auto 1fr}.offnum{grid-column:1/-1;justify-content:flex-end}}
 </style>
 </head>
 <body>
@@ -1398,7 +1419,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.30';
+const APP_VER = '2026-10-27.31';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1977,7 +1998,7 @@ function newBikeMatches(c,opt){
     const best=sizes.filter(z=>z.cls!=='nein').sort((p,q)=>p.score-q.score)[0];
     if(best){ const bi=sizes.indexOf(best); out.push({g,best,alt:sizes.filter((z,i)=>z!==best&&z.cls!=='nein'&&Math.abs(i-bi)===1).sort((p,q)=>p.score-q.score)[0]||null}); }
   });
-  out.sort((p,q)=>p.best.score-q.best.score);
+  out.forEach(h=>h.stock=stockFor(h.g)); out.sort((p,q)=>((q.stock.length>0)-(p.stock.length>0))||(p.best.score-q.best.score));
   return {P,list:out,type,crank:P.crank};
 }
 function newBikeHtml(cid){
@@ -1995,8 +2016,8 @@ function newBikeHtml(cid){
   const sheet=(z)=>`<div class="ckparts" style="margin-top:6px"><div><span>Sattelhöhe</span><b>${n(P.h)} mm</b><i>Tretlagermitte bis Satteloberfläche</i></div><div><span>Sattelversatz</span><b>${n(P.sb)} mm</b><i>Lot Tretlager bis Sattelspitze</i></div><div><span>Vorbau</span><b>${z.L} mm, ${z.ang>0?'+':'−'}${Math.abs(z.ang)}°</b><i>${z.stock?`Serie ${z.stock} mm`:'Serie unbekannt'}</i></div><div><span>Spacer unter Vorbau</span><b>${z.sp} mm</b><i>plus Steuersatz-Abdeckung</i></div><div><span>Lenkerbreite</span><b>${bw} mm</b><i>aus Schulterbreite${c.body.shoulder?'':' (geschätzt)'}</i></div><div><span>Kurbel</span><b>${fmtNum(R.crank)} mm</b><i>aus Schrittlänge</i></div></div>`;
   const tag=z=>z.cls==='serie'?'<span class="chip nodot c-ok">passt mit Serienteilen</span>':`<span class="chip nodot c-warn">passt mit ${z.L} mm Vorbau${z.ang>0?' (+6°)':''}</span>`;
   return head+bodyTypeHtml(c)+`<p class="muted" style="font-size:14px">Zielposition aus Körpermaßen (${esc({aero:'sportlich',mitte:'ausgewogen',komfort:'komfortabel'}[P.style])}): Sattelhöhe ${n(P.h)} mm, Sattel–Lenker ${n(P.r)} mm, Überhöhung ${n(P.d)} mm.${P.est.length?` Geschätzt: ${esc(P.est.join(', '))}.`:''} Für jedes Modell die beste Größe.</p>
-  ${R.list.length?`<div class="stack" style="gap:8px">${R.list.slice(0,12).map((h,i)=>`<details class="more nbhit" ${i===0?'open':''}><summary><b>${esc(h.g.brand)} ${esc(h.g.model)}</b> · Größe <b>${esc(h.best.size)}</b> ${tag(h.best)}</summary>
-    <p class="muted" style="font-size:13.5px;margin:6px 0 0">Stack ${n(h.best.x.stack)} · Reach ${n(h.best.x.reach)} mm${h.alt?` · Alternative: Größe ${esc(h.alt.size)} (${h.alt.cls==='serie'?'Serienteile':h.alt.L+' mm Vorbau'})`:''}${h.best.so!=null?` · Schrittfreiheit ${n(h.best.so)} mm`:''}</p>${sheet(h.best)}</details>`).join('')}</div>`:`<div class="empty">${ic('grid')}<span>Kein Modell dieses Typs passt mit üblichen Teilen. Andere Marke oder Radtyp wählen.</span></div>`}
+  ${R.list.length?`<div class="stack" style="gap:8px">${R.list.slice(0,12).map((h,i)=>`<details class="more nbhit" ${i===0?'open':''}><summary><b>${esc(h.g.brand)} ${esc(h.g.model)}</b> · Größe <b>${esc(h.best.size)}</b> ${tag(h.best)}${h.stock.length?` <span class="chip nodot c-acc">auf Lager: ${h.stock.map(x=>esc(x.geo.size)+' ('+x.stock+'×)').join(', ')}</span>`:''}</summary>
+    <p class="muted" style="font-size:13.5px;margin:6px 0 0">Stack ${n(h.best.x.stack)} · Reach ${n(h.best.x.reach)} mm${h.alt?` · Alternative: Größe ${esc(h.alt.size)} (${h.alt.cls==='serie'?'Serienteile':h.alt.L+' mm Vorbau'})`:''}${h.best.so!=null?` · Schrittfreiheit ${n(h.best.so)} mm`:''}</p>${sheet(h.best)}${h.stock.some(x=>String(x.geo.size)===String(h.best.size))?'':`<button class="btn sm ghost" style="margin-top:6px" data-act="nbStock" data-g="${h.g.id}" data-size="${esc(h.best.size)}" data-c="${cid}">Habe ich auf Lager (Größe ${esc(h.best.size)})</button>`}</details>`).join('')}</div>`:`<div class="empty">${ic('grid')}<span>Kein Modell dieses Typs passt mit üblichen Teilen. Andere Marke oder Radtyp wählen.</span></div>`}
   <div class="notice" style="font-size:13.5px">${ic('info')}<div>Aus Körpermaßen etwa ±10–15 mm genau. Bei der Übergabe: Werte einstellen, dann kurz auf dem Rollentrainer prüfen (Kniewinkel per iPhone-Kamera) und höchstens ±5 mm nachstellen. Geometrie aus Herstellerangaben, ${geoAll().length} Modelle in der Bibliothek.</div></div></div>`;
 }
 SESSTAB.anamnese = (s,c) => {
@@ -2013,6 +2034,7 @@ SESSTAB.anamnese = (s,c) => {
   ${!c.consent?`<div class="statusbox warn"><div style="flex:1;min-width:0"><b>Einwilligung fehlt</b><span class="muted" style="font-size:14px">Vor Gesundheitsangaben einholen.</span></div><button class="btn sm" data-act="consent" data-id="${c.id}">Erfassen</button></div>`:''}
   ${startBtn(first,done,first>=0?ANA_Q[first][1]:'')}
   <div class="ovl">${ANA_Q.map(([k,l],i)=>ovItem(i,l,a[k],a[k]?'done':'open')).join('')}</div>
+  ${painAreas(s).length?`<details class="more" ${s.pain?'':'open'}><summary>Wie stark sind die Beschwerden? (0–10)</summary><div style="margin-top:8px">${painHtml(s)}</div></details>`:''}
   ${goalPreviewHtml(s)}
   <details class="more"><summary>Notizen</summary><form class="stack" style="margin-top:8px" data-form="anaNotes" data-id="${s.id}"><textarea class="input" id="a_notes" name="notes">${esc(s.notes)}</textarea><div><button class="btn" type="submit">Notizen speichern</button></div></form></details>
   </div>`;
@@ -2833,8 +2855,8 @@ SESSTAB.bericht = s => `<div class="stack"><div class="row" style="justify-conte
   <div id="reportBox">${ui.reportFor===s.id?reportHtml(s):'<div class="empty">Noch kein Bericht erzeugt.</div>'}</div></div>`;
 SESSTAB.ergebnis = s => {
   const q=quality(s), crit=q.filter(x=>x[0]!=='info').length; const t=ui.resTab||'vergleich';
-  const tabs=[['vergleich','Vorher / Nachher'],['teile','Teile & Alternativen'],['uebertragen','Auf neues Rad'],['groesse','Größe & Sattel'],['qualitaet',`Datenqualität${crit?` (${crit})`:''}`],['bericht','Bericht']];
-  const body={vergleich:()=>SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,uebertragen:()=>transferHtml(s),teile:()=>checksHtml(s,false)+footHtml(s)+hoodHtml(s)+cockpitHtml(s)+planHtml(s)+'<hr>'+partsPlanHtml(s),groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
+  const tabs=[['vergleich','Vorher / Nachher'],['angebot','Angebot'],['teile','Teile & Alternativen'],['uebungen','Übungen'],['pass','Fit-Pass'],['uebertragen','Auf neues Rad'],['groesse','Größe & Sattel'],['qualitaet',`Datenqualität${crit?` (${crit})`:''}`],['bericht','Bericht']];
+  const body={angebot:()=>offerHtml(s),uebungen:()=>exercisesHtml(s),pass:()=>passHtml(s),vergleich:()=>`<div class="panel" style="box-shadow:none"><div class="panel-b"><h3 style="margin-top:0">Beschwerden vorher / nachher</h3>${painHtml(s)}</div></div>`+SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,uebertragen:()=>transferHtml(s),teile:()=>checksHtml(s,false)+footHtml(s)+hoodHtml(s)+cockpitHtml(s)+planHtml(s)+'<hr>'+partsPlanHtml(s),groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
   return `<div class="stack">
   <p class="onlyline">Prüfe das Ergebnis, erstelle den Bericht und schließ das Fitting ab.</p>
   <div class="tabsbar" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${t===k}" data-act="resTab" data-v="${k}">${l}</button>`).join('')}</div>
@@ -2842,6 +2864,116 @@ SESSTAB.ergebnis = s => {
   <div class="row"><span class="label">Status</span><select class="input" style="width:auto" data-change="sessStatus" data-id="${s.id}" aria-label="Status">${opts(['geplant','eingetroffen','in Arbeit','abgeschlossen','abgesagt'],s.status)}</select></div>
   </div>`;
 };
+/* =========================================================================
+   Mehrwert: Angebot aus dem Plan, Fit-Pass (QR), Übungen, Beschwerde-Verlauf, Lager-Räder
+   ========================================================================= */
+const PRICE_DEFAULT={stem:49,unit:189,spacer:6.5,insole:49,wedge:12,shim:9,saddle:89,tape:19,cleat:22,laborCockpit:25,laborHoods:20,laborCleat:15,laborInsole:10};
+function invFind(re){ return (S.inventory||[]).find(x=>re.test(x.name)); }
+function offerBuild(s){
+  const items=[]; const add=(id,name,qty,price,why,re)=>{ const inv=re?invFind(re):null; items.push({id,name:inv?inv.name:name,qty,price:inv&&inv.price?inv.price:price,why,on:true,sku:inv?inv.sku:null,stock:inv?inv.stock:null}); };
+  const P=computePlan(s); const b=bike(s.bikeId)||{};
+  // Cockpit / Vorbau aus der Cockpit-Empfehlung, wenn der Plan ein neues Teil braucht
+  const needPart=P.steps.some(x=>(x.acts||[]).some(a=>a.part)||((x.alt||[]).some(a=>a.part)&&!x.d&&x.want));
+  try{ const r=cockpitAdvice(s); if(r&&!Array.isArray(r.need)&&(Math.abs(r.need.dx)>=8||Math.abs(r.need.dy)>=8)&&needPart){ const u=r.units[0], a=r.best[0];
+    const err0=Math.abs(r.need.dx)+Math.abs(r.need.dy); const better=x=>x&&x.err<=err0-8;
+    if(!(b.cockpit==='unit'?better(u):(better(a)||better(u)))) throw 0;
+    if(b.cockpit==='unit'&&u) add('unit',`${u.u.brand} ${u.u.model} ${u.L}×${u.w}`,1,PRICE_DEFAULT.unit,'Cockpit-Empfehlung (gleiche Bauart)',null);
+    else if(a) add('stem',`Vorbau ${a.L} mm, ${a.a>0?'+':''}${a.a}°`,1,PRICE_DEFAULT.stem,'Cockpit-Empfehlung',new RegExp(`Vorbau ${a.L} mm`));
+    add('lab1','Arbeit: Cockpit tauschen und einstellen',1,PRICE_DEFAULT.laborCockpit,'Montage',null); } }catch(e){}
+  // Spacer, wenn mehr Spacer gebraucht werden als vorhanden (nur bei Vorbau, nicht Einheit)
+  const drop=P.steps.find(x=>x.key==='drop'&&x.parts&&x.parts.spacer!=null&&x.parts.spacer>((bikeParts(s).under||0)+(bikeParts(s).above||0)));
+  if(drop) add('sp','Spacer-Set 5 mm',Math.ceil((drop.parts.spacer-((bikeParts(s).under||0)+(bikeParts(s).above||0)))/5),PRICE_DEFAULT.spacer,'Mehr Spacer nötig',/Spacer/);
+  // Schalthebel höher setzen (bei blockierter Lenkerhöhe)
+  if(P.steps.some(x=>x.key==='drop'&&!x.d&&(x.alt||[]).some(a=>/Schalthebel 5–10 mm höher/.test(a.t)))){ add('tape','Lenkerband',1,PRICE_DEFAULT.tape,'Schalthebel höher setzen',/Lenkerband/); add('lab2','Arbeit: Schalthebel versetzen, Band wickeln',1,PRICE_DEFAULT.laborHoods,'Montage',null); }
+  // Füße
+  const f=footAdvice(s); const ins=['L','R'].filter(sd=>f.feet[sd].insole&&['ja','prüfen'].includes(f.feet[sd].insole.need));
+  if(ins.length){ add('ins',`Einlagen (${f.feet[ins[0]].insole.type.split(',')[0]})`,1,PRICE_DEFAULT.insole,`Fußgewölbe ${ins.map(x=>x==='L'?'links':'rechts').join(' und ')}`,/Einlage/); add('lab3','Arbeit: Einlagen anpassen',1,PRICE_DEFAULT.laborInsole,'Montage',null); }
+  const wd=['L','R'].reduce((a,sd)=>a+((f.feet[sd].wedge&&f.feet[sd].wedge.need==='ja')?f.feet[sd].wedge.count:0),0);
+  if(wd) add('wd','Keile für Cleats (Wedges)',wd,PRICE_DEFAULT.wedge,'Vorfuß schräg',/Keil|Wedge/);
+  if(f.shim&&f.shim.need==='ja') add('sh',`Unterlegplatte ${f.shim.mm} mm (${f.shim.side})`,1,PRICE_DEFAULT.shim,'Beinlängenausgleich',/Unterleg|Shim/);
+  if(P.steps.some(x=>x.key==='cleatFore'&&x.d)||wd||(f.shim&&f.shim.need==='ja')) add('lab4','Arbeit: Cleats einstellen',1,PRICE_DEFAULT.laborCleat,'Montage',null);
+  // Sattel bei Sitzbeschwerden
+  const pa=partsAdvice(s); if(pa.saddle&&/sitz/i.test((s.anamnesis&&s.anamnesis.complaints)||'')) add('sad',`Sattel ${pa.saddle.lo}–${pa.saddle.hi} mm breit`,1,PRICE_DEFAULT.saddle,`Sitzknochen ${pa.saddle.sb} mm, Sitzbeschwerden`,/Sattel/);
+  return items;
+}
+function offerHtml(s){
+  if(!s.offer||!s.offer.items) { s.offer={items:offerBuild(s),date:today()}; }
+  const it=s.offer.items; const sum=it.filter(x=>x.on).reduce((a,x)=>a+x.qty*x.price,0);
+  return `<div class="offer"><div class="row" style="justify-content:space-between"><h3>Angebot aus dem Fitting</h3><button class="btn sm ghost" data-act="offerRebuild" data-id="${s.id}">Neu berechnen</button></div>
+  ${it.length?`<div class="offlist">${it.map((x,i)=>`<div class="offrow ${x.on?'':'off'}"><input type="checkbox" ${x.on?'checked':''} data-change="offerOn" data-id="${s.id}" data-i="${i}" aria-label="Position übernehmen"><div class="offname"><b>${esc(x.name)}</b><span class="faint">${esc(x.why)}${x.sku?` · Lager: ${x.stock} Stk.`:x.id.startsWith('lab')?'':' · nicht im Lager'}</span></div><div class="offnum"><label><span>Menge</span><input class="input num" type="number" min="0" value="${x.qty}" data-change="offerQty" data-id="${s.id}" data-i="${i}"></label><label><span>Preis €</span><input class="input num" type="number" step="0.5" min="0" value="${x.price}" data-change="offerPrice" data-id="${s.id}" data-i="${i}"></label><b class="num">${eur(x.on?x.qty*x.price:0)}</b></div></div>`).join('')}</div>
+  <div class="row" style="justify-content:space-between"><b class="num" style="font-size:18px">Summe ${eur(sum)}</b><div class="row" style="gap:6px"><button class="btn" data-act="offerCopy" data-id="${s.id}">Text kopieren</button><button class="btn primary" data-act="offerSale" data-id="${s.id}">Als Auftrag anlegen</button></div></div>
+  <p class="faint" style="font-size:12.5px">Preise aus deinem Lager, sonst Richtpreise. Antippen zum Ändern. Positionen ohne Haken kommen nicht ins Angebot.</p>`
+  :'<p class="muted">Laut Plan sind keine neuen Teile nötig. Alles lässt sich mit den vorhandenen Teilen einstellen.</p>'}</div>`;
+}
+function offerText(s){ const c=cust(s.customerId); const it=(s.offer&&s.offer.items||[]).filter(x=>x.on); const sum=it.reduce((a,x)=>a+x.qty*x.price,0);
+  return [`Angebot – ${c.name} – ${fmtDate(today())}`,shopName()||'','',...it.map(x=>`${x.qty}× ${x.name} – ${eur(x.qty*x.price)} (${x.why})`),'',`Summe: ${eur(sum)}`].join('\n'); }
+
+/* ---------- Fit-Pass: Position als QR-Code, ohne Cloud ---------- */
+const PASS_KEYS=['saddleHeight','saddleSetback','saddleTilt','reach','drop','hoodDrop','cleatFore','crankLength','barWidth','stemLength','stemAngle','spacer','spacerAbove','bbHeight','saddleFloor','barFloor','barX','hoodFloor','hoodX'];
+function passData(s){ const c=cust(s.customerId), b=bike(s.bikeId)||{}; const e={...s.before,...s.after}; const v={}; PASS_KEYS.forEach(k=>{ if(e[k]) v[k]=Math.round(Number(e[k].value)*10)/10; });
+  const body={}; ['height','inseam','torso','arm','shoulder','sitBone'].forEach(k=>{ if(c.body[k]!=null&&c.body[k]!=='') body[k]=Number(c.body[k]); });
+  return {v:1,n:c.name,dt:s.date,bk:[b.brand,b.model,b.size,b.type].filter(Boolean).join('|'),g:b.geo?b.geo.id+'|'+b.geo.size:'',m:v,b:body,sh:shopName()||''}; }
+function b64u(str){ return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function unb64u(t){ t=t.replace(/-/g,'+').replace(/_/g,'/'); while(t.length%4) t+='='; return decodeURIComponent(escape(atob(t))); }
+function passLink(s){ return location.origin+location.pathname+'#pass='+b64u(JSON.stringify(passData(s))); }
+function passHtml(s){ const d=passData(s); const n=k=>d.m[k]!=null?fmtNum(d.m[k])+' '+MK[k].unit:'–'; const url=passLink(s);
+  const keyRows=[['saddleHeight','Sattelhöhe'],['saddleSetback','Sattelversatz'],['saddleTilt','Sattelneigung'],['reach','Sattel–Lenker'],['drop','Überhöhung'],['cleatFore','Cleat längs'],['crankLength','Kurbel'],['barWidth','Lenkerbreite']];
+  setTimeout(()=>{ const box=document.getElementById('passQR'); if(!box) return; (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ const q=window.qrcode(0,'L'); q.addData(url); q.make(); box.innerHTML=q.createSvgTag({cellSize:4,margin:1,scalable:true}); }).catch(()=>{ box.innerHTML='<span class="faint" style="font-size:12px">QR-Code braucht Internet</span>'; }); },30);
+  return `<div class="pass"><div class="pass-card"><div class="pass-head"><div><div class="label" style="color:rgba(255,255,255,.75)">Fit-Pass</div><b style="font-size:20px">${esc(d.n)}</b><div style="font-size:13px;opacity:.85">${esc(d.bk.split('|').slice(0,3).join(' '))} · ${fmtDate(d.dt)}</div></div><div class="pass-qr" id="passQR"></div></div>
+  <div class="pass-grid">${keyRows.map(([k,l])=>`<div><span>${l}</span><b>${n(k)}</b></div>`).join('')}</div>
+  <p class="faint" style="font-size:12px;margin:8px 0 0">${esc(d.sh||'FitFrame')} · Beim nächsten Rad QR-Code scannen – die Position wird 1:1 übertragen.</p></div>
+  <div class="row" style="gap:6px"><button class="btn primary" data-act="printReport">${ic('doc')}Drucken oder als PDF</button><button class="btn" data-act="passShare" data-id="${s.id}">Link teilen</button><button class="btn" data-act="passCopy" data-id="${s.id}">Link kopieren</button></div>
+  <p class="faint" style="font-size:12.5px">Alle Werte stecken im QR-Code selbst, es wird nichts hochgeladen. Wer den Code scannt, sieht die Werte. Deshalb nur dem Kunden geben.</p></div>`; }
+function passImportHtml(d){ const n=k=>d.m[k]!=null?fmtNum(d.m[k])+' '+MK[k].unit:'–';
+  return `<div class="stack"><p>Fit-Pass von <b>${esc(d.n)}</b> vom ${fmtDate(d.dt)}${d.sh?` (${esc(d.sh)})`:''}.</p><p class="muted" style="font-size:14px">Rad: ${esc(d.bk.split('|').slice(0,3).join(' ')||'–')}</p>
+  <div class="tw"><table><tbody>${Object.keys(d.m).map(k=>`<tr><td>${MK[k]?MK[k].label:k}</td><td class="r num">${n(k)}</td></tr>`).join('')}</tbody></table></div>
+  <button class="btn primary big" data-act="passImport">Übernehmen: Kunde und Fitting anlegen</button>
+  <p class="faint" style="font-size:12.5px">Gibt es den Kunden schon (gleicher Name), wird nur ein neues Fitting angelegt. Vorhandene Daten bleiben unverändert. Danach unter Ergebnis → „Auf neues Rad“ übertragen.</p></div>`; }
+function passImport(d){
+  let c=S.customers.find(x=>x.name.trim().toLowerCase()===String(d.n||'').trim().toLowerCase());
+  if(!c){ c={id:uid('c'),name:d.n||'Fit-Pass Kunde',phone:'',email:'',tags:['Fit-Pass'],consent:false,body:{height:null,inseam:null,torso:null,arm:null,shoulder:null,footL:null,footR:null,sitBone:null},flex:{},est:[],notes:''}; S.customers.push(c); }
+  Object.entries(d.b||{}).forEach(([k,v])=>{ if(c.body[k]==null||c.body[k]==='') c.body[k]=v; });
+  const [brand,model,size,type]=(d.bk||'').split('|'); const [gid,gs]=(d.g||'').split('|');
+  const bk={id:uid('b'),customerId:c.id,name:model||'Rad (Fit-Pass)',brand:brand||'–',model:model||'Rad aus Fit-Pass',size:size||'',type:type||'Rennrad',geo:gid&&geoById(gid)?{id:gid,size:gs}:null,frameNo:'–',pedal:'',saddle:'–',km:0,year:null}; S.bikes.push(bk);
+  const s={id:uid('s'),customerId:c.id,bikeId:bk.id,date:today(),time:'10:00',type:'Fit-Pass-Übernahme',status:'in Arbeit',anamnesis:{goal:'Position vom Fit-Pass übernehmen'},check:{},before:{},after:{},changes:[],followUps:[],notes:`Aus Fit-Pass vom ${fmtDate(d.dt)}${d.sh?` (${d.sh})`:''}.`};
+  Object.entries(d.m||{}).forEach(([k,v])=>{ if(MK[k]) s.before[k]={...mv(k,v,'Fit-Pass','übernommen',null),time:nowStamp()}; });
+  S.sessions.push(s); audit(`Fit-Pass übernommen: ${c.name}`,s.id); save(); return s; }
+
+/* ---------- Übungen aus dem Körpercheck ---------- */
+const EXERCISES={
+  hamstring:{t:'Rückseite Oberschenkel dehnen',how:['Rückenlage, ein Bein mit Gurt oder Handtuch gestreckt nach oben ziehen.','Knie gestreckt, bis ein Ziehen kommt – kein Schmerz.','30 Sekunden halten, 3× pro Seite, täglich.'],why:'Mehr Beweglichkeit erlaubt später eine sportlichere Position ohne Rückenschmerzen.'},
+  hipFlex:{t:'Hüftbeuger dehnen',how:['Ausfallschritt-Kniestand, hinteres Knie auf einem Kissen.','Becken leicht nach vorn schieben, Oberkörper aufrecht.','30 Sekunden, 3× pro Seite.'],why:'Stundenlanges Sitzen verkürzt die Hüftbeuger, das zieht am unteren Rücken.'},
+  glute:{t:'Seitliche Hüfte stärken (Clamshell)',how:['Seitenlage, Knie gebeugt, Füße zusammen.','Oberes Knie öffnen wie eine Muschel, Becken bleibt ruhig.','15 Wiederholungen, 3 Sätze pro Seite, jeden 2. Tag.'],why:'Stabilisiert das Knie, damit es beim Treten nicht nach innen fällt.'},
+  squat:{t:'Einbeinige Kniebeuge vor dem Spiegel',how:['Auf einem Bein stehen, langsam 30–40° in die Knie.','Knie zeigt über den 2. Zeh, nicht nach innen.','8 Wiederholungen, 3 Sätze pro Seite.'],why:'Trainiert genau die Kniespur, die beim Radfahren gebraucht wird.'},
+  foot:{t:'Fußgewölbe aktivieren (Kurzer Fuß)',how:['Barfuß stehen, Zehen bleiben lang am Boden.','Fußballen Richtung Ferse ziehen, das Gewölbe hebt sich.','10× 5 Sekunden, täglich.'],why:'Ein aktives Gewölbe hilft gegen Taubheit und einknickende Füße.'},
+  calf:{t:'Waden dehnen',how:['An der Wand, hinteres Bein gestreckt, Ferse am Boden.','Becken nach vorn, bis die Wade zieht.','30 Sekunden, 3× pro Seite; dann mit leicht gebeugtem Knie wiederholen.'],why:'Mehr Beweglichkeit im Fußgelenk entlastet Achillessehne und Knie.'},
+  neck:{t:'Nacken und Brustwirbelsäule lösen',how:['Kinn sanft zurückziehen (Doppelkinn), 5 Sekunden, 10×.','Auf einer Schaumstoffrolle quer unter den Schulterblättern liegen, Arme über den Kopf.','Täglich 3–5 Minuten.'],why:'Der Kopf muss auf dem Rad nach oben schauen. Eine bewegliche Brustwirbelsäule entlastet den Nacken.'},
+  back:{t:'Rumpf stabilisieren (Brücke)',how:['Rückenlage, Füße aufgestellt.','Becken heben, bis Knie, Hüfte und Schultern eine Linie bilden.','10× 10 Sekunden halten, jeden 2. Tag.'],why:'Ein starker Rumpf hält das Becken ruhig und schützt den unteren Rücken.'}
+};
+function exercisesFor(s){ const c=cust(s.customerId); const ch=s.check||{}; const comp=((s.anamnesis&&s.anamnesis.complaints)||'').toLowerCase(); const out=new Set();
+  const ham=Number(ch.hamstring||0); if(ham>10||/eingeschränkt/.test((c.flex&&c.flex.hamstring)||'')) out.add('hamstring');
+  if(/eingeschränkt|nicht/.test(String(ch.hipFlexL||'')+String(ch.hipFlexR||''))) out.add('hipFlex');
+  if(/innen/.test(String(ch.kneeTrackL||'')+String(ch.kneeTrackR||''))||/knie innen/.test(comp)){ out.add('glute'); out.add('squat'); }
+  if(/flach|hoch/.test(String(ch.archL||'')+String(ch.archR||''))||/fuß|zeh/.test(comp)) out.add('foot');
+  const an=Math.min(Number(ch.ankleL||99),Number(ch.ankleR||99)); if(an<10||/wade|achill/.test(comp)) out.add('calf');
+  if(/nacken|schulter/.test(comp)) out.add('neck'); if(/rücken|lenden/.test(comp)||/rücken/.test((s.anamnesis&&s.anamnesis.limits||'').toLowerCase())){ out.add('back'); out.add('hipFlex'); }
+  return [...out].slice(0,5).map(k=>({k,...EXERCISES[k]})); }
+function exercisesHtml(s,forReport){ const ex=exercisesFor(s); if(!ex.length) return forReport?'':'<p class="muted">Keine Übungen nötig – im Körpercheck und bei den Beschwerden ist nichts aufgefallen.</p>';
+  return `${forReport?'<div class="sec"><h3>Übungen für zu Hause</h3>':'<div class="stack" style="gap:10px"><p class="muted" style="font-size:14px">Passend zu Körpercheck und Beschwerden. Steht so auch im Bericht. Bei der Nachkontrolle neu messen: Wird es besser, kann die Position sportlicher werden.</p>'}
+  ${ex.map((e,i)=>`<div class="${forReport?'':'exc'}"><b>${i+1}. ${esc(e.t)}</b><div class="${forReport?'fine':'muted'}" style="font-size:13.5px">${esc(e.why)}</div><ol style="margin:4px 0 0;padding-left:18px;font-size:14px">${e.how.map(h=>`<li>${esc(h)}</li>`).join('')}</ol></div>`).join('')}
+  <p class="${forReport?'fine':'faint'}" style="font-size:12px">Ohne Schmerz üben. Bei Beschwerden Physiotherapie fragen. Kein medizinischer Rat.</p></div>`; }
+
+/* ---------- Beschwerde-Verlauf 0–10 ---------- */
+function painAreas(s){ return splitVals((s.anamnesis&&s.anamnesis.complaints)||'').filter(x=>x&&x!=='Keine'); }
+function painHtml(s,forReport){ const A=painAreas(s); if(!A.length) return forReport?'':'<p class="muted">Keine Beschwerden angegeben. Im Schritt Ziel eintragen, dann erscheint hier der Verlauf.</p>'; const p=s.pain||{};
+  const bar=(v,col)=>v==null?'<span class="faint">–</span>':`<span class="pbar"><i style="width:${v*10}%;background:${col}"></i></span><b class="num">${v}</b>`;
+  if(forReport){ const any=A.some(a=>p[a]&&(p[a].pre!=null||p[a].post!=null)); if(!any) return ''; return `<div class="sec"><h3>Beschwerden vorher / nachher (0–10)</h3><table><tbody>${A.map(a=>{ const x=p[a]||{}; return `<tr><td>${esc(a)}</td><td>vorher ${x.pre??'–'}</td><td>nachher ${x.post??'–'}${x.pre!=null&&x.post!=null?` (${x.post-x.pre>0?'+':''}${x.post-x.pre})`:''}</td></tr>`; }).join('')}</tbody></table></div>`; }
+  return `<div class="stack" style="gap:8px"><p class="muted" style="font-size:14px">0 = keine, 10 = sehr stark. „Vorher“ beim ersten Termin, „Nachher“ bei der Nachkontrolle eintragen.</p>
+  ${A.map(a=>{ const x=p[a]||{}; const sel=(w)=>`<select class="input" style="width:auto;min-height:36px" data-change="painSet" data-id="${s.id}" data-a="${esc(a)}" data-w="${w}" aria-label="${esc(a)} ${w==='pre'?'vorher':'nachher'}"><option value="">–</option>${[...Array(11)].map((_,i)=>`<option ${x[w]===i?'selected':''}>${i}</option>`).join('')}</select>`;
+    return `<div class="painrow"><b>${esc(a)}</b><div class="row" style="gap:8px;flex-wrap:nowrap"><span class="faint" style="font-size:12.5px">vorher</span>${sel('pre')}${bar(x.pre,'var(--bad)')}</div><div class="row" style="gap:8px;flex-wrap:nowrap"><span class="faint" style="font-size:12.5px">nachher</span>${sel('post')}${bar(x.post,'var(--ok)')}${x.pre!=null&&x.post!=null?`<span class="chip nodot ${x.post<x.pre?'c-ok':x.post>x.pre?'c-bad':''}">${x.post-x.pre>0?'+':''}${x.post-x.pre}</span>`:''}</div></div>`; }).join('')}</div>`; }
+
+/* ---------- Lager-Räder für die Neurad-Suche ---------- */
+function stockFor(g){ return (S.inventory||[]).filter(x=>x.geo&&x.geo.id===g.id&&x.stock>0); }
 function adviceHtml(s){
   const b=bike(s.bikeId); const sel=ui.advGeo||(b.geo&&b.geo.id)||''; const g=sel?geoById(sel):null;
   const pick=`<div class="field"><label for="advGeo">Rahmen aus der Bibliothek</label><select class="input" id="advGeo" data-change="advGeo"><option value="">Modell wählen …</option>${geoAll().map(x=>`<option value="${x.id}" ${x.id===sel?'selected':''}>${esc(x.brand+' '+x.model)}</option>`).join('')}</select></div>`;
@@ -2864,6 +2996,7 @@ function reportHtml(s){
   ${(()=>{ const p=partsAdvice(s); const kp=s.after.kneeOverPedal||s.before.kneeOverPedal; const l=[]; if(p.saddle) l.push(`Sattelbreite etwa ${p.saddle.lo}–${p.saddle.hi} mm (Sitzknochenabstand ${p.saddle.sb} mm)`); if(p.shoe) l.push(`Schuhgröße etwa EU ${fmtNum(p.shoe.lo)}–${fmtNum(p.shoe.hi)} (Herstellertabelle prüfen)`); if(kp) l.push(kopsText(Math.round(kp.value))+' (Kamera, Schätzung)'); return l.length?`<div class="sec"><h3>Empfehlungen</h3><ul style="margin:0;padding-left:18px">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''; })()}
   ${(()=>{ const pl=partsPlan(s).filter(x=>x.key!=='saddle'); return pl.length?`<div class="sec"><h3>Mögliche weitere Anpassungen</h3>${pl.map(x=>`<p><b>${esc(x.title)}.</b> Ohne neue Teile: ${esc(x.noParts.join(' '))}${x.parts.length?` <br>Mit neuen Teilen: ${esc(x.parts.join(' '))}`:''}</p>`).join('')}<p class="fine">Aus Beschwerden, gemessenen Winkeln und Zielbereichen (Faustregeln).</p></div>`:''; })()}
   ${s.notes?`<div class="sec"><h3>Beobachtungen</h3><p>${esc(s.notes)}</p></div>`:''}
+  ${painHtml(s,true)}${exercisesHtml(s,true)}
   <div class="sec"><h3>Nächste Schritte</h3><p>${fu.length?fu.map(f=>`Nachkontrolle am ${fmtDate(f.due)} (${f.days} Tage).`).join(' '):'Nachkontrolle nach 4–6 Wochen empfohlen.'} Bitte melden Sie neue Beschwerden früher.</p></div>
   ${q.length?`<div class="sec"><h3>Offene Punkte zur Datenqualität</h3><ul style="margin:0;padding-left:18px">${q.map(x=>`<li>${esc(x[1])}</li>`).join('')}</ul></div>`:''}
   <p class="fine" style="margin-top:18px">${isDemoCust(s.customerId)?'Demo-Bericht mit fiktiven Daten. ':''}Kein medizinischer Befund. Winkel aus Videoaufnahmen sind Orientierungswerte. Erstellt mit FitFrame.</p></article>
@@ -3978,6 +4111,13 @@ const ACT = {
   nbOpen(el){ ui.nb=ui.nb||{type:'Rennrad',style:'',brand:''}; openDrawer('Passendes Neurad finden',newBikeHtml(el.dataset.id)); },
   nbSet(el){ ui.nb=ui.nb||{}; ui.nb[el.dataset.k]=el.dataset.v; if(el.dataset.k==='type') ui.nb.brand=''; openDrawer('Passendes Neurad finden',newBikeHtml(el.dataset.id)); },
   setCockpit(el){ const b=bike(el.dataset.id); if(!b) return; b.cockpit=el.dataset.v; save(); render(); },
+  offerRebuild(el){ const s=sess(el.dataset.id); s.offer={items:offerBuild(s),date:today()}; save(); render(); toast('Angebot neu berechnet'); },
+  offerCopy(el){ copyText(offerText(sess(el.dataset.id))); },
+  offerSale(el){ const s=sess(el.dataset.id); const it=(s.offer&&s.offer.items||[]).filter(x=>x.on&&x.qty>0); if(!it.length){ toast('Keine Position ausgewählt',true); return; } S.sales=S.sales||[]; const id='VK-'+(300+S.sales.length+1); S.sales.unshift({id,customerId:s.customerId,bikeId:s.bikeId,date:today(),items:it.map(x=>`${x.qty}× ${x.name}`).join(', '),total:Math.round(it.reduce((a,x)=>a+x.qty*x.price,0)*100)/100,status:'Angebot'}); audit(`Angebot ${id} aus Fitting angelegt`,s.id); save(); render(); toast(`Auftrag ${id} angelegt (Lager & Verkauf)`); },
+  passShare(el){ const s=sess(el.dataset.id); const url=passLink(s); if(navigator.share) navigator.share({title:'Fit-Pass',text:`Fit-Pass ${cust(s.customerId).name}`,url}).catch(()=>{}); else copyText(url); },
+  passCopy(el){ copyText(passLink(sess(el.dataset.id))); },
+  passImport(){ const d=ui.passData; if(!d) return; const s=passImport(d); ui.passData=null; try{ history.replaceState(null,'',location.pathname); }catch(e){} closeDrawer(); ui.sess=s.id; ui.sessTab='ergebnis'; ui.resTab='uebertragen'; go('sitzung'); toast('Fit-Pass übernommen'); },
+  nbStock(el){ const g=geoById(el.dataset.g); if(!g) return; S.inventory=S.inventory||[]; const sku='BK-'+g.id.slice(0,18).toUpperCase()+'-'+el.dataset.size; const ex=S.inventory.find(x=>x.sku===sku); if(ex) ex.stock++; else S.inventory.push({sku,name:`${g.brand} ${g.model} ${el.dataset.size}`,cat:'Fahrräder',stock:1,min:0,price:0,loc:'Verkaufsfläche',geo:{id:g.id,size:el.dataset.size}}); save(); toast(`${g.brand} ${g.model} ${el.dataset.size} im Lager eingetragen – Preis unter Lager & Verkauf ergänzen`); openDrawer('Passendes Neurad finden',newBikeHtml(el.dataset.c)); },
   liveView(el){ live.view=el.dataset.v; liveReset(); document.querySelectorAll('[data-act=liveView]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===live.view))); const cb=document.getElementById('calBox'); if(cb) cb.hidden=live.view==='front'; const c=document.getElementById('liveCanvas'); if(c) c.getContext('2d').clearRect(0,0,c.width,c.height); },
   calibKnee(){ const el=document.getElementById('calKnee'); const v=el&&parseFloat(String(el.value).replace(',','.')); const r=live.last; if(!r||!(v>100&&v<180)){ toast('Erst Kamera laufen lassen und einen Winkel zwischen 100 und 180° eintragen',true); return; } const raw=r.kneeRaw??r.knee; const off=Math.round((v-raw)*10)/10; if(Math.abs(off)>10){ toast(`Unterschied ${fmtNum(off)}° ist zu groß – Kamera wirklich seitlich? Punkte richtig?`,true); return; } S.calib={knee:off,date:today()}; save(); live.infoT=0; liveInfo(true); calState(); el.value=''; toast(`Abgeglichen: Kamera ${off>0?'+':''}${fmtNum(off)}°`); },
   calibClear(){ delete S.calib; save(); live.infoT=0; liveInfo(true); calState(); toast('Abgleich gelöscht'); },
@@ -4149,6 +4289,10 @@ const FORMS = {
 };
 
 const CHG = {
+  offerOn(el){ const s=sess(el.dataset.id); s.offer.items[+el.dataset.i].on=el.checked; save(); render(); },
+  offerQty(el){ const s=sess(el.dataset.id); s.offer.items[+el.dataset.i].qty=Math.max(0,Number(el.value)||0); save(); render(); },
+  offerPrice(el){ const s=sess(el.dataset.id); s.offer.items[+el.dataset.i].price=Math.max(0,Number(String(el.value).replace(',','.'))||0); save(); render(); },
+  painSet(el){ const s=sess(el.dataset.id); s.pain=s.pain||{}; const a=el.dataset.a; s.pain[a]=s.pain[a]||{}; s.pain[a][el.dataset.w]=el.value===''?null:Number(el.value); save(); render(); },
   nbBrand(el){ ui.nb=ui.nb||{}; ui.nb.brand=el.value; openDrawer('Passendes Neurad finden',newBikeHtml(el.dataset.id)); },
   trGeo(el){ ui.trGeo=el.value; ui.trSize=''; render(); },
   trSize(el){ ui.trSize=el.value; render(); },
@@ -4194,8 +4338,9 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); cl
 
 applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
-go(VIEWS[start]?start:'dashboard');
-window.__fitframe={frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+if((location.hash||'').indexOf('#pass=')===0){ const ph=location.hash.slice(6); go('dashboard'); try{ ui.passData=JSON.parse(unb64u(ph)); setTimeout(()=>openDrawer('Fit-Pass übernehmen',passImportHtml(ui.passData)),50); }catch(e){ toast('Fit-Pass-Link ist beschädigt',true); } }
+else go(VIEWS[start]?start:'dashboard');
+window.__fitframe={offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
