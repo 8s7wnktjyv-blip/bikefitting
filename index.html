@@ -246,6 +246,8 @@ td.r,th.r{text-align:right}
 .footgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:560px){.footgrid{grid-template-columns:1fr}}
 .footcol{display:flex;flex-direction:column;gap:8px}.footcol h4{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .fitem{display:flex;flex-direction:column;gap:3px;padding:10px 12px;border-radius:12px;background:var(--surface-2);font-size:14.5px}.fitem .sub{font-size:13px;color:var(--muted);white-space:normal}
+.mk-list{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.mk-list li{display:flex;flex-direction:column;gap:1px;padding:8px 10px;border-radius:10px;background:var(--surface-2);font-size:14.5px}.mk-list li span{color:var(--muted);font-size:13.5px}
 .mgroup{display:flex;flex-direction:column;gap:4px}
 .acts{margin:6px 0 0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px}
 .acts li.info{color:var(--muted);list-style:circle}
@@ -1120,7 +1122,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.3';
+const APP_VER = '2026-10-27.4';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2470,9 +2472,47 @@ function wireVid(){
   const sk=document.getElementById('vidSeek'); if(sk) sk.addEventListener('input',()=>{ if(vidEl&&vidEl.duration){ vid.t=vidEl.duration*Number(sk.value)/1000; vidEl.currentTime=vid.t; } });
   if(vid.src) setTimeout(drawVid,30);
 }
+/* ---------- Anleitung: Klebepunkte richtig setzen ---------- */
+const MARKERS=[
+  {n:1,t:'Schulter',w:'Oberster, äußerer Knochenpunkt der Schulter (Schultereckgelenk). Arm locker hängen lassen, Knochenkante oben ertasten.',x:178,y:52},
+  {n:2,t:'Ellbogen (optional)',w:'Außen am Ellbogen auf dem Knochenvorsprung (Oberarmknorren außen).',x:212,y:82},
+  {n:3,t:'Handgelenk (optional)',w:'Außen am Handgelenk auf dem Knochenhöcker (Elle).',x:240,y:100},
+  {n:4,t:'Hüfte',w:'Großer Knochen außen am Oberschenkel (Trochanter). Zum Finden das Bein im Stehen nach innen und außen drehen – der Knochen bewegt sich unter den Fingern.',x:112,y:92},
+  {n:5,t:'Knie',w:'Mitte des Kniegelenkspalts außen: Knie leicht beugen, die Rinne zwischen Ober- und Unterschenkelknochen ertasten, Punkt in die Mitte.',x:166,y:124},
+  {n:6,t:'Knöchel',w:'Mitte des Außenknöchels.',x:150,y:184},
+  {n:7,t:'Ferse',w:'Am Schuh hinten auf Höhe der Sohle.',x:136,y:196},
+  {n:8,t:'Fußballen',w:'Am Schuh außen über dem Großzehengrundgelenk – entspricht etwa der Pedalachse.',x:178,y:196}
+];
+function markerSvg(){
+  const L=(a,b,c,d,w,col)=>`<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="${col||'var(--il-body,#b9a28f)'}" stroke-width="${w}" stroke-linecap="round"/>`;
+  const bikeCol='var(--line)';
+  return `<svg viewBox="0 0 320 230" role="img" aria-label="Seitenansicht Fahrer mit Klebepunkten" style="width:100%;max-width:420px;height:auto;display:block;margin:0 auto">
+    <circle cx="70" cy="190" r="38" fill="none" stroke="${bikeCol}" stroke-width="3"/><circle cx="262" cy="190" r="38" fill="none" stroke="${bikeCol}" stroke-width="3"/>
+    ${L(150,182,108,100,4,bikeCol)}${L(150,182,236,108,4,bikeCol)}${L(110,98,232,96,4,bikeCol)}${L(150,182,70,190,4,bikeCol)}${L(232,96,262,190,4,bikeCol)}
+    <path d="M86,90 Q110,84 134,90" stroke="var(--fg)" stroke-width="6" fill="none" stroke-linecap="round"/>${L(236,80,248,96,5,'var(--fg)')}
+    ${L(112,92,178,52,13)}${L(178,52,212,82,8)}${L(212,82,240,100,7)}${L(112,92,166,124,12)}${L(166,124,150,184,10)}${L(136,196,182,196,7,'var(--fg)')}
+    <circle cx="186" cy="34" r="13" fill="var(--il-body,#b9a28f)"/>
+    ${MARKERS.map(m=>`<g><circle cx="${m.x}" cy="${m.y}" r="7" fill="#39e75f" stroke="#0b3d18" stroke-width="1.5"/><text x="${m.x}" y="${m.y+3.5}" text-anchor="middle" font-size="9" font-weight="700" fill="#0b3d18">${m.n}</text></g>`).join('')}
+  </svg>`;
+}
+function markerGuideHtml(open){
+  return `<details class="more markers" ${open?'open':''}><summary>Klebepunkte richtig setzen</summary><div class="stack" style="margin-top:8px">
+  ${markerSvg()}
+  <div class="statusbox"><div><b>Neon-grüne, matte Punkte, 15–20 mm</b><span class="muted" style="font-size:14px">Grün hebt sich auf Haut und schwarzer Hose ab. Bei grüner Kleidung: Pink, Orange oder Weiß.</span></div></div>
+  <ol class="mk-list">${MARKERS.map(m=>`<li><b>${m.n} · ${esc(m.t)}</b><span>${esc(m.w)}</span></li>`).join('')}</ol>
+  <div class="gc-sec"><h4>So klappt es</h4><ul>
+    <li>Nur die Seite bekleben, die zur Kamera zeigt. Für die andere Seite neu kleben und das Stativ umstellen.</li>
+    <li>Punkte im Stehen ertasten, aber <b>auf dem Rad kleben</b>, mit der Kurbel ganz unten. Sonst verrutscht die Haut gegenüber dem Knochen.</li>
+    <li>Enge Kleidung, keine weiten Hosen. Bei Bedarf direkt auf die Haut kleben.</li>
+    <li>Für Kamera und Winkelmesser immer dieselben Punkte nutzen. Dann sind die Werte vergleichbar.</li>
+    <li>Kniewinkel: Hüfte (4), Knie (5), Knöchel (6). Hüftwinkel: Schulter (1), Hüfte (4), Knie (5). Knielot: Knie (5) und Fußballen (8).</li></ul></div>
+  <p class="faint" style="font-size:12.5px">Die automatische Erkennung findet den Körper auch ohne Punkte. Die Punkte machen das Antippen von Hand und die Kontrolle mit dem Winkelmesser genauer.</p></div></details>`;
+}
+
 function vidPanel(s,side){
   const m=VMODES[vid.mode];
   return panel('Video oder Foto auswerten',`<div class="stack">
+    ${markerGuideHtml(false)}
     <details class="more" ${vid.src?'':'open'}><summary>So nimmst du richtig auf</summary><ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">
       <li>iPhone quer halten oder auf ein Stativ, auf Hüfthöhe, genau seitlich zum Rad, etwa 2–3 m Abstand.</li><li>Rad steht gerade im Rollentrainer. Kunde trägt enge Kleidung.</li><li>Tipp: Klebepunkte auf Hüfte, Knie und Außenknöchel machen das Antippen genauer.</li><li>5–10 Sekunden locker fahren lassen und filmen.</li></ol></details>
     <div class="livecta"><button class="btn primary big" data-act="liveCam" data-id="${s.id}" data-side="${side||ui.motionSide||'after'}">${ic('camera')}Live-Analyse starten</button><span class="muted" style="font-size:13.5px">Automatisch, Mittelwert über ${LIVE_N} Kurbelumdrehungen, mit Knielot und Empfehlung in mm (Beta)</span></div>
@@ -2589,6 +2629,7 @@ async function liveOpen(sid,src,side){
   liveStop(); live.sid=sid; live.src=src; liveReset(); live.status='Erkennung wird geladen …';
   openDrawer('Live-Analyse (Beta)',`<div class="stack">
     <p class="muted" style="font-size:14px">${src==='cam'?'iPhone quer auf ein Stativ, genau seitlich auf Hüfthöhe, 2–3 m Abstand. Ganze Person mit Pedal im Bild. Kunde fährt locker. Die App erkennt Schulter, Hüfte, Knie, Knöchel und Fuß selbst und bildet den Mittelwert über '+LIVE_N+' Umdrehungen.':'Das geladene Video wird abgespielt und Bild für Bild ausgewertet.'}</p>
+    ${markerGuideHtml(false)}
     <div class="livewrap"><video id="liveVideo" playsinline muted autoplay></video><canvas id="liveCanvas" aria-hidden="true"></canvas></div>
     <p id="liveState" class="faint" style="font-size:13px">Erkennung wird geladen (beim ersten Mal etwa 6 MB) …</p>
     <div id="liveInfo"></div>
