@@ -1097,14 +1097,17 @@ function permanentData(){
   const t='2026-10-26 00:30', m=(k,v,meth,src)=>({...mv(k,v,meth,src,null),time:t});
   return {
     customers:[{id:'p-dominik-boehm',name:'Dominik Böhm',email:'',phone:'',since:'2026-10-26',discipline:'Gravel',consent:true,body:{height:180,inseam:88,torso:null,arm:null,shoulder:null,footL:null,footR:null,sitBone:130},flex:{hamstring:'',hip:'',ankle:''},tags:['Fest gespeichert'],est:[]}],
-    bikes:[{id:'p-bike-grizl',customerId:'p-dominik-boehm',name:'Gravel',brand:'Canyon',model:'Grizl CF SL 7',size:'M',year:null,type:'Gravel',frameNo:'',geo:{id:'canyon-grizl-cf-sl-7',size:'M'},pedal:'',saddle:'',km:null}],
+    bikes:[{id:'p-bike-grizl',customerId:'p-dominik-boehm',name:'Gravel',brand:'Canyon',model:'Grail CF SL 7 AXS',size:'M',year:null,type:'Gravel',frameNo:'',geo:{id:'canyon-grail-cf-sl-7-axs',size:'M'},pedal:'',saddle:'',km:null}],
     sessions:[{id:'p-sess-dominik-1',customerId:'p-dominik-boehm',bikeId:'p-bike-grizl',date:'2026-10-26',time:'',type:'Erstfitting',status:'in Arbeit',fitter:'Dominik Böhm',version:1,
       anamnesis:{goal:'Beschwerden loswerden, Längere Touren, Neues Rad richtig einstellen',complaints:'Füße / Zehen, Nacken, Rücken',training:'unter 2 h pro Woche',experience:'1–3 Jahre',previous:'Fitting bei anderem Anbieter',limits:'Keine',comfort:'Ausgewogen'},
       before:{saddleHeight:m('saddleHeight',750,'Maßband','gemessen'),saddleSetback:m('saddleSetback',13,'Maßband','gemessen'),reach:m('reach',545,'Maßband','gemessen'),drop:m('drop',100,'Maßband','gemessen'),cleatFore:m('cleatFore',15,'Maßband','gemessen'),
-        stemLength:m('stemLength',80,'Herstellerangabe','vom Hersteller'),barWidth:m('barWidth',440,'Herstellerangabe','vom Hersteller'),crankLength:m('crankLength',172.5,'Herstellerangabe','vom Hersteller')},
+        stemLength:m('stemLength',70,'Herstellerangabe','vom Hersteller'),barWidth:m('barWidth',440,'Herstellerangabe','vom Hersteller'),crankLength:m('crankLength',172.5,'Herstellerangabe','vom Hersteller')},
       after:{},changes:[],notes:'',feedback:[],followUps:[],check:{pain:'nein',legLenL:92,legLenR:93,pelvis:'rechts höher',shoulder:'gerade',kneeTrackL:'gerade',kneeTrackR:'fällt nach innen',archL:'hoch',archR:'hoch',forefootL:'neutral',forefootR:'Außenkante höher',hamstring:10,hipFlexL:'frei',hipFlexR:'frei',ankleL:13.5,ankleR:13,sitBone:130},comp:[]}]
   };
 }
+function fixDominikBike(){ if(S.fixGrail) return; const c=S.customers.find(x=>x.name.trim().toLowerCase()==='dominik böhm'); if(c){ S.bikes.filter(b=>b.customerId===c.id&&/Grizl/.test(b.model||'')).forEach(b=>{ b.model='Grail CF SL 7 AXS'; b.geo={id:'canyon-grail-cf-sl-7-axs',size:b.size||'M'};
+    S.sessions.filter(x=>x.bikeId===b.id).forEach(x=>{ const st=x.before.stemLength; if(st&&st.source==='vom Hersteller'&&Number(st.value)===80) st.value=70; }); }); }
+  S.fixGrail=true; save(); }
 function ensurePermanent(){
   const P=permanentData(); let n=0;
   P.customers.forEach(c=>{ const ex=S.customers.find(x=>x.id===c.id||x.name.trim().toLowerCase()===c.name.toLowerCase());
@@ -1122,7 +1125,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.4';
+const APP_VER = '2026-10-27.5';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1159,7 +1162,7 @@ const inAppBrowser=/iPhone|iPad/.test(navigator.userAgent)&&!/Safari\//.test(nav
 function audit(what,ref){ S.audit.unshift({time:nowStamp(),who:'Demo-Nutzer',what,ref:ref||''}); }
 S = load(); try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){} S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; }); S.geoCustom=S.geoCustom||[]; S.bikes.forEach(b=>{ if(!b.geo&&b.brand==='Canyon'&&b.model==='Endurace CF 7'&&b.size==='M') b.geo={id:'canyon-endurace-cf-7',size:'M'}; }); (function(){ const sd=seed(); sd.sessions.forEach(d=>{ const x=S.sessions.find(y=>y.id===d.id); if(x&&!Object.keys(x.check).length&&Object.keys(d.check||{}).length&&x.customerId===d.customerId){ x.check=d.check; x.comp=d.comp; } }); })();
 
-snapshotBeforeUpdate(); ensurePermanent();
+snapshotBeforeUpdate(); ensurePermanent(); fixDominikBike();
 const ui = {route:'dashboard', sess:'s4', sessTab:'anamnese', cust:null, search:'', bikeSearch:'', woFilter:'alle', invSearch:'', invCat:'alle', aiSess:'s1', aiOut:null, portalCust:'c1', motionSess:'s1', motionSide:'after', cmpA:'s1', cmpB:'s2', cmpChanged:true, fitView:'both', hwSel:'cleatlab', cleatSys:'SPD-SL', apptFilter:'heute', fuFilter:'offen'};
 
 const cust = id => S.customers.find(c=>c.id===id);
