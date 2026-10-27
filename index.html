@@ -1386,7 +1386,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.26';
+const APP_VER = '2026-10-27.27';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1809,9 +1809,9 @@ function bodyTarget(c,type,a,check,crank,frame,styleOverride){
   const style=styleOverride||(()=>{ try{ return goalPreviewRaw(a||{},type,check); }catch(e){ return 'mitte'; } })();
   const ham=Number((check&&check.hamstring)||0); const comp=((a&&a.complaints)||'').toLowerCase();
   const cr=crank||(I<78?165:I<84?170:I<90?172.5:175);
-  const h=Math.round(I*10*0.883-(cr-172.5)*0.5);
+  const h=frame&&frame.h?Math.round(frame.h):Math.round(I*10*0.883-(cr-172.5)*0.5);
   const sa=SEAT_ANG[type]||73.5; const cs=Math.cos(sa*Math.PI/180);
-  const sb=type==='Triathlon'?Math.round(h*cs-150):Math.round(h*cs-125);
+  const sb=frame&&frame.sb!=null&&frame.sb>=20?Math.round(frame.sb):type==='Triathlon'?Math.round(h*cs-150):Math.round(h*cs-125);
   const xs=sb+70, Hs=Math.sqrt(Math.max(h*h-xs*xs,0));
   // Anpassung durch Ziel und Körper (gegenüber der Serienposition), begrenzt
   let adjD=style==='aero'?15:style==='komfort'?-15:0; const why=[];
@@ -1838,7 +1838,7 @@ function bodyTarget(c,type,a,check,crank,frame,styleOverride){
   }
   const unc=est.includes('Schrittlänge')?15:10;
   const bx=-sb+Math.sqrt(Math.max(r*r-d*d,0)), by=Hs-d;
-  return {h,sb,r,d,bx,by,crank:cr,style,est,unc,type,sa,basis};
+  return {h,sb,r,d,bx,by,crank:cr,style,est,unc,type,sa,basis,adjD,adjR,why};
 }
 /* Stil ohne Sitzung (für Neurad und Vorschau) */
 function goalPreviewRaw(a,type,check){ const fake={anamnesis:a,bikeId:'__none',check:check||{}}; const g=goalPreview(fake,type); return g?g.style:'mitte'; }
@@ -2218,7 +2218,17 @@ function targetFit(s){
   if(tor&&arm&&!est.includes('torso')&&!est.includes('arm')){ const k=(REACH_K[b.type]||.44)-(/Komfort/.test(comfort)?.02:/Leistung/.test(comfort)?-.01:0); R('reach',(tor+arm)*10*(k-.035),(tor+arm)*10*(k+.035),`Rumpf ${fmtNum(tor)} + Arm ${fmtNum(arm)} cm, Radtyp ${b.type}`); }
   else R('reach',null,null,'','Rumpf- und Armlänge');
   let [dl,dh]=DROP_RANGE[b.type]||[0,90]; if(/Komfort/.test(comfort)) dh-=20; if(/Leistung|Aero/.test(comfort)) dl+=10; if(stiff) dh=Math.min(dh,Math.round(dl+(dh-dl)*0.5)); else if(mild) dh=Math.min(dh,Math.round(dl+(dh-dl)*0.75));
-  R('drop',dl,dh,`Radtyp ${b.type}${comfort?', '+comfort:''}${stiff?', deutlich eingeschränkte Beweglichkeit':mild?', leicht eingeschränkte Beweglichkeit':''}`);
+  let dropBasis=`Radtyp ${b.type}${comfort?', '+comfort:''}${stiff?', deutlich eingeschränkte Beweglichkeit':mild?', leicht eingeschränkte Beweglichkeit':''}`;
+  // Besser: vom Rahmen aus (Serienposition bei der jetzigen Sattelhöhe) plus Ziel und Körper
+  try{ const g=b.geo&&geoById(b.geo.id), x=g&&geoRow(g,b.geo.size); const pp=bikeParts(s);
+    if(x&&x.stack!=null&&x.reach!=null&&x.headAngle!=null){ const BT=bodyTarget(c,b.type,s.anamnesis,s.check,null,{x,L:pp.L||x.stem||100,ang:pp.ang,spacer:pp.under??25,h:cur('saddleHeight'),sb:cur('saddleSetback')});
+      if(BT&&!BT.need){ const dn=cur('drop'); const reasonsTxt=[BT.style!=='mitte'?({aero:'sportliches',komfort:'komfortables'}[BT.style]+' Ziel'):null,...(BT.why||[])].filter(Boolean).join(', ');
+        if(dn!=null){ const t=dn+BT.adjD; dl=t-10; dh=t+10; dropBasis=`Ausgangspunkt deine jetzige Position ${fmtNum(dn)} mm${BT.adjD?`, ${BT.adjD>0?'+':''}${BT.adjD} mm wegen ${reasonsTxt}`:''}`; }
+        else { dl=BT.d-15; dh=BT.d+15; dropBasis=BT.basis.d; } } } }catch(err){}
+  // Gemessene Winkel haben Vorrang: liegen Oberkörper- und Hüftwinkel im Ziel, bleibt die Lenkerhöhe
+  { const FP=fitProfile(s), ta=e.torsoAngle?Number(e.torsoAngle.value):null, hp=e.hipAngle?Number(e.hipAngle.value):null, dn=cur('drop');
+    if(ta!=null&&hp!=null&&dn!=null&&ta>=FP.torso[0]&&ta<=FP.torso[1]&&hp>=FP.hip[0]&&hp<=FP.hip[1]){ dl=dn-10; dh=dn+10; dropBasis=`Oberkörper ${fmtNum(ta)}° und Hüfte ${fmtNum(hp)}° liegen im Zielbereich – Lenkerhöhe bleibt`; } }
+  R('drop',dl,dh,dropBasis);
   if(I){ const t=I<78?165:I<84?170:I<90?172.5:175; R('crankLength',t-2.5,t+2.5,`Schrittlänge ${fmtNum(I)} cm`); }
   R('cleatFore',0,10,'Pedalachse 0–10 mm hinter dem Großzehengrundgelenk');
   return {rows,ins:ins.v,insSrc:ins.src,type:b.type,stiff};
