@@ -1,4 +1,4 @@
-# FitFrame – Bikefitting-Demo
+# FYF – Fit your Frame – Bikefitting-Demo
 
 Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei (`index.html`), ohne Server, ohne Kosten.
 
@@ -53,7 +53,7 @@ Kamera seitlich aufs Rad richten: Google MediaPipe erkennt Schulter, Hüfte, Kni
 | Kundenportal, Kapazität, Kennzahlen | Vorschau mit Demo-Daten |
 | Hardware Lab, Team, Flotten, Anbindungen | Konzept |
 
-FitFrame stellt keine Diagnosen. Alle Zahlen und Faustregeln sind Demonstrationswerte.
+FYF – Fit your Frame stellt keine Diagnosen. Alle Zahlen und Faustregeln sind Demonstrationswerte.
 
 ## Fehlt für eine echte Version
 

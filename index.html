@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FitFrame</title>
+<title>FYF – Fit your Frame</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -675,7 +675,7 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
   <div class="main">
     <header class="topbar">
       <button class="iconbtn menu-btn" data-act="menu" aria-label="Menü öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-      <div class="crumb" id="crumb">FitFrame</div>
+      <div class="crumb" id="crumb">FYF</div>
       <div class="spacer"></div>
       <button class="savepill" id="savePill" data-act="saveInfo" aria-label="Speicherstatus"></button>
       <span class="demo-pill" title="Alle Daten sind fiktiv">Demo</span>
@@ -1137,7 +1137,7 @@ function fitSuggestions(s,noTargets){
   if(/rücken|lenden/.test(t)) add('drop','Rücken','Eine sehr gestreckte Haltung belastet den unteren Rücken.','Überhöhung und Sattel–Lenker-Abstand prüfen.');
   if(/wade|zeh|fuß|brennen/.test(t)) add('cleatFore','Füße und Waden','Weit vorn sitzende Cleats belasten Waden und Vorfuß.','Cleat weiter nach hinten setzen, Einlage und Schuhgröße prüfen.');
   const k=(s.after.kneeBDC||s.before.kneeBDC); const KT=kneeTarget(s); if(k&&(k.value<KT.lo||k.value>KT.hi)){ const a=saddleAdvice(s,Number(k.value)); const up=k.value<KT.lo;
-    add('saddleHeight',`Kniewinkel unten ${fmtNum(k.value)}°: Sattel ${a.delta>0?'+':''}${a.delta} mm`,`${up?'Unter':'Über'} dem Zielbereich ${KT.lo}–${KT.hi}° (${KT.label}). Der Sattel ist vermutlich zu ${up?'tief':'hoch'}. Die Millimeter rechnet FitFrame mit einem Körpermodell aus Schritt- und Kurbellänge (etwa ${fmtNum(Math.round(1/a.slope*10)/10)} mm pro Grad). Das ist eine Schätzung, deshalb neu messen.`,`Sattel auf etwa ${a.newH} mm (${a.delta>0?'+':''}${a.delta} mm), in Schritten von 2–3 mm. Danach den Kniewinkel neu messen.`,a.newH,`Kniewinkel unten ${fmtNum(k.value)}°`); }
+    add('saddleHeight',`Kniewinkel unten ${fmtNum(k.value)}°: Sattel ${a.delta>0?'+':''}${a.delta} mm`,`${up?'Unter':'Über'} dem Zielbereich ${KT.lo}–${KT.hi}° (${KT.label}). Der Sattel ist vermutlich zu ${up?'tief':'hoch'}. Die Millimeter rechnet FYF mit einem Körpermodell aus Schritt- und Kurbellänge (etwa ${fmtNum(Math.round(1/a.slope*10)/10)} mm pro Grad). Das ist eine Schätzung, deshalb neu messen.`,`Sattel auf etwa ${a.newH} mm (${a.delta>0?'+':''}${a.delta} mm), in Schritten von 2–3 mm. Danach den Kniewinkel neu messen.`,a.newH,`Kniewinkel unten ${fmtNum(k.value)}°`); }
   const kp=(s.after.kneeOverPedal||s.before.kneeOverPedal); if(kp&&Math.abs(kp.value)>15){ const sb=val(s.after.saddleSetback)??val(s.before.saddleSetback); const d=Math.round(Number(kp.value));
     add('saddleSetback',`Knielot ${d>0?'+':''}${d} mm`,`Das Knie steht bei waagerechter Kurbel ${Math.abs(d)} mm ${d>0?'vor':'hinter'} der Pedalachse. Viele Fitter beginnen mit dem Knie etwa über der Achse. Das ist eine Faustregel, keine feste Vorgabe.`,`Sattel etwa ${Math.abs(d)} mm nach ${d>0?'hinten':'vorn'}, wenn Beschwerden dazu passen. Danach Sattelhöhe prüfen, weil sie sich mitverändert.`,sb!=null?sb+d:null,`Knielot ${d>0?'+':''}${d} mm`); }
   if(/hüfte/.test(t)) add('saddleHeight','Hüfte','Hüftbeschwerden passen oft zu einem zu hohen Sattel (Becken kippt seitlich) oder zu wenig Platz vorn.','Prüfen, ob das Becken beim Treten seitlich kippt. Wenn ja, Sattel in Schritten von 2–3 mm senken.');
@@ -1324,7 +1324,7 @@ function seed(){
       feedback:[{date:dayOff(-123),score:7,text:'Hände besser, Sitz nach 2 h noch leicht unangenehm'},{date:dayOff(-100),score:8,text:'120 km ohne Taubheit gefahren'}],
       followUps:[{days:7,due:dayOff(-123),status:'erledigt'},{days:30,due:dayOff(-100),status:'erledigt'}]},
     {id:'s2',customerId:'c1',bikeId:'b1',date:dayOff(-94),time:'16:00',type:'Nachkontrolle',status:'abgeschlossen',fitter:'Tom Krämer',version:1,
-      anamnesis:{goal:'Feinjustierung nach 5 Wochen',complaints:'Leichter Druck rechtes Knie innen nach langen Anstiegen',training:'8 h pro Woche',experience:'5 Jahre Rennrad',previous:'Erstfitting FitFrame',limits:'wie zuvor',comfort:'Komfort vor Aerodynamik'},
+      anamnesis:{goal:'Feinjustierung nach 5 Wochen',complaints:'Leichter Druck rechtes Knie innen nach langen Anstiegen',training:'8 h pro Woche',experience:'5 Jahre Rennrad',previous:'Erstfitting FYF',limits:'wie zuvor',comfort:'Komfort vor Aerodynamik'},
       before:s2before, after:s2after,
       changes:[
         {key:'saddleHeight',from:736,to:733,reason:'Hüfte kippt seitlich am unteren Totpunkt (Beobachtung im Video)',time:dayOff(-94)+' 16:30'},
@@ -1430,7 +1430,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.38';
+const APP_VER = '2026-10-28.39';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1505,7 +1505,7 @@ function renderNav(){
   document.getElementById('side').innerHTML = `
     <div class="brand">
       <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" style="fill:var(--accent)"/><path d="M10 23l6-14h7M13 16h7" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <div><b>FitFrame</b><small>Bikefitting für deinen Laden</small></div>
+      <div><b>FYF</b><small>Fit your Frame · Bikefitting für deinen Laden</small></div>
     </div>
     <div class="navgroup">${mainNav().filter(m=>m[0]!=='mehr').map(([r,l,i])=>btn(r,l,i)).join('')}</div>
     ${moreNav().map(([g,items])=>`<div class="navgroup"><div class="label">${g}</div>${items.map(([r,l,i])=>btn(r,l,i,'small')).join('')}</div>`).join('')}
@@ -1690,13 +1690,13 @@ function dataPanel(){
 VIEWS.preise = () => `${head('Preise, Produkte & Gutscheine','Fitting-Pakete, die Produkte, die du verkaufst, und Gutscheine.')}${catalogHtml()}${panel('Zufriedenheitsgarantie',`<label class="row" style="gap:10px;align-items:center"><input type="checkbox" ${guarantee()?'checked':''} data-change="guarantee" style="width:22px;height:22px;accent-color:var(--accent)"><span>30 Tage kostenlose Nachjustierung – steht im Bericht, Nachkontrolle wird automatisch nach 30 Tagen eingeplant.</span></label>`)}${vouchersHtml()}`;
 const guarantee=()=>!(S.settings&&S.settings.guarantee===false);
 VIEWS.mehr = () => `
-  ${head('Mehr','Alle weiteren Bereiche von FitFrame.')}
+  ${head('Mehr','Alle weiteren Bereiche von FYF.')}
   ${moreNav().map(([g,items])=>`<div class="stack"><h2>${g}</h2><div class="tiles">${items.map(([r,l,i,d])=>`<button class="tile" data-nav="${r}"><span class="ti">${ic(i)}</span><b>${l}</b><span>${d}</span></button>`).join('')}</div></div>`).join('')}
   ${shopHtml()}
   ${dataPanel()}
   ${statsHtml()}
   ${panel('Einstellungen',`<div class="stack"><div class="row" style="justify-content:space-between"><span>Darstellung</span><div class="seg"><button data-act="setTheme" data-v="light" aria-pressed="${theme==='light'}">Hell</button><button data-act="setTheme" data-v="dark" aria-pressed="${theme==='dark'}">Dunkel</button></div></div>
-  <hr><div class="row" style="justify-content:space-between"><span style="max-width:52ch">Profi-Bereiche: Werkstatt, Kundenportal, Team & Zahlen, Schreibhilfe, Messdaten, Hardware Lab<br><span class="muted" style="font-size:13.5px">Teils nur Vorschau. Ausgeblendet bleibt FitFrame aufs Fitting und den Verkauf konzentriert.</span></span><div class="seg"><button data-act="setExtra" data-v="1" aria-pressed="${showExtra()}">Zeigen</button><button data-act="setExtra" data-v="0" aria-pressed="${!showExtra()}">Ausblenden</button></div></div>
+  <hr><div class="row" style="justify-content:space-between"><span style="max-width:52ch">Profi-Bereiche: Werkstatt, Kundenportal, Team & Zahlen, Schreibhilfe, Messdaten, Hardware Lab<br><span class="muted" style="font-size:13.5px">Teils nur Vorschau. Ausgeblendet bleibt FYF aufs Fitting und den Verkauf konzentriert.</span></span><div class="seg"><button data-act="setExtra" data-v="1" aria-pressed="${showExtra()}">Zeigen</button><button data-act="setExtra" data-v="0" aria-pressed="${!showExtra()}">Ausblenden</button></div></div>
   ${S.demoRemoved?'':`<hr><div class="row" style="justify-content:space-between"><span style="max-width:52ch">Beispielkunden entfernen<br><span class="muted" style="font-size:13.5px">Löscht nur die 4 erfundenen Kunden mit ihren Rädern und Fittings. Deine eigenen Einträge bleiben.</span></span><button class="btn" data-act="removeDemo">Entfernen</button></div>`}
   <hr><div class="row" style="justify-content:space-between"><span class="muted" style="max-width:52ch">Zurücksetzen lädt die Beispielkunden neu und löscht deine Einträge.</span><button class="btn" data-act="reset">Demo zurücksetzen</button></div></div>`)}
 `;
@@ -1810,7 +1810,7 @@ const ANA_Q=[['goal','Was ist das Ziel des Fittings?','Mehrere Antworten möglic
 /* ---------- iPhone als digitaler Winkelmesser (Neigungssensor) ---------- */
 const TILT_KEYS={
   saddleTilt:{how:'iPhone flach der Länge nach auf den Sattel legen, Oberkante zeigt zur Sattelnase. Am besten auf ein gerades Lineal über den Sattel.',sign:1},
-  stemAngle:{how:'iPhone flach auf den Vorbau legen, Oberkante zeigt nach vorn. FitFrame rechnet den Lenkwinkel heraus.',sign:1,stem:true},
+  stemAngle:{how:'iPhone flach auf den Vorbau legen, Oberkante zeigt nach vorn. FYF rechnet den Lenkwinkel heraus.',sign:1,stem:true},
   barRoll:{how:'iPhone an das gerade Stück des Unterlenkers halten, Oberkante zeigt nach hinten zu den Lenkerenden.',sign:1},
   hoodRamp:{how:'iPhone von der Lenkeroberseite zur Schalthebel-Oberkante legen, Oberkante zeigt nach vorn zu den Schalthebeln.',sign:1},
   torsoAngle:{how:'Kunde in Fahrposition (Hände an den Schalthebeln). iPhone flach auf den Rücken legen, zwischen Becken und Schulterblatt, Oberkante zeigt zum Kopf.',sign:1,abs:true}
@@ -1898,7 +1898,7 @@ function goalPreviewHtml(s){ const g=goalPreview(s); if(!g) return '';
   <div class="gprev-rows">${g.rows.map(r=>`<div class="gp"><span class="gp-i">${ico[r.k]||'•'}</span><div class="grow" style="min-width:0"><b>${esc(r.label)}: ${esc(r.dir)}</b> <span class="gp-a">${esc(r.amount)}</span><div class="sub">${esc(r.txt)}</div></div></div>`).join('')}</div>
   <p style="font-size:13.5px;margin:6px 0 0"><b>Zielwinkel auf dem Rad:</b> ${esc(g.angles)}</p>
   ${g.warn.map(w=>`<div class="notice warn" style="margin-top:6px;font-size:13.5px">${ic('warn')}<div>${esc(w)}</div></div>`).join('')}
-  <p class="faint" style="font-size:12.5px;margin:6px 0 0">Grobe Richtung vor dem Messen. Die genauen Millimeter berechnet FitFrame im Schritt Anpassen aus Messwerten, Rahmen und Körpercheck.</p></div>`; }
+  <p class="faint" style="font-size:12.5px;margin:6px 0 0">Grobe Richtung vor dem Messen. Die genauen Millimeter berechnet FYF im Schritt Anpassen aus Messwerten, Rahmen und Körpercheck.</p></div>`; }
 /* ---------- Körper zuerst: Zielposition aus Körpermaßen, Einstelldaten für ein Rad ---------- */
 const DROP_BODY={Rennrad:{aero:95,mitte:70,komfort:40},Gravel:{aero:70,mitte:45,komfort:20},Triathlon:{aero:110,mitte:90,komfort:70},MTB:{aero:40,mitte:20,komfort:0},'E-Bike':{aero:-20,mitte:-50,komfort:-80},Trekking:{aero:-20,mitte:-50,komfort:-80}};
 const SEAT_ANG={Rennrad:73.5,Gravel:73,Triathlon:78,MTB:74,'E-Bike':72,Trekking:72};
@@ -1977,7 +1977,7 @@ function bodySetupHtml(s){
     const up=now.d!=null?Math.round(now.d-P.d):null;
     let main='', sub='', bad=false;
     if(up!=null&&Math.abs(up)>=5){ main=`Lenker ${Math.abs(up)} mm ${up>0?'höher':'tiefer'} als jetzt`;
-      if(spNow==null||now.above==null) sub=`Wie viel davon über Spacer geht, zeigt FitFrame, sobald „Spacer unter dem Vorbau“ und „Spacer über dem Vorbau“ gemessen sind.`;
+      if(spNow==null||now.above==null) sub=`Wie viel davon über Spacer geht, zeigt FYF, sobald „Spacer unter dem Vorbau“ und „Spacer über dem Vorbau“ gemessen sind.`;
       else if(up>0&&up>canUp+2){ bad=true; sub=`Über dem ${what} sind nur ${canUp} mm Spacer. ${canUp?`Damit ${canUp} mm höher; `:''}den Rest schafft das ${unit?'Cockpit':'Rad'} mit Serienteilen nicht. Alternativen stehen im Schritt Anpassen.`; }
       else if(up>0) sub=`${Math.round(up/5)*5} mm Spacer von oben unter den ${what} setzen.`;
       else sub=`${Math.round(-up/5)*5} mm Spacer von unten über den ${what} setzen.`; }
@@ -1986,7 +1986,7 @@ function bodySetupHtml(s){
     if(sp&&Math.abs(sp.dx)>10&&p.L) sub+=` Länge: ${what} ${n(Math.round((p.L-sp.dx)/10)*10)} mm wäre passender als ${p.L} mm.`;
     cock=main?`<div class="statusbox ${bad?'warn':'ok'}" style="margin-top:8px"><div><b>${main}</b>${sub?`<span class="muted" style="font-size:14px">${sub}</span>`:''}</div></div>`:''; }
   return `<details class="more bodyset"><summary>Option: Einstelldaten aus Körpermaßen</summary><div class="stack" style="margin-top:8px;gap:8px">
-  <p class="muted" style="font-size:14px">Ohne Messung am Rad: FitFrame rechnet aus Schrittlänge, Rumpf, Arm, Beweglichkeit und Ziel (<b>${esc({aero:'sportlich',mitte:'ausgewogen',komfort:'komfortabel'}[P.style])}</b>) die Zielposition und vergleicht mit dem Rad.${P.est.length?` Geschätzt: ${esc(P.est.join(', '))} – messen macht es genauer.`:''}</p>
+  <p class="muted" style="font-size:14px">Ohne Messung am Rad: FYF rechnet aus Schrittlänge, Rumpf, Arm, Beweglichkeit und Ziel (<b>${esc({aero:'sportlich',mitte:'ausgewogen',komfort:'komfortabel'}[P.style])}</b>) die Zielposition und vergleicht mit dem Rad.${P.est.length?` Geschätzt: ${esc(P.est.join(', '))} – messen macht es genauer.`:''}</p>
   <div class="tw"><table><thead><tr><th>Einstellung</th><th>Ziel</th><th>Jetzt</th><th></th></tr></thead><tbody>
   ${row('Sattelhöhe',P.h,now.h,`88 % der Schrittlänge, Kurbel ${fmtNum(P.crank)} mm${now.h!=null&&Math.abs(P.h-now.h)>10?` · Unterschied ${n(P.h-now.h)} mm: nicht direkt ändern, erst Kniewinkel messen – der entscheidet`:''}`,P.unc,{lim:10,t:'Kniewinkel messen'})}
   ${row('Sattelversatz',P.sb,now.sb,`Sitzwinkel ${fmtNum(P.sa)}° wirksam`,15,{lim:40,t:'nachmessen'})}
@@ -2162,7 +2162,7 @@ SESSTAB.koerper = (s,c) => {
   ${startBtn(first,done,first>=0?items[first].label:'')}
   <div class="ovl">${items.map((it,i)=>ckRow(s,c,it,i)).join('')}</div>
   ${done>2?footHtml(s):''}
-  <details class="more"><summary>Warum zuerst der Körpercheck?</summary><p class="muted" style="margin-top:6px">Das Rad wird an den Körper angepasst. Ist ein Bein kürzer oder steht ein Fuß schräg, gleichst du das zuerst aus. Sonst stellst du das Rad auf eine schiefe Haltung ein. FitFrame stellt keine Diagnosen. Bei Schmerzen oder großen Unterschieden: Fachleute hinzuziehen.</p></details>
+  <details class="more"><summary>Warum zuerst der Körpercheck?</summary><p class="muted" style="margin-top:6px">Das Rad wird an den Körper angepasst. Ist ein Bein kürzer oder steht ein Fuß schräg, gleichst du das zuerst aus. Sonst stellst du das Rad auf eine schiefe Haltung ein. FYF stellt keine Diagnosen. Bei Schmerzen oder großen Unterschieden: Fachleute hinzuziehen.</p></details>
   <button class="btn ghost" data-act="openCustomer" data-id="${c.id}" style="align-self:flex-start">Alle Körpermaße bearbeiten</button>
   </div>`;
 };
@@ -2222,7 +2222,7 @@ SESSTAB.ausgang = s => {
   if(ui.wIdx!=null&&MEASURE_NOW[ui.wIdx]){ const i=ui.wIdx, k=MEASURE_NOW[i], m=MK[k], cur=s.before[k], h=HOW[k]||{m:'Maßband',steps:[],tool:''}, rg=measureRange(k,c,b);
     return wizFrame(i,MEASURE_NOW.length,m.label,esc(m.def||''),`${IL(k)}<form id="wizForm" class="stack" data-form="measure" data-wiz="1" data-id="${s.id}" data-side="before" data-i="${i}"><input type="hidden" name="key" value="${k}"><input type="hidden" name="source" value="gemessen">
         ${TILT_KEYS[k]?`<button type="button" class="btn sm" style="align-self:flex-start" data-act="tiltOpen" data-k="${k}" data-t="mc_${k}">${ic('fit')}iPhone als Winkelmesser</button>`:''}<div class="field"><label for="mc_${k}">1. Messung in ${m.unit}</label><input class="input num" id="mc_${k}" name="value" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" value="${cur?(cur.m1??cur.value):''}" required ${rangeAttr(rg,'mc_'+k)}>${rangeHint(rg,'mc_'+k,cur?cur.value:'')}</div>
-        <div class="field"><label for="mc2_${k}">2. Messung (Kontrolle) in ${m.unit}</label><input class="input num" id="mc2_${k}" name="value2" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" value="${cur&&cur.m2!=null?cur.m2:''}" placeholder="Maßband ab, neu anlegen, nochmal messen"><div class="hint">Weichen beide mehr als ${m.unit==='°'?'1°':'3 mm'} ab, misst du ein drittes Mal. FitFrame speichert den Mittelwert.</div></div>
+        <div class="field"><label for="mc2_${k}">2. Messung (Kontrolle) in ${m.unit}</label><input class="input num" id="mc2_${k}" name="value2" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" value="${cur&&cur.m2!=null?cur.m2:''}" placeholder="Maßband ab, neu anlegen, nochmal messen"><div class="hint">Weichen beide mehr als ${m.unit==='°'?'1°':'3 mm'} ab, misst du ein drittes Mal. FYF speichert den Mittelwert.</div></div>
         <details class="more"><summary>Methode und Genauigkeit</summary><div class="form" style="margin-top:8px"><div class="field"><label for="mm_${k}">Methode</label><select class="input" id="mm_${k}" name="method">${opts(METHODS,cur?cur.method:h.m)}</select></div><div class="field"><label for="mu_${k}">± Genauigkeit (${m.unit})</label><input class="input num" id="mu_${k}" name="unc" type="number" step="0.1" min="0" inputmode="decimal" value="${cur&&cur.unc!=null?cur.unc:''}" placeholder="optional"></div></div></details>
       </form>
       <details class="more" open><summary>So misst du · ${esc(h.tool)}</summary><ol class="how">${h.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>${h.tip?`<p class="faint" style="margin-top:6px;font-size:13.5px">Tipp: ${esc(h.tip)}</p>`:''}</details>`); }
@@ -2401,7 +2401,7 @@ function realize(s,k,want,A){
   if(k==='reach'){
     if(Math.abs(w)<5){ out.acts.push({t:'Weniger als 5 mm: nicht spürbar, so lassen.',info:1}); return out; }
     if(p.drops&&Math.abs(w)<=12){ const d=Math.max(-10,Math.min(10,r(w))); out.d=d; out.acts.push({t:`Bremsgriffe ${Math.abs(d)} mm ${d>0?'weiter nach vorn':'weiter nach hinten'} setzen bzw. Lenker leicht ${d>0?'nach vorn':'nach hinten'} drehen. Lenkerband neu wickeln.`}); return out; }
-    if(!p.L){ out.need.push('Vorbaulänge'); out.acts.push({t:'Vorbaulänge eintragen, dann rechnet FitFrame die passende Vorbaulänge aus.',info:1}); return out; }
+    if(!p.L){ out.need.push('Vorbaulänge'); out.acts.push({t:'Vorbaulänge eintragen, dann rechnet FYF die passende Vorbaulänge aus.',info:1}); return out; }
     const lo=p.mtb?30:60, hi=p.mtb?80:140; const nl=Math.max(lo,Math.min(hi,Math.round((p.L+w)/10)*10)); const d=nl-p.L;
     if(!d){ out.acts.push({t:`Nächster Vorbau wäre gleich lang (${p.L} mm).`,info:1}); return out; }
     out.d=d; out.parts={stemLength:nl}; out.acts.push({t:`Vorbau ${p.L} → ${nl} mm.`,part:1});
@@ -2425,10 +2425,10 @@ function computePlan(s){
       if(d!==0&&Math.sign(d)===Math.sign(x.d)){ if(Math.abs(x.d)>Math.abs(d)) d=x.d; }
       else { const nv=cur[k]+d+x.d; if(lo==null||(nv>=lo-0.01&&nv<=hi+0.01)) d+=x.d; else why.push('Liegt schon am Rand des Bereichs – hier nicht weiter verändern.'); } }
     if(k==='saddleHeight'){ const kn=s.after.kneeBDC||s.before.kneeBDC;
-      if(!kn&&Math.abs(d)>=1.5){ const est=Math.round(d); why.length=0; why.push(`Laut Schrittlänge eher ${Math.abs(est)} mm ${est>0?'höher':'tiefer'}. Die Schrittlänge allein ist aber auf etwa ±10 mm ungenau (Schuhsohle, Pedal, Sattel, Messfehler). Deshalb hier noch keine Änderung: erst den Kniewinkel unten messen (Winkelmesser oder iPhone als Kamera). Dann rechnet FitFrame die Millimeter genau aus.`); d=0; }
+      if(!kn&&Math.abs(d)>=1.5){ const est=Math.round(d); why.length=0; why.push(`Laut Schrittlänge eher ${Math.abs(est)} mm ${est>0?'höher':'tiefer'}. Die Schrittlänge allein ist aber auf etwa ±10 mm ungenau (Schuhsohle, Pedal, Sattel, Messfehler). Deshalb hier noch keine Änderung: erst den Kniewinkel unten messen (Winkelmesser oder iPhone als Kamera). Dann rechnet FYF die Millimeter genau aus.`); d=0; }
       else if(kn&&Math.abs(d)>5){ const full=Math.round(d); d=Math.sign(d)*5; why.push(`Insgesamt ${Math.abs(full)} mm. Profis ändern die Sattelhöhe in Schritten von höchstens 5 mm: erst ${d>0?'+':''}${d} mm, 10–15 Minuten fahren, Kniewinkel neu messen.`); }
       if(Math.abs(hOffset)>=1.5) why.push(`${why.length?'Dazu':'Nur'} ${hOffset>0?'+':''}${Math.round(hOffset)} mm als Ausgleich für die Cleat-Änderung (Faustregel: halbe Verschiebung).`); d+=hOffset; }
-    if(k==='saddleSetback'&&!(s.after.kneeOverPedal||s.before.kneeOverPedal)&&Math.abs(d)>=1.5&&!/Triathlon/.test((bike(s.bikeId)||{}).type||'')){ const est=Math.round(d); why.length=0; why.push(`Laut Rahmengeometrie eher ${Math.abs(est)} mm ${est>0?'weiter hinten':'weiter vorn'}. Das ist nur eine Schätzung. Prüfe zuerst, ob der Versatz richtig gemessen ist (Lot durch die Tretlagermitte bis Sattelspitze), und miss das Knielot (Winkelmesser-Lot oder iPhone als Kamera). Erst dann ändert FitFrame den Versatz.`); d=0; }
+    if(k==='saddleSetback'&&!(s.after.kneeOverPedal||s.before.kneeOverPedal)&&Math.abs(d)>=1.5&&!/Triathlon/.test((bike(s.bikeId)||{}).type||'')){ const est=Math.round(d); why.length=0; why.push(`Laut Rahmengeometrie eher ${Math.abs(est)} mm ${est>0?'weiter hinten':'weiter vorn'}. Das ist nur eine Schätzung. Prüfe zuerst, ob der Versatz richtig gemessen ist (Lot durch die Tretlagermitte bis Sattelspitze), und miss das Knielot (Winkelmesser-Lot oder iPhone als Kamera). Erst dann ändert FYF den Versatz.`); d=0; }
     if(Math.abs(d)<1.5){ if(why.length) steps.push({key:k,want:0,d:0,from:cur[k],to:cur[k],target:cur[k],why:why.join(' '),acts:[],alt:[],need:[],info:true}); return; }
     const rz=realize(s,k,d,A);
     steps.push({key:k,want:Math.round(d),d:rz.d,from:cur[k],to:cur[k]+rz.d,target:cur[k]+d,why:order+' '+why.join(' '),parts:rz.parts||null,acts:rz.acts,alt:rz.alt,need:rz.need,left:rz.left,effects:rz.d?sideEffects(s,k,rz.d):[]});
@@ -2520,7 +2520,7 @@ function measureChecks0(s){
   const add=(lvl,title,text,go)=>out.push({lvl,title,text,go});
   const H=Number(c.body.height)||null, I=Number(c.body.inseam)||null;
   if(H&&I){ const q=I/H; if(q<0.40||q>0.52) add('warn','Schrittlänge passt nicht zur Körpergröße',`Schrittlänge ${fmtNum(I)} cm ist ${Math.round(q*100)} % der Körpergröße. Üblich sind 43–49 %. Nachmessen: Buch fest in den Schritt drücken, Boden bis Buchkante.`,'koerper'); }
-  if(!c.body.torso||(c.est||[]).includes('torso')||!c.body.arm||(c.est||[]).includes('arm')) add('info','Rumpf- oder Armlänge fehlt','Ohne diese Maße schätzt FitFrame die Länge Sattel–Lenker nur aus der Körpergröße. Eintragen unter Körper → Grundmaße.','koerper');
+  if(!c.body.torso||(c.est||[]).includes('torso')||!c.body.arm||(c.est||[]).includes('arm')) add('info','Rumpf- oder Armlänge fehlt','Ohne diese Maße schätzt FYF die Länge Sattel–Lenker nur aus der Körpergröße. Eintragen unter Körper → Grundmaße.','koerper');
   const sb=(s.check&&s.check.sitBone)||c.body.sitBone; if(sb){ const x=Number(sb); if(x<30) add('bad','Sitzknochenabstand: Tippfehler?',`${fmtNum(x)} mm ist zu klein. Vermutlich in cm eingegeben: ${fmtNum(x*10)} mm?`,'koerper'); else if(x<80||x>180) add('warn','Sitzknochenabstand ungewöhnlich',`${fmtNum(x)} mm. Üblich sind 90–160 mm.`,'koerper'); }
   const h=v('saddleHeight'); if(h&&I){ const q=h/(I*10); if(q<0.83||q>0.93) add('warn','Sattelhöhe passt nicht zur Schrittlänge',`${fmtNum(h)} mm sind ${Math.round(q*1000)/10} % der Schrittlänge. Üblich sind 85–90 %. Entweder Messfehler (Tretlagermitte bis Satteloberfläche entlang dem Sitzrohr) oder Sattel deutlich zu ${q<0.85?'tief':'hoch'}.`,'ausgang'); }
   const st=v('saddleSetback'); if(st!=null&&h&&b.type!=='Triathlon'){ const base=h*A.cs; const lo=Math.round(base-170), hi=Math.round(base-80); if(st<lo||st>hi) add('warn','Sattelversatz passt nicht zum Rahmen',`Bei ${fmtNum(h)} mm Sattelhöhe und ${fmtNum(A.sa)}° Sitzwinkel liegt der Versatz meist zwischen ${lo} und ${hi} mm. Gemessen: ${fmtNum(st)} mm. Messung prüfen: Lot durch die Tretlagermitte, waagerecht bis zur Sattelspitze.`,'ausgang'); }
@@ -2745,7 +2745,7 @@ function simHtml(s){
   const chip=a=>a==='besser'?'<span class="chip c-ok nodot">näher am Ziel</span>':a==='im Bereich'?'<span class="chip c-ok nodot">im Bereich</span>':a==='schlechter'?'<span class="chip c-bad nodot">weiter weg</span>':a==='gleich'?'<span class="chip nodot">unverändert gut/schlecht</span>':'';
   const last=st.log[st.log.length-1];
   return `<div class="simbox"><h3>Teile tauschen – was ändert sich?</h3>
-  <p class="muted" style="font-size:14px">Teil auswählen, Wirkung ansehen. Nach dem Umbau „Umgebaut“ tippen – dann rechnet FitFrame alle Werte neu.</p>
+  <p class="muted" style="font-size:14px">Teil auswählen, Wirkung ansehen. Nach dem Umbau „Umgebaut“ tippen – dann rechnet FYF alle Werte neu.</p>
   <div class="form">
     <div class="field wide"><label>Cockpit</label><div class="seg" role="group" aria-label="Was wird getauscht"><button data-act="simMode" data-id="${s.id}" data-v="none" aria-pressed="${st.mode==='none'}">Nichts</button><button data-act="simMode" data-id="${s.id}" data-v="unit" aria-pressed="${st.mode==='unit'}">Einheit</button><button data-act="simMode" data-id="${s.id}" data-v="stem" aria-pressed="${st.mode==='stem'}">Vorbau/Lenker</button></div></div>
     ${st.mode==='unit'?`<div class="field wide"><label>Lenker-Vorbau-Einheit (passend zu ${esc(b.type)})</label>${units.length?sel('unit',[['','Bitte wählen …'],...units.map(x=>[x.id,`${x.u.brand} ${x.u.model.replace(/ 1 1\/8" /,' ')} · ${x.L}×${x.w}${x.fit?' ✓':''}`])],st.unit):'<p class="muted">Keine Einheit für diesen Radtyp im Katalog.</p>'}${r.unit&&r.unit.fit?`<span class="faint" style="font-size:12.5px">✓ ${esc(r.unit.fit)}</span>`:''}</div>
@@ -3071,7 +3071,7 @@ function prodChoices(cat,match){ const all=products().filter(p=>p.cat===cat); co
 function catalogHtml(){
   const P=products(), F=fitPacks();
   return panel('Fitting-Preise und Produkte',`<div class="stack">
-  <p class="muted" style="font-size:14px">Fitting-Pakete enthalten alle Einstellarbeiten. Material wird extra berechnet: FitFrame schlägt im Angebot passende Produkte aus deiner Liste vor. Trag ein, was du verkaufst und zu welchem Preis.</p>
+  <p class="muted" style="font-size:14px">Fitting-Pakete enthalten alle Einstellarbeiten. Material wird extra berechnet: FYF schlägt im Angebot passende Produkte aus deiner Liste vor. Trag ein, was du verkaufst und zu welchem Preis.</p>
   <h4 style="margin:4px 0 0">Fitting-Pakete</h4>
   <div class="catlist">${F.map((p,i)=>`<div class="catrow"><input class="input" value="${esc(p.name)}" data-change="packEdit" data-i="${i}" data-f="name" aria-label="Paketname"><input class="input num" type="number" step="1" min="0" value="${p.price}" data-change="packEdit" data-i="${i}" data-f="price" aria-label="Preis" style="width:96px"><button class="btn sm ghost" data-act="packDel" data-i="${i}" aria-label="Paket löschen">${ic('x')}</button></div>`).join('')}</div>
   <div><button class="btn sm" data-act="packAdd">${ic('plus')}Paket</button></div>
@@ -3140,7 +3140,7 @@ function passHtml(s){ const d=passData(s); const n=k=>d.m[k]!=null?fmtNum(d.m[k]
   setTimeout(()=>{ const box=document.getElementById('passQR'); if(!box) return; (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ const q=window.qrcode(0,'L'); q.addData(url); q.make(); box.innerHTML=q.createSvgTag({cellSize:4,margin:1,scalable:true}); }).catch(()=>{ box.innerHTML='<span class="faint" style="font-size:12px">QR-Code braucht Internet</span>'; }); },30);
   return `<div class="pass"><div class="pass-card"><div class="pass-head"><div><div class="label" style="color:rgba(255,255,255,.75)">Fit-Pass</div><b style="font-size:20px">${esc(d.n)}</b><div style="font-size:13px;opacity:.85">${esc(d.bk.split('|').slice(0,3).join(' '))} · ${fmtDate(d.dt)}</div></div><div class="pass-qr" id="passQR"></div></div>
   <div class="pass-grid">${keyRows.map(([k,l])=>`<div><span>${l}</span><b>${n(k)}</b></div>`).join('')}</div>
-  <p class="faint" style="font-size:12px;margin:8px 0 0">${esc(d.sh||'FitFrame')} · Beim nächsten Rad QR-Code scannen – die Position wird 1:1 übertragen.</p></div>
+  <p class="faint" style="font-size:12px;margin:8px 0 0">${esc(d.sh||'FYF')} · Beim nächsten Rad QR-Code scannen – die Position wird 1:1 übertragen.</p></div>
   <div class="row" style="gap:6px"><button class="btn primary" data-act="printReport">${ic('doc')}Drucken oder als PDF</button><button class="btn" data-act="passShare" data-id="${s.id}">Link teilen</button><button class="btn" data-act="passCopy" data-id="${s.id}">Link kopieren</button></div>
   <p class="faint" style="font-size:12.5px">Alle Werte stecken im QR-Code selbst, es wird nichts hochgeladen. Wer den Code scannt, sieht die Werte. Deshalb nur dem Kunden geben.</p></div>`; }
 function passImportHtml(d){ const n=k=>d.m[k]!=null?fmtNum(d.m[k])+' '+MK[k].unit:'–';
@@ -3241,7 +3241,7 @@ function vouchersHtml(){ const V=S.vouchers||[]; const P=fitPacks();
   <div class="wide"><button class="btn primary" type="submit">${ic('plus')}Gutschein erstellen</button></div></form>
   <div class="row" style="gap:6px"><input class="input" id="voRedeem" placeholder="Code einlösen, z. B. ABCD-EF23" style="max-width:240px"><button class="btn" data-act="voRedeem">Einlösen</button></div>
   ${V.length?`<div class="list">${V.slice().reverse().map(v=>`<div class="li"><div class="grow"><div class="t mono">${esc(v.code)} · ${esc(v.title)}</div><div class="sub">${eur(v.value)}${v.for?' · für '+esc(v.for):''} · gültig bis ${fmtDate(v.until)}</div></div><span class="chip nodot ${v.status==='offen'?'c-info':'c-ok'}">${v.status}</span><button class="btn sm" data-act="voShow" data-c="${esc(v.code)}">Ansehen</button></div>`).join('')}</div>`:''}</div>`); }
-function voucherCard(v){ setTimeout(()=>{ const box=document.getElementById('voQR'); if(!box) return; (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ const q=window.qrcode(0,'M'); q.addData(`${shopName()||'FitFrame'} Gutschein ${v.code}`); q.make(); box.innerHTML=q.createSvgTag({cellSize:4,margin:1,scalable:true}); }).catch(()=>{}); },30);
+function voucherCard(v){ setTimeout(()=>{ const box=document.getElementById('voQR'); if(!box) return; (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ const q=window.qrcode(0,'M'); q.addData(`${shopName()||'FYF'} Gutschein ${v.code}`); q.make(); box.innerHTML=q.createSvgTag({cellSize:4,margin:1,scalable:true}); }).catch(()=>{}); },30);
   return `<div class="pass"><div class="pass-card"><div class="pass-head"><div><div class="label" style="color:rgba(255,255,255,.8)">Gutschein</div><b style="font-size:22px">${esc(v.title)}</b><div style="font-size:14px;opacity:.9">${v.for?'für '+esc(v.for)+' · ':''}Wert ${eur(v.value)}</div></div><div class="pass-qr" id="voQR"></div></div>
   <div style="padding:14px"><div class="label">Code</div><b class="mono" style="font-size:24px;letter-spacing:.08em">${esc(v.code)}</b><p class="faint" style="font-size:12.5px;margin:6px 0 0">${shopName()?esc(shopName())+' · ':''}gültig bis ${fmtDate(v.until)}. Termin vereinbaren und Code mitbringen.</p></div></div>
   <div class="row" style="gap:6px"><button class="btn primary" data-act="printReport">${ic('doc')}Drucken oder als PDF</button></div></div>`; }
@@ -3254,7 +3254,7 @@ function photosHtml(s,forReport){ const P=s.photos||{}; if(forReport) return P.b
 function adviceHtml(s){
   const b=bike(s.bikeId); const sel=ui.advGeo||(b.geo&&b.geo.id)||''; const g=sel?geoById(sel):null;
   const pick=`<div class="field"><label for="advGeo">Rahmen aus der Bibliothek</label><select class="input" id="advGeo" data-change="advGeo"><option value="">Modell wählen …</option>${geoAll().map(x=>`<option value="${x.id}" ${x.id===sel?'selected':''}>${esc(x.brand+' '+x.model)}</option>`).join('')}</select></div>`;
-  const intro='<p class="muted">FitFrame rechnet aus der gefitteten Position (Sattelhöhe, Versatz, Sattel–Lenker, Überhöhung), welchen Vorbau und wie viele Spacer jede Rahmengröße bräuchte. So findest du die passende Größe beim Radkauf oder überträgst die Position auf ein neues Rad.</p>';
+  const intro='<p class="muted">FYF rechnet aus der gefitteten Position (Sattelhöhe, Versatz, Sattel–Lenker, Überhöhung), welchen Vorbau und wie viele Spacer jede Rahmengröße bräuchte. So findest du die passende Größe beim Radkauf oder überträgst die Position auf ein neues Rad.</p>';
   if(!g) return intro+pick;
   const a=sizeAdvice(s,g);
   if(!a) return intro+pick+`<div class="notice warn">${ic('warn')}Für die Rechnung fehlen Werte. Nötig sind Sattelhöhe, Sattelversatz, Sattel–Lenker und Überhöhung.</div>`;
@@ -3264,7 +3264,7 @@ function adviceHtml(s){
 function reportHtml(s){
   const c=cust(s.customerId),b=bike(s.bikeId);const rows=compareRows(s.before,s.after);const fu=s.followUps.filter(f=>f.status==='offen');
   const q=quality(s).filter(x=>x[0]!=='info');
-  return `<article class="report"><div class="rh"><div><h2 style="font-size:24px">Fitting-Bericht</h2><div>${esc(c.name)} · ${esc(b.brand+' '+b.model)}</div></div><div style="text-align:right">${S.shop&&S.shop.logo?`<img src="${S.shop.logo}" alt="" style="max-height:44px;max-width:150px;display:block;margin-left:auto;margin-bottom:4px">`:''}<b>${esc(shopName()||'FitFrame')}</b>${S.shop&&(S.shop.addr||S.shop.phone)?`<div class="fine">${esc([S.shop.addr,S.shop.phone,S.shop.email,S.shop.web].filter(Boolean).join(' · '))}</div>`:''}<div class="fine">${fmtDate(s.date)} · ${esc(s.type)} · Version ${s.version}<br>Fitter: ${esc(s.fitter)}</div></div></div>
+  return `<article class="report"><div class="rh"><div><h2 style="font-size:24px">Fitting-Bericht</h2><div>${esc(c.name)} · ${esc(b.brand+' '+b.model)}</div></div><div style="text-align:right">${S.shop&&S.shop.logo?`<img src="${S.shop.logo}" alt="" style="max-height:44px;max-width:150px;display:block;margin-left:auto;margin-bottom:4px">`:''}<b>${esc(shopName()||'FYF')}</b>${S.shop&&(S.shop.addr||S.shop.phone)?`<div class="fine">${esc([S.shop.addr,S.shop.phone,S.shop.email,S.shop.web].filter(Boolean).join(' · '))}</div>`:''}<div class="fine">${fmtDate(s.date)} · ${esc(s.type)} · Version ${s.version}<br>Fitter: ${esc(s.fitter)}</div></div></div>
   <div class="sec"><h3>Ziel und Ausgangslage</h3><p>${esc(s.anamnesis.goal||'Nicht dokumentiert.')}</p>${s.anamnesis.complaints?`<p><b>Angaben der Kundin/des Kunden:</b> ${esc(s.anamnesis.complaints)}</p>`:''}</div>
   ${Object.keys(s.check||{}).length?`${s.scan?`<div class="sec"><h3>Körper-Scan (Kamera, Schätzung)</h3><p>${[s.scan.shDiff!=null?`Schultern: ${Math.abs(s.scan.shDiff)<8?'gerade':(s.scan.shDiff>0?'links':'rechts')+' '+Math.abs(s.scan.shDiff)+' mm tiefer'}`:'',s.scan.pelDiff!=null?`Becken: ${Math.abs(s.scan.pelDiff)<6?'gerade':(s.scan.pelDiff>0?'links':'rechts')+' '+Math.abs(s.scan.pelDiff)+' mm höher'}`:'',s.scan.kneeL?`Beinachse links: ${s.scan.kneeL.dir}`:'',s.scan.kneeR?`Beinachse rechts: ${s.scan.kneeR.dir}`:''].filter(Boolean).join(' · ')}</p></div>`:''}<div class="sec"><h3>Körpercheck</h3>${checkFindings(s).filter(x=>x.lvl!=='ok').map(x=>`<p><b>${esc(x.title)}.</b> ${esc(x.text)}</p>`).join('')||'<p>Keine Auffälligkeiten.</p>'}${(s.comp||[]).length?`<p><b>Ausgleich:</b> ${s.comp.map(cp=>esc(cp.t)+' ('+cp.status+')').join('; ')}</p>`:''}</div>`:''}
   <div class="sec"><h3>Vorgenommene Änderungen</h3>${s.changes.length?`<table><thead><tr><th>Einstellung</th><th style="text-align:right">Vorher</th><th style="text-align:right">Nachher</th><th>Grund</th></tr></thead><tbody>${s.changes.map(ch=>`<tr><td>${MK[ch.key].label}</td><td style="text-align:right">${fmtNum(ch.from)} ${MK[ch.key].unit}</td><td style="text-align:right">${fmtNum(ch.to)} ${MK[ch.key].unit}</td><td>${esc(ch.reason)}</td></tr>`).join('')}</tbody></table>`:'<p>Keine Änderungen.</p>'}</div>
@@ -3276,7 +3276,7 @@ function reportHtml(s){
   ${photosHtml(s,true)}${painHtml(s,true)}${exercisesHtml(s,true)}
   <div class="sec"><h3>Nächste Schritte</h3>${guarantee()?`<p><b>Zufriedenheitsgarantie:</b> Innerhalb von 30 Tagen justieren wir kostenlos nach, falls etwas nicht passt.</p>`:''}<p>${fu.length?fu.map(f=>`Nachkontrolle am ${fmtDate(f.due)} (${f.days} Tage).`).join(' '):'Nachkontrolle nach 4–6 Wochen empfohlen.'} Bitte melden Sie neue Beschwerden früher.</p></div>
   ${q.length?`<div class="sec"><h3>Offene Punkte zur Datenqualität</h3><ul style="margin:0;padding-left:18px">${q.map(x=>`<li>${esc(x[1])}</li>`).join('')}</ul></div>`:''}
-  <p class="fine" style="margin-top:18px">${isDemoCust(s.customerId)?'Demo-Bericht mit fiktiven Daten. ':''}Kein medizinischer Befund. Winkel aus Videoaufnahmen sind Orientierungswerte. Erstellt mit FitFrame.</p></article>
+  <p class="fine" style="margin-top:18px">${isDemoCust(s.customerId)?'Demo-Bericht mit fiktiven Daten. ':''}Kein medizinischer Befund. Winkel aus Videoaufnahmen sind Orientierungswerte. Erstellt mit FYF.</p></article>
   <div class="row"><button class="btn primary" data-act="printReport">${ic('doc')}Drucken oder als PDF sichern</button><button class="btn" data-act="shareReport" data-id="${s.id}">Teilen</button><button class="btn" data-act="copyReport" data-id="${s.id}">${ic('copy')}Berichtstext kopieren</button></div>${shopName()?'':'<p class="faint" style="font-size:12.5px">Tipp: Unter Mehr → Dein Laden Name und Logo eintragen. Sie erscheinen dann oben im Bericht.</p>'}
   <p class="faint" style="font-size:12.5px">Am iPhone: Drucken → oben auf Teilen → „In Dateien sichern“ ergibt ein PDF. Funktioniert über den GitHub-Link, nicht in der Claude-Vorschau.</p>`;
 }
@@ -3546,7 +3546,7 @@ async function phoneConnect(st){
 }
 /* Seite auf dem iPhone: nur Kamera, keine Kundendaten, nichts wird gespeichert */
 function camMode(pcId){
-  document.title='FitFrame · Kamera';
+  document.title='FYF · Kamera';
   const css=`.cm{position:fixed;inset:0;background:#1f1c1a;color:#f4eee8;display:flex;flex-direction:column;font:15px/1.5 Figtree,system-ui,sans-serif;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom))}
   .cm h1{font:700 20px/1.2 Archivo,Figtree,sans-serif;margin:0}.cm .vw{flex:1;min-height:0;display:grid;place-items:center;margin:12px 0;border-radius:16px;overflow:hidden;background:#000}
   .cm video{width:100%;height:100%;object-fit:contain}.cm .st{background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;font-size:14px}
@@ -3554,7 +3554,7 @@ function camMode(pcId){
   .cm button{flex:1;min-height:48px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font:600 15px Figtree,sans-serif}
   .cm button.go{background:linear-gradient(135deg,#b9481f,#d9642c 45%,#e98f45);border:0}.cm .tip{font-size:13px;color:rgba(244,238,232,.7);margin-top:8px}
   .cm .badge{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:700;margin-left:6px}.g-gut{background:#2f8f63}.g-mittel{background:#a8780e}.g-schlecht{background:#c8402f}`;
-  document.body.innerHTML=`<style>${css}</style><div class="cm"><h1>FitFrame · Kamera</h1><div class="vw"><video id="cv" playsinline muted autoplay></video></div>
+  document.body.innerHTML=`<style>${css}</style><div class="cm"><h1>FYF · Kamera</h1><div class="vw"><video id="cv" playsinline muted autoplay></video></div>
     <div class="st" id="cs"><b>Bereit</b>Tippe auf „Kamera starten“. Das Bild geht direkt an den PC und wird nirgends gespeichert.</div>
     <div class="row"><button class="go" id="cgo">Kamera starten</button><button id="cflip" hidden>Kamera wechseln</button><button id="cagain" hidden>Neu verbinden</button><button id="cend" hidden>Beenden</button></div>
     <div class="tip" id="ctip">iPhone quer aufs Stativ, genau seitlich zum Rad auf Hüfthöhe, 2–3 m Abstand. Ganze Person und Pedal im Bild.</div></div>`;
@@ -3832,7 +3832,7 @@ function liveDraw(ctx,f){
   const t=Math.round(f.knee)+'°'; ctx.strokeText(t,f.kn.x+r*2.5,f.kn.y); ctx.fillText(t,f.kn.x+r*2.5,f.kn.y);
 }
 function calState(){ const el=document.getElementById('calState'), cl=document.getElementById('calClear'); if(!el) return; const c=S.calib; const r=live.last;
-  el.textContent=c&&c.knee!=null?`Kamera abgeglichen: Kniewinkel ${c.knee>0?'+':''}${fmtNum(c.knee)}° (Winkelmesser vom ${fmtDate(c.date)})${r&&r.kneeRaw!=null?`, Kamerawert ohne Abgleich ${fmtNum(r.kneeRaw)}°`:''}.`:'Genauer: Kurbel ganz unten anhalten, Kniewinkel mit dem Winkelmesser messen und hier eintragen. FitFrame merkt sich den Unterschied zur Kamera für alle weiteren Messungen.'; if(cl) cl.hidden=!(c&&c.knee!=null); }
+  el.textContent=c&&c.knee!=null?`Kamera abgeglichen: Kniewinkel ${c.knee>0?'+':''}${fmtNum(c.knee)}° (Winkelmesser vom ${fmtDate(c.date)})${r&&r.kneeRaw!=null?`, Kamerawert ohne Abgleich ${fmtNum(r.kneeRaw)}°`:''}.`:'Genauer: Kurbel ganz unten anhalten, Kniewinkel mit dem Winkelmesser messen und hier eintragen. FYF merkt sich den Unterschied zur Kamera für alle weiteren Messungen.'; if(cl) cl.hidden=!(c&&c.knee!=null); }
 function liveInfo(final){
   if(live.view==='front'){ const nw=performance.now(); if(!final&&nw-live.infoT<900) return; live.infoT=nw; frontInfo(); return; }
   const box=document.getElementById('liveInfo'); if(!box) return; const now=performance.now(); if(!final&&now-live.infoT<900) return; live.infoT=now;
@@ -4064,7 +4064,7 @@ const CLEAT = {
 VIEWS.hardware = () => {
   const h=HW.find(x=>x.id===ui.hwSel)||HW[1];
   return `
-  ${head('Hardware Lab','FitFrame Lab: eigene modulare Mess- und Positionierungshilfen aus dem 3D-Drucker, passend zur Software.')}
+  ${head('Hardware Lab','FYF Lab: eigene modulare Mess- und Positionierungshilfen aus dem 3D-Drucker, passend zur Software.')}
   <div class="notice warn">${ic('warn')}<div>Kein Modul ist gedruckt, getestet oder validiert. Es gibt keine Maß- oder Genauigkeitsangaben. Passform, Kalibrierung und Messgenauigkeit müssen an echten Teilen physisch geprüft werden.</div></div>
   ${panelFlush('Module',`<div class="tw"><table><thead><tr><th>Modul</th><th>Zweck</th><th>Kompatibilität</th><th>Entwicklungsstand</th><th class="r">Priorität</th></tr></thead><tbody>${HW.map(x=>`<tr class="click" data-act="hwSel" data-id="${x.id}" ${x.id===h.id?'style="background:var(--accent-soft)"':''}><td><b style="font-weight:600">${x.name}</b>${x.soft?'<div class="faint" style="font-size:11px">reine Software</div>':''}</td><td>${esc(x.purpose)}</td><td>${esc(x.compat)}</td><td><div class="row" style="flex-wrap:nowrap;gap:3px" title="${STAGES[x.stage]}">${STAGES.map((_,i)=>`<span style="width:10px;height:6px;border-radius:2px;background:${i<=x.stage?'var(--accent)':'var(--surface-2)'}"></span>`).join('')}</div><div class="faint" style="font-size:11px;margin-top:3px">${STAGES[x.stage]}</div></td><td class="r num">${x.prio}</td></tr>`).join('')}</tbody></table></div>`,st('k'))}
   ${h.id==='cleatlab'?cleatLab():panel(h.name,`<dl class="dl"><dt>Zweck</dt><dd>${esc(h.purpose)}</dd><dt>Kompatibilität</dt><dd>${esc(h.compat)}</dd><dt>Stand</dt><dd>${STAGES[h.stage]}</dd><dt>Nächster Schritt</dt><dd>${h.soft?'In der Demo nutzbar, siehe Qualität bzw. Verlauf.':'Anforderungen mit Fittern klären, danach parametrisches CAD mit offenen Maßvariablen.'}</dd></dl>${h.soft?`<div style="margin-top:12px"><button class="btn" data-nav="${h.id==='fitquality'?'qualitaet':'verlauf'}">Zum Modul</button></div>`:''}`,h.soft?st('i'):st('k'))}`;
@@ -4225,8 +4225,8 @@ const MODULES = [
   ['ProgressLoop','Bikefitting','Nachkontrollen, Rückmeldungen, neue Sitzung aus Historie','i','followup'],
   ['BikePassport','Daten','Digitale Akte je Fahrrad inkl. Fitting und Service','i','fahrraeder'],
   ['Motion / Motion360','Analyse','Videoarbeitsplatz, Mehrkamera-Konzept; Figur und Winkel simuliert','s','motion'],
-  ['FitFrame Lab','Hardware','UniversalBase, CleatLab, PositionTrack, MotionTiles, CameraFit, FootMap, SaddleMap','k','hardware'],
-  ['FitFrame AI','Analyse','Zusammenfassung, Datenlücken, Vergleich, Kundennachricht (regelbasiert)','s','ki'],
+  ['FYF Lab','Hardware','UniversalBase, CleatLab, PositionTrack, MotionTiles, CameraFit, FootMap, SaddleMap','k','hardware'],
+  ['FYF AI','Analyse','Zusammenfassung, Datenlücken, Vergleich, Kundennachricht (regelbasiert)','s','ki'],
   ['Connect / Kundenportal','Kunden','Berichte, BikePassport, Freigaben, Nachrichten','s','portal'],
   ['Approve','Werkstatt','Kostenvoranschlag, Kundenfreigabe mit Zeitstempel','s','werkstatt'],
   ['Workshop','Werkstatt','Aufträge, Positionen, Status, Übergabe','i','werkstatt'],
@@ -4244,7 +4244,7 @@ const MODULES = [
   ['Academy','Wissen','Schulungen und Protokoll-Vorlagen für Fitter','k','module']
 ];
 VIEWS.module = () => `
-  ${head('Modulübersicht','Die gesamte geplante FitFrame-Plattform. Bikefitting ist der Kern, alle anderen Module erweitern ihn.')}
+  ${head('Modulübersicht','Die gesamte geplante FYF-Plattform. Bikefitting ist der Kern, alle anderen Module erweitern ihn.')}
   ${panel('Legende',`<div class="grid g4">${Object.entries(STATUS).map(([k,v])=>`<div class="row" style="flex-wrap:nowrap;align-items:flex-start">${st(k)}<span class="muted" style="font-size:12.5px">${v[2]}</span></div>`).join('')}</div>`)}
   ${panelFlush('',`<div class="tw"><table><thead><tr><th>Modul</th><th>Bereich</th><th>Inhalt</th><th>Stand in der Demo</th><th></th></tr></thead><tbody>${MODULES.map(([n,a,d,s,r])=>`<tr><td><b style="font-weight:600">${n}</b></td><td class="muted">${a}</td><td>${d}</td><td>${st(s)}</td><td class="r">${r!=='module'?`<button class="btn sm" data-nav="${r}">Öffnen</button>`:''}</td></tr>`).join('')}</tbody></table></div>`)}
   ${panel('Was für eine echte Produktversion fehlt',`<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>Backend mit Datenbank, Anmeldung, Rollen und Mandantentrennung</li><li>EU-Hosting, Backups, Verschlüsselung, Lösch- und Exportfunktion (DSGVO)</li><li>PDF-Export der Berichte, E-Mail- und SMS-Versand</li><li>Echte Videoaufnahme, Kalibrierung und geprüfte Gelenkerkennung</li><li>Gedruckte und getestete Hardware mit dokumentierter Genauigkeit</li><li>Anbindung an Sprachmodell mit Auftragsverarbeitung</li><li>Schnittstellen zu Kalender, Kasse, Buchhaltung und Sensoren</li><li>Validierung der Abläufe mit echten Bikefittern</li></ul>`)}
@@ -4323,7 +4323,7 @@ const ACT = {
     if(s.status==='geplant') s.status='in Arbeit'; audit(`Live-Analyse (${r.n} Umdrehungen): Knie ${r.knee}°, Knielot ${r.kops} mm (${side==='before'?'Ausgangswert':'Endwert'})`,s.id); save(); closeDrawer(); render(); toast(`Gespeichert: Knie ${fmtNum(r.knee)}°, Knielot ${r.kops>0?'+':''}${r.kops} mm und ${[r.shoulder,r.elbow,r.ankle,r.hipRock].filter(x=>x!=null).length} weitere Werte`); },
   finderPick(el){ ui.advGeo=el.dataset.id; render(); window.scrollTo({top:0,behavior:'smooth'}); },
   shopLogoDel(){ if(S.shop){ delete S.shop.logo; save(); render(); } },
-  exportCsv(){ try{ download(`fitframe-fittings-${today()}.csv`,sessionsCsv(),'text/csv;charset=utf-8'); toast('Tabelle erstellt'); }catch(e){ toast('Export nicht möglich',true); } },
+  exportCsv(){ try{ download(`fyf-fittings-${today()}.csv`,sessionsCsv(),'text/csv;charset=utf-8'); toast('Tabelle erstellt'); }catch(e){ toast('Export nicht möglich',true); } },
   shareReport(el){ const s=sess(el.dataset.id); const t=reportText(s); if(navigator.share){ navigator.share({title:'Fitting-Bericht',text:t}).catch(()=>{}); } else copyText(t); },
   setExtra(el){ S.settings=S.settings||{}; S.settings.extra=el.dataset.v==='1'; save(); render(); toast(S.settings.extra?'Zusatzbereiche eingeblendet':'Zusatzbereiche ausgeblendet'); },
   removeDemo(){ openDrawer('Beispielkunden entfernen',`<div class="stack"><p>Entfernt werden die 4 erfundenen Kunden mit ihren Rädern, Fittings, Werkstattaufträgen und Beispiel-Lagerartikeln.</p><div class="notice">${ic('info')}<div>Deine eigenen Kunden, Räder und Fittings bleiben. Vorher wird automatisch eine Sicherung in diesem Browser angelegt (Mehr → Deine Daten sichern).</div></div><div class="row"><button class="btn danger" data-act="removeDemoConfirm">Beispielkunden entfernen</button><button class="btn" data-act="close">Abbrechen</button></div></div>`); },
@@ -4340,8 +4340,8 @@ const ACT = {
   finishSession(el){ const s=sess(el.dataset.id); const sel={value:'abgeschlossen',dataset:{id:s.id}}; CHG.sessStatus(sel); },
   addComp(el){ const s=sess(el.dataset.id); const f=checkFindings(s).find(x=>x.title===el.dataset.t); s.comp.push({t:`${f.title} – ${f.text.split('.')[0]}`,status:'geplant'}); audit(`Ausgleich eingeplant: ${f.title}`,s.id); save(); render(); toast('Ausgleich eingeplant'); },
   prepChange(el){ ui.prepKey=el.dataset.key; ui.prepVal=el.dataset.v||''; ui.prepReason=el.dataset.reason||''; render(); const h=document.getElementById('changeHead'); if(h) h.scrollIntoView({behavior:'smooth',block:'start'}); const v=document.getElementById('m_val_after'); if(v) v.focus({preventScroll:true}); },
-  exportData(){ const txt=JSON.stringify({app:'FitFrame',exported:nowStamp(),data:S}); try{ const blob=new Blob([txt],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`fitframe-sicherung-${today()}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); toast('Sicherung erstellt. Falls kein Download startet: „Als Text kopieren“ nutzen'); }catch(e){ toast('Download nicht möglich – bitte „Als Text kopieren“ nutzen',true); } },
-  exportCopy(){ copyText(JSON.stringify({app:'FitFrame',exported:nowStamp(),data:S})); toast('Sicherung kopiert – füge sie z. B. in eine Notiz oder Mail an dich ein'); },
+  exportData(){ const txt=JSON.stringify({app:'FYF',exported:nowStamp(),data:S}); try{ const blob=new Blob([txt],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`fyf-sicherung-${today()}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); toast('Sicherung erstellt. Falls kein Download startet: „Als Text kopieren“ nutzen'); }catch(e){ toast('Download nicht möglich – bitte „Als Text kopieren“ nutzen',true); } },
+  exportCopy(){ copyText(JSON.stringify({app:'FYF',exported:nowStamp(),data:S})); toast('Sicherung kopiert – füge sie z. B. in eine Notiz oder Mail an dich ein'); },
   importText(){ const t=document.getElementById('importText').value.trim(); if(!t){ toast('Bitte zuerst den Sicherungstext einfügen',true); return; } importJson(t); },
   restoreKey(el){ try{ importJson(localStorage.getItem(el.dataset.k)); }catch(e){ toast('Sicherung nicht lesbar',true); } },
   vidMode(el){ vid.mode=el.dataset.v; vid.pts=[]; render(); },
@@ -4507,8 +4507,8 @@ const ACT = {
   delItem(el){ S.inventory=S.inventory.filter(i=>i.sku!==el.dataset.sku); audit(`Artikel gelöscht: ${el.dataset.sku}`); save(); closeDrawer(); render(); toast('Artikel gelöscht'); }
 };
 function importJson(t){
-  let d; try{ d=JSON.parse(t); }catch(e){ toast('Das ist keine gültige FitFrame-Sicherung',true); return; }
-  if(d&&d.data) d=d.data; if(!d||!Array.isArray(d.customers)){ toast('Das ist keine gültige FitFrame-Sicherung',true); return; }
+  let d; try{ d=JSON.parse(t); }catch(e){ toast('Das ist keine gültige FYF-Sicherung',true); return; }
+  if(d&&d.data) d=d.data; if(!d||!Array.isArray(d.customers)){ toast('Das ist keine gültige FYF-Sicherung',true); return; }
   const n=mergeData(d); S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; });
   audit(`Sicherung geladen: ${n.customers} Kunden, ${n.bikes} Fahrräder, ${n.sessions} Fittings ergänzt`); save(); render();
   toast(`Ergänzt: ${n.customers} Kunden, ${n.bikes} Fahrräder, ${n.sessions} Fittings`);
