@@ -1386,7 +1386,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.22';
+const APP_VER = '2026-10-27.23';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2110,7 +2110,8 @@ function realize(s,k,want,A){
   if(k==='saddleSetback'){ const d=Math.max(-15,Math.min(15,r(w))); out.d=d; out.acts.push({t:`Sattel auf den Streben ${Math.abs(d)} mm ${d>0?'nach hinten':'nach vorn'} schieben (nur wenn die Markierung am Gestell es erlaubt).`}); if(r(w)!==d){ out.left=r(w)-d; out.alt.push({t:`Für die restlichen ${Math.abs(out.left)} mm: Sattelstütze ${w>0?'mit mehr Versatz (z. B. 20–25 mm)':'ohne Versatz'}.`,part:1}); } return out; }
   if(k==='drop'){ // want>0: Lenker tiefer
     if(Math.abs(w)<5){ out.acts.push({t:'Weniger als 5 mm: lohnt sich nicht, Spacer gibt es erst ab 5 mm.',info:1}); return out; }
-    const flip=p.L?2*p.L*Math.sin(Math.abs(p.ang)*Math.PI/180):0; const flipDir=p.ang<0?-1:1; // Umdrehen: abfallender Vorbau -> Lenker höher
+    const unit=(bike(s.bikeId)||{}).cockpit==='unit';
+    const flip=p.L&&!unit?2*p.L*Math.sin(Math.abs(p.ang)*Math.PI/180):0; const flipDir=p.ang<0?-1:1; // Umdrehen: abfallender Vorbau -> Lenker höher (geht bei einer Einheit nicht)
     const cands=[{d:0,a:[]}];
     const maxLower=p.under??0, maxRaise=p.above??0;
     for(let m=5;m<=Math.max(maxLower,maxRaise);m+=5){ if(m<=maxLower) cands.push({d:m,sp:-m,a:[{t:`${m} mm Spacer von unter dem Vorbau nach oben setzen.`}]}); if(m<=maxRaise) cands.push({d:-m,sp:m,a:[{t:`${m} mm Spacer von oben unter den Vorbau setzen.`}]}); }
@@ -2120,6 +2121,14 @@ function realize(s,k,want,A){
     if(best){ out.d=r(best.d); out.acts=best.a; out.parts={}; if(best.sp){ out.parts.spacer=(p.under||0)+best.sp; out.parts.spacerAbove=(p.above||0)-best.sp; } if(best.flip) out.parts.stemAngle=-p.ang; }
     if(p.under==null) out.need.push('Spacer unter dem Vorbau'); if(p.above==null) out.need.push('Spacer über dem Vorbau'); if(!p.L) out.need.push('Vorbaulänge');
     out.left=r(w-out.d);
+    if(Math.abs(out.left)>=5&&unit&&w<0){
+      out.alt.push({t:`Die Lenker-Vorbau-Einheit lässt sich nicht drehen${(p.above||0)?'':', und über dem Cockpit sind keine Spacer'}. Den Gabelschaft kann man nicht verlängern. Höher geht an diesem Rad also nur so:`});
+      out.alt.push({t:'1. Schalthebel 5–10 mm höher auf dem Lenker setzen (Lenkerband neu wickeln). Die Hände liegen meist auf den Schalthebeln, das entlastet Nacken und Hände spürbar. Kostet nur Lenkerband.'});
+      out.alt.push({t:'2. Kürzeres Cockpit (gleiche Einheit, 10 mm kürzer): Oberkörper etwas aufrechter, weniger Gewicht auf den Händen.'});
+      out.alt.push({t:`3. Umbau auf Vorbau + Lenker mit positivem Winkel (z. B. +10° bis +17°): bis etwa ${Math.round(Math.abs((p.L||70)*(Math.sin(17*Math.PI/180)-Math.sin((p.ang)*Math.PI/180))))} mm höher. Aufwendig, weil die Leitungen innen liegen. Vorher beim Händler klären, ob es für dieses Rad passt.`,part:1});
+      out.alt.push({t:'Bleiben die Beschwerden trotzdem, ist der Rahmen für diese Position zu tief (Rahmen-Finder).'});
+      if(!best||!best.d) out.acts.push({t:'Mit den Serienteilen kann der Lenker nicht höher. Siehe Möglichkeiten unten.',info:1});
+      return out; }
     if(Math.abs(out.left)>=5){ const L=p.L||100, curAng=(out.acts.some(a=>/umdrehen/.test(a.t))?-p.ang:p.ang), tgtAng=w<0?17:-17; const gain=Math.round(Math.abs(L*(Math.sin(tgtAng*Math.PI/180)-Math.sin(curAng*Math.PI/180))));
       out.alt.push({t:`Vorbau mit ${w<0?'+17°':'−17°'} statt ${fmtNum(curAng)}°: etwa ${gain} mm ${w<0?'höher':'tiefer'}.`,part:1});
       if(Math.abs(out.left)>gain+5) out.alt.push({t:`Die restlichen ${Math.abs(out.left)-gain} mm gehen an diesem Rahmen kaum.${w<0?' Möglich: Lenker mit Rise (z. B. 15–20 mm) oder höherer Steuersatz-Spacer, wenn der Gabelschaft lang genug ist. Sonst ist der Rahmen für diese Position zu flach (Rahmen-Finder).':' Rahmen ist für diese Position eher zu hoch (Rahmen-Finder).'}`,part:1}); if(!best) out.acts.push({t:`Mit den vorhandenen Spacern nicht machbar${out.need.length?' – oder es fehlen Angaben':''}.`,info:1}); }
@@ -2309,10 +2318,10 @@ function stepCard(s,c,i,n){
   const tr=targetFit(s).rows.find(r=>r.key===c.key); const aNow=ampel(c.key,c.from,tr), aNew=ampel(c.key,c.to,tr);
   const res=s.plan.res[i];
   return `<div class="gcard">
-    <div class="gc-head">${IL(c.key)?`<div class="gc-ill">${IL(c.key)}</div>`:''}<div class="grow" style="min-width:0"><div class="label">Schritt ${i+1} von ${n}${c.comp?' · Ausgleich':''}</div><h2>${c.key==='drop'&&!c.blocked?`Lenker ${nn(Math.abs(c.d))} mm ${c.d<0?'höher':'tiefer'}`:`${esc(m.label)} ${c.blocked?'– so nicht machbar':`${c.d>0?'+':''}${nn(c.d)} ${u}`}`}</h2>${c.key==='drop'?`<p class="muted" style="margin:2px 0 0;font-size:14px">Überhöhung = Sattel minus Lenker. Weniger Überhöhung heißt: Lenker höher.</p>`:''}</div></div>
+    <div class="gc-head">${IL(c.key)?`<div class="gc-ill">${IL(c.key)}</div>`:''}<div class="grow" style="min-width:0"><div class="label">Schritt ${i+1} von ${n}${c.comp?' · Ausgleich':''}</div><h2>${c.key==='drop'&&c.blocked&&c.target<c.from?'Lenker höher – mit Serienteilen nicht machbar':c.key==='drop'&&!c.blocked?`Lenker ${nn(Math.abs(c.d))} mm ${c.d<0?'höher':'tiefer'}`:`${esc(m.label)} ${c.blocked?'– so nicht machbar':`${c.d>0?'+':''}${nn(c.d)} ${u}`}`}</h2>${c.key==='drop'?`<p class="muted" style="margin:2px 0 0;font-size:14px">Überhöhung = Sattel minus Lenker. Weniger Überhöhung heißt: Lenker höher.</p>`:''}</div></div>
     <div class="gc-nums"><div class="gn ${aNow.c}"><span>Jetzt</span><b>${nn(c.from)}</b><i>${aNow.t}</i></div><div class="gn tgt"><span>Ziel</span><b>${nn(c.target)}</b><i>${tr&&tr.lo!=null?`Bereich ${nn(tr.lo)}–${nn(tr.hi)}`:''}</i></div><div class="gn ${c.blocked?'bad':aNew.c}"><span>Am Rad machbar</span><b>${c.blocked?'–':nn(c.to)}</b><i>${c.blocked?'neues Teil nötig':aNew.t}</i></div></div>
     <div class="gc-sec"><h4>Warum</h4><p>${esc(c.why)}</p></div>
-    ${c.acts.length?`<div class="gc-sec"><h4>Was genau</h4><ul>${c.acts.map(a=>`<li>${a.part?'<span class="chip c-acc nodot">neues Teil</span> ':''}${esc(a.t)}</li>`).join('')}</ul>${c.alt.length?`<p class="muted" style="margin-top:4px"><b>Alternative:</b> ${c.alt.map(a=>esc(a.t)).join(' ')}</p>`:''}</div>`:''}
+    ${c.acts.length?`<div class="gc-sec"><h4>Was genau</h4><ul>${c.acts.map(a=>`<li>${a.part?'<span class="chip c-acc nodot">neues Teil</span> ':''}${esc(a.t)}</li>`).join('')}</ul>${c.alt.length>2?`<div class="muted" style="margin-top:4px"><b>Möglichkeiten:</b><ul style="margin:4px 0 0">${c.alt.map(a=>`<li>${a.part?'<span class="chip c-acc nodot">neues Teil</span> ':''}${esc(a.t)}</li>`).join('')}</ul></div>`:c.alt.length?`<p class="muted" style="margin-top:4px"><b>Alternative:</b> ${c.alt.map(a=>esc(a.t)).join(' ')}</p>`:''}</div>`:''}
     ${!c.blocked?`<div class="gc-sec"><h4>So geht’s</h4><p class="muted" style="margin-bottom:4px">${ic('wrench','width="14" height="14"')} ${esc(kb.tool||'')}</p><ol>${steps.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>${kb.torque?`<p class="torque">${ic('warn','width="14" height="14"')} Drehmoment: ${esc(kb.torque)}. Nie raten – der Wert steht auf dem Bauteil.</p>`:''}</div>`:''}
     ${!c.blocked?`<div class="gc-sec"><h4>Danach prüfen</h4><ul>${kb.check.map(t=>`<li>${esc(t)}</li>`).join('')}${c.effects&&c.effects.length?`<li>Ändert sich mit: ${c.effects.map(e=>`${MK[e.key].label} ${e.delta>0?'+':''}${fmtNum(Math.round(e.delta))} ${MK[e.key].unit}`).join(', ')} (wird automatisch eingetragen).</li>`:''}</ul></div>
     <div class="gc-sec err"><h4>Häufige Fehler</h4><ul>${kb.errors.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`:''}
@@ -2386,7 +2395,7 @@ function cockpitHtml(s){
   ${(()=>{ const a=r.best[0], u=r.units[0]; const useA=!u||(!isUnit&&a.err+5<u.err);
     const reach=isUnit?(u?u.dy:0):Math.max(a?a.dy:0,u?u.dy:0); const short=r.need.dy-reach;
     return `<div class="statusbox ok"><div><b>Empfehlung: ${useA?`Variante A – Vorbau ${a.L} mm, ${a.a>0?'+':''}${a.a}°`:`Variante B – ${esc(u.u.brand+' '+u.u.model)} ${u.L}×${u.w}`}</b><span class="muted" style="font-size:14px">${useA?(u?(isUnit?`Mit einer Einheit fehlen hier ${n(u.err)} mm. Dafür müsste das Cockpit auf Vorbau + Lenker umgebaut werden (aufwendig bei innen verlegten Leitungen).`:`Eine Einheit hat einen festen Winkel und bleibt hier ${n(u.err)} mm vom Ziel entfernt. Einzelteile treffen es besser.`):'Keine passende Einheit im Katalog.'):(isUnit?`Gleiche Bauart wie jetzt: kein Umbau der Leitungen, nur tauschen.${a&&a.err+5<u.err?` Mit Umbau auf Vorbau + Lenker (Variante A) ginge es genauer: ${hTxt(a.dy)}.`:''}`:'Die Einheit trifft das Ziel fast so gut wie Einzelteile und ist aufgeräumter.')}</span></div></div>
-    ${short>8&&r.need.dy>0?`<div class="notice warn" style="font-size:13.5px">${ic('warn')}<div><b>So viel höher geht mit diesem Cockpit nicht.</b> Erreichbar sind etwa ${sg(reach)} mm, gewünscht ${sg(r.need.dy)} mm. Mehr Höhe nur über zusätzliche Spacer (Gabelschaft muss lang genug sein, beim Händler prüfen) oder einen Lenker mit Rise. Sonst ist der Rahmen für diese Position sehr tief. Tipp: erst den ersten Schritt umsetzen, 2–3 Ausfahrten fahren, dann neu bewerten.</div></div>`:''}`; })()}
+    ${short>8&&r.need.dy>0?`<div class="notice warn" style="font-size:13.5px">${ic('warn')}<div><b>So viel höher geht mit diesem Cockpit nicht.</b> Erreichbar sind etwa ${sg(reach)} mm, gewünscht ${sg(r.need.dy)} mm. ${(r.p.above||0)?`Über dem Cockpit liegen ${r.p.above} mm Spacer, die kannst du darunter setzen.`:'Über dem Cockpit sind keine Spacer, und den Gabelschaft kann man nicht verlängern.'} Was trotzdem hilft: Schalthebel 5–10 mm höher setzen (Lenkerband neu wickeln) – dort liegen die Hände meist.${isUnit?' Mehr Höhe nur mit Umbau auf Vorbau + Lenker (Variante A).':' Oder ein Vorbau mit mehr Winkel (Variante A).'} Tipp: erst den ersten Schritt umsetzen, 2–3 Ausfahrten fahren, dann neu bewerten.</div></div>`:''}`; })()}
   ${r.units.some(x=>x.L<r.L0&&Math.abs(x.dy)<3)?`<p class="faint" style="font-size:12.5px;margin:0">Warum ein kürzeres Cockpit rechnerisch 1–2 mm tiefer ist: Der Gabelschaft steht schräg, der Vorbau zeigt dadurch leicht nach oben. Kürzer heißt minimal tiefer. Spürbar ist das nicht.</p>`:''}
   <div class="ck2"><div class="ckc"><h4>Variante A: Einzelteile${isUnit?' (Umbau)':''}</h4>
     <ol>${r.best.map((x,i)=>`<li><b>Vorbau ${x.L} mm, ${x.a>0?'+':''}${x.a}°</b> · ${spTxt(x.sp)}<div class="sub">ergibt ${hTxt(x.dy)}, ${sg(x.dx)} mm Länge${x.err>8?` · noch ${n(x.err)} mm vom Ziel entfernt`:' · trifft das Ziel'}</div></li>`).join('')}</ol>
