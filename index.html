@@ -410,20 +410,20 @@ canvas{max-width:100%;display:block}
 
 /* ===== Design „Werkbank-Messblatt“: Schneidematte, Laserlinie, Papier ===== */
 :root{
-  --mat:#17463f; --mat-2:#1d564d; --mat-line:rgba(255,255,255,.07); --mat-line-2:rgba(255,255,255,.14); --laser:#ff4d1a;
-  --bg:#eef2ef; --surface:#ffffff; --surface-2:#f1f4f2; --line:#dbe3df; --fg:#142026; --muted:#4f5f63; --faint:#7d8b8e;
+  --mat:#3a78b8; --mat-2:#4688c9; --mat-line:rgba(255,255,255,.07); --mat-line-2:rgba(255,255,255,.14); --laser:#ff4d1a;
+  --bg:#f2f5f8; --surface:#ffffff; --surface-2:#eef2f6; --line:#dce3ea; --fg:#142026; --muted:#4f5f63; --faint:#7d8b8e;
   --accent:#ff4d1a; --accent-ink:#ffffff; --accent-strong:#c7360b; --accent-soft:#ffece4; --accent-line:#ffc2ab;
   --ok:#1e9e6a; --ok-soft:#e1f4ea; --warn:#a9790a; --warn-soft:#fdf3d3; --bad:#d23a2f; --bad-soft:#fbe4e1; --info:#1f6fa8; --info-soft:#e2eef8;
-  --il-bg:#f1f4f2; --il-frame:#3e5257; --il-tire:#1f2c31; --il-body:#25343a; --il-soft:#cfdad6;
+  --il-bg:#eef2f6; --il-frame:#3e4f60; --il-tire:#1f2a35; --il-body:#25313d; --il-soft:#cfd8e2;
   --f-head:"Archivo","Figtree",system-ui,sans-serif;
   --shadow:0 1px 0 rgba(20,32,38,.04),0 8px 24px -12px rgba(20,32,38,.18); --r:12px;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --mat:#1f4a43; --mat-2:#25554d; --bg:#2c3033; --surface:#373c40; --surface-2:#41474c; --line:#4d545a; --fg:#eef1f2; --muted:#b8c0c4; --faint:#8d969b; --glass:rgba(55,60,64,.92);
+  --mat:#33689e; --mat-2:#3b75ad; --bg:#2c3033; --surface:#373c40; --surface-2:#41474c; --line:#4d545a; --fg:#eef1f2; --muted:#b8c0c4; --faint:#8d969b; --glass:rgba(55,60,64,.92);
   --accent:#ff6a3d; --accent-ink:#1b0700; --accent-strong:#ff8a63; --accent-soft:rgba(255,106,61,.14); --accent-line:rgba(255,106,61,.45);
   --il-bg:#41474c; --il-frame:#b4c0c3; --il-tire:#e1e6e8; --il-body:#eef1f2; --il-soft:#565e64;}}
 :root[data-theme="dark"]{
-  --mat:#1f4a43; --mat-2:#25554d; --bg:#2c3033; --surface:#373c40; --surface-2:#41474c; --line:#4d545a; --fg:#eef1f2; --muted:#b8c0c4; --faint:#8d969b; --glass:rgba(55,60,64,.92);
+  --mat:#33689e; --mat-2:#3b75ad; --bg:#2c3033; --surface:#373c40; --surface-2:#41474c; --line:#4d545a; --fg:#eef1f2; --muted:#b8c0c4; --faint:#8d969b; --glass:rgba(55,60,64,.92);
   --accent:#ff6a3d; --accent-ink:#1b0700; --accent-strong:#ff8a63; --accent-soft:rgba(255,106,61,.14); --accent-line:rgba(255,106,61,.45);
   --il-bg:#41474c; --il-frame:#b4c0c3; --il-tire:#e1e6e8; --il-body:#eef1f2; --il-soft:#565e64;}
 
@@ -480,18 +480,11 @@ h1{font-weight:800;font-size:30px} h2{font-weight:750} h3{font-family:var(--f-he
 .brand svg rect{fill:var(--mat)!important}
 
 /* ===== Durchgängig auf allen Seiten ===== */
-/* Navigation links: Mattengrün, wie ein Werkzeugbrett */
-.side{background:var(--mat);border-right:0;color:#e9f1ee}
-.side .brand b{color:#fff} .side .brand small{color:rgba(233,241,238,.65)}
-.side .brand svg rect{fill:var(--laser)!important}
-.side .navgroup .label{color:rgba(233,241,238,.55)}
-.side .navbtn{color:rgba(233,241,238,.82)}
-.side .navbtn:hover{background:rgba(255,255,255,.08);color:#fff}
-.side .navbtn[aria-current="page"]{background:rgba(255,255,255,.12);color:#fff;box-shadow:inset 3px 0 0 var(--laser)}
-.side .navbtn[aria-current="page"] svg{color:var(--laser)}
+/* Navigation links: hell, aktiver Punkt mit Laser-Streifen */
+.side .brand svg rect{fill:var(--mat)!important}
+.side .navbtn[aria-current="page"]{background:color-mix(in srgb,var(--mat) 12%,transparent);color:var(--fg);box-shadow:inset 3px 0 0 var(--laser)}
+.side .navbtn[aria-current="page"] svg{color:var(--mat)}
 .side .navbtn .cnt{background:var(--laser);color:#fff}
-.side .demo-note{border-top-color:rgba(255,255,255,.12);color:rgba(233,241,238,.6)}
-.side .demo-note .btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff}
 
 /* Seitenköpfe: große breite Überschrift mit kurzer Laser-Markierung */
 .pagehead:not(.hero) h1{position:relative;padding-bottom:10px}
@@ -504,7 +497,7 @@ h1{font-weight:800;font-size:30px} h2{font-weight:750} h3{font-family:var(--f-he
 .tile{border-radius:16px;transition:transform .15s var(--ease),border-color .15s}
 .tile:hover{transform:translateY(-2px);border-color:var(--mat-2)}
 .tile .ti{background:color-mix(in srgb,var(--mat) 10%,transparent);color:var(--mat)}
-:root[data-theme="dark"] .tile:not(.main) .ti{background:rgba(255,255,255,.08);color:#9fd8c8}
+:root[data-theme="dark"] .tile:not(.main) .ti{background:rgba(255,255,255,.08);color:#a9cdf0}
 .tile b{font-family:var(--f-head);font-stretch:108%;font-weight:700}
 
 /* Listen, Avatare */
@@ -1273,7 +1266,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.9';
+const APP_VER = '2026-10-27.10';
 let loadIssue = null;
 function load(){
   let raw=null;
