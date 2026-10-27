@@ -1419,7 +1419,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.31';
+const APP_VER = '2026-10-27.32';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1670,6 +1670,7 @@ VIEWS.mehr = () => `
   ${head('Mehr','Alle weiteren Bereiche von FitFrame.')}
   ${moreNav().map(([g,items])=>`<div class="stack"><h2>${g}</h2><div class="tiles">${items.map(([r,l,i,d])=>`<button class="tile" data-nav="${r}"><span class="ti">${ic(i)}</span><b>${l}</b><span>${d}</span></button>`).join('')}</div></div>`).join('')}
   ${shopHtml()}
+  ${pricesHtml()}
   ${dataPanel()}
   ${statsHtml()}
   ${panel('Einstellungen',`<div class="stack"><div class="row" style="justify-content:space-between"><span>Darstellung</span><div class="seg"><button data-act="setTheme" data-v="light" aria-pressed="${theme==='light'}">Hell</button><button data-act="setTheme" data-v="dark" aria-pressed="${theme==='dark'}">Dunkel</button></div></div>
@@ -2867,7 +2868,10 @@ SESSTAB.ergebnis = s => {
 /* =========================================================================
    Mehrwert: Angebot aus dem Plan, Fit-Pass (QR), Übungen, Beschwerde-Verlauf, Lager-Räder
    ========================================================================= */
+const PRICE_LABEL={stem:'Vorbau',unit:'Lenker-Vorbau-Einheit',spacer:'Spacer-Set 5 mm',insole:'Einlagen (Paar)',wedge:'Keil für Cleats (Stück)',shim:'Unterlegplatte (Shim)',saddle:'Sattel',tape:'Lenkerband',cleat:'Cleats',laborCockpit:'Arbeit: Cockpit/Vorbau tauschen',laborHoods:'Arbeit: Schalthebel versetzen + Band',laborCleat:'Arbeit: Cleats einstellen',laborInsole:'Arbeit: Einlagen anpassen'};
 const PRICE_DEFAULT={stem:49,unit:189,spacer:6.5,insole:49,wedge:12,shim:9,saddle:89,tape:19,cleat:22,laborCockpit:25,laborHoods:20,laborCleat:15,laborInsole:10};
+function price(k){ return S.prices&&S.prices[k]!=null?S.prices[k]:PRICE_DEFAULT[k]; }
+function pricesHtml(){ return panel('Deine Preise',`<div class="stack"><p class="muted" style="font-size:14px">Für das Angebot aus dem Fitting. Steht ein Teil mit Preis im Lager, gilt der Lagerpreis.</p><form class="form" data-form="prices">${Object.keys(PRICE_DEFAULT).map(k=>`<div class="field"><label for="pr_${k}">${PRICE_LABEL[k]} (€)</label><input class="input num" id="pr_${k}" name="${k}" type="number" step="0.5" min="0" inputmode="decimal" value="${price(k)}"></div>`).join('')}<div class="wide"><button class="btn primary" type="submit">Preise speichern</button></div></form></div>`); }
 function invFind(re){ return (S.inventory||[]).find(x=>re.test(x.name)); }
 function offerBuild(s){
   const items=[]; const add=(id,name,qty,price,why,re)=>{ const inv=re?invFind(re):null; items.push({id,name:inv?inv.name:name,qty,price:inv&&inv.price?inv.price:price,why,on:true,sku:inv?inv.sku:null,stock:inv?inv.stock:null}); };
@@ -2877,23 +2881,23 @@ function offerBuild(s){
   try{ const r=cockpitAdvice(s); if(r&&!Array.isArray(r.need)&&(Math.abs(r.need.dx)>=8||Math.abs(r.need.dy)>=8)&&needPart){ const u=r.units[0], a=r.best[0];
     const err0=Math.abs(r.need.dx)+Math.abs(r.need.dy); const better=x=>x&&x.err<=err0-8;
     if(!(b.cockpit==='unit'?better(u):(better(a)||better(u)))) throw 0;
-    if(b.cockpit==='unit'&&u) add('unit',`${u.u.brand} ${u.u.model} ${u.L}×${u.w}`,1,PRICE_DEFAULT.unit,'Cockpit-Empfehlung (gleiche Bauart)',null);
-    else if(a) add('stem',`Vorbau ${a.L} mm, ${a.a>0?'+':''}${a.a}°`,1,PRICE_DEFAULT.stem,'Cockpit-Empfehlung',new RegExp(`Vorbau ${a.L} mm`));
-    add('lab1','Arbeit: Cockpit tauschen und einstellen',1,PRICE_DEFAULT.laborCockpit,'Montage',null); } }catch(e){}
+    if(b.cockpit==='unit'&&u) add('unit',`${u.u.brand} ${u.u.model} ${u.L}×${u.w}`,1,price('unit'),'Cockpit-Empfehlung (gleiche Bauart)',null);
+    else if(a) add('stem',`Vorbau ${a.L} mm, ${a.a>0?'+':''}${a.a}°`,1,price('stem'),'Cockpit-Empfehlung',new RegExp(`Vorbau ${a.L} mm`));
+    add('lab1','Arbeit: Cockpit tauschen und einstellen',1,price('laborCockpit'),'Montage',null); } }catch(e){}
   // Spacer, wenn mehr Spacer gebraucht werden als vorhanden (nur bei Vorbau, nicht Einheit)
   const drop=P.steps.find(x=>x.key==='drop'&&x.parts&&x.parts.spacer!=null&&x.parts.spacer>((bikeParts(s).under||0)+(bikeParts(s).above||0)));
-  if(drop) add('sp','Spacer-Set 5 mm',Math.ceil((drop.parts.spacer-((bikeParts(s).under||0)+(bikeParts(s).above||0)))/5),PRICE_DEFAULT.spacer,'Mehr Spacer nötig',/Spacer/);
+  if(drop) add('sp','Spacer-Set 5 mm',Math.ceil((drop.parts.spacer-((bikeParts(s).under||0)+(bikeParts(s).above||0)))/5),price('spacer'),'Mehr Spacer nötig',/Spacer/);
   // Schalthebel höher setzen (bei blockierter Lenkerhöhe)
-  if(P.steps.some(x=>x.key==='drop'&&!x.d&&(x.alt||[]).some(a=>/Schalthebel 5–10 mm höher/.test(a.t)))){ add('tape','Lenkerband',1,PRICE_DEFAULT.tape,'Schalthebel höher setzen',/Lenkerband/); add('lab2','Arbeit: Schalthebel versetzen, Band wickeln',1,PRICE_DEFAULT.laborHoods,'Montage',null); }
+  if(P.steps.some(x=>x.key==='drop'&&!x.d&&(x.alt||[]).some(a=>/Schalthebel 5–10 mm höher/.test(a.t)))){ add('tape','Lenkerband',1,price('tape'),'Schalthebel höher setzen',/Lenkerband/); add('lab2','Arbeit: Schalthebel versetzen, Band wickeln',1,price('laborHoods'),'Montage',null); }
   // Füße
   const f=footAdvice(s); const ins=['L','R'].filter(sd=>f.feet[sd].insole&&['ja','prüfen'].includes(f.feet[sd].insole.need));
-  if(ins.length){ add('ins',`Einlagen (${f.feet[ins[0]].insole.type.split(',')[0]})`,1,PRICE_DEFAULT.insole,`Fußgewölbe ${ins.map(x=>x==='L'?'links':'rechts').join(' und ')}`,/Einlage/); add('lab3','Arbeit: Einlagen anpassen',1,PRICE_DEFAULT.laborInsole,'Montage',null); }
+  if(ins.length){ add('ins',`Einlagen (${f.feet[ins[0]].insole.type.split(',')[0]})`,1,price('insole'),`Fußgewölbe ${ins.map(x=>x==='L'?'links':'rechts').join(' und ')}`,/Einlage/); add('lab3','Arbeit: Einlagen anpassen',1,price('laborInsole'),'Montage',null); }
   const wd=['L','R'].reduce((a,sd)=>a+((f.feet[sd].wedge&&f.feet[sd].wedge.need==='ja')?f.feet[sd].wedge.count:0),0);
-  if(wd) add('wd','Keile für Cleats (Wedges)',wd,PRICE_DEFAULT.wedge,'Vorfuß schräg',/Keil|Wedge/);
-  if(f.shim&&f.shim.need==='ja') add('sh',`Unterlegplatte ${f.shim.mm} mm (${f.shim.side})`,1,PRICE_DEFAULT.shim,'Beinlängenausgleich',/Unterleg|Shim/);
-  if(P.steps.some(x=>x.key==='cleatFore'&&x.d)||wd||(f.shim&&f.shim.need==='ja')) add('lab4','Arbeit: Cleats einstellen',1,PRICE_DEFAULT.laborCleat,'Montage',null);
+  if(wd) add('wd','Keile für Cleats (Wedges)',wd,price('wedge'),'Vorfuß schräg',/Keil|Wedge/);
+  if(f.shim&&f.shim.need==='ja') add('sh',`Unterlegplatte ${f.shim.mm} mm (${f.shim.side})`,1,price('shim'),'Beinlängenausgleich',/Unterleg|Shim/);
+  if(P.steps.some(x=>x.key==='cleatFore'&&x.d)||wd||(f.shim&&f.shim.need==='ja')) add('lab4','Arbeit: Cleats einstellen',1,price('laborCleat'),'Montage',null);
   // Sattel bei Sitzbeschwerden
-  const pa=partsAdvice(s); if(pa.saddle&&/sitz/i.test((s.anamnesis&&s.anamnesis.complaints)||'')) add('sad',`Sattel ${pa.saddle.lo}–${pa.saddle.hi} mm breit`,1,PRICE_DEFAULT.saddle,`Sitzknochen ${pa.saddle.sb} mm, Sitzbeschwerden`,/Sattel/);
+  const pa=partsAdvice(s); if(pa.saddle&&/sitz/i.test((s.anamnesis&&s.anamnesis.complaints)||'')) add('sad',`Sattel ${pa.saddle.lo}–${pa.saddle.hi} mm breit`,1,price('saddle'),`Sitzknochen ${pa.saddle.sb} mm, Sitzbeschwerden`,/Sattel/);
   return items;
 }
 function offerHtml(s){
@@ -4216,6 +4220,7 @@ function importJson(t){
 function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
 
 const FORMS = {
+  prices(f,data){ S.prices=S.prices||{}; Object.keys(PRICE_DEFAULT).forEach(k=>{ const v=parseFloat(String(data.get(k)||'').replace(',','.')); if(isFinite(v)&&v>=0) S.prices[k]=v; }); save(); render(); toast('Preise gespeichert – gilt ab dem nächsten Angebot (oder „Neu berechnen“)'); },
   shop(f,data){ S.shop=S.shop||{}; ['name','addr','phone','email','web'].forEach(k=>S.shop[k]=String(data.get(k)||'').trim()); save(); render(); toast('Ladendaten gespeichert'); },
   anaOne(f,data){ const s=sess(f.dataset.id); const i=Number(f.dataset.i); const k=ANA_Q[i][0]; s.anamnesis[k]=String(data.get(k)||'').trim(); if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit'; audit(`Ziel/Anamnese: ${ANA_Q[i][1]}`,s.id); save();
     ui.wIdx=i+1<ANA_Q.length?i+1:null; render(); window.scrollTo({top:0}); if(ui.wIdx==null) toast('Alle Fragen beantwortet'); },
