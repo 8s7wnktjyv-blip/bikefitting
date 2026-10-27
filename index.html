@@ -1386,7 +1386,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.23';
+const APP_VER = '2026-10-27.25';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1752,8 +1752,8 @@ const PRESET={
 const splitVals=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean);
 const ANA_Q=[['goal','Was ist das Ziel des Fittings?','Mehrere Antworten möglich.'],['complaints','Gibt es Beschwerden beim Fahren?','Mehrere möglich. Wo genau und seit wann, kannst du unten ergänzen.'],['training','Wie viel fährt die Person pro Woche?',''],['experience','Seit wann fährt die Person Rad?',''],['previous','Gab es schon ein Fitting?',''],['limits','Gibt es körperliche Einschränkungen?','Mehrere möglich.'],['comfort','Was ist wichtiger?','']];
 /* ---------- Vorschau: Was sich durch Ziel und Bedürfnisse ungefähr an der Position ändert ---------- */
-function goalPreview(s){
-  const a=s.anamnesis||{}, b=bike(s.bikeId)||{}, t=b.type||'';
+function goalPreview(s,typeOverride){
+  const a=s.anamnesis||{}, b=bike(s.bikeId)||{}, t=typeOverride||b.type||'';
   const goal=(a.goal||'').toLowerCase(), comp=(a.complaints||'').toLowerCase(), cf=a.comfort||'', lim=(a.limits||'').toLowerCase(), tr=a.training||'';
   if(!goal&&!cf&&!comp) return null;
   let sc=0; const why=[];
@@ -1796,6 +1796,101 @@ function goalPreviewHtml(s){ const g=goalPreview(s); if(!g) return '';
   <p style="font-size:13.5px;margin:6px 0 0"><b>Zielwinkel auf dem Rad:</b> ${esc(g.angles)}</p>
   ${g.warn.map(w=>`<div class="notice warn" style="margin-top:6px;font-size:13.5px">${ic('warn')}<div>${esc(w)}</div></div>`).join('')}
   <p class="faint" style="font-size:12.5px;margin:6px 0 0">Grobe Richtung vor dem Messen. Die genauen Millimeter berechnet FitFrame im Schritt Anpassen aus Messwerten, Rahmen und Körpercheck.</p></div>`; }
+/* ---------- Körper zuerst: Zielposition aus Körpermaßen, Einstelldaten für ein Rad ---------- */
+const DROP_BODY={Rennrad:{aero:95,mitte:70,komfort:40},Gravel:{aero:70,mitte:45,komfort:20},Triathlon:{aero:110,mitte:90,komfort:70},MTB:{aero:40,mitte:20,komfort:0},'E-Bike':{aero:-20,mitte:-50,komfort:-80},Trekking:{aero:-20,mitte:-50,komfort:-80}};
+const SEAT_ANG={Rennrad:73.5,Gravel:73,Triathlon:78,MTB:74,'E-Bike':72,Trekking:72};
+/* Zielposition: Sattelhöhe, Versatz, Sattel–Lenker, Überhöhung + Koordinaten Lenkermitte ab Tretlager */
+function stockBar(x,L,ang,spacer){ const HA=x.headAngle*Math.PI/180; const ux=-Math.cos(HA), uy=Math.sin(HA); const Sp=(spacer??25)+30; const th=(90-x.headAngle+(ang??-6))*Math.PI/180;
+  return {bx:x.reach+Sp*ux+L*Math.cos(th), by:x.stack+Sp*uy+L*Math.sin(th)}; }
+function bodyTarget(c,type,a,check,crank,frame){
+  const H=Number(c.body.height)||null; if(!H) return {need:['Körpergröße']};
+  const est=[]; const I=Number(c.body.inseam)||(est.push('Schrittlänge'),H*RATIO.inseam);
+  const Tm=Number(c.body.torso)||null, Am=Number(c.body.arm)||null;
+  const style=(()=>{ try{ return goalPreviewRaw(a||{},type,check); }catch(e){ return 'mitte'; } })();
+  const ham=Number((check&&check.hamstring)||0); const comp=((a&&a.complaints)||'').toLowerCase();
+  const cr=crank||(I<78?165:I<84?170:I<90?172.5:175);
+  const h=Math.round(I*10*0.883-(cr-172.5)*0.5);
+  const sa=SEAT_ANG[type]||73.5; const cs=Math.cos(sa*Math.PI/180);
+  const sb=type==='Triathlon'?Math.round(h*cs-150):Math.round(h*cs-125);
+  const xs=sb+70, Hs=Math.sqrt(Math.max(h*h-xs*xs,0));
+  // Anpassung durch Ziel und Körper (gegenüber der Serienposition), begrenzt
+  let adjD=style==='aero'?15:style==='komfort'?-15:0; const why=[];
+  if(/nacken|schulter|rücken|hände/.test(comp)){ adjD-=10; why.push('Beschwerden im Oberkörper'); }
+  if(ham>20){ adjD-=10; why.push('Beweglichkeit deutlich eingeschränkt'); } else if(ham>10){ adjD-=5; why.push('Beweglichkeit leicht eingeschränkt'); }
+  if(/unter 2 h/.test((a&&a.training)||'')) adjD-=5;
+  adjD=Math.max(-20,Math.min(20,adjD));
+  let adjR=style==='aero'?10:style==='komfort'?-10:0; if(/nacken|schulter|hände/.test(comp)) adjR-=5; adjR=Math.max(-20,Math.min(15,adjR));
+  let d,r,basis;
+  if(frame&&frame.x&&frame.x.stack!=null&&frame.x.reach!=null&&frame.x.headAngle!=null){
+    const sbar=stockBar(frame.x,frame.L||100,frame.ang,frame.spacer);
+    const dF=Hs-sbar.by, rF=Math.hypot(sbar.bx+sb,Hs-sbar.by);
+    d=Math.round(dF+adjD); r=Math.round(rF+adjR);
+    if(Tm&&Am){ const k=(REACH_K[type]||.44); const rb=(Tm+Am)*10*k; r=Math.round((r+rb)/2); }
+    basis={d:`Serienposition dieses Rahmens ${Math.round(dF)} mm${adjD?`, ${adjD>0?'+':''}${adjD} mm wegen ${[style!=='mitte'?({aero:'sportlichem',komfort:'komfortablem'}[style]+' Ziel'):null,...why].filter(Boolean).join(', ')}`:''}`,r:`Serienposition ${Math.round(rF)} mm${adjR?`, ${adjR>0?'+':''}${adjR} mm wegen Ziel/Beschwerden`:''}${Tm&&Am?', gemittelt mit Rumpf + Arm':''}`};
+  } else {
+    const T=Tm||H*RATIO.torso, Ar=Am||H*RATIO.arm; if(!Tm) est.push('Rumpf'); if(!Am) est.push('Arm');
+    r=Math.round((T+Ar)*10*(REACH_K[type]||.44)+adjR);
+    const base={Rennrad:80,Gravel:65,Triathlon:100,MTB:30,'E-Bike':-40,Trekking:-40}[type]??60; d=Math.round((base>0?base*H/180:base)+adjD);
+    basis={d:`Richtwert ${type} bei ${fmtNum(H)} cm${adjD?`, ${adjD>0?'+':''}${adjD} mm wegen Ziel/Körper`:''}`,r:'aus Rumpf und Arm'};
+  }
+  const unc=est.includes('Schrittlänge')?15:10;
+  const bx=-sb+Math.sqrt(Math.max(r*r-d*d,0)), by=Hs-d;
+  return {h,sb,r,d,bx,by,crank:cr,style,est,unc,type,sa,basis};
+}
+/* Stil ohne Sitzung (für Neurad und Vorschau) */
+function goalPreviewRaw(a,type,check){ const fake={anamnesis:a,bikeId:'__none',check:check||{}}; const g=goalPreview(fake,type); return g?g.style:'mitte'; }
+/* Einstelldaten für einen Rahmen: welcher Vorbau, wie viele Spacer */
+function frameSetup(P,x,opt){
+  opt=opt||{}; if(x.stack==null||x.reach==null||x.headAngle==null) return null;
+  const HA=x.headAngle*Math.PI/180, ang=opt.ang??-6; const ux=-Math.cos(HA), uy=Math.sin(HA);
+  const solve=a=>{ const th=(90-x.headAngle+a)*Math.PI/180, vx=Math.cos(th), vy=Math.sin(th); const dx=P.bx-x.reach, dy=P.by-x.stack; const det=ux*vy-uy*vx; return {Sp:(dx*vy-dy*vx)/det,L:(ux*dy-uy*dx)/det}; };
+  const S=solve(ang); const spacerNeed=Math.round(S.Sp-30), stemNeed=Math.round(S.L);
+  // mit dem vorhandenen Vorbau: Spacer passend zur Höhe, Rest in der Länge
+  let withStock=null;
+  if(opt.L){ const th=(90-x.headAngle+ang)*Math.PI/180; const vy=Math.sin(th), vx=Math.cos(th);
+    const sp=(P.by-x.stack-opt.L*vy)/uy; const xEnd=x.reach+sp*ux+opt.L*vx; withStock={spacer:Math.round(sp-30),dx:Math.round(xEnd-P.bx)}; }
+  const L=Math.round(stemNeed/10)*10;
+  return {spacerNeed,stemNeed,stemRound:L,withStock};
+}
+function bodySetupForSession(s){
+  const c=cust(s.customerId), b=bike(s.bikeId); if(!b) return null;
+  const crank=(s.before.crankLength&&Number(s.before.crankLength.value))||null;
+  const g=b.geo&&geoById(b.geo.id), x=g&&geoRow(g,b.geo.size);
+  const p=bikeParts(s);
+  const P=bodyTarget(c,b.type,s.anamnesis,s.check,crank,x?{x,L:p.L||x.stem||100,ang:p.ang,spacer:p.under??25}:null); if(P.need) return P; const e={...s.before,...s.after}; const v=k=>e[k]?Number(e[k].value):null;
+  const F=x?frameSetup(P,x,{L:p.L,ang:p.ang}):null;
+  return {P,g,x,F,p,unit:b.cockpit==='unit',now:{h:v('saddleHeight'),sb:v('saddleSetback'),r:v('reach'),d:v('drop'),spacer:p.under,above:p.above}};
+}
+function bodySetupHtml(s){
+  const R=bodySetupForSession(s); if(!R) return '';
+  if(R.need) return `<details class="more bodyset"><summary>Option: Einstelldaten aus Körpermaßen</summary><p class="muted" style="margin-top:6px">Dafür fehlt: ${esc(R.need.join(', '))} (Körper → Grundmaße).</p></details>`;
+  const {P,F,now,p,unit}=R; const n=v=>fmtNum(Math.round(v)); const dl=(t,c)=>t==null||c==null?'':Math.abs(t-c)<3?'<span class="chip nodot c-ok">passt</span>':`<span class="chip nodot c-warn">${t-c>0?'+':''}${n(t-c)} mm</span>`;
+  const row=(lab,t,cur,how,unc,chk,isDrop)=>`<tr><td><b>${lab}</b><div class="faint" style="font-size:12.5px">${how}</div></td><td class="num"><b>${n(t)} mm</b><div class="faint" style="font-size:12px">±${unc} mm</div></td><td class="num">${cur!=null?n(cur)+' mm':'–'}</td><td>${chk&&cur!=null&&Math.abs(t-cur)>chk.lim?`<span class="chip nodot c-info">${chk.t}</span>`:isDrop&&cur!=null&&Math.abs(t-cur)>=3?`<span class="chip nodot c-warn">Lenker ${n(Math.abs(t-cur))} mm ${t<cur?'höher':'tiefer'}</span>`:dl(t,cur)}</td></tr>`;
+  let cock='';
+  if(F){ const sp=F.withStock; const spNow=now.spacer; const canUp=(now.above||0); const what=unit?'Cockpit':'Vorbau';
+    const up=now.d!=null?Math.round(now.d-P.d):null;
+    let main='', sub='', bad=false;
+    if(up!=null&&Math.abs(up)>=5){ main=`Lenker ${Math.abs(up)} mm ${up>0?'höher':'tiefer'} als jetzt`;
+      if(spNow==null||now.above==null) sub=`Wie viel davon über Spacer geht, zeigt FitFrame, sobald „Spacer unter dem Vorbau“ und „Spacer über dem Vorbau“ gemessen sind.`;
+      else if(up>0&&up>canUp+2){ bad=true; sub=`Über dem ${what} sind nur ${canUp} mm Spacer. ${canUp?`Damit ${canUp} mm höher; `:''}den Rest schafft das ${unit?'Cockpit':'Rad'} mit Serienteilen nicht. Alternativen stehen im Schritt Anpassen.`; }
+      else if(up>0) sub=`${Math.round(up/5)*5} mm Spacer von oben unter den ${what} setzen.`;
+      else sub=`${Math.round(-up/5)*5} mm Spacer von unten über den ${what} setzen.`; }
+    else if(up!=null){ main='Lenkerhöhe passt'; }
+    else if(p.L){ main=`Ideal an diesem Rahmen: ${what} etwa ${F.stemRound} mm`; }
+    if(sp&&Math.abs(sp.dx)>10&&p.L) sub+=` Länge: ${what} ${n(Math.round((p.L-sp.dx)/10)*10)} mm wäre passender als ${p.L} mm.`;
+    cock=main?`<div class="statusbox ${bad?'warn':'ok'}" style="margin-top:8px"><div><b>${main}</b>${sub?`<span class="muted" style="font-size:14px">${sub}</span>`:''}</div></div>`:''; }
+  return `<details class="more bodyset"><summary>Option: Einstelldaten aus Körpermaßen</summary><div class="stack" style="margin-top:8px;gap:8px">
+  <p class="muted" style="font-size:14px">Ohne Messung am Rad: FitFrame rechnet aus Schrittlänge, Rumpf, Arm, Beweglichkeit und Ziel (<b>${esc({aero:'sportlich',mitte:'ausgewogen',komfort:'komfortabel'}[P.style])}</b>) die Zielposition und vergleicht mit dem Rad.${P.est.length?` Geschätzt: ${esc(P.est.join(', '))} – messen macht es genauer.`:''}</p>
+  <div class="tw"><table><thead><tr><th>Einstellung</th><th>Ziel</th><th>Jetzt</th><th></th></tr></thead><tbody>
+  ${row('Sattelhöhe',P.h,now.h,`88 % der Schrittlänge, Kurbel ${fmtNum(P.crank)} mm${now.h!=null&&Math.abs(P.h-now.h)>10?` · Unterschied ${n(P.h-now.h)} mm: nicht direkt ändern, erst Kniewinkel messen – der entscheidet`:''}`,P.unc,{lim:10,t:'Kniewinkel messen'})}
+  ${row('Sattelversatz',P.sb,now.sb,`Sitzwinkel ${fmtNum(P.sa)}° wirksam`,15,{lim:40,t:'nachmessen'})}
+  ${row('Sattel–Lenker',P.r,now.r,esc(P.basis.r),15)}
+  ${row('Überhöhung',P.d,now.d,esc(P.basis.d)+' · positiv = Lenker tiefer als Sattel',15,null,true)}
+  </tbody></table></div>
+  ${cock}
+  ${now.sb!=null&&Math.abs(now.sb-P.sb)>40?`<div class="notice warn" style="font-size:13.5px">${ic('warn')}<div>Dein gemessener Sattelversatz (${n(now.sb)} mm) weicht stark vom Erwartungswert ab. Bitte nachmessen: waagerecht vom Lot durch die Tretlagermitte bis zur <b>Sattelspitze</b> (Kreuzlaser oder Lot hilft).</div></div>`:''}
+  <div class="notice" style="font-size:13.5px">${ic('info')}<div>Aus Körpermaßen allein ist das etwa ±10–15 mm genau. Danach immer kurz auf dem Rad prüfen: Kniewinkel per iPhone-Kamera, dann höchstens ±5 mm nachstellen.</div></div></div></details>`;
+}
 SESSTAB.anamnese = (s,c) => {
   const a=s.anamnesis;
   if(ui.wIdx!=null&&ANA_Q[ui.wIdx]){ const i=ui.wIdx, [k,l,hint]=ANA_Q[i], p=PRESET[k], cur=a[k]||'', vals=splitVals(cur), multi=p.m==='multi';
@@ -1980,6 +2075,7 @@ SESSTAB.ausgang = s => {
   return `<div class="stack">
   <p class="onlyline">Miss das Rad so, wie die Person es mitgebracht hat. ${MEASURE_NOW.length} Punkte, je mit Skizze und Anleitung.</p>
   <div class="statusbox ${done===MEASURE_NOW.length?'ok':''}"><div style="flex:1;min-width:0"><b>${done===MEASURE_NOW.length?'Alle Pflichtwerte erfasst':'Noch '+(MEASURE_NOW.length-done)+' Werte offen'}</b>${mk&&fromMaker.length?`<span class="muted" style="font-size:14px">${fromMaker.length} Serienwerte vom Hersteller übernommen</span>`:''}</div><span class="num" style="font-weight:700">${done}/${MEASURE_NOW.length}</span></div>
+  ${bodySetupHtml(s)}
   ${startBtn(first,done,first>=0?MK[MEASURE_NOW[first]].label:'')}
   ${done?checksHtml(s,true):''}
   ${MGROUPS.map(([gl,keys])=>`<div class="mgroup"><div class="label">${gl} <span class="faint">· ${keys.filter(k=>s.before[k]).length}/${keys.length}</span></div><div class="ovl">${keys.map(k=>{const i=MEASURE_NOW.indexOf(k), v=s.before[k], rg=measureRange(k,c,b), out=v&&rg&&rg.lo!=null&&(v.value<rg.lo||v.value>rg.hi);return ovItem(i,MK[k].label,v?`${fmtNum(v.value)} ${MK[k].unit}${v.double?' ✓✓':''}`:'',v?(out?'warn':'done'):'open');}).join('')}</div></div>`).join('')}
@@ -3909,7 +4005,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); cl
 applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
 go(VIEWS[start]?start:'dashboard');
-window.__fitframe={goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
