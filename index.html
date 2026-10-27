@@ -662,6 +662,9 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 
 .catlist{display:flex;flex-direction:column;gap:6px}
 .catrow{display:flex;gap:8px;align-items:center}.catrow .input.num{width:92px!important;flex:none}.catrow>.btn{flex:none}.catrow>.input:first-child{flex:1;min-width:0}
+
+.msgbox{display:flex;flex-direction:column;gap:6px}
+.report.kpirep{background:transparent!important;color:inherit;box-shadow:none}
 </style>
 </head>
 <body>
@@ -1422,7 +1425,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-10-27.34';
+const APP_VER = '2026-10-27.35';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1476,8 +1479,8 @@ const mainNav=()=>showExtra()?MAIN_ALL:MAIN_ALL.map(m=>m[0]==='werkstatt'?['geom
 const moreNav=()=>{ const main=mainNav().map(m=>m[0]); return MORE.map(([g,items])=>[g,items.filter(m=>(showExtra()||!EXTRA_ROUTES.includes(m[0]))&&!main.includes(m[0]))]).filter(([,items])=>items.length); };
 const MORE=[
   ['Fitting-Werkzeuge',[['fahrraeder','Fahrräder','bike','Alle Räder mit Einstellungen und Historie'],['geometrie','Geometrie-Bibliothek','grid','Rahmenmaße nach Hersteller, Größenberatung'],['followup','Nachkontrollen','loop','Wer ist wann wieder dran?'],['motion','Bewegung & Video','motion','Winkel aus Video messen oder simulieren'],['verlauf','Verlauf & Vergleich','history','Sitzungen nebeneinander und über die Zeit']]],
-  ['Verkauf',[['lager','Angebote & Lager','box','Angebote aus dem Fitting, Bestand, Räder auf Lager'],['preise','Preise & Produkte','doc','Fitting-Pakete und deine Produkte mit Preisen']]],
-  ['Für Profis',[['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht'],['qualitaet','Messdaten & Qualität','quality','Herkunft und Vollständigkeit aller Werte'],['portal','Kundenportal','portal','So sehen Kunden ihre Berichte'],['betrieb','Team & Zahlen','ops','Auslastung, Rollen, Kennzahlen'],['hardware','Hardware Lab','hw','Geplante eigene Messhilfen'],['module','Alle Module','grid','Gesamtplan und Stand der Demo']]]
+  ['Laden',[['lager','Angebote & Lager','box','Angebote aus dem Fitting, Bestand, Räder auf Lager'],['werkstatt','Werkstatt','wrench','Aufträge, Kunden benachrichtigen, Wartung'],['preise','Preise, Produkte & Gutscheine','doc','Fitting-Pakete, deine Produkte, Gutscheine'],['betrieb','Zahlen & Team','ops','Deine Kennzahlen pro Monat, Team']]],
+  ['Für Profis',[['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht'],['qualitaet','Messdaten & Qualität','quality','Herkunft und Vollständigkeit aller Werte'],['portal','Kundenportal','portal','So sehen Kunden ihre Berichte'],['hardware','Hardware Lab','hw','Geplante eigene Messhilfen'],['module','Alle Module','grid','Gesamtplan und Stand der Demo']]]
 ];
 const TITLES=Object.fromEntries([...MAIN.map(m=>[m[0],m[1]]),...MORE.flatMap(g=>g[1].map(m=>[m[0],m[1]]))]);
 const isMore=r=>MORE.some(g=>g[1].some(m=>m[0]===r));
@@ -1608,6 +1611,8 @@ VIEWS.dashboard = () => {
   const att=[];
   S.sessions.forEach(s=>s.followUps.forEach(f=>{ if(f.status==='offen'&&f.due<=td) att.push({icon:'loop',t:`${cust(s.customerId).name}: Nachkontrolle fällig`,sub:`seit ${fmtDate(f.due)}`,a:'data-nav="followup"',chip:'<span class="chip c-bad">fällig</span>'}); }));
   S.sessions.filter(s=>s.status==='in Arbeit').forEach(s=>{ const q=quality(s).filter(x=>x[0]!=='info'); if(q.length) att.push({icon:'quality',t:`${cust(s.customerId).name}: ${q.length} offene Punkte im Fitting`,sub:q[0][1],a:`data-act="openSession" data-id="${s.id}" data-tab="ergebnis"`,chip:'<span class="chip c-warn">prüfen</span>'}); });
+  S.workshop.filter(w=>w.status!=='Übergeben'&&w.due&&w.due<td).forEach(w=>att.push({icon:'wrench',t:`${w.title} ist überfällig`,sub:`${cust(w.customerId).name} · fällig ${fmtDate(w.due)}`,a:`data-act="openWO" data-id="${w.id}"`,chip:'<span class="chip c-bad">überfällig</span>'}));
+  (S.services||[]).forEach((x,i)=>{ if(x.next&&x.next<=dayOff(7)&&bike(x.bikeId)) att.push({icon:'loop',t:`${bike(x.bikeId).model}: ${x.task}`,sub:`${cust(bike(x.bikeId).customerId).name} · fällig ${fmtDate(x.next)}`,a:`data-act="svcRemind" data-i="${i}"`,chip:`<span class="chip ${x.next<td?'c-bad':'c-warn'}">${x.next<td?'fällig':'bald'}</span>`}); });
   if(showExtra()){ openWO.filter(w=>w.status==='Freigabe ausstehend').forEach(w=>att.push({icon:'wrench',t:`${w.title}`,sub:`${cust(w.customerId).name} muss den Kostenvoranschlag freigeben`,a:`data-act="openWO" data-id="${w.id}"`,chip:'<span class="chip c-warn">wartet</span>'}));
   openWO.filter(w=>w.status==='Abholbereit').forEach(w=>att.push({icon:'wrench',t:`${w.title} ist fertig`,sub:`${cust(w.customerId).name} kann abholen`,a:`data-act="openWO" data-id="${w.id}"`,chip:'<span class="chip c-ok">abholbereit</span>'}));
   S.inventory.filter(x=>x.stock<x.min).forEach(x=>att.push({icon:'box',t:`${x.name} nachbestellen`,sub:`noch ${x.stock}, Minimum ${x.min}`,a:'data-nav="lager"',chip:'<span class="chip c-warn">knapp</span>'})); }
@@ -1677,7 +1682,8 @@ function dataPanel(){
   ${bk.length?`<details class="more"><summary>Automatische Sicherungen in diesem Browser (${bk.length})</summary><div class="list" style="margin-top:8px">${bk.map(k=>`<div class="li" style="padding:8px 0"><div class="grow">${k.startsWith('fitframe-rescue-')?'Gerettete Daten vom '+new Date(Number(k.split('-').pop())).toLocaleString('de-DE'):'Stand vor Update '+esc(k.replace('fitframe-before-',''))}</div><button class="btn sm" data-act="restoreKey" data-k="${esc(k)}">Ergänzen</button></div>`).join('')}</div></details>`:''}
   </div>`);
 }
-VIEWS.preise = () => `${head('Preise & Produkte','Fitting-Pakete und die Produkte, die du verkaufst. Das Angebot nach dem Fitting nutzt diese Liste.')}${catalogHtml()}`;
+VIEWS.preise = () => `${head('Preise, Produkte & Gutscheine','Fitting-Pakete, die Produkte, die du verkaufst, und Gutscheine.')}${catalogHtml()}${panel('Zufriedenheitsgarantie',`<label class="row" style="gap:10px;align-items:center"><input type="checkbox" ${guarantee()?'checked':''} data-change="guarantee" style="width:22px;height:22px;accent-color:var(--accent)"><span>30 Tage kostenlose Nachjustierung – steht im Bericht, Nachkontrolle wird automatisch nach 30 Tagen eingeplant.</span></label>`)}${vouchersHtml()}`;
+const guarantee=()=>!(S.settings&&S.settings.guarantee===false);
 VIEWS.mehr = () => `
   ${head('Mehr','Alle weiteren Bereiche von FitFrame.')}
   ${moreNav().map(([g,items])=>`<div class="stack"><h2>${g}</h2><div class="tiles">${items.map(([r,l,i,d])=>`<button class="tile" data-nav="${r}"><span class="ti">${ic(i)}</span><b>${l}</b><span>${d}</span></button>`).join('')}</div></div>`).join('')}
@@ -2868,7 +2874,7 @@ SESSTAB.bericht = s => `<div class="stack"><div class="row" style="justify-conte
 SESSTAB.ergebnis = s => {
   const q=quality(s), crit=q.filter(x=>x[0]!=='info').length; const t=ui.resTab||'vergleich';
   const tabs=[['vergleich','Vorher / Nachher'],['angebot','Angebot'],['teile','Teile & Alternativen'],['uebungen','Übungen'],['pass','Fit-Pass'],['uebertragen','Auf neues Rad'],['groesse','Größe & Sattel'],['qualitaet',`Datenqualität${crit?` (${crit})`:''}`],['bericht','Bericht']];
-  const body={angebot:()=>offerHtml(s),uebungen:()=>exercisesHtml(s),pass:()=>passHtml(s),vergleich:()=>`<div class="panel" style="box-shadow:none"><div class="panel-b"><h3 style="margin-top:0">Beschwerden vorher / nachher</h3>${painHtml(s)}</div></div>`+SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,uebertragen:()=>transferHtml(s),teile:()=>checksHtml(s,false)+footHtml(s)+hoodHtml(s)+cockpitHtml(s)+planHtml(s)+'<hr>'+partsPlanHtml(s),groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
+  const body={angebot:()=>offerHtml(s),uebungen:()=>exercisesHtml(s),pass:()=>passHtml(s),vergleich:()=>`<div class="panel" style="box-shadow:none"><div class="panel-b"><h3 style="margin-top:0">Beschwerden vorher / nachher</h3>${painHtml(s)}</div></div>`+photosHtml(s)+SESSTAB.vergleich(s)+`<details class="more"><summary>Alle Endwerte</summary><div style="margin-top:8px">${measureTable(s,'after')}</div></details>`,uebertragen:()=>transferHtml(s),teile:()=>checksHtml(s,false)+footHtml(s)+hoodHtml(s)+cockpitHtml(s)+planHtml(s)+'<hr>'+partsPlanHtml(s),groesse:()=>adviceHtml(s)+'<hr>'+frameFinder(s)+'<hr>'+partsHtml(s),qualitaet:()=>SESSTAB.qualitaet(s),bericht:()=>SESSTAB.bericht(s)}[t]();
   return `<div class="stack">
   <p class="onlyline">Prüfe das Ergebnis, erstelle den Bericht und schließ das Fitting ab.</p>
   <div class="tabsbar" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${t===k}" data-act="resTab" data-v="${k}">${l}</button>`).join('')}</div>
@@ -2969,7 +2975,7 @@ function offerHtml(s){
   const it=s.offer.items; const sum=it.filter(x=>x.on).reduce((a,x)=>a+x.qty*x.price,0);
   return `<div class="offer"><div class="row" style="justify-content:space-between"><h3>Angebot aus dem Fitting</h3><button class="btn sm ghost" data-act="offerRebuild" data-id="${s.id}">Neu berechnen</button></div>
   ${it.length?`<div class="offlist">${it.map((x,i)=>`<div class="offrow ${x.on?'':'off'}"><input type="checkbox" ${x.on?'checked':''} data-change="offerOn" data-id="${s.id}" data-i="${i}" aria-label="Position übernehmen"><div class="offname">${x.cat==="Paket"?`<select class="input" style="min-height:36px" data-change="offerProd" data-id="${s.id}" data-i="${i}" aria-label="Fitting-Paket">${fitPacks().map(p=>`<option value="${p.id}" ${p.id===x.pid?"selected":""}>${esc(p.name)}</option>`).join("")}</select>`:(x.alts&&x.alts.length>1)?`<b>${esc(x.name)}</b><select class="input" style="min-height:34px;margin-top:4px;font-size:13.5px" data-change="offerProd" data-id="${s.id}" data-i="${i}" aria-label="Anderes Produkt wählen">${x.alts.map(id=>{ const p=products().find(z=>z.id===id); return p?`<option value="${p.id}" ${p.id===x.pid?"selected":""}>${esc(p.name)} – ${eur(p.price)}</option>`:""; }).join("")}</select>`:`<b>${esc(x.name)}</b>`}<span class="faint">${esc(x.cat)} · ${esc(x.why)}${x.note?` · ${esc(x.note)}`:""}</span></div><div class="offnum"><label><span>Menge</span><input class="input num" type="number" min="0" value="${x.qty}" data-change="offerQty" data-id="${s.id}" data-i="${i}"></label><label><span>Preis €</span><input class="input num" type="number" step="0.5" min="0" value="${x.price}" data-change="offerPrice" data-id="${s.id}" data-i="${i}"></label><b class="num">${eur(x.on?x.qty*x.price:0)}</b></div></div>`).join('')}</div>
-  <div class="row" style="justify-content:space-between"><b class="num" style="font-size:18px">Summe ${eur(sum)}</b><div class="row" style="gap:6px"><button class="btn" data-act="offerCopy" data-id="${s.id}">Text kopieren</button><button class="btn primary" data-act="offerSale" data-id="${s.id}">Als Auftrag anlegen</button></div></div>
+  <div class="row" style="justify-content:space-between"><b class="num" style="font-size:18px">Summe ${eur(sum)}</b><div class="row" style="gap:6px"><button class="btn" data-act="offerCopy" data-id="${s.id}">Text kopieren</button><button class="btn" data-act="offerWO" data-id="${s.id}">Als Werkstattauftrag</button><button class="btn primary" data-act="offerSale" data-id="${s.id}">Als Verkauf anlegen</button></div></div>
   <p class="faint" style="font-size:12.5px">Einstellarbeiten sind im Fitting-Paket enthalten. Produkte und Preise aus deiner Liste (Mehr → Fitting-Preise und Produkte). Preise hier für diesen Kunden änderbar, Positionen ohne Haken kommen nicht ins Angebot.</p>`
   :'<p class="muted">Laut Plan sind keine neuen Teile nötig.</p>'}</div>`;
 }
@@ -3042,6 +3048,64 @@ function painHtml(s,forReport){ const A=painAreas(s); if(!A.length) return forRe
 
 /* ---------- Lager-Räder für die Neurad-Suche ---------- */
 function stockFor(g){ return (S.inventory||[]).filter(x=>x.geo&&x.geo.id===g.id&&x.stock>0); }
+/* ---------- Laden: Nachrichten teilen, Werkstatt-Export, echte Kennzahlen, Gutscheine, Fotos ---------- */
+function msgButtons(text,c){ const ph=String((c&&c.phone)||'').replace(/[^\d+]/g,''); const wa=ph?ph.replace(/^\+/,'').replace(/^0/,'49'):'';
+  const enc=encodeURIComponent(text);
+  return `<div class="msgbox"><textarea class="input" readonly style="min-height:90px">${esc(text)}</textarea><div class="row" style="gap:6px">
+  <a class="btn sm" href="https://wa.me/${wa}?text=${enc}" target="_blank" rel="noopener">WhatsApp</a>
+  ${ph?`<a class="btn sm" href="sms:${ph}?&body=${enc}">SMS</a>`:''}
+  ${c&&c.email?`<a class="btn sm" href="mailto:${esc(c.email)}?subject=${encodeURIComponent(shopName()||'Dein Rad')}&body=${enc}">E-Mail</a>`:''}
+  <button class="btn sm" data-act="msgCopy" data-t="${esc(text)}">Kopieren</button></div>
+  <p class="faint" style="font-size:12px">Wird über deine eigene App verschickt (WhatsApp, SMS, Mail) – kein kostenpflichtiger Dienst.</p></div>`; }
+const firstName=c=>String((c&&c.name)||'').split(' ')[0]||'';
+function woMsg(w,kind){ const c=cust(w.customerId), b=bike(w.bikeId)||{}; const tot=w.positions.reduce((a,p)=>a+p.qty*p.price,0); const sig=shopName()?`\n\nViele Grüße\n${shopName()}${S.shop&&S.shop.phone?'\n'+S.shop.phone:''}`:'';
+  if(kind==='fertig') return `Hallo ${firstName(c)},\ndein ${b.brand||''} ${b.model||'Rad'} ist fertig und kann abgeholt werden. Betrag: ${eur(tot)}.${sig}`;
+  if(kind==='kv') return `Hallo ${firstName(c)},\nfür dein ${b.brand||''} ${b.model||'Rad'} (${w.title}) haben wir folgenden Kostenvoranschlag:\n${w.positions.map(p=>`– ${p.t}: ${eur(p.qty*p.price)}`).join('\n')}\nSumme: ${eur(tot)}\nBitte kurz Bescheid geben, ob wir loslegen dürfen.${sig}`;
+  return `Hallo ${firstName(c)},\nkurze Info zu deinem Auftrag „${w.title}“: Status ${w.status}.${sig}`; }
+function woCsv(w){ const c=cust(w.customerId), b=bike(w.bikeId)||{}; const rows=[['Auftrag','Datum','Kunde','Fahrrad','Position','Art','Menge','Einzelpreis','Summe']]; w.positions.forEach(p=>rows.push([w.id,w.created||'',c.name,`${b.brand||''} ${b.model||''}`,p.t,p.kind,String(p.qty).replace('.',','),String(p.price).replace('.',','),String(Math.round(p.qty*p.price*100)/100).replace('.',',')])); return rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(';')).join('\n'); }
+function svcMsg(x){ const b=bike(x.bikeId)||{}, c=cust(b.customerId); const sig=shopName()?`\n\nViele Grüße\n${shopName()}`:''; return `Hallo ${firstName(c)},\nbei deinem ${b.brand||''} ${b.model||'Rad'} ist bald „${x.task}“ fällig. Sollen wir einen Termin machen?${sig}`; }
+
+/* Echte Kennzahlen aus den eigenen Daten */
+function kpis(month){ const m=month||today().slice(0,7); const inM=d=>(d||'').slice(0,7)===m;
+  const own=S.sessions.filter(s=>!isDemoCust(s.customerId)||!S.demoRemoved);
+  const fits=own.filter(s=>inM(s.date)&&s.status!=='abgesagt'); const done=fits.filter(s=>s.status==='abgeschlossen');
+  const offers=own.filter(s=>s.offer&&s.offer.items&&inM(s.offer.date));
+  const offerSum=offers.reduce((a,s)=>a+s.offer.items.filter(x=>x.on).reduce((x,i)=>x+i.qty*i.price,0),0);
+  const packSum=offers.reduce((a,s)=>a+s.offer.items.filter(x=>x.on&&x.cat==='Paket').reduce((x,i)=>x+i.qty*i.price,0),0);
+  const sales=(S.sales||[]).filter(x=>inM(x.date)); const won=sales.filter(x=>x.status!=='Angebot'&&x.status!=='abgelehnt'); const quote=sales.length?Math.round(won.length/sales.length*100):null;
+  const fu=S.sessions.flatMap(s=>s.followUps||[]).filter(f=>inM(f.due)); const fuDone=fu.filter(f=>f.status==='erledigt').length;
+  const pains=[]; own.forEach(s=>Object.values(s.pain||{}).forEach(p=>{ if(p.pre!=null&&p.post!=null) pains.push(p.pre-p.post); }));
+  const painAvg=pains.length?Math.round(pains.reduce((a,b)=>a+b,0)/pains.length*10)/10:null;
+  const wo=S.workshop.filter(w=>inM(w.created)); const woSum=wo.reduce((a,w)=>a+w.positions.reduce((x,p)=>x+p.qty*p.price,0),0);
+  const byFitter={}; fits.forEach(s=>{ const f=s.fitter||'ohne Angabe'; byFitter[f]=(byFitter[f]||0)+1; });
+  return {m,fits:fits.length,done:done.length,offers:offers.length,offerSum,packSum,matSum:offerSum-packSum,sales:sales.length,won:won.length,quote,fu:fu.length,fuDone,painAvg,painN:pains.length,wo:wo.length,woSum,byFitter,vouchers:(S.vouchers||[]).filter(v=>inM(v.date)).length};
+}
+function kpiHtml(){ const m=ui.kpiMonth||today().slice(0,7); const k=kpis(m); const months=[...new Set([today().slice(0,7),...S.sessions.map(s=>(s.date||'').slice(0,7))].filter(Boolean))].sort().reverse().slice(0,12);
+  const tile=(l,v,s)=>`<div class="panel kpi"><span class="label">${l}</span><span class="v">${v}</span><span class="s">${s||''}</span></div>`;
+  return `<section class="report kpirep" style="border:0;padding:0"><div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Deine Zahlen · ${new Date(m+'-15').toLocaleDateString('de-DE',{month:'long',year:'numeric'})}</h2><div class="row" style="gap:6px"><select class="input" style="width:auto" data-change="kpiMonth" aria-label="Monat">${months.map(x=>`<option value="${x}" ${x===m?'selected':''}>${new Date(x+'-15').toLocaleDateString('de-DE',{month:'long',year:'numeric'})}</option>`).join('')}</select><button class="btn" data-act="printReport">${ic('doc')}Als PDF</button></div></div>
+  <div class="grid g4" style="margin-top:10px">${tile('Fittings',k.fits,`${k.done} abgeschlossen`)}${tile('Angebote',eur(k.offerSum),`${k.offers} Stück · Pakete ${eur(k.packSum)} · Material ${eur(k.matSum)}`)}${tile('Abschlussquote',k.quote==null?'–':k.quote+' %',`${k.won} von ${k.sales} Angeboten/Aufträgen`)}${tile('Werkstatt',eur(k.woSum),`${k.wo} Aufträge`)}</div>
+  <div class="grid g4" style="margin-top:10px">${tile('Nachkontrollen',`${k.fuDone}/${k.fu}`,'erledigt in diesem Monat')}${tile('Beschwerden',k.painAvg==null?'–':`−${fmtNum(k.painAvg)}`,k.painN?`im Schnitt besser (0–10), ${k.painN} Angaben`:'noch keine Vorher/Nachher-Werte')}${tile('Gutscheine',k.vouchers,'verkauft')}${tile('Fittings je Fitter',Object.keys(k.byFitter).length||'–',Object.entries(k.byFitter).map(([f,n])=>`${esc(f)}: ${n}`).join(' · '))}</div>
+  <p class="fine faint" style="font-size:12.5px;margin-top:8px">Aus deinen eigenen Einträgen in diesem Browser${S.demoRemoved?'':' (inklusive Beispielkunden)'}.</p></section>`; }
+
+/* Gutscheine */
+function voucherCode(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<8;i++) c+=a[Math.floor(Math.random()*a.length)]; return c.slice(0,4)+'-'+c.slice(4); }
+function vouchersHtml(){ const V=S.vouchers||[]; const P=fitPacks();
+  return panel('Gutscheine',`<div class="stack"><p class="muted" style="font-size:14px">Fitting zum Verschenken. Der Code steht auf dem Gutschein, beim Einlösen hier eingeben.</p>
+  <form class="form" data-form="voucher"><div class="field"><label for="vo_p">Paket</label><select class="input" id="vo_p" name="pack">${P.map(p=>`<option value="${p.id}">${esc(p.name)} – ${eur(p.price)}</option>`).join('')}<option value="wert">Wertgutschein</option></select></div>
+  <div class="field"><label for="vo_w">Wert € (bei Wertgutschein)</label><input class="input num" id="vo_w" name="value" type="number" min="0" step="5"></div><div class="field"><label for="vo_f">Für (optional)</label><input class="input" id="vo_f" name="for" placeholder="Name"></div>
+  <div class="wide"><button class="btn primary" type="submit">${ic('plus')}Gutschein erstellen</button></div></form>
+  <div class="row" style="gap:6px"><input class="input" id="voRedeem" placeholder="Code einlösen, z. B. ABCD-EF23" style="max-width:240px"><button class="btn" data-act="voRedeem">Einlösen</button></div>
+  ${V.length?`<div class="list">${V.slice().reverse().map(v=>`<div class="li"><div class="grow"><div class="t mono">${esc(v.code)} · ${esc(v.title)}</div><div class="sub">${eur(v.value)}${v.for?' · für '+esc(v.for):''} · gültig bis ${fmtDate(v.until)}</div></div><span class="chip nodot ${v.status==='offen'?'c-info':'c-ok'}">${v.status}</span><button class="btn sm" data-act="voShow" data-c="${esc(v.code)}">Ansehen</button></div>`).join('')}</div>`:''}</div>`); }
+function voucherCard(v){ setTimeout(()=>{ const box=document.getElementById('voQR'); if(!box) return; (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ const q=window.qrcode(0,'M'); q.addData(`${shopName()||'FitFrame'} Gutschein ${v.code}`); q.make(); box.innerHTML=q.createSvgTag({cellSize:4,margin:1,scalable:true}); }).catch(()=>{}); },30);
+  return `<div class="pass"><div class="pass-card"><div class="pass-head"><div><div class="label" style="color:rgba(255,255,255,.8)">Gutschein</div><b style="font-size:22px">${esc(v.title)}</b><div style="font-size:14px;opacity:.9">${v.for?'für '+esc(v.for)+' · ':''}Wert ${eur(v.value)}</div></div><div class="pass-qr" id="voQR"></div></div>
+  <div style="padding:14px"><div class="label">Code</div><b class="mono" style="font-size:24px;letter-spacing:.08em">${esc(v.code)}</b><p class="faint" style="font-size:12.5px;margin:6px 0 0">${shopName()?esc(shopName())+' · ':''}gültig bis ${fmtDate(v.until)}. Termin vereinbaren und Code mitbringen.</p></div></div>
+  <div class="row" style="gap:6px"><button class="btn primary" data-act="printReport">${ic('doc')}Drucken oder als PDF</button></div></div>`; }
+
+/* Fotos vorher/nachher (verkleinert, nur in diesem Browser) */
+function photoResize(file,cb){ const r=new FileReader(); r.onload=()=>{ const img=new Image(); img.onload=()=>{ const m=900, sc=Math.min(1,m/Math.max(img.width,img.height)); const c=document.createElement('canvas'); c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc); c.getContext('2d').drawImage(img,0,0,c.width,c.height); cb(c.toDataURL('image/jpeg',0.72)); }; img.src=r.result; }; r.readAsDataURL(file); }
+function photosHtml(s,forReport){ const P=s.photos||{}; if(forReport) return P.before||P.after?`<div class="sec"><h3>Position vorher / nachher</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${['before','after'].map(k=>P[k]?`<figure style="margin:0"><img src="${P[k]}" alt="" style="width:100%;border-radius:8px"><figcaption class="fine">${k==='before'?'Vorher':'Nachher'}</figcaption></figure>`:'<div></div>').join('')}</div></div>`:'';
+  return `<div class="panel" style="box-shadow:none"><div class="panel-b"><h3 style="margin-top:0">Fotos vorher / nachher</h3><p class="muted" style="font-size:13.5px">Seitlich auf dem Rad, gleiche Stelle wie das Video. Erscheint im Bericht. Bleibt nur auf diesem Gerät.</p>
+  <div class="grid g2">${['before','after'].map(k=>`<div class="stack" style="gap:6px"><b>${k==='before'?'Vorher':'Nachher'}</b>${P[k]?`<img src="${P[k]}" alt="" style="width:100%;border-radius:10px">`:'<div class="empty" style="min-height:120px"><span>Noch kein Foto</span></div>'}<div class="row" style="gap:6px"><label class="btn sm" for="ph_${k}">${ic('camera')}${P[k]?'Ersetzen':'Foto aufnehmen'}</label><input class="vh" type="file" id="ph_${k}" accept="image/*" capture="environment" data-change="photoSet" data-id="${s.id}" data-k="${k}">${P[k]?`<button class="btn sm ghost" data-act="photoDel" data-id="${s.id}" data-k="${k}">Löschen</button>`:''}</div></div>`).join('')}</div></div></div>`; }
 function adviceHtml(s){
   const b=bike(s.bikeId); const sel=ui.advGeo||(b.geo&&b.geo.id)||''; const g=sel?geoById(sel):null;
   const pick=`<div class="field"><label for="advGeo">Rahmen aus der Bibliothek</label><select class="input" id="advGeo" data-change="advGeo"><option value="">Modell wählen …</option>${geoAll().map(x=>`<option value="${x.id}" ${x.id===sel?'selected':''}>${esc(x.brand+' '+x.model)}</option>`).join('')}</select></div>`;
@@ -3064,8 +3128,8 @@ function reportHtml(s){
   ${(()=>{ const p=partsAdvice(s); const kp=s.after.kneeOverPedal||s.before.kneeOverPedal; const l=[]; if(p.saddle) l.push(`Sattelbreite etwa ${p.saddle.lo}–${p.saddle.hi} mm (Sitzknochenabstand ${p.saddle.sb} mm)`); if(p.shoe) l.push(`Schuhgröße etwa EU ${fmtNum(p.shoe.lo)}–${fmtNum(p.shoe.hi)} (Herstellertabelle prüfen)`); if(kp) l.push(kopsText(Math.round(kp.value))+' (Kamera, Schätzung)'); return l.length?`<div class="sec"><h3>Empfehlungen</h3><ul style="margin:0;padding-left:18px">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''; })()}
   ${(()=>{ const pl=partsPlan(s).filter(x=>x.key!=='saddle'); return pl.length?`<div class="sec"><h3>Mögliche weitere Anpassungen</h3>${pl.map(x=>`<p><b>${esc(x.title)}.</b> Ohne neue Teile: ${esc(x.noParts.join(' '))}${x.parts.length?` <br>Mit neuen Teilen: ${esc(x.parts.join(' '))}`:''}</p>`).join('')}<p class="fine">Aus Beschwerden, gemessenen Winkeln und Zielbereichen (Faustregeln).</p></div>`:''; })()}
   ${s.notes?`<div class="sec"><h3>Beobachtungen</h3><p>${esc(s.notes)}</p></div>`:''}
-  ${painHtml(s,true)}${exercisesHtml(s,true)}
-  <div class="sec"><h3>Nächste Schritte</h3><p>${fu.length?fu.map(f=>`Nachkontrolle am ${fmtDate(f.due)} (${f.days} Tage).`).join(' '):'Nachkontrolle nach 4–6 Wochen empfohlen.'} Bitte melden Sie neue Beschwerden früher.</p></div>
+  ${photosHtml(s,true)}${painHtml(s,true)}${exercisesHtml(s,true)}
+  <div class="sec"><h3>Nächste Schritte</h3>${guarantee()?`<p><b>Zufriedenheitsgarantie:</b> Innerhalb von 30 Tagen justieren wir kostenlos nach, falls etwas nicht passt.</p>`:''}<p>${fu.length?fu.map(f=>`Nachkontrolle am ${fmtDate(f.due)} (${f.days} Tage).`).join(' '):'Nachkontrolle nach 4–6 Wochen empfohlen.'} Bitte melden Sie neue Beschwerden früher.</p></div>
   ${q.length?`<div class="sec"><h3>Offene Punkte zur Datenqualität</h3><ul style="margin:0;padding-left:18px">${q.map(x=>`<li>${esc(x[1])}</li>`).join('')}</ul></div>`:''}
   <p class="fine" style="margin-top:18px">${isDemoCust(s.customerId)?'Demo-Bericht mit fiktiven Daten. ':''}Kein medizinischer Befund. Winkel aus Videoaufnahmen sind Orientierungswerte. Erstellt mit FitFrame.</p></article>
   <div class="row"><button class="btn primary" data-act="printReport">${ic('doc')}Drucken oder als PDF sichern</button><button class="btn" data-act="shareReport" data-id="${s.id}">Teilen</button><button class="btn" data-act="copyReport" data-id="${s.id}">${ic('copy')}Berichtstext kopieren</button></div>${shopName()?'':'<p class="faint" style="font-size:12.5px">Tipp: Unter Mehr → Dein Laden Name und Logo eintragen. Sie erscheinen dann oben im Bericht.</p>'}
@@ -3714,7 +3778,7 @@ function frameFinder(s){
 }
 
 /* ---------- Ladenprofil, Export, Zahlen ---------- */
-const EXTRA_ROUTES=['werkstatt','portal','betrieb','hardware','module','ki','qualitaet'];
+const EXTRA_ROUTES=['portal','hardware','module','ki','qualitaet'];
 const showExtra=()=>!!(S.settings&&S.settings.extra);
 const DEMO_IDS={customers:['c1','c2','c3','c4']};
 const isDemoCust=id=>DEMO_IDS.customers.includes(id)&&!S.demoRemoved;
@@ -3956,6 +4020,7 @@ function woDrawer(id){
   <div class="stack"><h3>Status</h3><div class="row">${WO_FLOW.map((f,i)=>`<span class="chip nodot ${i<idx?'c-ok':i===idx?'c-acc':''}">${i+1}. ${f}</span>`).join('')}</div>
   <div class="row">${next?`<button class="btn primary" data-act="woNext" data-id="${w.id}">Weiter: ${next}</button>`:''}${w.status==='Kostenvoranschlag'||w.status==='Angenommen'?`<button class="btn" data-act="woSendKV" data-id="${w.id}" ${w.positions.length?'':'disabled'}>Kostenvoranschlag an Kunden senden</button>`:''}${idx>0?`<button class="btn ghost" data-act="woBack" data-id="${w.id}">Zurück</button>`:''}</div>
   ${w.approval?`<div class="notice acc">${ic('quality')}Freigegeben von ${esc(w.approval.by)} am ${esc(w.approval.time)} (simuliert).</div>`:''}</div>
+  <div class="stack"><h3>Kunde benachrichtigen</h3>${msgButtons(woMsg(w,w.status==='Abholbereit'?'fertig':(w.status==='Kostenvoranschlag'||w.status==='Freigabe ausstehend'||w.status==='Angenommen')?'kv':'info'),cust(w.customerId))}<div><button class="btn sm" data-act="woCsv" data-id="${w.id}">Export für die Kasse (CSV)</button></div></div>
   <div class="stack"><h3>Verlauf</h3><div class="list">${w.log.slice().reverse().map(l=>`<div class="li" style="padding:7px 0"><span class="mono faint" style="font-size:12px;white-space:nowrap">${esc(l.time)}</span><div class="grow">${esc(l.text)}</div></div>`).join('')}</div></div>`;
   openDrawer(`${w.id} · ${w.title}`,body);
 }
@@ -3990,11 +4055,12 @@ function itemDrawer(sku){
 
 /* --- Betrieb --- */
 VIEWS.betrieb = () => {
+  if(!showExtra()) return `${head('Zahlen & Team','Deine Kennzahlen aus echten Einträgen. Als PDF für dich, die Bank oder den Businessplan.')}${kpiHtml()}<p class="faint" style="font-size:12.5px">Team-Planung und Auslastung findest du unter Mehr → Profi-Bereiche einblenden.</p>`;
   const days=[0,1,2,3,4].map(i=>dayOff(i)); const fitters=S.team.filter(t=>/fitter/i.test(t.role)||/Mechaniker/.test(t.role));
   const load=(name,d)=>{ const f=S.sessions.filter(s=>s.fitter===name&&s.date===d&&s.status!=='abgesagt').length*2; const w=S.workshop.filter(w=>w.mechanic===name&&w.due===d&&w.status!=='Übergeben').reduce((a,w)=>a+Math.max(1,w.positions.filter(p=>p.kind==='Arbeit').reduce((x,p)=>x+p.qty,0)),0); return f+w; };
   const rev=S.workshop.reduce((a,w)=>a+w.positions.reduce((x,p)=>x+p.qty*p.price,0),0); const lab=S.workshop.reduce((a,w)=>a+w.positions.filter(p=>p.kind==='Arbeit').reduce((x,p)=>x+p.qty*p.price,0),0);
   const fitRev=S.sessions.filter(s=>s.status==='abgeschlossen').length*249;
-  return `
+  return `${kpiHtml()}<hr>
   ${head('Team & Auswertung','Rollen, Standorte, Kapazität, Kennzahlen, Flotten und Anbindungen. Großteils Konzept mit Beispieldaten.')}
   <div class="grid g4"><div class="panel kpi"><span class="label">Umsatz Fittings (Demo)</span><span class="v" style="font-size:26px">${eur(fitRev)}</span><span class="s">${S.sessions.filter(s=>s.status==='abgeschlossen').length} × 249 € Annahme</span></div><div class="panel kpi"><span class="label">Werkstatt-Volumen</span><span class="v" style="font-size:26px">${eur(rev)}</span><span class="s">davon Arbeit ${eur(lab)}</span></div><div class="panel kpi"><span class="label">Material-Anteil</span><span class="v">${Math.round((rev-lab)/Math.max(rev,1)*100)} %</span><span class="s">Profit ${st('s')}</span></div><div class="panel kpi"><span class="label">Standorte</span><span class="v">2</span><span class="s">MultiShop ${st('k')}</span></div></div>
   ${panel('Capacity – Auslastung nächste 5 Tage',`<div class="tw"><div class="cal"><div></div>${days.map(d=>`<div class="label">${new Date(d+'T12:00').toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'})}</div>`).join('')}
@@ -4181,6 +4247,13 @@ const ACT = {
   setupHide(){ S.setup=S.setup||{}; S.setup.hidden=true; save(); render(); },
   pricesOk(){ S.setup=S.setup||{}; S.setup.prices=true; save(); render(); toast('Prima – Preise und Produkte sind eingerichtet'); },
   setCockpit(el){ const b=bike(el.dataset.id); if(!b) return; b.cockpit=el.dataset.v; save(); render(); },
+  msgCopy(el){ copyText(el.dataset.t); },
+  woCsv(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); try{ download(`${w.id}.csv`,'\ufeff'+woCsv(w),'text/csv;charset=utf-8'); toast('CSV erstellt'); }catch(e){ copyText(woCsv(w)); } },
+  offerWO(el){ const s=sess(el.dataset.id); const it=(s.offer&&s.offer.items||[]).filter(x=>x.on&&x.qty>0); if(!it.length){ toast('Keine Position ausgewählt',true); return; } const n=Math.max(1000,...S.workshop.map(w=>Number(String(w.id).split('-')[1])||0))+1; const id='WO-'+n; const due=dayOff(3);
+    S.workshop.unshift({id,customerId:s.customerId,bikeId:s.bikeId,title:`Umbau nach Fitting (${fmtDate(s.date)})`,status:'Angenommen',created:today(),due,mechanic:s.fitter||S.lastFitter||'',positions:it.map(x=>({t:x.name,kind:x.cat==='Paket'?'Arbeit':'Teil',qty:x.qty,price:x.price})),log:[{time:nowStamp(),text:'Aus dem Fitting-Angebot angelegt'}],approval:null}); audit(`Werkstattauftrag ${id} aus Angebot`,s.id); save(); render(); woDrawer(id); toast(`${id} angelegt`); },
+  voRedeem(){ const el=document.getElementById('voRedeem'); const code=String(el&&el.value||'').trim().toUpperCase(); const v=(S.vouchers||[]).find(x=>x.code===code); if(!v){ toast('Code nicht gefunden',true); return; } if(v.status!=='offen'){ toast(`Bereits ${v.status} am ${fmtDate(v.used)}`,true); return; } if(v.until<today()){ toast('Gutschein ist abgelaufen',true); return; } v.status='eingelöst'; v.used=today(); audit(`Gutschein ${v.code} eingelöst`); save(); render(); toast(`Eingelöst: ${v.title} (${eur(v.value)})`); },
+  voShow(el){ const v=(S.vouchers||[]).find(x=>x.code===el.dataset.c); if(v) openDrawer('Gutschein',voucherCard(v)); },
+  photoDel(el){ const s=sess(el.dataset.id); if(s.photos) delete s.photos[el.dataset.k]; save(); render(); },
   packAdd(){ fitPacks().push({id:uid('pk'),name:'Neues Paket',price:0}); save(); render(); },
   packDel(el){ const F=fitPacks(); if(F.length<=1){ toast('Mindestens ein Paket nötig',true); return; } F.splice(+el.dataset.i,1); save(); render(); },
   prodDel(el){ products().splice(+el.dataset.i,1); save(); render(); },
@@ -4274,7 +4347,7 @@ const ACT = {
   woBack(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); const i=WO_FLOW.indexOf(w.status); w.status=WO_FLOW[i-1]; w.log.push({time:nowStamp(),text:`Status zurückgesetzt: ${w.status}`}); audit(`${w.id}: ${WO_FLOW[i]} → ${w.status}`); save(); woDrawer(w.id); render(); },
   woSendKV(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); w.status='Freigabe ausstehend'; w.log.push({time:nowStamp(),text:'Kostenvoranschlag ins Kundenportal gestellt (simuliert, kein Versand)'}); audit(`${w.id}: Kostenvoranschlag gesendet`); save(); woDrawer(w.id); render(); toast('Im Kundenportal zur Freigabe sichtbar'); },
   delPos(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); const p=w.positions.splice(Number(el.dataset.i),1)[0]; w.log.push({time:nowStamp(),text:`Position entfernt: ${p.t}`}); save(); woDrawer(w.id); render(); },
-  svcRemind(el){ const x=S.services[Number(el.dataset.i)]; audit(`Service-Erinnerung vorgemerkt: ${bike(x.bikeId).model}, ${x.task} (kein Versand)`); save(); toast('Erinnerung protokolliert – Versand braucht eine Integration'); },
+  svcRemind(el){ const x=S.services[Number(el.dataset.i)]; const b=bike(x.bikeId); openDrawer('Wartung: Kunde erinnern',`<div class="stack"><p><b>${esc(b.brand+' '+b.model)}</b> · ${esc(x.task)} · fällig ${fmtDate(x.next)}</p>${msgButtons(svcMsg(x),cust(b.customerId))}</div>`); audit(`Wartungs-Erinnerung geöffnet: ${b.model}, ${x.task}`); },
   stock(el){ const x=S.inventory.find(i=>i.sku===el.dataset.sku); const d=Number(el.dataset.d); if(x.stock+d<0){toast('Bestand kann nicht negativ sein',true);return;} x.stock+=d; audit(`Bestand ${x.name}: ${x.stock-d} → ${x.stock}`); save(); render(); },
   newItem(){ itemDrawer(null); },
   editItem(el){ itemDrawer(el.dataset.sku); },
@@ -4290,6 +4363,7 @@ function importJson(t){
 function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
 
 const FORMS = {
+  voucher(f,data){ const pk=fitPacks().find(p=>p.id===data.get('pack')); const val=pk?pk.price:Math.max(0,Number(data.get('value'))||0); if(!pk&&!val){ toast('Wert eingeben',true); return; } S.vouchers=S.vouchers||[]; let code; do{ code=voucherCode(); }while(S.vouchers.some(v=>v.code===code)); const u=new Date(); u.setFullYear(u.getFullYear()+3); u.setMonth(11,31); const v={code,title:pk?pk.name:'Wertgutschein',value:val,for:String(data.get('for')||'').trim(),date:today(),until:iso(u),status:'offen'}; S.vouchers.push(v); audit(`Gutschein ${code} erstellt`); save(); render(); openDrawer('Gutschein',voucherCard(v)); },
   prodAdd(f,data){ const v=String(data.get('variant')||''); const p={id:uid('pr'),cat:data.get('cat'),name:String(data.get('name')||'').trim(),price:Math.max(0,Number(String(data.get('price')).replace(',','.'))||0)}; if(v.startsWith('arch:')) p.arch=[v.slice(5)]; if(v.startsWith('system:')) p.system=v.slice(7); const w=Number(data.get('width')); if(w) p.width=w; const k=Number(data.get('pack')); if(k>1) p.pack=k; products().push(p); save(); render(); toast('Produkt hinzugefügt'); },
   prices(f,data){ S.prices=S.prices||{}; Object.keys(PRICE_DEFAULT).forEach(k=>{ const v=parseFloat(String(data.get(k)||'').replace(',','.')); if(isFinite(v)&&v>=0) S.prices[k]=v; }); save(); render(); toast('Preise gespeichert – gilt ab dem nächsten Angebot (oder „Neu berechnen“)'); },
   shop(f,data){ S.shop=S.shop||{}; ['name','addr','phone','email','web'].forEach(k=>S.shop[k]=String(data.get(k)||'').trim()); save(); render(); toast('Ladendaten gespeichert'); },
@@ -4365,6 +4439,9 @@ const FORMS = {
 };
 
 const CHG = {
+  kpiMonth(el){ ui.kpiMonth=el.value; render(); },
+  guarantee(el){ S.settings=S.settings||{}; S.settings.guarantee=el.checked; save(); toast(el.checked?'Garantie im Bericht':'Garantie ausgeblendet'); },
+  photoSet(el){ const f=el.files&&el.files[0]; if(!f) return; const s=sess(el.dataset.id); photoResize(f,url=>{ s.photos=s.photos||{}; s.photos[el.dataset.k]=url; try{ save(); toast('Foto gespeichert'); }catch(e){ toast('Speicher voll – ältere Fotos löschen',true); } render(); }); },
   offerProd(el){ const s=sess(el.dataset.id); const x=s.offer.items[+el.dataset.i]; const p=x.cat==='Paket'?fitPacks().find(z=>z.id===el.value):products().find(z=>z.id===el.value); if(!p) return; x.pid=p.id; if(x.cat==='Paket'||!/^(Vorbau|Cockpit)$/.test(x.cat)) x.name=p.name; x.price=p.price; x.note=p.note||''; save(); render(); },
   packEdit(el){ const p=fitPacks()[+el.dataset.i]; if(!p) return; p[el.dataset.f]=el.dataset.f==='price'?Math.max(0,Number(el.value)||0):el.value; save(); },
   prodEdit(el){ const p=products()[+el.dataset.i]; if(!p) return; p[el.dataset.f]=el.dataset.f==='price'?Math.max(0,Number(String(el.value).replace(',','.'))||0):el.value; save(); },
@@ -4419,7 +4496,7 @@ applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
 if((location.hash||'').indexOf('#pass=')===0){ const ph=location.hash.slice(6); go('dashboard'); try{ ui.passData=JSON.parse(unb64u(ph)); setTimeout(()=>openDrawer('Fit-Pass übernehmen',passImportHtml(ui.passData)),50); }catch(e){ toast('Fit-Pass-Link ist beschädigt',true); } }
 else go(VIEWS[start]?start:'dashboard');
-window.__fitframe={offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
