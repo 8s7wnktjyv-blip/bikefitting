@@ -51,6 +51,10 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Nachkontrollen: Standard beim Abschluss frei wählbar (2 Wochen, 4 Wochen, 30 Tage, 3 Monate oder eigene Tage); einzelne Nachkontrolle mit frei wählbaren Tagen; „Vergleich“ öffnet Erst-Fitting und letzte Sitzung.
 - Fotos, Videos und Standbilder je Sitzung (mit Einwilligung, nur auf dem Gerät), Zeitpunkt vorher/nachher; aus einem Video lässt sich ein Standbild speichern.
 
+## Bericht (ab v.48)
+
+16 nummerierte Abschnitte, nur aus gespeicherten Daten; Fehlendes steht als „Nicht erfasst“: Kundendaten, Fahrrad, Anlass, Beschwerden, Körperanalyse (mit Beobachtung/Einschätzung des Fitters), Sitzknochen, relevante Messwerte (mit Messmitteln), Ausgangsposition, Anpassungen (mit wer/Bewertung), Endposition, Vorher-Nachher, Fotos/Standbilder, Produktempfehlungen, Eingewöhnung, Nachkontrolle, Datum/Fitter mit Unterschriftsfeld. Drucken oder als PDF sichern.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.
