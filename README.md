@@ -29,6 +29,14 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
   - Messwert, Beobachtung und Einschätzung des Fitters werden getrennt gespeichert und angezeigt. Hinweise von FYF sind Faustregeln, keine Diagnose.
 - Fotos und Videos je Kunde und je Rad. Nur mit eigener Einwilligung für Fotos/Videos. Gespeichert nur auf dem Gerät (IndexedDB, Fotos bis 15 MB, Videos bis 80 MB), nicht in der Text-Sicherung.
 
+## Geführter Ablauf und Vorlagen (ab v.45)
+
+- Im Fitting oben: „Geführter Ablauf“ mit 12 Schritten (Kunde und Fahrrad, Ziele, Körperanalyse, Sitzknochen, Körpermaße, Beweglichkeit, Fahrrad vermessen, Bewegungsanalyse, Anpassungen, Produktempfehlungen, Abschluss, Bericht).
+- Fortschritt, erledigt/offen/übersprungen, „Öffnen“ springt direkt zum Schritt, „Überspringen“ und „Nachholen“.
+- Notizen während des Termins mit Uhrzeit; frühere Daten des Kunden (letztes Fitting, Werte, Bericht) direkt im Ablauf.
+- Pflichtangaben (Ziele, Körpermaße, Fahrrad vermessen): Beim Abschließen erscheint eine Warnung. Trotzdem abschließen wird protokolliert.
+- Vorlagen Rennrad, Gravel, MTB, Triathlon, Trekking, Allroad: legen fest, welche Tests vorgeschlagen werden, je Fitting anpassbar. Berechnungen ändern sich dadurch nicht.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.

@@ -679,6 +679,7 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 .report.kpirep{background:transparent!important;color:inherit;box-shadow:none}
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.mitem{margin:0;display:flex;flex-direction:column;gap:6px;min-width:0}.mthumb{aspect-ratio:4/3;background:var(--sunk,#eee);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--faint,#888)}.mthumb img,.mthumb video{width:100%;height:100%;object-fit:cover;display:block}
 .ctabs{flex:0 0 auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line);position:sticky;top:-18px;z-index:3;background:var(--bg);margin:-18px -18px 0;padding:4px 10px 0;-webkit-overflow-scrolling:touch}.ctabs::-webkit-scrollbar{display:none}.ctab{flex:0 0 auto;background:none;border:0;border-bottom:2px solid transparent;padding:10px 12px;min-height:44px;font:inherit;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap}.ctab[aria-selected=true]{color:var(--fg);border-bottom-color:var(--accent);font-weight:600}.ctab .cnt{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:11px;line-height:18px;text-align:center}.ctab-b{gap:14px}.sbgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.flow{padding:0}.flow>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 14px;min-height:52px}.flow>summary::-webkit-details-marker{display:none}.flow[open] .flow-ar{transform:rotate(90deg)}.flowbar{height:4px;border-radius:2px;background:var(--line);margin-top:6px;overflow:hidden}.flowbar i{display:block;height:100%;background:var(--accent);border-radius:2px}.flowlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}.flowlist li{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}.flowlist li:last-child{border-bottom:0}.flowlist li>.grow,.flow>summary>.grow{flex:1 1 auto;min-width:0}.flowlist li.ok .grow{color:var(--muted)}.req{font-size:11px;padding:1px 6px;border-radius:8px;background:var(--accent-soft);color:var(--accent-strong,var(--accent));font-weight:600}.tplgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 12px}
 </style>
 </head>
 <body>
@@ -1475,7 +1476,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER='2026-11-01.44';
+const APP_VER='2026-11-01.45';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1961,6 +1962,57 @@ function stepDone(s,c,k){
   if(k==='anpassung') return s.changes.length>0;
   return s.status==='abgeschlossen';
 }
+/* --- Phase 4: Geführter Ablauf (12 Schritte) und Fitting-Vorlagen --- */
+const BODY_K=['pain','legLen','pelvis','shoulder','kneeTrack','arch','forefoot','footWidth','footAngle','legAxis'], MOB_K=['hamstring','hipFlex','ankle','hipRot','trunk','singleLeg'];
+const FIT_TPL={
+  Rennrad:{tests:['pain','legLen','pelvis','kneeTrack','arch','forefoot','hamstring','hipFlex','ankle','sitBone','trunk'],focus:['Sattelhöhe und Kniewinkel','Sattel–Lenker-Abstand und Überhöhung','Cleat-Position und -Drehung']},
+  Gravel:{tests:['pain','legLen','pelvis','kneeTrack','arch','forefoot','hamstring','hipFlex','sitBone','trunk','singleLeg'],focus:['Komfort auf langen Fahrten','Überhöhung moderat, Griffpositionen','Sattel und Sitzknochen']},
+  MTB:{tests:['pain','legLen','kneeTrack','arch','ankle','hipFlex','sitBone','trunk','singleLeg'],focus:['Sattelhöhe (auch mit Variostütze)','Lenkerbreite und Cockpit-Höhe','Brems- und Schalthebel-Position']},
+  Triathlon:{tests:['pain','legLen','kneeTrack','hamstring','hipFlex','hipRot','sitBone','trunk'],focus:['Hüftwinkel in Aero-Position','Position der Armauflagen','Sattel für vorgeneigtes Sitzen']},
+  Trekking:{tests:['pain','legLen','pelvis','shoulder','arch','hamstring','sitBone'],focus:['Aufrechte, entspannte Haltung','Griffe und Handgelenke','Sattel und Sitzknochen']},
+  Allroad:{tests:['pain','legLen','pelvis','kneeTrack','arch','forefoot','hamstring','hipFlex','sitBone','trunk'],focus:['Komfort und Kontrolle','Überhöhung moderat','Cleats und Füße']}
+};
+function tplName(s){ if(s.tpl&&FIT_TPL[s.tpl]) return s.tpl; const t=String((bike(s.bikeId)||{}).type||'')+' '+String((cust(s.customerId)||{}).discipline||''); return Object.keys(FIT_TPL).find(k=>t.includes(k))||(/E-Bike|Pendeln/.test(t)?'Trekking':'Rennrad'); }
+function tplTests(s){ return Array.isArray(s.tplTests)?s.tplTests:FIT_TPL[tplName(s)].tests; }
+const ckHas=(s,k)=>{ const t=CHECKS.find(x=>x.k===k); return !!t&&(t.side?['L','R']:['']).some(sd=>{ const v=chkVal(s,k,sd); return v!==undefined&&v!==''; }); };
+const FLOW=[
+  {k:'kunde',l:'Kunde und Fahrrad',req:1,go:{tab:'anamnese'},done:(s,c)=>!!(c&&c.id&&bike(s.bikeId)&&bike(s.bikeId).id)},
+  {k:'ziel',l:'Ziele und Beschwerden',req:1,go:{tab:'anamnese'},done:s=>!!(s.anamnesis&&s.anamnesis.goal)},
+  {k:'koerper',l:'Körperanalyse',go:{tab:'koerper'},done:s=>BODY_K.some(k=>ckHas(s,k))},
+  {k:'sitz',l:'Sitzknochen messen',go:{tab:'koerper',ck:'sitBone'},done:s=>!!(s.check&&s.check.sitBone)},
+  {k:'masse',l:'Körpermaße',req:1,go:{tab:'koerper',ck:'grund'},done:(s,c)=>c.body.height!=null&&c.body.height!==''&&c.body.inseam!=null&&c.body.inseam!==''},
+  {k:'beweg',l:'Beweglichkeitstests',go:{tab:'koerper',ck:'hamstring'},done:s=>MOB_K.some(k=>ckHas(s,k))},
+  {k:'vermessen',l:'Fahrrad vermessen',req:1,go:{tab:'ausgang'},done:s=>REQUIRED.every(x=>s.before[x])},
+  {k:'bewegung',l:'Bewegungsanalyse',go:{nav:'motion'},done:s=>{ const e={...s.before,...s.after}; return Object.keys(e).some(k=>MK[k]&&MK[k].group==='Bewegung'&&k!=='kneeBDC')||Object.values(e).some(m=>/Video|Kamera|Live/i.test(String(m&&m.method||''))); }},
+  {k:'anpassen',l:'Anpassungen',go:{tab:'anpassung'},done:s=>s.changes.length>0},
+  {k:'produkte',l:'Produktempfehlungen',go:{tab:'ergebnis',res:'angebot'},done:s=>(s.recs||[]).some(r=>r.status==='angenommen')||!!(s.offer&&s.offer.items&&s.offer.items.some(x=>x.on&&x.qty>0))},
+  {k:'abschluss',l:'Fitting abschließen',req:1,go:{tab:'ergebnis'},done:s=>s.status==='abgeschlossen'},
+  {k:'bericht',l:'Bericht erstellen',go:{tab:'ergebnis',res:'bericht'},done:s=>!!s.reportAt}
+];
+function flowState(s,c){ const sk=s.skip||{}; return FLOW.map(f=>({...f,ok:f.done(s,c),skipped:!!sk[f.k]})); }
+function flowMissing(s,c){ return flowState(s,c).filter(f=>f.req&&f.k!=='abschluss'&&!f.ok&&!f.skipped); }
+function prevSess(s){ return S.sessions.filter(x=>x.customerId===s.customerId&&x.id!==s.id&&x.date<=s.date&&(Object.keys(x.after||{}).length||Object.keys(x.before||{}).length)).sort((a,b)=>b.date.localeCompare(a.date))[0]; }
+function flowPanel(s,c){
+  const F=flowState(s,c), done=F.filter(f=>f.ok).length, sk=F.filter(f=>f.skipped&&!f.ok).length; const pct=Math.round(done/F.length*100);
+  const T=tplName(s), tt=tplTests(s); const ps=prevSess(s); const e=x=>{ const r=x.after&&Object.keys(x.after).length?{...x.before,...x.after}:x.before; return r||{}; };
+  const pv=ps?e(ps):{}; const keys=['saddleHeight','saddleSetback','reach','drop','kneeBDC'].filter(k=>pv[k]);
+  const notes=(s.liveNotes||[]);
+  return `<details class="panel flow" ${ui.flowOpen?'open':''} data-flow><summary class="flow-s" data-act="flowToggle"><div class="grow" style="min-width:0"><b>Geführter Ablauf</b><span class="muted" style="font-size:13px"> · ${done}/${F.length} erledigt${sk?` · ${sk} übersprungen`:''} · Vorlage ${esc(T)}</span><div class="flowbar" aria-hidden="true"><i style="width:${pct}%"></i></div></div>${ic('arrow','width="16" height="16" class="flow-ar"')}</summary>
+  <div class="panel-b stack" style="gap:14px">
+    <ol class="flowlist">${F.map((f,i)=>`<li class="${f.ok?'ok':f.skipped?'sk':''}"><span class="st-ico ${f.ok?'done':f.skipped?'info':'open'}">${f.ok?ic('check','width="13" height="13"'):f.skipped?'–':i+1}</span><span class="grow">${esc(f.l)}${f.req?' <span class="req">Pflicht</span>':''}${f.skipped&&!f.ok?' <span class="faint" style="font-size:12px">übersprungen</span>':''}</span>${!f.ok&&f.k!=='abschluss'&&f.k!=='kunde'?`<button class="btn sm ghost" data-act="flowSkip" data-id="${s.id}" data-k="${f.k}">${f.skipped?'Nachholen':'Überspringen'}</button>`:''}<button class="btn sm" data-act="flowGo" data-id="${s.id}" data-k="${f.k}">Öffnen</button></li>`).join('')}</ol>
+    <details class="more"><summary>Vorlage: ${esc(T)} · ${tt.length} Tests</summary><div class="stack" style="margin-top:8px;gap:8px">
+      <div class="field"><label for="tplSel">Vorlage</label><select class="input" id="tplSel" data-change="tplSet" data-id="${s.id}">${Object.keys(FIT_TPL).map(k=>`<option ${k===T?'selected':''}>${k}</option>`).join('')}</select></div>
+      <p class="faint" style="font-size:12.5px">Schwerpunkte: ${FIT_TPL[T].focus.map(esc).join(' · ')}. Die Vorlage legt nur fest, welche Tests vorgeschlagen werden. Berechnungen ändern sich nicht.</p>
+      <div class="tplgrid">${CHECKS.map(t=>`<label class="row" style="gap:6px;flex-wrap:nowrap;font-size:14px"><input type="checkbox" data-change="tplTest" data-id="${s.id}" data-k="${t.k}" ${tt.includes(t.k)?'checked':''}><span>${esc(t.label)}</span></label>`).join('')}</div>
+      ${Array.isArray(s.tplTests)?`<button class="btn sm ghost" data-act="tplReset" data-id="${s.id}" style="align-self:flex-start">Vorlage zurücksetzen</button>`:''}</div></details>
+    <div class="stack" style="gap:6px"><h4 style="margin:0">Notizen während des Termins</h4>
+      ${notes.length?`<div class="list">${notes.map((n,i)=>`<div class="li" style="padding:6px 0"><span class="mono faint" style="font-size:12px">${esc(n.t)}</span><div class="grow" style="white-space:pre-wrap">${esc(n.x)}</div><button class="btn sm ghost danger" data-act="liveNoteDel" data-id="${s.id}" data-i="${i}" aria-label="Notiz löschen">${ic('x')}</button></div>`).join('')}</div>`:''}
+      <form class="row" style="flex-wrap:nowrap;gap:6px" data-form="liveNote" data-id="${s.id}"><input class="input" name="x" placeholder="Kurze Notiz, z. B. Kunde rutscht nach vorn" aria-label="Notiz" style="flex:1;min-width:0"><button class="btn sm primary" type="submit">Speichern</button></form></div>
+    <div class="stack" style="gap:6px"><h4 style="margin:0">Frühere Daten</h4>${ps?`<p class="muted" style="font-size:13.5px;margin:0">${esc(ps.type)} vom ${fmtDate(ps.date)} · ${esc(bike(ps.bikeId).brand+' '+bike(ps.bikeId).model)} · ${ps.changes.length} Änderungen${(ps.anamnesis&&ps.anamnesis.complaints)?` · Beschwerden: ${esc(ps.anamnesis.complaints)}`:''}</p>${keys.length?`<div class="tw"><table><tbody>${keys.map(k=>`<tr><td>${MK[k].label}</td><td class="r num">${fmtNum(pv[k].value)} ${MK[k].unit}</td></tr>`).join('')}</tbody></table></div>`:''}<div class="row" style="gap:6px">${ps.status==='abgeschlossen'?`<button class="btn sm" data-act="openReport" data-id="${ps.id}">Bericht vom ${fmtDate(ps.date)}</button>`:''}<button class="btn sm ghost" data-act="openCustomer" data-id="${c.id}">Kundenakte</button></div>`:'<span class="muted" style="font-size:13.5px">Kein früheres Fitting mit Messwerten.</span>'}</div>
+    <div class="stack" style="gap:4px"><h4 style="margin:0">Ergebnisse bisher</h4><p class="muted" style="font-size:13.5px;margin:0">${Object.keys(s.check||{}).length} Körpercheck-Werte · ${Object.keys(s.before).length} Messwerte vorher · ${Object.keys(s.after).length} nachher · ${s.changes.length} Änderungen · ${checkFindings(s).filter(x=>x.lvl!=='ok').length} Hinweise</p></div>
+  </div></details>`;
+}
+
 VIEWS.sitzung = () => {
   const s=sess(ui.sess)||S.sessions[0]; ui.sess=s.id; if(!STEPS.some(x=>x[0]===ui.sessTab)) ui.sessTab=TABALIAS[ui.sessTab]||'anamnese';
   const c=cust(s.customerId), b=bike(s.bikeId); const sc=qScore(s);
@@ -1968,6 +2020,7 @@ VIEWS.sitzung = () => {
   return `
   <div class="sesshead"><div style="min-width:0;flex:1"><h1>${esc(c.name)}</h1><p>${esc(s.type)} · ${esc(b.brand+' '+b.model)}, ${esc(b.size)} · ${fmtDate(s.date)}</p></div>
     <button class="btn sm" data-act="sessMenu" data-id="${s.id}" aria-label="Fitting wechseln oder neu anlegen">${ic('more')}<span class="hide-sm">Fitting wechseln</span></button></div>
+  ${flowPanel(s,c)}
   <section class="panel"><div class="panel-h stepbar" style="padding:10px"><nav class="steps" aria-label="Schritte">${STEPS.map(([k,l],i)=>`<button class="step ${stepDone(s,c,k)?'done':''}" data-act="sessTab" data-v="${k}" ${k===ui.sessTab?'aria-current="step"':''}><i>${stepDone(s,c,k)&&k!==ui.sessTab?ic('check','width="14" height="14"'):i+1}</i><span class="lbl">${l}</span></button>`).join('')}</nav></div>
   <div class="panel-b stack">${SESSTAB[ui.sessTab](s,c,b)}
     ${ui.wIdx!=null&&WIZ_N[ui.sessTab]?`<div class="stepnav"><button class="btn" data-act="wGo" data-i="${ui.wIdx>0?ui.wIdx-1:''}" aria-label="Zurück">${ic('back')}<span class="hide-sm">Zurück</span></button><div class="row" style="flex-wrap:nowrap"><button class="btn ghost" data-act="wSkip">Überspringen</button><button class="btn primary" type="submit" form="wizForm">${ui.wIdx>=WIZ_N[ui.sessTab]()-1?'Fertig':'Weiter'}${ic('arrow')}</button></div></div>`:`<div class="stepnav">${prev?`<button class="btn" data-act="sessTab" data-v="${prev[0]}" aria-label="Zurück: ${prev[1]}">${ic('back')}<span class="hide-sm">${prev[1]}</span></button>`:'<span></span>'}
@@ -2345,7 +2398,8 @@ SESSTAB.koerper = (s,c) => {
   ${(s.comp||[]).length?`<details class="more"><summary>Ausgleich vor dem Fitting (${s.comp.filter(x=>x.status==='umgesetzt').length}/${s.comp.length} erledigt)</summary>${s.comp.map((cp,i)=>`<label class="li" style="padding:8px 0;cursor:pointer"><input type="checkbox" data-change="compDone" data-id="${s.id}" data-i="${i}" ${cp.status==='umgesetzt'?'checked':''}><span class="grow">${esc(cp.t)}</span></label>`).join('')}</details>`:''}
   ${bodyTypeHtml(c)}
   ${startBtn(first,done,first>=0?items[first].label:'')}
-  <div class="ovl">${items.map((it,i)=>ckRow(s,c,it,i)).join('')}</div>
+  ${(()=>{ const tt=tplTests(s); const inT=items.map((it,i)=>[it,i]).filter(([it])=>it.k==='grund'||tt.includes(it.k)||ckDone(s,c,it)), outT=items.map((it,i)=>[it,i]).filter(([it])=>!(it.k==='grund'||tt.includes(it.k)||ckDone(s,c,it)));
+    return `<p class="faint" style="font-size:12.5px;margin:0">Vorlage ${esc(tplName(s))}: ${tt.length} Tests vorgeschlagen. Anpassen im geführten Ablauf oben.</p><div class="ovl">${inT.map(([it,i])=>ckRow(s,c,it,i)).join('')}</div>${outT.length?`<details class="more"><summary>Weitere Tests (${outT.length}, nicht in der Vorlage)</summary><div class="ovl" style="margin-top:6px">${outT.map(([it,i])=>ckRow(s,c,it,i)).join('')}</div></details>`:''}`; })()}
   ${done>2?footHtml(s):''}
   <details class="more"><summary>Warum zuerst der Körpercheck?</summary><p class="muted" style="margin-top:6px">Das Rad wird an den Körper angepasst. Ist ein Bein kürzer oder steht ein Fuß schräg, gleichst du das zuerst aus. Sonst stellst du das Rad auf eine schiefe Haltung ein. FYF stellt keine Diagnosen. Bei Schmerzen oder großen Unterschieden: Fachleute hinzuziehen.</p></details>
   <button class="btn ghost" data-act="openCustomer" data-id="${c.id}" style="align-self:flex-start">Alle Körpermaße bearbeiten</button>
@@ -4563,7 +4617,20 @@ const ACT = {
   repFilter(el){ ui.repFilter=el.dataset.v; render(); },
   openSession(el){ ui.wIdx=null; ui.sess=el.dataset.id; ui.sessTab=TABALIAS[el.dataset.tab]||el.dataset.tab||'anamnese'; closeDrawer(); go('sitzung'); },
   startSession(el){ const s=sess(el.dataset.id); s.status='in Arbeit'; audit(`Fitting gestartet: ${cust(s.customerId).name}`,s.id); save(); ui.sess=s.id; ui.sessTab='anamnese'; go('sitzung'); toast('Fitting gestartet'); },
-  finishSession(el){ const s=sess(el.dataset.id); const sel={value:'abgeschlossen',dataset:{id:s.id}}; CHG.sessStatus(sel); },
+  finishSession(el){ const s=sess(el.dataset.id); const miss=flowMissing(s,cust(s.customerId));
+    if(miss.length&&el.dataset.force!=='1'){ openDrawer('Pflichtangaben fehlen',`<div class="stack"><div class="notice warn">${ic('warn')}<div>Für ein vollständiges Fitting fehlen noch Angaben. Du kannst sie nachholen, als übersprungen markieren oder trotzdem abschließen.</div></div><ul class="stack" style="gap:6px;padding-left:18px;margin:0">${miss.map(f=>`<li><b>${esc(f.l)}</b> <button class="btn sm" data-act="flowGo" data-id="${s.id}" data-k="${f.k}">Nachholen</button></li>`).join('')}</ul><div class="row"><button class="btn" data-act="close">Zurück</button><button class="btn primary" data-act="finishSession" data-id="${s.id}" data-force="1">Trotzdem abschließen</button></div></div>`); return; }
+    if(el.dataset.force==='1'){ closeDrawer(); audit(`Abgeschlossen trotz fehlender Angaben: ${miss.map(f=>f.l).join(', ')}`,s.id); }
+    const sel={value:'abgeschlossen',dataset:{id:s.id}}; CHG.sessStatus(sel); },
+  flowToggle(el,e){ if(e) e.preventDefault(); ui.flowOpen=!ui.flowOpen; render(); },
+  flowGo(el){ const s=sess(el.dataset.id); const f=FLOW.find(x=>x.k===el.dataset.k); if(!s||!f) return; closeDrawer(); ui.sess=s.id; ui.flowOpen=false;
+    if(f.go.nav){ go(f.go.nav); return; } ui.sessTab=f.go.tab; ui.wIdx=null; if(f.go.res) ui.resTab=f.go.res;
+    if(f.go.ck){ const i=CK_ITEMS().findIndex(x=>x.k===f.go.ck); if(i>=0) ui.wIdx=i; }
+    if(ui.sessTab==='ausgang'){ const n=applyMaker(s); if(n) save(); }
+    if(f.go.res==='bericht'){ s.reportAt=s.reportAt||nowStamp(); save(); }
+    if(ui.route!=='sitzung') go('sitzung'); else render(); window.scrollTo({top:0}); },
+  flowSkip(el){ const s=sess(el.dataset.id); s.skip=s.skip||{}; const k=el.dataset.k; if(s.skip[k]) delete s.skip[k]; else s.skip[k]=true; const f=FLOW.find(x=>x.k===k); audit(`Ablauf: ${f.l} ${s.skip[k]?'übersprungen':'wieder offen'}`,s.id); save(); render(); },
+  tplReset(el){ const s=sess(el.dataset.id); delete s.tplTests; save(); render(); },
+  liveNoteDel(el){ const s=sess(el.dataset.id); (s.liveNotes||[]).splice(Number(el.dataset.i),1); save(); render(); },
   addComp(el){ const s=sess(el.dataset.id); const f=checkFindings(s).find(x=>x.title===el.dataset.t); s.comp.push({t:`${f.title} – ${f.text.split('.')[0]}`,status:'geplant'}); audit(`Ausgleich eingeplant: ${f.title}`,s.id); save(); render(); toast('Ausgleich eingeplant'); },
   prepChange(el){ ui.prepKey=el.dataset.key; ui.prepVal=el.dataset.v||''; ui.prepReason=el.dataset.reason||''; render(); const h=document.getElementById('changeHead'); if(h) h.scrollIntoView({behavior:'smooth',block:'start'}); const v=document.getElementById('m_val_after'); if(v) v.focus({preventScroll:true}); },
   exportData(){ const txt=JSON.stringify({app:'FYF',exported:nowStamp(),data:S}); try{ const blob=new Blob([txt],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`fyf-sicherung-${today()}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); toast('Sicherung erstellt. Falls kein Download startet: „Als Text kopieren“ nutzen'); }catch(e){ toast('Download nicht möglich – bitte „Als Text kopieren“ nutzen',true); } },
@@ -4578,7 +4645,7 @@ const ACT = {
     audit(`${MK[key].label} aus Video gemessen: ${ang}° (${side==='before'?'Ausgangswert':'Endwert'}${asCheck?', als Kontrolle zum Goniometer':''})`,s.id); save(); render(); toast(asCheck?`Video ${ang}° als Kontrolle gespeichert – maßgeblich bleibt der Goniometer-Wert`:`${MK[key].label} ${ang}° in der Sitzung gespeichert`); },
   wGo(el){ ui.wIdx=el.dataset.i===''?null:Number(el.dataset.i); render(); window.scrollTo({top:0}); if(ui.wIdx!=null) setTimeout(()=>{ const f=document.querySelector('#wizForm input.num:not([type=hidden])'); if(f&&!f.value) f.focus({preventScroll:true}); },50); },
   wSkip(){ const n=WIZ_N[ui.sessTab](); ui.wIdx=ui.wIdx+1>=n?null:ui.wIdx+1; render(); window.scrollTo({top:0}); },
-  resTab(el){ ui.resTab=el.dataset.v; render(); },
+  resTab(el){ ui.resTab=el.dataset.v; if(el.dataset.v==='bericht'){ const s=sess(ui.sess); if(s&&!s.reportAt){ s.reportAt=nowStamp(); save(); } } render(); },
   sessMenu(el){ const s=sess(el.dataset.id); const list=S.sessions.slice().sort((a,b)=>b.date.localeCompare(a.date));
     openDrawer('Fitting',`<div class="stack"><button class="btn primary big" data-act="newSession">${ic('plus')}Neues Fitting anlegen</button>
     <div class="row"><span class="label">Status dieses Fittings</span><select class="input" style="width:auto" data-change="sessStatus" data-id="${s.id}">${opts(['geplant','eingetroffen','in Arbeit','abgeschlossen','abgesagt'],s.status)}</select></div>
@@ -4770,6 +4837,7 @@ function importJson(t){
 function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
 
 const FORMS = {
+  liveNote(f,data){ const s=sess(f.dataset.id); const x=String(data.get('x')||'').trim().slice(0,500); if(!x){ toast('Bitte Text eingeben',true); return; } (s.liveNotes=s.liveNotes||[]).push({t:nowStamp(),x}); audit('Notiz im Termin gespeichert',s.id); save(); render(); toast('Notiz gespeichert'); },
   purchase(f,data){ const c=cust(f.dataset.id); if(!c){ toast('Kunde nicht gefunden',true); return; } const items=String(data.get('items')||'').trim(); const total=Number(String(data.get('total')||'').replace(',','.')); const date=String(data.get('date')||'');
     if(!items){ toast('Bitte Artikel angeben',true); return; } if(!isFinite(total)||total<0||total>100000){ toast('Betrag prüfen',true); return; } if(!date||date>today()){ toast('Datum prüfen',true); return; }
     const n=Math.max(300,...(S.sales||[]).map(x=>Number(String(x.id).split('-')[1])||0))+1; const bid=data.get('bike')||null;
@@ -4876,6 +4944,8 @@ const FORMS = {
 };
 
 const CHG = {
+  tplSet(el){ const s=sess(el.dataset.id); s.tpl=el.value; delete s.tplTests; audit(`Vorlage gewählt: ${el.value}`,s.id); save(); render(); },
+  tplTest(el){ const s=sess(el.dataset.id); const L=[...tplTests(s)]; const k=el.dataset.k; const i=L.indexOf(k); if(el.checked&&i<0) L.push(k); if(!el.checked&&i>=0) L.splice(i,1); s.tplTests=L; save(); render(); },
   mediaAdd(el){ const owner=el.dataset.owner, files=[...(el.files||[])]; if(!files.length) return; const c=owner.startsWith('c:')?cust(owner.slice(2)):cust((bike(owner.slice(2))||{}).customerId);
     if(!mediaOk(c)){ toast('Erst Einwilligung für Fotos/Videos erfassen',true); return; } let ok=0, done=0; const fin=()=>{ if(++done<files.length) return; if(ok){ audit(`${ok} Foto/Video gespeichert (${c.name})`,c.id); save(); } reopenOwner(owner); if(ok) toast(ok===1?'Gespeichert':ok+' Dateien gespeichert'); };
     files.forEach(f=>{ const kind=/^video\//.test(f.type)?'video':/^image\//.test(f.type)?'image':null; if(!kind){ toast(`${f.name}: nur Fotos oder Videos`,true); return fin(); } if(f.size>MEDIA_MAX[kind]){ toast(`${f.name}: zu groß (max. ${MEDIA_MAX[kind]/1e6} MB)`,true); return fin(); }
