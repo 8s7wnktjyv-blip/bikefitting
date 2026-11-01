@@ -24,6 +24,7 @@ Kamera seitlich aufs Rad richten: Google MediaPipe erkennt Schulter, Hüfte, Kni
 
 ## Weitere Funktionen
 
+- Kundenakte → „Stammdaten bearbeiten“ (Name, E-Mail, Telefon, Disziplin) und Fahrradakte → „Fahrraddaten bearbeiten“ (Marke, Modell, Typ, Größe, Pedal, Rahmennummer, Baujahr). Verknüpfte Fittings und Aufträge bleiben erhalten, jede Änderung steht im Audit-Protokoll.
 - Mehr → Dein Laden: Name, Adresse, Logo für Bericht und Einwilligung
 - Mehr → Zahlen: Fittings pro Monat, häufigste Beschwerden, CSV-Export aller Fittings
 - Mehr → Einstellungen: Werkstatt, Lager, Kundenportal, Team und Hardware Lab ein- oder ausblenden (Standard: ausgeblendet); Beispielkunden entfernen, ohne eigene Einträge zu löschen
