@@ -1136,7 +1136,7 @@ function fitSuggestions(s,noTargets){
   if(/sitz|gesäß|druck|damm|sattel/.test(t)) add('saddleTilt','Sitzbeschwerden','Druck im Sitzbereich hängt an Neigung, Breite und Höhe des Sattels.','Sattelneigung in kleinen Schritten anpassen, Sattelbreite mit Sitzknochenabstand prüfen.');
   if(/rücken|lenden/.test(t)) add('drop','Rücken','Eine sehr gestreckte Haltung belastet den unteren Rücken.','Überhöhung und Sattel–Lenker-Abstand prüfen.');
   if(/wade|zeh|fuß|brennen/.test(t)) add('cleatFore','Füße und Waden','Weit vorn sitzende Cleats belasten Waden und Vorfuß.','Cleat weiter nach hinten setzen, Einlage und Schuhgröße prüfen.');
-  const k=(s.after.kneeBDC||s.before.kneeBDC); const KT=kneeTarget(s); if(k&&(k.value<KT.lo||k.value>KT.hi)){ const a=saddleAdvice(s,Number(k.value)); const up=k.value<KT.lo;
+  const k=kneeOf(s); const KT=kneeTarget(s); if(k&&(k.value<KT.lo||k.value>KT.hi)){ const a=saddleAdvice(s,Number(k.value)); const up=k.value<KT.lo;
     add('saddleHeight',`Kniewinkel unten ${fmtNum(k.value)}°: Sattel ${a.delta>0?'+':''}${a.delta} mm`,`${up?'Unter':'Über'} dem Zielbereich ${KT.lo}–${KT.hi}° (${KT.label}). Der Sattel ist vermutlich zu ${up?'tief':'hoch'}. Die Millimeter rechnet FYF mit einem Körpermodell aus Schritt- und Kurbellänge (etwa ${fmtNum(Math.round(1/a.slope*10)/10)} mm pro Grad). Das ist eine Schätzung, deshalb neu messen.`,`Sattel auf etwa ${a.newH} mm (${a.delta>0?'+':''}${a.delta} mm), in Schritten von 2–3 mm. Danach den Kniewinkel neu messen.`,a.newH,`Kniewinkel unten ${fmtNum(k.value)}°`); }
   const kp=(s.after.kneeOverPedal||s.before.kneeOverPedal); if(kp&&Math.abs(kp.value)>15){ const sb=val(s.after.saddleSetback)??val(s.before.saddleSetback); const d=Math.round(Number(kp.value));
     add('saddleSetback',`Knielot ${d>0?'+':''}${d} mm`,`Das Knie steht bei waagerechter Kurbel ${Math.abs(d)} mm ${d>0?'vor':'hinter'} der Pedalachse. Viele Fitter beginnen mit dem Knie etwa über der Achse. Das ist eine Faustregel, keine feste Vorgabe.`,`Sattel etwa ${Math.abs(d)} mm nach ${d>0?'hinten':'vorn'}, wenn Beschwerden dazu passen. Danach Sattelhöhe prüfen, weil sie sich mitverändert.`,sb!=null?sb+d:null,`Knielot ${d>0?'+':''}${d} mm`); }
@@ -1430,7 +1430,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER = '2026-11-01.40';
+const APP_VER = '2026-11-01.41';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2202,7 +2202,7 @@ function measureForm(s,side,isChange){
   </form>`;
 }
 const MAKER={stemLength:'stem',barWidth:'bar',crankLength:'crank'};
-const MEASURE_NOW=['saddleHeight','saddleSetback','reach','drop','cleatFore','saddleTilt','spacer','spacerAbove','stemAngle','bbHeight','saddleFloor','barFloor','hoodFloor','saddleToHood'];
+const MEASURE_NOW=['saddleHeight','kneeBDC','saddleSetback','reach','drop','cleatFore','saddleTilt','spacer','spacerAbove','stemAngle','bbHeight','saddleFloor','barFloor','hoodFloor','saddleToHood'];
 function makerValues(s){ const b=bike(s.bikeId); const g=b&&b.geo&&geoById(b.geo.id); const r=g&&geoRow(g,b.geo.size); if(!r) return null; const vals={}; Object.entries(MAKER).forEach(([k,c])=>{ if(r[c]!=null) vals[k]=r[c]; }); return {vals,g,r}; }
 function applyMaker(s){ const m=makerValues(s); if(!m) return 0; let n=0; Object.entries(m.vals).forEach(([k,v])=>{ if(!s.before[k]){ s.before[k]={...mv(k,v,'Herstellerangabe','vom Hersteller',null),time:nowStamp()}; n++; } }); if(n) audit(`${n} Serienwerte vom Hersteller übernommen (${m.g.brand} ${m.g.model}, ${m.r.size})`,s.id); return n; }
 function measureCard(s,side,k,c,b){
@@ -2320,8 +2320,8 @@ function targetFit(s){
   const I=Number(c.body.inseam)||null, ins=bodyVal(c,'inseam'); const comfort=s.anamnesis.comfort||'';
   const ham=Number((s.check&&s.check.hamstring)||0), stiff=ham>20||(!ham&&/eingeschränkt/.test(c.flex.hamstring||'')), mild=!stiff&&ham>10;
   const rows=[]; const R=(key,lo,hi,basis,need)=>{ const v=cur(key); const diff=v==null||lo==null?null:v<lo?Math.round((lo-v)*10)/10:v>hi?Math.round((hi-v)*10)/10:0; rows.push({key,lo:lo==null?null:Math.round(lo*10)/10,hi:hi==null?null:Math.round(hi*10)/10,cur:v,diff,basis,need}); };
-  const kb=e.kneeBDC; if(kb&&cur('saddleHeight')!=null){ const a=saddleAdvice(s,Number(kb.value)); const h=cur('saddleHeight'); R('saddleHeight',h+(a.lo-kb.value)/a.slope,h+(a.hi-kb.value)/a.slope,`gemessener Kniewinkel ${fmtNum(kb.value)}° (Ziel ${a.lo}–${a.hi}°, ${a.label})`); }
-  else if(I) R('saddleHeight',I*10*0.865,I*10*0.895,`86,5–89,5 % der Schrittlänge (${fmtNum(I)} cm${ins.src==='eingetragen'?'':', geschätzt'})`); else R('saddleHeight',null,null,'','Schrittlänge');
+  const kb=kneeOf(s); if(kb&&cur('saddleHeight')!=null){ const a=saddleAdvice(s,Number(kb.value)); const h=kneeRefH(s)??cur('saddleHeight'); R('saddleHeight',h+(a.lo-kb.value)/a.slope,h+(a.hi-kb.value)/a.slope,`gemessener Kniewinkel ${fmtNum(kb.value)}° (Ziel ${a.lo}–${a.hi}°, ${a.label})`); }
+  else if(I){ const sm=saddleModel(s); if(sm) R('saddleHeight',sm.lo,sm.hi,`Startwert aus dem Beinmodell (Schrittlänge ${fmtNum(I)} cm${ins.src==='eingetragen'?'':', geschätzt'}, Kurbel ${fmtNum(sm.crank)} mm, Ziel-Kniewinkel ${sm.T.lo}–${sm.T.hi}°) – den Endwert liefert erst der gemessene Kniewinkel`); else R('saddleHeight',I*10*0.865,I*10*0.895,`86,5–89,5 % der Schrittlänge (${fmtNum(I)} cm${ins.src==='eingetragen'?'':', geschätzt'})`); } else R('saddleHeight',null,null,'','Schrittlänge');
   const kp=e.kneeOverPedal, sb=cur('saddleSetback'), h=cur('saddleHeight');
   if(kp&&sb!=null) R('saddleSetback',sb+Number(kp.value)-15,sb+Number(kp.value)+15,`gemessenes Knielot ${fmtNum(kp.value)} mm (Ziel ±15 mm)`);
   else if(h&&b.type!=='Triathlon') R('saddleSetback',h*A.cs-170,h*A.cs-80,`Rahmengeometrie (Sitzwinkel ${fmtNum(A.sa)}°)${A.known?'':', geschätzt'}`);
@@ -2360,6 +2360,9 @@ function planReasons(s){
   if(has(/knie.*vorn|vorne.*knie|kniescheibe/)) add('saddleHeight',+3,'Knie vorn: oft ist der Sattel etwas zu tief.');
   if(has(/kniekehle|knie.*hinten/)) add('saddleHeight',-3,'Kniekehle: oft ist der Sattel etwas zu hoch.');
   if(has(/hüfte/)) add('saddleHeight',-3,'Hüfte: Wenn das Becken beim Treten kippt, ist der Sattel oft zu hoch.');
+  { const E={...s.before,...s.after}, kn=kneeOf(s), KT=kneeTarget(s), mid=(KT.lo+KT.hi)/2; const pr=E.pelvisRock&&Number(E.pelvisRock.value), ar=E.ankleRange&&Number(E.ankleRange.value);
+    if(pr>5){ if(kn&&Number(kn.value)>=mid) add('saddleHeight',-3,`Becken kippt von vorn ${fmtNum(pr)}° (mehr als 5°) und der Kniewinkel liegt in der oberen Hälfte: das spricht für einen etwas zu hohen Sattel.`); else add('saddleHeight',0,`Becken kippt von vorn ${fmtNum(pr)}°. Der Kniewinkel spricht nicht für einen zu hohen Sattel – Beinlängenunterschied prüfen (Körper → Beinlänge).`); }
+    if(ar>35) add('saddleHeight',0,`Fußgelenk bewegt sich stark (${fmtNum(ar)}° pro Umdrehung). Das kann heißen, dass der Fuß unten „nachtritt“, weil der Sattel zu hoch ist. Zusammen mit dem Kniewinkel bewerten.`); }
   if(has(/nacken|schulter/)) add('drop',-10,'Nacken oder Schultern: Lenker etwas höher entlastet den Nacken.');
   if(has(/rücken|lenden/)) add('drop',-10,'Rücken: etwas weniger Überhöhung entlastet den unteren Rücken.');
   if(has(/hand|händ|taub|finger|handgelenk/)) add('reach',-10,'Hände: etwas kürzer nimmt Gewicht von den Händen.');
@@ -2414,6 +2417,11 @@ function realize(s,k,want,A){
   return out;
 }
 
+function kneeAfterHtml(s){ const kn=s.after.kneeBDC&&!isSimKnee(s.after.kneeBDC)?s.after.kneeBDC:null; const KT=kneeTarget(s);
+  const st=kn?(Number(kn.value)<KT.lo?'low':Number(kn.value)>KT.hi?'high':'ok'):null; const a=kn&&st!=='ok'?saddleAdvice(s,Number(kn.value)):null;
+  return `<div class="gc-sec"><h4>Kniewinkel neu messen</h4><p class="muted" style="font-size:14px">Nach 10–15 Minuten Fahren den Kniewinkel unten erneut messen. So lange wiederholen, bis er im Zielbereich ${KT.lo}–${KT.hi}° liegt.</p>
+  <form class="row" data-form="kneeAfter" data-id="${s.id}" style="gap:6px;align-items:flex-end"><div class="field" style="margin:0"><label for="ka_v">Kniewinkel jetzt (°)</label><input class="input num" id="ka_v" name="value" type="number" step="0.5" min="100" max="180" inputmode="decimal" required value="${kn?kn.value:''}" style="width:110px"></div><div class="field" style="margin:0"><label for="ka_v2">Kontrolle (°)</label><input class="input num" id="ka_v2" name="value2" type="number" step="0.5" min="100" max="180" inputmode="decimal" style="width:110px"></div><button class="btn" type="submit">Speichern</button></form>
+  ${kn?(st==='ok'?`<div class="statusbox ok" style="margin-top:8px"><div><b>Im Zielbereich: ${fmtNum(kn.value)}°</b><span class="muted" style="font-size:14px">Sattelhöhe passt. Der aktuelle Wert ist gespeichert.</span></div></div>`:`<div class="statusbox warn" style="margin-top:8px"><div style="flex:1"><b>Noch ${st==='low'?'zu gebeugt':'zu gestreckt'}: ${fmtNum(kn.value)}°</b><span class="muted" style="font-size:14px">${a?`Rechnerisch ${a.edge>0?'+':''}${a.edge} mm bis in den Zielbereich.`:''} Nächsten Schritt berechnen (höchstens 5 mm).</span></div><button class="btn sm primary" type="button" data-act="planStart">Nächsten Schritt berechnen</button></div>`):''}</div>`; }
 function computePlan(s){
   const tg=targetFit(s); if(!tg.rows.length) return {steps:[],tg,body:[]};
   const R=Object.fromEntries(tg.rows.map(r=>[r.key,r])); const A=bikeAngles(s); const reasons=planReasons(s);
@@ -2426,8 +2434,8 @@ function computePlan(s){
     const rs=(s.changes||[]).some(ch=>ch.plan&&ch.key===k)?[]:(reasons[k]||[]); if(rs.length){ rs.forEach(x=>why.push(x.why)); const x=rs.reduce((a,c)=>Math.abs(c.d)>Math.abs(a.d)?c:a);
       if(d!==0&&Math.sign(d)===Math.sign(x.d)){ if(Math.abs(x.d)>Math.abs(d)) d=x.d; }
       else { const nv=cur[k]+d+x.d; if(lo==null||(nv>=lo-0.01&&nv<=hi+0.01)) d+=x.d; else why.push('Liegt schon am Rand des Bereichs – hier nicht weiter verändern.'); } }
-    if(k==='saddleHeight'){ const kn=s.after.kneeBDC||s.before.kneeBDC;
-      if(!kn&&Math.abs(d)>=1.5){ const est=Math.round(d); why.length=0; why.push(`Laut Schrittlänge eher ${Math.abs(est)} mm ${est>0?'höher':'tiefer'}. Die Schrittlänge allein ist aber auf etwa ±10 mm ungenau (Schuhsohle, Pedal, Sattel, Messfehler). Deshalb hier noch keine Änderung: erst den Kniewinkel unten messen (Winkelmesser oder iPhone als Kamera). Dann rechnet FYF die Millimeter genau aus.`); d=0; }
+    if(k==='saddleHeight'){ const kn=kneeOf(s);
+      if(!kn&&Math.abs(d)>=1.5){ const est=Math.round(d); why.length=0; why.push(`Laut Schrittlänge eher ${Math.abs(est)} mm ${est>0?'höher':'tiefer'}. Die Schrittlänge allein ist aber auf etwa ±10 mm ungenau (Schuhsohle, Pedal, Sattel, Messfehler). Deshalb hier noch keine Änderung: erst den Kniewinkel unten messen (Pflichtpunkt unter Messen: Goniometer, oder iPhone als Kamera). Dann rechnet FYF die Millimeter genau aus.`); d=0; }
       else if(kn&&Math.abs(d)>5){ const full=Math.round(d); d=Math.sign(d)*5; why.push(`Insgesamt ${Math.abs(full)} mm. Profis ändern die Sattelhöhe in Schritten von höchstens 5 mm: erst ${d>0?'+':''}${d} mm, 10–15 Minuten fahren, Kniewinkel neu messen.`); }
       if(Math.abs(hOffset)>=1.5) why.push(`${why.length?'Dazu':'Nur'} ${hOffset>0?'+':''}${Math.round(hOffset)} mm als Ausgleich für die Cleat-Änderung (Faustregel: halbe Verschiebung).`); d+=hOffset; }
     if(k==='saddleSetback'&&!(s.after.kneeOverPedal||s.before.kneeOverPedal)&&Math.abs(d)>=1.5&&!/Triathlon/.test((bike(s.bikeId)||{}).type||'')){ const est=Math.round(d); why.length=0; why.push(`Laut Rahmengeometrie eher ${Math.abs(est)} mm ${est>0?'weiter hinten':'weiter vorn'}. Das ist nur eine Schätzung. Prüfe zuerst, ob der Versatz richtig gemessen ist (Lot durch die Tretlagermitte bis Sattelspitze), und miss das Knielot (Winkelmesser-Lot oder iPhone als Kamera). Erst dann ändert FYF den Versatz.`); d=0; }
@@ -2612,6 +2620,7 @@ function stepCard(s,c,i,n){
     ${!c.blocked?`<div class="gc-sec"><h4>Danach prüfen</h4><ul>${kb.check.map(t=>`<li>${esc(t)}</li>`).join('')}${c.effects&&c.effects.length?`<li>Ändert sich mit: ${c.effects.map(e=>`${MK[e.key].label} ${e.delta>0?'+':''}${fmtNum(Math.round(e.delta))} ${MK[e.key].unit}`).join(', ')} (wird automatisch eingetragen).</li>`:''}</ul></div>
     <div class="gc-sec err"><h4>Häufige Fehler</h4><ul>${kb.errors.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`:''}
     ${c.need&&c.need.length?`<div class="notice">${ic('info')}<div>Für einen genaueren Vorschlag fehlt: ${esc(c.need.join(', '))}. Unter Messen → Weitere Messpunkte eintragen und Plan neu berechnen.</div></div>`:''}
+    ${c.key==='saddleHeight'&&res&&res.status==='done'?kneeAfterHtml(s):''}
     <div class="gc-act">${res&&res.status==='done'&&!res.feel?`<div class="feel"><b>Kurz fahren lassen. Wie fühlt es sich an?</b><div class="row">${[['better','😊','besser'],['same','😐','gleich'],['worse','😣','schlechter']].map(([v,e,l])=>`<button class="btn feelbtn" data-act="planFeel" data-v="${v}">${e}<span>${l}</span></button>`).join('')}</div></div>`
       :res&&res.feel?`<div class="statusbox ${res.feel==='worse'?'warn':'ok'}"><div style="flex:1"><b>${res.feel==='better'?'Besser – super!':res.feel==='same'?'Gleich – passt, weiter.':'Schlechter'}</b>${res.feel==='worse'?'<span class="muted" style="font-size:14px">Am besten zurückstellen und den nächsten Schritt prüfen.</span>':''}</div>${res.feel==='worse'?'<button class="btn sm" data-act="planUndo">Zurückstellen</button>':''}<button class="btn sm primary" data-act="planNext">Weiter</button></div>`
       :c.blocked?`<button class="btn" data-act="planSkip">Verstanden, weiter</button>`
@@ -2805,7 +2814,7 @@ function trainerHtml(s){
   </div></details>`;
 }
 /* ---------- Koordinaten vom Tretlager, Querprüfung und 1:1-Übertragung ---------- */
-const MGROUPS=[['Grundmessung',['saddleHeight','saddleSetback','reach','drop','cleatFore']],['Sattel und Cockpit',['saddleTilt','spacer','spacerAbove','stemAngle']],['Koordinaten für die 1:1-Übertragung',['bbHeight','saddleFloor','barFloor','hoodFloor','saddleToHood']]];
+const MGROUPS=[['Grundmessung',['saddleHeight','kneeBDC','saddleSetback','reach','drop','cleatFore']],['Sattel und Cockpit',['saddleTilt','spacer','spacerAbove','stemAngle']],['Koordinaten für die 1:1-Übertragung',['bbHeight','saddleFloor','barFloor','hoodFloor','saddleToHood']]];
 function coords(s){ // Endposition: gemessene Koordinaten (vorher) plus Änderungen aus dem Fitting
   const o=coords0(s,s.before); const B=s.before, E={...s.before,...s.after}; const v=(r,k)=>r[k]?Number(r[k].value):null; const A=bikeAngles(s);
   const ch=k=>v(B,k)!=null&&v(E,k)!=null&&Math.abs(v(E,k)-v(B,k))>0.05; if(!['saddleHeight','saddleSetback','reach','drop'].some(ch)) return o;
@@ -2841,6 +2850,8 @@ function coordChecks(s){
       if(dist>lim) add('warn','Lenkerposition passt nicht zur Rahmengeometrie',`Aus Stack/Reach (${esc(mk.g.brand+' '+mk.g.model)}, ${esc(mk.r.size)}), Vorbau ${fmtNum(P.L)} mm${P.angKnown?' / '+fmtNum(P.ang)+'°':''} und ${sp!=null?fmtNum(sp)+' mm Spacern':'geschätzten Spacern'} wäre die Lenkermitte ${Math.round(sb.bx)} mm vor und ${Math.round(sb.by)} mm über dem Tretlager. Aus deinen Messungen: ${Math.round(C.BX)} / ${Math.round(C.BY)} mm (${Math.round(dist)} mm Abstand). Bitte nachmessen: Sattel–Lenker, Überhöhung, Sattelversatz, Tretlagerhöhe – oder Rahmengröße/Vorbau prüfen.`); }
     if(C.HX!=null&&C.BX!=null&&bike(s.bikeId)&&['Rennrad','Gravel'].includes(bike(s.bikeId).type)){ const fw=C.HX-C.BX; if(fw<40||fw>140) add('warn','Schalthebel-Position unplausibel',`Die Schalthebel lägen ${Math.round(fw)} mm vor der Lenkermitte – üblich sind etwa 60–110 mm. Messpunkt prüfen: Mitte des Griffgummis oben, nicht die Spitze vorn.`); }
   }
+  [['before','Ausgangswert'],['after','nach der Anpassung']].forEach(([sd,lab])=>{ const kn=s[sd]&&s[sd].kneeBDC; if(kn&&kn.video&&!isSimKnee(kn)){ const dd=Math.abs(Number(kn.value)-Number(kn.video.value)); if(dd>5) add('warn',`Kniewinkel: Goniometer und Video weichen um ${fmtNum(Math.round(dd*10)/10)}° ab (${lab})`,`Goniometer ${fmtNum(kn.value)}°, Video ${fmtNum(kn.video.value)}°. Bitte nachmessen: Kurbel genau unten, Goniometer-Mitte auf dem Kniegelenk, Kamera exakt seitlich auf Kniehöhe. Maßgeblich bleibt der Goniometer-Wert.`); else add('info',`Kniewinkel doppelt bestätigt (${lab})`,`Goniometer ${fmtNum(kn.value)}° und Video ${fmtNum(kn.video.value)}° liegen ${fmtNum(Math.round(dd*10)/10)}° auseinander – passt.`); } });
+  if(!kneeOf(s)) add('warn','Kniewinkel unten fehlt','Ohne gemessenen Kniewinkel kann FYF die Sattelhöhe nur als Startwert aus dem Beinmodell angeben. Für die genaue Sattelhöhe den Kniewinkel messen (Goniometer oder Video).');
   const single=MGROUPS.flatMap(g=>g[1]).filter(k=>s.before[k]&&s.before[k].source==='gemessen'&&!s.before[k].double).length;
   if(single) add('info',`${single} Wert${single>1?'e':''} nur einmal gemessen`,'Für sichere Daten jeden Wert ein zweites Mal messen (Kontrollmessung im Messschritt).');
   return out;
@@ -3629,6 +3640,17 @@ function fitProfile(s){
   P.key=key; P.why=why; return P;
 }
 const kneeTarget=s=>{ const P=fitProfile(s); return {lo:P.knee[0],hi:P.knee[1],label:P.label,why:P.why}; };
+/* Sattelhöhe: nur echt gemessene Kniewinkel (Goniometer, Video, Live) zählen – simulierte nie */
+const isVideoM=e=>/Video/.test((e&&e.method)||'');
+const isSimKnee=e=>!e||/Simulation/.test(e.method||'');
+function kneeOf(s){ for(const r of [s.after,s.before]){ const k=r&&r.kneeBDC; if(k&&!isSimKnee(k)) return k; } return null; }
+/* Sattelhöhe, bei der der Kniewinkel gemessen wurde (gleiche Seite: vorher oder nachher) */
+function kneeRefH(s){ const k=kneeOf(s); if(!k) return null; const fromAfter=s.after.kneeBDC===k; const h=fromAfter?(s.after.saddleHeight||s.before.saddleHeight):s.before.saddleHeight; return h?Number(h.value):null; }
+function kneeMerge(old,ent){ if(!old||!ent) return; if(isVideoM(old)&&!isVideoM(ent)&&!isSimKnee(old)) ent.video={value:old.value,method:old.method,time:old.time,unc:old.unc}; else if(old.video&&!ent.video) ent.video=old.video; }
+function storeVideoKnee(rec,ent){ const old=rec.kneeBDC; if(old&&!isVideoM(old)&&!isSimKnee(old)){ old.video={value:ent.value,method:ent.method,time:ent.time,unc:ent.unc,note:ent.note}; return true; } if(old&&old.video&&!isSimKnee(old)) ent.video=old.video; rec.kneeBDC=ent; return false; }
+function saddleModel(s){ try{ const P=simInputs(s,'after'); if(!P.inseam||!P.inseam.v||!P.crank||!P.crank.v) return null; const T=kneeTarget(s);
+  const solve=tg=>{ let lo=400,hi=1150; for(let i=0;i<28;i++){ const m=(lo+hi)/2; if(kneeMaxAt(P,m)<tg) lo=m; else hi=m; } return lo; };
+  const r={lo:solve(T.lo),hi:solve(T.hi),mid:solve((T.lo+T.hi)/2),T,inseam:P.inseam,crank:P.crank.v}; return r.lo>400&&r.hi<1150?r:null; }catch(e){ return null; } }
 
 /* ---------- Live-Analyse: Bein-Verfolgung, Kurbelkreis, Kurve über alle Umdrehungen, ±-Bereich ---------- */
 function liveFrame(lmk,W,H,t){
@@ -4321,7 +4343,7 @@ const ACT = {
   liveReset(){ liveReset(); },
   liveSave(){ if(live.view==='front'){ const r=frontResult(); if(!r||r.L.sway==null){ toast(r?'Für Millimeter fehlt die Körpergröße':'Noch zu wenig Bewegung erkannt',true); return; } const s=sess(live.sid); const side=document.getElementById('liveSide').value; const meth='2D-Video von vorn (automatisch)'; [['kneeSwayL',r.L.sway],['kneeSwayR',r.R.sway],['kneeInL',r.L.mean],['kneeInR',r.R.mean],['pelvisRock',r.rock]].forEach(([k,v])=>{ s[side][k]={...mv(k,v,meth,'gemessen',k==='pelvisRock'?1:5),time:nowStamp(),note:`${r.n} Umdrehungen`}; }); if(s.status==='geplant') s.status='in Arbeit'; audit(`Video von vorn: Knie L ${r.L.sway} mm, R ${r.R.sway} mm, Becken ${r.rock}°`,s.id); save(); closeDrawer(); render(); toast(`Gespeichert: Knie pendelt L ${r.L.sway} / R ${r.R.sway} mm, Becken ${fmtNum(r.rock)}°`); return; }
     const r=live.last||liveResult(); if(!r){ toast('Noch keine vollständige Umdrehung erkannt',true); return; } const s=sess(live.sid); const side=document.getElementById('liveSide').value; const meth=`2D-Video live (automatisch)${r.calib?' · mit Winkelmesser abgeglichen':''}`;
-    [['kneeBDC',r.knee],['kneeTDC',r.kneeTop],['hipAngle',r.hip],['torsoAngle',r.torso],['shoulderAngle',r.shoulder],['elbowAngle',r.elbow],['ankleRange',r.ankle],['hipRock',r.hipRock],['kneeOverPedal',r.kops]].filter(([k,v])=>v!=null).forEach(([k,v])=>{ const tol=k==='kneeOverPedal'?10:k==='hipRock'?3:k==='kneeBDC'&&r.ci&&r.ci.knee!=null?Math.max(1,Math.round(r.ci.knee*10)/10):3; s[side][k]={...mv(k,Math.round(v*10)/10,meth,'gemessen',tol),time:nowStamp(),note:`Kurve über ${r.n} Umdrehungen · Aufnahme ${r.grade}`}; });
+    [['kneeBDC',r.knee],['kneeTDC',r.kneeTop],['hipAngle',r.hip],['torsoAngle',r.torso],['shoulderAngle',r.shoulder],['elbowAngle',r.elbow],['ankleRange',r.ankle],['hipRock',r.hipRock],['kneeOverPedal',r.kops]].filter(([k,v])=>v!=null).forEach(([k,v])=>{ const tol=k==='kneeOverPedal'?10:k==='hipRock'?3:k==='kneeBDC'&&r.ci&&r.ci.knee!=null?Math.max(1,Math.round(r.ci.knee*10)/10):3; const ent={...mv(k,Math.round(v*10)/10,meth,'gemessen',tol),time:nowStamp(),note:`Kurve über ${r.n} Umdrehungen · Aufnahme ${r.grade}`}; if(k==='kneeBDC') storeVideoKnee(s[side],ent); else s[side][k]=ent; });
     if(s.status==='geplant') s.status='in Arbeit'; audit(`Live-Analyse (${r.n} Umdrehungen): Knie ${r.knee}°, Knielot ${r.kops} mm (${side==='before'?'Ausgangswert':'Endwert'})`,s.id); save(); closeDrawer(); render(); toast(`Gespeichert: Knie ${fmtNum(r.knee)}°, Knielot ${r.kops>0?'+':''}${r.kops} mm und ${[r.shoulder,r.elbow,r.ankle,r.hipRock].filter(x=>x!=null).length} weitere Werte`); },
   finderPick(el){ ui.advGeo=el.dataset.id; render(); window.scrollTo({top:0,behavior:'smooth'}); },
   shopLogoDel(){ if(S.shop){ delete S.shop.logo; save(); render(); } },
@@ -4350,8 +4372,8 @@ const ACT = {
   vidReset(){ vid.pts=[]; drawVid(); },
   vidStep(el){ if(!vidEl||!vidEl.duration) return; vid.t=Math.max(0,Math.min(vidEl.duration,vidEl.currentTime+Number(el.dataset.d)/30)); vidEl.currentTime=vid.t; const sk=document.getElementById('vidSeek'); if(sk) sk.value=Math.round(vid.t/vidEl.duration*1000); },
   vidSave(el){ const ang=vidAngle(); if(ang==null){ toast(`Bitte erst alle Punkte antippen: ${VMODES[vid.mode].pts.join(', ')}`,true); return; } const s=sess(el.dataset.id); const side=document.getElementById('vidSide').value; const key=VMODES[vid.mode].key;
-    s[side][key]={...mv(key,ang,'2D-Video (unkalibriert)','gemessen',null),time:nowStamp()}; if(s.status==='geplant') s.status='in Arbeit';
-    audit(`${MK[key].label} aus Video gemessen: ${ang}° (${side==='before'?'Ausgangswert':'Endwert'})`,s.id); save(); render(); toast(`${MK[key].label} ${ang}° in der Sitzung gespeichert`); },
+    const ent={...mv(key,ang,'2D-Video (unkalibriert)','gemessen',null),time:nowStamp()}; const asCheck=key==='kneeBDC'?storeVideoKnee(s[side],ent):(s[side][key]=ent,false); if(s.status==='geplant') s.status='in Arbeit';
+    audit(`${MK[key].label} aus Video gemessen: ${ang}° (${side==='before'?'Ausgangswert':'Endwert'}${asCheck?', als Kontrolle zum Goniometer':''})`,s.id); save(); render(); toast(asCheck?`Video ${ang}° als Kontrolle gespeichert – maßgeblich bleibt der Goniometer-Wert`:`${MK[key].label} ${ang}° in der Sitzung gespeichert`); },
   wGo(el){ ui.wIdx=el.dataset.i===''?null:Number(el.dataset.i); render(); window.scrollTo({top:0}); if(ui.wIdx!=null) setTimeout(()=>{ const f=document.querySelector('#wizForm input.num:not([type=hidden])'); if(f&&!f.value) f.focus({preventScroll:true}); },50); },
   wSkip(){ const n=WIZ_N[ui.sessTab](); ui.wIdx=ui.wIdx+1>=n?null:ui.wIdx+1; render(); window.scrollTo({top:0}); },
   resTab(el){ ui.resTab=el.dataset.v; render(); },
@@ -4572,11 +4594,16 @@ const FORMS = {
     const n=checkFindings(s).filter(x=>x.lvl!=='ok').length; audit(`Körpercheck gespeichert: ${Object.keys(ch).length} Ergebnisse, ${n} Auffälligkeiten`,s.id); save(); render(); window.scrollTo({top:0,behavior:'smooth'}); toast(n?`${n} Punkte gefunden – siehe Ergebnis`:'Keine Auffälligkeiten gefunden'); },
   body(f,data){ const c=cust(f.dataset.id); c.est=c.est||[]; BODY.forEach(([k])=>{ const v=data.get(k); const nv=v===''?null:Number(v); if(nv!==c.body[k]) c.est=c.est.filter(x=>x!==k); c.body[k]=nv; }); ['hamstring','hip','ankle'].forEach(k=>c.flex[k]=data.get(k)); audit(`Körpermaße aktualisiert: ${c.name}`); save(); toast('Körpermaße gespeichert'); if(f.dataset.ctx!=='session') customerDrawer(c.id); render(); },
   anamnesis(f,data){ const s=sess(f.dataset.id); Object.keys(s.anamnesis).forEach(k=>{ if(data.has(k)) s.anamnesis[k]=data.get(k).trim(); }); s.notes=data.get('notes'); audit('Anamnese gespeichert',s.id); save(); render(); toast('Anamnese gespeichert'); },
+  kneeAfter(f,data){ const s=sess(f.dataset.id); const num=x=>{ const v=parseFloat(String(x??'').replace(',','.')); return isNaN(v)?null:v; }; const v1=num(data.get('value')), v2=num(data.get('value2'));
+    if(v1==null||v1<100||v1>180){ toast('Bitte einen Kniewinkel zwischen 100 und 180° eingeben',true); return; } if(v2!=null&&Math.abs(v1-v2)>2){ toast(`Die Messungen weichen um ${fmtNum(Math.abs(v1-v2))}° ab. Bitte ein drittes Mal messen.`,true); return; }
+    const v=v2!=null?Math.round((v1+v2)/2*10)/10:v1; const old=s.after.kneeBDC; const ent={...mv('kneeBDC',v,'Goniometer','gemessen',v2!=null?Math.max(1,Math.round(Math.abs(v1-v2)/2*10)/10):2),time:nowStamp(),m1:v1,m2:v2,double:v2!=null}; kneeMerge(old,ent); s.after.kneeBDC=ent;
+    const KT=kneeTarget(s); audit(`Kniewinkel nach Anpassung gemessen: ${fmtNum(v)}° (Ziel ${KT.lo}–${KT.hi}°)`,s.id); save(); render(); toast(v>=KT.lo&&v<=KT.hi?`Kniewinkel ${fmtNum(v)}° – im Zielbereich`:`Kniewinkel ${fmtNum(v)}° – noch außerhalb ${KT.lo}–${KT.hi}°`,!(v>=KT.lo&&v<=KT.hi)); },
   measure(f,data){ const s=sess(f.dataset.id); const k=data.get('key'); const v1=parseFloat(String(data.get('value')).replace(',','.')); if(isNaN(v1)){toast('Bitte einen Zahlenwert eingeben',true);return;}
-    const v2raw=data.get('value2'); const v2=v2raw==null||v2raw===''?null:parseFloat(String(v2raw).replace(',','.')); const tol=MK[k].unit==='°'?1:3;
+    const v2raw=data.get('value2'); const v2=v2raw==null||v2raw===''?null:parseFloat(String(v2raw).replace(',','.')); const tol=k==='kneeBDC'?2:MK[k].unit==='°'?1:3;
     if(v2!=null&&!isNaN(v2)&&Math.abs(v1-v2)>tol){ toast(`Die Messungen weichen um ${fmtNum(Math.round(Math.abs(v1-v2)*10)/10)} ${MK[k].unit} ab. Bitte ein drittes Mal messen und die zwei passenden Werte eintragen.`,true); const el=document.getElementById('mc2_'+k); if(el){ el.value=''; el.focus(); } return; }
     const v=v2!=null&&!isNaN(v2)?Math.round((v1+v2)/2*10)/10:v1;
     const old=s.before[k]; const unc=data.get('unc'); ui.editMaker=null; s.before[k]={key:k,value:v,method:data.get('method'),source:(old&&old.source==='vom Hersteller'&&Number(old.value)===v)?'vom Hersteller':data.get('method')==='Herstellerangabe'?'manuell eingegeben':data.get('source'),unc:unc===''||unc==null?(v2!=null&&!isNaN(v2)?Math.max(1,Math.round(Math.abs(v1-v2)/2*10)/10):null):Number(unc),time:nowStamp(),m1:v1,m2:v2!=null&&!isNaN(v2)?v2:null,double:v2!=null&&!isNaN(v2)};
+    if(k==='kneeBDC') kneeMerge(old,s.before[k]);
     if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit';
     { const rg=measureRange(k,cust(s.customerId),bike(s.bikeId)); if(rg&&rg.lo!=null&&(v<rg.lo||v>rg.hi)) setTimeout(()=>toast(`${MK[k].label} liegt außerhalb von ${fmtNum(rg.lo)}–${fmtNum(rg.hi)} ${rg.unit} – bitte nachmessen`,true),50); }
     audit(old?`Ausgangswert korrigiert: ${MK[k].label} ${fmtNum(old.value)} → ${fmtNum(v)} ${MK[k].unit}`:`Ausgangswert erfasst: ${MK[k].label} ${fmtNum(v)} ${MK[k].unit}`,s.id); save();
@@ -4589,7 +4616,7 @@ const FORMS = {
   change(f,data){ ui.prepKey=null; ui.prepVal=''; ui.prepReason=''; const s=sess(f.dataset.id); const k=data.get('key'); const v=parseFloat(String(data.get('value')).replace(',','.')); const reason=String(data.get('reason')||'').trim();
     if(isNaN(v)){toast('Bitte einen Zahlenwert eingeben',true);return;} if(!reason){toast('Bitte eine Begründung angeben',true);return;}
     const from=s.after[k]?s.after[k].value:(s.before[k]?s.before[k].value:null);
-    const unc=data.get('unc'); s.after[k]={key:k,value:v,method:data.get('method'),source:data.get('source'),unc:unc===''?null:Number(unc),time:nowStamp()};
+    const unc=data.get('unc'); const oldA=s.after[k]; s.after[k]={key:k,value:v,method:data.get('method'),source:data.get('source'),unc:unc===''?null:Number(unc),time:nowStamp()}; if(k==='kneeBDC') kneeMerge(oldA,s.after[k]);
     s.changes.push({key:k,from,to:v,reason,time:nowStamp()}); if(s.status!=='abgeschlossen') s.status='in Arbeit'; else s.version++;
     if(data.get('follow')&&from!=null){ const end={...s.before}; Object.assign(end,s.after); sideEffects(s,k,v-from).filter(e=>e.delta!=null&&MK[e.key]&&!e.comp&&['saddleSetback','reach','drop','saddleHeight'].includes(e.key)&&e.key!==k).forEach(e=>{ const base=s.after[e.key]||s.before[e.key]; if(!base) return; const nv=Math.round((Number(base.value)+e.delta)*10)/10; s.after[e.key]={key:e.key,value:nv,method:'Berechnet',source:'berechnet',unc:3,time:nowStamp()}; s.changes.push({key:e.key,from:Number(base.value),to:nv,reason:`Folge von ${MK[k].label} ${v-from>0?'+':''}${fmtNum(Math.round((v-from)*10)/10)} ${MK[k].unit} (berechnet)`,time:nowStamp()}); }); }
     audit(`${MK[k].label}: ${fmtNum(from)} → ${fmtNum(v)} ${MK[k].unit}${s.status==='abgeschlossen'?` (neue Version ${s.version})`:''}`,s.id); save(); render(); toast(from==null?'Änderung dokumentiert – kein Ausgangswert vorhanden':'Änderung dokumentiert'); },
@@ -4681,7 +4708,7 @@ applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
 if((location.hash||'').indexOf('#pass=')===0){ const ph=location.hash.slice(6); go('dashboard'); try{ ui.passData=JSON.parse(unb64u(ph)); setTimeout(()=>openDrawer('Fit-Pass übernehmen',passImportHtml(ui.passData)),50); }catch(e){ toast('Fit-Pass-Link ist beschädigt',true); } }
 else go(VIEWS[start]?start:'dashboard');
-window.__fitframe={simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>

@@ -35,6 +35,7 @@ Kamera seitlich aufs Rad richten: Google MediaPipe erkennt Schulter, Hüfte, Kni
 
 ## Genauigkeit und Übertragung
 
+- **Sattelhöhe:** Pflicht-Messpunkt „Kniewinkel unten“ (Goniometer, zwei Messungen, Toleranz 2°). Daraus rechnet FYF die Millimeter über ein Beinmodell (Schrittlänge, Kurbel) und schlägt Änderungen in Schritten von höchstens 5 mm vor; nach jeder Änderung wird der Kniewinkel neu gemessen, bis er im Zielbereich liegt. Ohne Kniewinkel gibt es nur einen Startwert aus dem Beinmodell. Video-Werte werden als Kontrolle neben dem Goniometer gespeichert (Warnung ab 5° Abweichung). Simulierte Kniewinkel lösen nie eine Änderung aus. Becken-Kippen von vorn über 5° fließt als Hinweis „Sattel eher zu hoch“ ein.
 - Jeder Messwert mit Kontrollmessung: Weichen beide mehr als 3 mm bzw. 1° ab, verlangt die App eine dritte Messung und speichert den Mittelwert.
 - 15 Messpunkte in drei Gruppen, davon 6 Koordinaten vom Tretlager (Höhen über Boden, Abstände vor dem Lot). Sie prüfen die anderen Werte gegen und erlauben die 1:1-Übertragung auf ein anderes Rad (Ergebnis → „Auf neues Rad“).
 - Geführte Anpassung: eine Karte pro Änderung mit Ampel, Zielwert, am Rad machbarem Wert, Anleitung, Drehmoment-Hinweis, Kontrolle und Rückmeldung. Spacer, Vorbauwinkel und Vorbaulänge werden beim Umsetzen mit eingetragen.
