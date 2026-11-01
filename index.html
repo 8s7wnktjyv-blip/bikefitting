@@ -683,6 +683,13 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 .bviz-wrap{position:relative;background:var(--il-bg,#f4f2ee);border-radius:12px;padding:6px}.bviz{width:100%;max-width:520px;display:block;margin:0 auto;height:auto}.bv-w{fill:none;stroke:var(--il-tire,#2b2f34);stroke-width:3;opacity:.55}.bv-f{stroke:var(--il-frame,#4a5058);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.bv-p{stroke:var(--accent);fill:var(--accent);stroke-width:4;stroke-linecap:round}.bv-old{stroke:var(--faint,#888);fill:none;stroke-width:3;stroke-dasharray:4 4;opacity:.9}.bv-bb{fill:var(--il-body,#2c3136)}.bv-c{fill:var(--il-body,#2c3136)}.bv-hs circle{fill:transparent;stroke:transparent;stroke-width:2;cursor:pointer}.bv-hs:hover circle,.bv-hs:focus circle{stroke:var(--accent);fill:var(--accent-soft)}.bv-hs.on circle{stroke:var(--accent);stroke-width:2.5;fill:var(--accent-soft)}.bviz-legend{display:flex;gap:12px;justify-content:center;font-size:12px;color:var(--muted)}.bviz-legend i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:4px}.lg-p{background:var(--accent)}.lg-o{border-top:2px dashed var(--faint)}.chips{display:flex;gap:6px;flex-wrap:wrap}.dbars{display:flex;flex-direction:column;gap:6px}.dbar{display:grid;grid-template-columns:minmax(90px,30%) 1fr 80px;gap:8px;align-items:center;font-size:13px}.dtrack{position:relative;height:10px;background:var(--surface-2,#eee);border-radius:5px}.dtrack:after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--faint)}.dtrack i{position:absolute;top:0;bottom:0;border-radius:5px}.dtrack i.pos{background:var(--accent)}.dtrack i.neg{background:var(--muted)}.dv{text-align:right}.input.sm{min-height:36px;padding:4px 8px;font-size:13px}
 .report h3 .rn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px;margin-right:8px;vertical-align:1px}.report h3{break-after:avoid;page-break-after:avoid}.report tr,.report figure,.report .sig{break-inside:avoid}.report .rpics{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}.report .rpics figure{margin:0}.report .sig{margin-top:28px;border-top:1px solid #999;width:220px;padding-top:4px;font-size:11px;color:#666}@media print{.report h3 .rn{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 .gl{display:grid;grid-template-columns:minmax(120px,28%) 1fr;gap:8px 14px;margin:0}.gl dt{font-weight:600}.gl dd{margin:0;color:var(--muted)}@media (max-width:560px){.gl{grid-template-columns:1fr}.gl dd{margin-bottom:6px}}
+/* Phase 10: Design-Feinschliff */
+@media (pointer:coarse){.seg button{min-height:40px}.st{min-height:36px}.chipbtn{min-height:42px}.input.sm{min-height:40px}}
+#cmpA,#cmpB,#cmpC{width:100%;min-width:0}.form .field>select.input{width:100%}
+.tw table td:first-child{min-width:140px}.tw table td.r.num,.tw table th.r{white-space:nowrap}
+.flow>summary:focus-visible,.ctab:focus-visible,.bv-hs:focus-visible circle{outline:2px solid var(--accent);outline-offset:2px}
+.ctab-b>hr{margin:4px 0}.mitem figcaption{display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){.drawer,.anim-in,.anim-next,.anim-prev{animation:none!important}}
 </style>
 </head>
 <body>
@@ -1482,7 +1489,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-01.50';
+const APP_VER='2026-11-01.51';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -3755,7 +3762,7 @@ VIEWS.verlauf = () => {
   const cid=A?A.customerId:'c1'; const series=S.sessions.filter(s=>s.customerId===cid&&s.bikeId===(A?A.bikeId:'b1')&&Object.keys(s.before).length).sort((a,b)=>a.date.localeCompare(b.date));
   return `
   ${head('Verlauf & Vergleich','FitReplay: Endpositionen zweier Sitzungen nebeneinander und die Entwicklung über alle Termine.',st('i'))}
-  ${panel('Sitzungen vergleichen',`<div class="form"><div class="field wide"><label for="cmpC">Kunde</label><select class="input" id="cmpC" data-change="cmpC">${custs.map(id=>`<option value="${id}" ${id===ui.cmpC?'selected':''}>${esc(cust(id).name)} (${candidates.filter(s=>s.customerId===id).length})</option>`).join('')}</select></div><div class="field"><label for="cmpA">Sitzung A</label><select class="input" id="cmpA" data-change="cmpA">${own.map(s=>`<option value="${s.id}" ${s.id===ui.cmpA?'selected':''}>${fmtDate(s.date)} · ${esc(s.type)} · ${esc(bike(s.bikeId).model)}</option>`).join('')}</select></div>
+  ${panel('Sitzungen vergleichen',`<div class="form" style="grid-template-columns:1fr 1fr"><div class="field wide"><label for="cmpC">Kunde</label><select class="input" id="cmpC" data-change="cmpC">${custs.map(id=>`<option value="${id}" ${id===ui.cmpC?'selected':''}>${esc(cust(id).name)} (${candidates.filter(s=>s.customerId===id).length})</option>`).join('')}</select></div><div class="field"><label for="cmpA">Sitzung A</label><select class="input" id="cmpA" data-change="cmpA">${own.map(s=>`<option value="${s.id}" ${s.id===ui.cmpA?'selected':''}>${fmtDate(s.date)} · ${esc(s.type)} · ${esc(bike(s.bikeId).model)}</option>`).join('')}</select></div>
   <div class="field"><label for="cmpB">Sitzung B</label><select class="input" id="cmpB" data-change="cmpB">${own.map(s=>`<option value="${s.id}" ${s.id===ui.cmpB?'selected':''}>${fmtDate(s.date)} · ${esc(s.type)} · ${esc(bike(s.bikeId).model)}</option>`).join('')}</select></div></div>
   ${own.length<2?'<p class="muted" style="font-size:13.5px">Dieser Kunde hat erst eine Sitzung mit Messwerten.</p>':''}
   <div style="margin-top:12px">${!sameBike?`<div class="notice warn" style="margin-bottom:12px">${ic('warn')}Die Sitzungen betreffen unterschiedliche Fahrräder. Werte sind nur eingeschränkt vergleichbar.</div>`:''}${compareTable(rows,false,'Endstand A','Endstand B')}${cmpExtraHtml(A,B)}</div>`)}
