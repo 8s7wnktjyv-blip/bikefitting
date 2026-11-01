@@ -74,6 +74,14 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Durchgehender Test mit fiktivem Kunden „TEST Max Praxistest“ in 14 Schritten (Kunde → Rad → Fitting → Körper → Sitzknochen → Maße → Vermessung → Bewegung → Anpassung → Produkte → Bericht → Nachkontrolle → neue Sitzung → Vergleich) am Handy-, Tablet- und PC-Format: bestanden.
 - Dabei behoben: Kurbellänge, Vorbau und Lenkerbreite aus der Fahrradakte werden beim Messen als Herstellerangabe übernommen.
 
+## Befundkarte und Übungsblatt (ab v.53)
+
+- Im Fitting, Schritt „Körper“ → „Befundkarte“: Figur von vorn, hinten, seitlich und Kopf/Kiefer. In die Figur tippen setzt einen Punkt (Druckpunkt, Schmerz, Verspannung, Fehlstellung, Übungspunkt) mit Stelle, Seite, Stärke 0–10 und Notiz.
+- Vermuteter Zusammenhang zwischen zwei Punkten (z. B. Kiefer → Hüfte), klar als Vermutung des Fitters gekennzeichnet.
+- Tests vorher / Maßnahme / nachher (z. B. Krafttest Arm, Beckenstand, Beinlänge). Hinweis: manuelle Krafttests sind nicht wissenschaftlich belegt.
+- Übungsblatt für den Kunden: markierte Punkte plus Übungen (z. B. Selbstmassage, auf Keilen liegen), druckbar als PDF.
+- Im Fitting-Bericht nur, wenn eingeschaltet. FYF stellt keine Diagnose und zieht keine eigenen Schlüsse.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.
