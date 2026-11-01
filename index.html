@@ -691,6 +691,7 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 .ctab-b>hr{margin:4px 0}.mitem figcaption{display:flex;flex-direction:column;gap:6px}
 @media (prefers-reduced-motion:reduce){.drawer,.anim-in,.anim-next,.anim-prev{animation:none!important}}
 .bm-wrap{background:var(--il-bg,#f4f2ee);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:center}.bmap{width:100%;max-width:min(300px,60vh);height:auto;display:block;cursor:crosshair;touch-action:manipulation}.bmap.ro{cursor:default}.bm-body{fill:var(--surface,#fff);stroke:var(--il-frame,#4a5058);stroke-width:2}.bm-line{fill:none;stroke:var(--il-frame,#4a5058);stroke-width:1.2;opacity:.6}.bm-lbl{font-size:9px;fill:var(--muted,#666)}.bm-link{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}.bm-pt{cursor:pointer}.bm-pt circle{stroke:#fff;stroke-width:1.5}.bm-n{font-size:7px;fill:#fff;font-weight:700;pointer-events:none}.bm-leg{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font-size:12px;color:var(--muted)}.bm-leg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}.bm-dot{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;flex:0 0 auto}.bm-sheet{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.bm-sheet figure{margin:0;text-align:center}.bm-sheet .bmap{max-width:200px;margin:0 auto}.print-handout .report:not(.handout){display:none!important}@media print{.bm-pt circle,.bm-dot{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+.susp-col .field{gap:3px}.susp-col .input{min-height:40px}
 </style>
 </head>
 <body>
@@ -736,6 +737,8 @@ const I = {
   hw:'<path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/>',
   ai:'<path d="M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
   portal:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  susp:'<path d="M9 3h6M12 3v4M8 7h8l-1 4H9z"/><path d="M10 11v3l-2 2 4 2-4 2 4 2M14 11v10"/>',
+  handover:'<path d="M3 12l4-4 4 3 3-3 7 6"/><path d="M3 17h18"/><circle cx="7" cy="5" r="1.5"/>',
   wrench:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
   box:'<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
   ops:'<path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/>',
@@ -1490,7 +1493,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-01.53';
+const APP_VER='2026-11-01.54';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1540,21 +1543,39 @@ const val = (rec) => rec ? rec.value : null;
 /* ---------- Navigation ---------- */
 const MAIN_ALL=[['dashboard','Start','dash'],['kunden','Kunden','users'],['sitzung','Fitting','fit'],['werkstatt','Werkstatt','wrench'],['mehr','Mehr','more']];
 const MAIN=MAIN_ALL;
-const mainNav=()=>showExtra()?MAIN_ALL:MAIN_ALL.map(m=>m[0]==='werkstatt'?['geometrie','Geometrie','grid']:m);
+const mainNav=()=>{ let L=showExtra()?MAIN_ALL:MAIN_ALL.map(m=>m[0]==='werkstatt'?['geometrie','Geometrie','grid']:m); const st=(S.settings||{}).shopType;
+  if(!modOn('fitting')) L=L.map(m=>m[0]==='sitzung'?(modOn('quickfit')?['quickfit','Quick-Fit','handover']:['geometrie','Geometrie','grid']):m);
+  if(modOn('fahrwerk')&&(st==='werkstatt'||st==='ebike')) L=L.map(m=>m[0]==='geometrie'||(m[0]==='werkstatt'&&st!=='werkstatt')?['fahrwerk','Fahrwerk','susp']:m);
+  if(st==='werkstatt'&&modOn('werkstatt')&&!L.some(m=>m[0]==='werkstatt')) L=L.map(m=>m[0]==='kunden'?['werkstatt','Werkstatt','wrench']:m);
+  const seen=new Set(); return L.filter(m=>!seen.has(m[0])&&seen.add(m[0])); };
 const moreNav=()=>MORE.map(([g,items])=>[g,navVisible(items).filter(m=>m[0]!=='mehr')]).filter(([,items])=>items.length);
 const NAV_AREAS=[
   ['Dashboard',[['dashboard','Dashboard','dash','Überblick, Termine, offene Aufgaben']]],
   ['Kunden',[['kunden','Kunden','users','Kundenakten mit Rädern, Historie und Körpermaßen'],['fahrraeder','Fahrräder','bike','Alle Räder mit Einstellungen und Historie']]],
   ['Bikefitting',[['sitzung','Fitting','fit','Geführter Ablauf vom Ziel bis zum Ergebnis'],['verlauf','Verlauf & Vergleich','history','Sitzungen nebeneinander und über die Zeit'],['followup','Nachkontrollen','loop','Wer ist wann wieder dran?']]],
   ['Körperanalyse',[['koerper','Körperanalyse','body','Körpermaße, Beinlänge, Sitzknochen, Tests']]],
-  ['Bike-Vermessung',[['vermessung','Bike-Vermessung','ruler','Aktuelle Sitzposition je Fahrrad']]],
+  ['Bike-Vermessung',[['vermessung','Bike-Vermessung','ruler','Aktuelle Sitzposition je Fahrrad'],['quickfit','Quick-Fit Übergabe','handover','Neues Rad in 10 Minuten einstellen und übergeben']]],
+  ['Fahrwerk',[['fahrwerk','Fahrwerk','susp','Gabel und Dämpfer: Sag, Druck, Klicks je Rad']]],
   ['Bewegungsanalyse',[['motion','Bewegung & Video','motion','Winkel aus Video messen, Live-Analyse (Beta)']]],
   ['Produktempfehlungen',[['preise','Produkte & Preise','tag','Fitting-Pakete, deine Produkte, Gutscheine'],['lager','Angebote & Lager','box','Angebote aus dem Fitting, Bestand'],['werkstatt','Werkstatt','wrench','Aufträge, Kunden benachrichtigen, Wartung']]],
   ['Berichte',[['berichte','Berichte','doc','Alle Fitting-Berichte öffnen und drucken'],['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht (Textvorlagen)'],['portal','Kundenportal','portal','So sehen Kunden ihre Berichte (Vorschau)']]],
   ['Datenbanken',[['geometrie','Geometrie-Bibliothek','grid','Rahmenmaße nach Hersteller, Größenberatung'],['messmittel','Messmittel','ruler','Geräte, Genauigkeit, Prüfdatum'],['produktdb','Produktdatenbank','tag','Sättel, Einlagen, Cleats mit Quelle'],['wissen','Wissen','book','Fachbegriffe, Messverfahren, Tests']]],
   ['Einstellungen',[['mehr','Einstellungen & Daten','gear','Laden, Sicherung, Darstellung'],['betrieb','Zahlen & Team','ops','Kennzahlen pro Monat, Team'],['qualitaet','Messdaten & Qualität','quality','Herkunft und Vollständigkeit aller Werte'],['hardware','Hardware Lab','hw','Geplante eigene Messhilfen (Konzept)'],['module','Alle Module','grid','Gesamtplan und Stand der Demo']]]
 ];
-const navVisible=items=>items.filter(m=>showExtra()||!EXTRA_ROUTES.includes(m[0]));
+/* --- Ladentyp und Module: jeder Laden sieht nur, was er braucht --- */
+const SHOP_TYPES=[['haendler','Fahrradhändler','Verkauf, Größenberatung, Übergabe'],['ebike','E-Bike / Pendler','Übergabe, Werkstatt, Fahrwerk'],['werkstatt','Werkstatt','Aufträge, Fahrwerk, Fahrradakte'],['studio','Fitting-Studio','Komplettes Bikefitting']];
+const MODS=[['fitting','Bikefitting','Fitting-Ablauf, Körperanalyse, Vergleich, Nachkontrollen, Berichte'],['quickfit','Quick-Fit Übergabe','Neues Rad in 10 Minuten einstellen'],['fahrwerk','Fahrwerk','Gabel und Dämpfer einstellen und dokumentieren'],['verkauf','Verkauf & Produkte','Größenberatung, Preise, Angebote, Produktdatenbank'],['werkstatt','Werkstatt','Aufträge und Lager']];
+const MOD_DEFAULT={haendler:['quickfit','verkauf','werkstatt'],ebike:['quickfit','verkauf','werkstatt','fahrwerk'],werkstatt:['werkstatt','fahrwerk','quickfit'],studio:['fitting','quickfit','verkauf','fahrwerk']};
+const ROUTE_MOD={sitzung:'fitting',verlauf:'fitting',followup:'fitting',koerper:'fitting',vermessung:'fitting',motion:'fitting',berichte:'fitting',quickfit:'quickfit',fahrwerk:'fahrwerk',preise:'verkauf',lager:'verkauf',produktdb:'verkauf',werkstatt:'werkstatt'};
+const modsOn=()=>{ const st=S.settings||{}; return Array.isArray(st.mods)?st.mods:MODS.map(m=>m[0]); };
+const modOn=k=>modsOn().includes(k);
+const routeOn=r=>!ROUTE_MOD[r]||modOn(ROUTE_MOD[r]);
+function shopTypeHtml(compact){ const st=(S.settings||{}).shopType;
+  return `<div class="stack" style="gap:10px">${compact?'<p class="muted" style="margin:0;font-size:14px">Was für ein Laden bist du? FYF zeigt dann nur die passenden Bereiche. Alles andere kannst du jederzeit unter Mehr → Ladentyp & Module einschalten.</p>':''}
+  <div class="tiles">${SHOP_TYPES.map(([k,l,d])=>`<button class="tile ${st===k?'main':''}" data-act="shopType" data-v="${k}"><b>${l}</b><span>${d}</span></button>`).join('')}</div>
+  ${compact?'':`<div class="stack" style="gap:6px"><div class="label">Module</div>${MODS.map(([k,l,d])=>`<label class="row" style="gap:8px;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" data-change="modSet" data-k="${k}" ${modOn(k)?'checked':''} style="margin-top:4px"><span><b>${l}</b><br><span class="muted" style="font-size:13px">${d}</span></span></label>`).join('')}</div>`}</div>`; }
+
+const navVisible=items=>items.filter(m=>(showExtra()||!EXTRA_ROUTES.includes(m[0]))&&routeOn(m[0]));
 const MORE=NAV_AREAS.filter(([a])=>a!=='Dashboard').map(([a,items])=>[a,items]);
 const AREA_OF=Object.fromEntries(NAV_AREAS.flatMap(([a,items])=>items.map(m=>[m[0],a])));
 const TITLES=Object.fromEntries([...MAIN.map(m=>[m[0],m[1]]),...MORE.flatMap(g=>g[1].map(m=>[m[0],m[1]]))]);
@@ -1707,9 +1728,12 @@ VIEWS.dashboard = () => {
   ${loadIssue?`<div class="notice warn">${ic('warn')}<div><b>${esc(loadIssue)}</b> Eine Kopie wurde gesichert. Unter Mehr → Deine Daten sichern kannst du sie wiederherstellen.</div></div>`:''}
   ${heroHtml(greet,todays,upcoming)}
   ${setupHtml()}
+  ${!(S.settings||{}).shopType&&!(S.settings||{}).shopAsked?panel('Ladentyp wählen',shopTypeHtml(true),`<button class="btn sm ghost" data-act="shopTypeLater">Später</button>`):''}
   ${kpiTiles()}
   <div class="tiles">
-    <button class="tile main" data-act="newSession"><span class="ti">${ic('plus')}</span><b>Neues Fitting</b><span>Kunde wählen und loslegen</span></button>
+    ${modOn('fitting')?`<button class="tile main" data-act="newSession"><span class="ti">${ic('plus')}</span><b>Neues Fitting</b><span>Kunde wählen und loslegen</span></button>`:''}
+    ${modOn('quickfit')?`<button class="tile ${modOn('fitting')?'':'main'}" data-nav="quickfit"><span class="ti">${ic('handover')}</span><b>Quick-Fit Übergabe</b><span>Neues Rad einstellen</span></button>`:''}
+    ${modOn('fahrwerk')?`<button class="tile" data-nav="fahrwerk"><span class="ti">${ic('susp')}</span><b>Fahrwerk</b><span>Gabel und Dämpfer</span></button>`:''}
     <button class="tile" data-act="newCustomer"><span class="ti">${ic('users')}</span><b>Neuer Kunde</b><span>Akte anlegen</span></button>
     <button class="tile" data-act="lastReport"><span class="ti">${ic('doc')}</span><b>Letzter Bericht</b><span>${S.sessions.filter(x=>x.status==='abgeschlossen').length?'zuletzt abgeschlossenes Fitting':'noch keiner'}</span></button>
     <button class="tile" data-act="findCustomer"><span class="ti">${ic('users')}</span><b>Kunde suchen</b><span>${S.customers.length} Kunden gespeichert</span></button>
@@ -1781,7 +1805,14 @@ function kpiTiles(){ const td=today(); const fin=S.sessions.filter(s=>s.status==
   const upc=S.sessions.filter(s=>s.date>=td&&s.status!=='abgesagt'&&s.status!=='abgeschlossen').length;
   const fu=S.sessions.flatMap(s=>s.followUps||[]).filter(f=>f.status==='offen'); const fuDue=fu.filter(f=>f.due<=td).length;
   const t=(nav,v,l,sub)=>`<button class="kpi" data-nav="${nav}"><b class="num">${v}</b><span>${l}</span>${sub?`<i>${sub}</i>`:''}</button>`;
-  return `<div class="kpis">${t('kunden',S.customers.length,'Kunden',S.bikes.length+' Fahrräder')}${t('berichte',fin,'Fittings abgeschlossen','')}${t('sitzung',upc,'Termine anstehend','heute und später')}${t('followup',fu.length,'Nachkontrollen offen',fuDue?fuDue+' fällig':'')}</div>`; }
+  const m=td.slice(0,7); const recs=S.sessions.flatMap(x=>(x.recs||[]).filter(r=>r.status==='angenommen')); const P=products(); const recSum=recs.reduce((a,r)=>a+(Number((P.find(p=>p.id===r.prodId)||{}).price)||0),0);
+  const hoM=(S.handovers||[]).filter(h=>(h.date||'').startsWith(m)).length, spN=(S.suspension||[]).length;
+  const L=[t('kunden',S.customers.length,'Kunden',S.bikes.length+' Fahrräder')];
+  if(modOn('fitting')) L.push(t('berichte',fin,'Fittings abgeschlossen',''),t('sitzung',upc,'Termine anstehend','heute und später'),t('followup',fu.length,'Nachkontrollen offen',fuDue?fuDue+' fällig':''));
+  if(modOn('quickfit')) L.push(t('quickfit',hoM,'Übergaben diesen Monat',(S.handovers||[]).length+' insgesamt'));
+  if(modOn('fahrwerk')) L.push(t('fahrwerk',spN,'Fahrwerk-Einstellungen',''));
+  if(recs.length) L.push(t('produktdb',recs.length,'Empfehlungen angenommen',recSum?eur(recSum)+' Umsatz (VK)':''));
+  return `<div class="kpis">${L.join('')}</div>`; }
 function fittingChart(){ const fin=S.sessions.filter(s=>s.status==='abgeschlossen'&&s.date); if(fin.length<3) return '';
   const d=new Date(); const months=[]; for(let i=5;i>=0;i--){ const x=new Date(d.getFullYear(),d.getMonth()-i,1); months.push(x.toISOString().slice(0,7)); }
   const cnt=months.map(m=>fin.filter(s=>s.date.slice(0,7)===m).length); if(cnt.reduce((a,b)=>a+b,0)<2) return ''; const mx=Math.max(...cnt,1);
@@ -1836,6 +1867,7 @@ VIEWS.mehr = () => `
   ${shopHtml()}
   ${dataPanel()}
   ${statsHtml()}
+  ${panel('Ladentyp & Module',shopTypeHtml(false))}
   ${panel('Rolle und Datenspeicherung',`<div class="stack"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span style="max-width:52ch">Rolle (Demo)<br><span class="muted" style="font-size:13.5px">Admin: alles. Fitter: keine Preise, kein Löschen von Kunden. Mitarbeiter: messen und dokumentieren, nichts löschen oder abschließen. Echte Rechte prüft später der Server.</span></span><div class="seg">${ROLES.map(r=>`<button data-act="roleSet" data-v="${r}" aria-pressed="${role()===r}">${r}</button>`).join('')}</div></div>
   <hr><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span style="max-width:52ch">Speicherort<br><span class="muted" style="font-size:13.5px">${esc(STORE.kind)}. Fotos und Videos: nur auf diesem Gerät (IndexedDB). Eine Server-Datenbank ist vorbereitet, aber nicht angeschlossen.</span></span></div>
   <hr><div class="row" style="justify-content:space-between"><span>Version</span><span class="mono" id="appVer">v.${APP_VER.split('.').pop()} · ${APP_VER}</span></div></div>`)}
@@ -1980,6 +2012,8 @@ function bikeDrawer(id){
     <hr><h3>Historie</h3>
     <div class="list">${[...ss.map(s=>({d:s.date,t:`Fitting: ${s.type}`,c:sessChip(s.status),a:`data-act="openSession" data-id="${s.id}"`})),...wos.map(w=>({d:w.created,t:`Werkstatt: ${w.title}`,c:woChip(w.status),a:`data-act="openWO" data-id="${w.id}"`}))].sort((x,y)=>y.d.localeCompare(x.d)).map(e=>`<div class="li click" style="padding:8px 0" ${e.a}><span class="mono faint" style="font-size:12px">${fmtDate(e.d)}</span><div class="grow">${esc(e.t)}</div>${e.c}</div>`).join('')||'<span class="muted">Keine Einträge.</span>'}</div>
     ${svc.length?`<hr><h3>Wartungsintervalle</h3><table><tbody>${svc.map(x=>`<tr><td>${esc(x.task)}</td><td>${esc(x.interval)}</td><td>${x.next<today()?'<span class="chip c-bad">fällig seit '+fmtDate(x.next)+'</span>':'nächste '+fmtDate(x.next)}</td></tr>`).join('')}</tbody></table>`:''}
+    ${(()=>{ const H=(S.handovers||[]).filter(h=>h.bikeId===b.id); return H.length?`<hr><h3>Übergaben (Quick-Fit)</h3><div class="list">${H.slice().reverse().map(h=>`<div class="li" style="padding:6px 0"><span class="mono faint" style="font-size:12px">${fmtDate(h.date)}</span><div class="grow">Sattelhöhe ${h.sh?fmtNum(h.sh)+' mm':'–'}${h.knee?` · Knie ${h.knee}°`:''} · ${esc(h.who||'')}</div><button class="btn sm" data-act="qfSheet" data-id="${h.id}">Blatt</button></div>`).join('')}</div>`:''; })()}
+    ${(()=>{ const R=suspOf(b.id); const r=R[0]; return r||['MTB','E-Bike'].includes(b.type)?`<hr><div class="row" style="justify-content:space-between"><h3>Fahrwerk</h3><button class="btn sm" data-act="suspBike" data-id="${b.id}" data-go="1">${r?'Öffnen':'Einstellen'}</button></div>${r?`<p class="muted" style="font-size:13.5px;margin:0">${fmtDate(r.date)} · Gabel ${r.fork&&r.fork.psi?fmtNum(r.fork.psi)+' psi':'–'} · Dämpfer ${r.shock&&r.shock.psi?fmtNum(r.shock.psi)+' psi':'–'}${R.length>1?` · ${R.length} Einträge`:''}</p>`:'<span class="muted" style="font-size:13.5px">Noch nicht eingestellt.</span>'}`:''; })()}
     <hr>${mediaHtml('b:'+b.id,cust(b.customerId))}`;
   openDrawer(`${b.brand} ${b.model}`,body);
 }
@@ -2152,9 +2186,9 @@ function allowed(act,form){ const r=role(); return form?!DENY_FORM[r].includes(f
 function mediaGC(){ return mdb().then(db=>new Promise(res=>{ const keep=new Set((S.media||[]).map(m=>m.id)); const t=db.transaction('m','readwrite'); const st=t.objectStore('m'); const q=st.getAllKeys(); q.onsuccess=()=>{ q.result.filter(k=>!keep.has(k)).forEach(k=>st.delete(k)); }; t.oncomplete=()=>res(true); t.onerror=()=>res(false); })).catch(()=>false); }
 const PERMANENT_IDS=['p-dominik-boehm'];
 function custDataOf(cid){ const c=cust(cid); const bs=S.bikes.filter(b=>b.customerId===cid).map(b=>b.id); const ss=S.sessions.filter(x=>x.customerId===cid); const sids=ss.map(x=>x.id);
-  return {customer:c,bikes:S.bikes.filter(b=>b.customerId===cid),sessions:ss,sales:(S.sales||[]).filter(x=>x.customerId===cid),workshop:(S.workshop||[]).filter(w=>w.customerId===cid),services:(S.services||[]).filter(x=>bs.includes(x.bikeId)),messages:(S.messages||{})[cid]||[],media:(S.media||[]).filter(m=>m.owner==='c:'+cid||bs.some(b=>m.owner==='b:'+b)||sids.some(i=>m.owner==='s:'+i)).map(({id,owner,kind,name,date,note,phase})=>({id,owner,kind,name,date,note,phase}))}; }
+  return {customer:c,bikes:S.bikes.filter(b=>b.customerId===cid),sessions:ss,sales:(S.sales||[]).filter(x=>x.customerId===cid),workshop:(S.workshop||[]).filter(w=>w.customerId===cid),services:(S.services||[]).filter(x=>bs.includes(x.bikeId)),handovers:(S.handovers||[]).filter(h=>h.customerId===cid),suspension:(S.suspension||[]).filter(r=>bs.includes(r.bikeId)),messages:(S.messages||{})[cid]||[],media:(S.media||[]).filter(m=>m.owner==='c:'+cid||bs.some(b=>m.owner==='b:'+b)||sids.some(i=>m.owner==='s:'+i)).map(({id,owner,kind,name,date,note,phase})=>({id,owner,kind,name,date,note,phase}))}; }
 function deleteCustomer(cid){ const d=custDataOf(cid); const bs=d.bikes.map(b=>b.id), sids=d.sessions.map(x=>x.id), mids=new Set(d.media.map(m=>m.id));
-  S.customers=S.customers.filter(c=>c.id!==cid); S.bikes=S.bikes.filter(b=>b.customerId!==cid); S.sessions=S.sessions.filter(x=>x.customerId!==cid); S.sales=(S.sales||[]).filter(x=>x.customerId!==cid); S.workshop=(S.workshop||[]).filter(w=>w.customerId!==cid); S.services=(S.services||[]).filter(x=>!bs.includes(x.bikeId));
+  S.customers=S.customers.filter(c=>c.id!==cid); S.bikes=S.bikes.filter(b=>b.customerId!==cid); S.sessions=S.sessions.filter(x=>x.customerId!==cid); S.sales=(S.sales||[]).filter(x=>x.customerId!==cid); S.workshop=(S.workshop||[]).filter(w=>w.customerId!==cid); S.services=(S.services||[]).filter(x=>!bs.includes(x.bikeId)); S.handovers=(S.handovers||[]).filter(h=>h.customerId!==cid); S.suspension=(S.suspension||[]).filter(r=>!bs.includes(r.bikeId));
   if(S.messages) delete S.messages[cid]; sids.forEach(i=>{ if(S.shared) delete S.shared[i]; }); S.media=(S.media||[]).filter(m=>!mids.has(m.id)); mids.forEach(id=>{ if(mediaURLs[id]){ URL.revokeObjectURL(mediaURLs[id]); delete mediaURLs[id]; } });
   const nm=String((d.customer||{}).name||'').trim(); S.audit=(S.audit||[]).map(a=>a.ref===cid||sids.includes(a.ref)||(nm&&String(a.what||'').includes(nm))?{...a,what:'[Eintrag zu gelöschtem Kunden]',ref:''}:a); audit(`Kunde gelöscht (DSGVO): ${bs.length} Räder, ${sids.length} Fittings, ${mids.size} Medien entfernt`); return {bikes:bs.length,sessions:sids.length,media:mids.size}; }
 function scrubBackups(cid){ let n=0; try{ backupKeys().filter(k=>/^fitframe-(before|rescue)-/.test(k)).forEach(k=>{ try{ const d=JSON.parse(localStorage.getItem(k)); if(!d||!Array.isArray(d.customers)||!d.customers.some(c=>c.id===cid)) return; const keep=S; S=d; try{ deleteCustomer(cid); } finally { S=keep; } localStorage.setItem(k,JSON.stringify(d)); n++; }catch(e){} }); }catch(e){} return n; }
@@ -2216,6 +2250,65 @@ document.addEventListener('click',e=>{ const sv=e.target.closest&&e.target.close
   if(!allowed('bmEdit')){ toast(`Keine Berechtigung (Rolle: ${role()})`,true); return; }
   const pt=sv.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY; const m=sv.getScreenCTM(); if(!m) return; const q=pt.matrixTransform(m.inverse());
   openDrawer('Punkt setzen',bmPointForm(s,{x:Math.round(q.x),y:Math.round(q.y),view:sv.dataset.view})); });
+
+/* --- Quick-Fit Übergabe (neues Rad in ~10 Minuten) --- */
+const QF_CHECKS=[['tyre','Reifendruck eingestellt'],['bolts','Schrauben mit Drehmoment geprüft'],['brakes','Bremsen geprüft und erklärt'],['gears','Schaltung eingestellt'],['saddleLevel','Sattel waagerecht, Klemmung fest'],['levers','Brems- und Schalthebel erreichbar'],['battery','Akku geladen, Laden und Display erklärt (E-Bike)'],['pedals','Pedale montiert']];
+const qfStart=inseamCm=>inseamCm?Math.round(inseamCm*10*0.883):null; // LeMond-Formel 88,3 % – nur Startwert
+function qfKneeRange(bid){ try{ return kneeTarget({bikeId:bid,anamnesis:{},check:{}}); }catch(e){ return {lo:140,hi:150,label:''}; } }
+VIEWS.quickfit = () => { const q=ui.qf||(ui.qf={}); const c=cust(q.cid); const bs=c&&c.id?bikesOf(c.id):[]; const b=bike(q.bid); const B=c&&c.body||{};
+  const inseam=q.inseam??B.inseam, height=q.height??B.height; const start=qfStart(Number(inseam)); const KR=b&&b.id?qfKneeRange(b.id):null; const kn=Number(q.knee);
+  const kneeMsg=kn&&KR?(kn<KR.lo?`Knie zu stark gebeugt (Ziel ${KR.lo}–${KR.hi}°): Sattel etwas höher, in Schritten von 3–5 mm.`:kn>KR.hi?`Knie zu gestreckt (Ziel ${KR.lo}–${KR.hi}°): Sattel etwas tiefer.`:`Im Zielbereich ${KR.lo}–${KR.hi}°.`):'';
+  const past=(S.handovers||[]).filter(h=>!c||!c.id||h.customerId===c.id).slice(-5).reverse();
+  return `${head('Quick-Fit Übergabe','Neues Rad in etwa 10 Minuten passend einstellen und sauber übergeben. Kein volles Fitting.')}
+  <div class="stack" style="gap:14px">
+  ${panel('1 · Kunde und Fahrrad',`<div class="form"><div class="field"><label for="qf_c">Kunde</label><select class="input" id="qf_c" data-change="qfSet" data-k="cid"><option value="">– wählen –</option>${S.customers.map(x=>`<option value="${x.id}" ${x.id===q.cid?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
+    <div class="field"><label for="qf_b">Fahrrad</label><select class="input" id="qf_b" data-change="qfSet" data-k="bid" ${bs.length?'':'disabled'}><option value="">${bs.length?'– wählen –':'erst Kunde wählen'}</option>${bs.map(x=>`<option value="${x.id}" ${x.id===q.bid?'selected':''}>${esc(x.brand+' '+x.model)}</option>`).join('')}</select></div></div>
+    <div class="row" style="gap:6px;margin-top:8px"><button class="btn sm" data-act="newCustomer">${ic('plus')}Neuer Kunde</button>${c&&c.id?`<button class="btn sm" data-act="newBike" data-id="${c.id}">${ic('plus')}Fahrrad</button>`:''}</div>`)}
+  ${c&&c.id&&b&&b.id?`
+  ${panel('2 · Körper',`<div class="form"><div class="field"><label for="qf_h">Körpergröße (cm)</label><input class="input num" id="qf_h" type="number" step="0.5" inputmode="decimal" value="${height??''}" data-change="qfSet" data-k="height"></div><div class="field"><label for="qf_i">Schrittlänge (cm)</label><input class="input num" id="qf_i" type="number" step="0.5" inputmode="decimal" value="${inseam??''}" data-change="qfSet" data-k="inseam"></div></div>
+    <label class="row" style="gap:8px;margin-top:10px"><input type="checkbox" data-change="qfSet" data-k="pain" ${q.pain?'checked':''}>Kunde hat Beschwerden beim Radfahren (Knie, Rücken, Hände, Sitz)</label>
+    ${q.pain?`<div class="notice warn" style="margin-top:8px">${ic('warn')}<div><b>Volles Fitting empfehlen.</b> Ein Quick-Fit stellt nur die Grundposition ein.${modOn('fitting')?` <button class="btn sm" data-act="newSession" data-cust="${c.id}" data-bike="${b.id}">Fitting anlegen</button>`:''}</div></div>`:''}`)}
+  ${panel('3 · Sattelhöhe',`<p class="muted" style="margin:0 0 8px;font-size:14px">${start?`<b>Startwert: ${start} mm</b> (Schrittlänge × 0,883, Mitte Tretlager bis Satteloberkante). Nur ein Startwert – danach prüfen.`:'Schrittlänge eintragen, dann erscheint ein Startwert.'}</p>
+    <div class="form"><div class="field"><label for="qf_s">Eingestellte Sattelhöhe (mm)</label><input class="input num" id="qf_s" type="number" step="1" inputmode="numeric" value="${q.sh??''}" data-change="qfSet" data-k="sh"></div><div class="field"><label for="qf_k">Kniewinkel unten (°, optional)</label><input class="input num" id="qf_k" type="number" step="1" inputmode="numeric" value="${q.knee??''}" data-change="qfSet" data-k="knee"></div></div>
+    ${kneeMsg?`<p style="margin:8px 0 0;font-size:14px"><b>${esc(kneeMsg)}</b></p>`:''}
+    <label class="row" style="gap:8px;margin-top:8px"><input type="checkbox" data-change="qfSet" data-k="heel" ${q.heel?'checked':''}>Fersentest: Ferse auf dem Pedal unten, Bein gerade gestreckt, Becken kippt nicht</label>`)}
+  ${panel('4 · Übergabe-Check',`<div class="stack" style="gap:6px">${QF_CHECKS.map(([k,l])=>`<label class="row" style="gap:8px;flex-wrap:nowrap"><input type="checkbox" data-change="qfCheck" data-k="${k}" ${(q.checks||{})[k]?'checked':''}><span>${l}</span></label>`).join('')}</div>
+    <div class="field" style="margin-top:10px"><label for="qf_n">Notiz</label><input class="input" id="qf_n" value="${esc(q.note||'')}" data-change="qfSet" data-k="note" placeholder="z. B. Spacer 10 mm über Vorbau versetzt"></div>
+    <div class="field" style="margin-top:8px"><label for="qf_w">Wer</label><select class="input" id="qf_w" data-change="qfSet" data-k="who">${opts([...new Set([q.who,ui.lastWho,'Demo-Nutzer',...(S.team||[]).map(t=>t.name)].filter(Boolean))],q.who||ui.lastWho||'Demo-Nutzer')}</select></div>
+    <div class="row" style="margin-top:12px;gap:8px"><button class="btn primary" data-act="qfSave">${ic('check')}Übergabe speichern</button><button class="btn ghost" data-act="qfReset">Neu beginnen</button></div>`)}`:''}
+  ${past.length?panel('Letzte Übergaben',`<div class="list">${past.map(h=>`<div class="li" style="padding:8px 0"><span class="mono faint" style="font-size:12px">${fmtDate(h.date)}</span><div class="grow" style="min-width:0"><div class="t">${esc((cust(h.customerId)||{}).name||'–')} · ${esc(((bike(h.bikeId)||{}).brand||'')+' '+((bike(h.bikeId)||{}).model||''))}</div><div class="sub">Sattelhöhe ${h.sh?fmtNum(h.sh)+' mm':'–'}${h.knee?` · Knie ${h.knee}°`:''} · ${Object.values(h.checks||{}).filter(Boolean).length}/${QF_CHECKS.length} Punkte${h.pain?' · Fitting empfohlen':''}</div></div><button class="btn sm" data-act="qfSheet" data-id="${h.id}">Blatt</button></div>`).join('')}</div>`):''}
+  <p class="faint" style="font-size:12.5px">Die Formel ist ein Startwert, keine Messung. Für Beschwerden oder sportliche Ziele: volles Fitting.</p></div>`; };
+function qfSheetHtml(h){ const c=cust(h.customerId)||{}, b=bike(h.bikeId)||{};
+  return `<article class="report handout"><div class="rh"><div><h2 style="font-size:22px">Übergabe deines Rads</h2><div>${esc(c.name||'')} · ${esc((b.brand||'')+' '+(b.model||''))} · ${fmtDate(h.date)}</div></div><div style="text-align:right"><b>${esc(shopName()||'FYF')}</b><div class="fine">${esc(h.who||'')}</div></div></div>
+  <div class="sec"><h3>Deine Einstellung</h3><table><tbody>${h.sh?`<tr><td>Sattelhöhe (Mitte Tretlager bis Satteloberkante)</td><td style="text-align:right">${fmtNum(h.sh)} mm</td></tr>`:''}${h.knee?`<tr><td>Kniewinkel unten</td><td style="text-align:right">${h.knee}°</td></tr>`:''}${h.inseam?`<tr><td>Schrittlänge</td><td style="text-align:right">${fmtNum(h.inseam)} cm</td></tr>`:''}</tbody></table>${h.note?`<p>${esc(h.note)}</p>`:''}</div>
+  <div class="sec"><h3>Geprüft</h3><ul style="margin:0;padding-left:18px">${QF_CHECKS.filter(([k])=>(h.checks||{})[k]).map(([,l])=>`<li>${esc(l)}</li>`).join('')||'<li>–</li>'}</ul></div>
+  ${h.pain?'<div class="sec"><h3>Empfehlung</h3><p>Du hast Beschwerden angegeben. Wir empfehlen ein vollständiges Bikefitting.</p></div>':''}
+  <p class="fine">Grundeinstellung bei der Übergabe, kein vollständiges Bikefitting.</p></article><div class="row" style="margin-top:10px"><button class="btn primary" data-act="bmPrint">${ic('doc')}Drucken oder als PDF sichern</button></div>`; }
+
+/* --- Fahrwerk: Gabel und Dämpfer --- */
+const SUSP_SRC={fox:['FOX: 25 % Sag als Startwert','https://tech.ridefox.com/fox_tech_center/owners_manuals/011/Content/Rear_Shocks/Measuring_Sag.html'],rs:['RockShox/SRAM: Stahlfeder 25–35 %, Luft ±5 % nach Vorliebe','https://docs.sram.com/en-US/publications/5ODr3E6BhL1uWDnWhq4ATB/UM%20-%20Suspension']};
+const SUSP_F=[['model','Modell','',''],['travel','Federweg bzw. Hub','mm','num'],['target','Ziel-Sag','%','num'],['psi','Luftdruck','psi','num'],['psiStart','Startdruck laut Herstellertabelle','psi','num'],['sag','Gemessener Sag','mm','num'],['reb','Zugstufe (Klicks von zu)','','num'],['lsc','Druckstufe Low (Klicks)','','num'],['hsc','Druckstufe High (Klicks)','','num'],['tokens','Volumen-Spacer (Tokens)','','num']];
+function suspCalc(x){ const t=Number(x&&x.travel), sg=Number(x&&x.sag), tg=Number(x&&x.target)||25; if(!t) return null; const tgMm=Math.round(t*tg/100*10)/10; if(!sg) return {tgMm,tg}; const pct=Math.round(sg/t*1000)/10; const d=Math.round((pct-tg)*10)/10;
+  return {tgMm,tg,pct,d,lvl:Math.abs(d)<=2?'ok':Math.abs(d)<=5?'warn':'bad',msg:Math.abs(d)<=2?'Nah am Ziel.':d>0?`${fmtNum(d)} % mehr Sag als Ziel: Fahrwerk zu weich → Druck erhöhen (bei Stahlfeder: Vorspannung/härtere Feder).`:`${fmtNum(-d)} % weniger Sag als Ziel: Fahrwerk zu hart → Druck verringern.`}; }
+const suspOf=bid=>(S.suspension||[]).filter(r=>r.bikeId===bid).sort((a,b)=>(b.date+b.id).localeCompare(a.date+a.id));
+function suspPart(rec,part,label,ro){ const x=(rec&&rec[part])||{}; const c=suspCalc(x);
+  return `<div class="stack susp-col" style="gap:8px"><h4 style="margin:0">${label}</h4>${SUSP_F.map(([k,l,u,t])=>ro?(x[k]!=null&&x[k]!==''?`<div class="row" style="justify-content:space-between"><span class="muted">${l}</span><span class="${t?'num':''}">${esc(String(x[k]))}${u?' '+u:''}</span></div>`:''):`<div class="field"><label for="sp_${part}_${k}">${l}${u?' ('+u+')':''}</label><input class="input${t?' num':''}" id="sp_${part}_${k}" ${t?'type="number" step="any" inputmode="decimal"':''} value="${esc(String(x[k]??(k==='target'?25:'')))}" data-change="suspSet" data-p="${part}" data-k="${k}"></div>`).join('')}
+  ${c?`<div class="statusbox ${c.lvl||''}" style="padding:10px"><div><b>Ziel-Sag: ${fmtNum(c.tgMm)} mm</b> (${fmtNum(c.tg)} %)${c.pct!=null?`<br>Ist: ${fmtNum(c.pct)} % · ${esc(c.msg)}`:''}</div></div>`:'<span class="faint" style="font-size:12.5px">Federweg bzw. Hub eintragen, dann rechnet FYF den Ziel-Sag.</span>'}</div>`; }
+VIEWS.fahrwerk = () => { const q=(ui.sp=ui.sp||{}); const L=S.bikes.filter(b=>cust(b.customerId)&&cust(b.customerId).id).sort((a,b)=>(['MTB','E-Bike'].includes(b.type)?0:1)-(['MTB','E-Bike'].includes(a.type)?0:1)); const fq=(ui.spq||'').toLowerCase();
+  const b=bike(q.bid); const hist=b&&b.id?suspOf(b.id):[]; const d=q.draft;
+  const list=L.filter(x=>!fq||(x.brand+' '+x.model+' '+cust(x.customerId).name).toLowerCase().includes(fq));
+  return `${head('Fahrwerk','Gabel und Dämpfer einstellen und je Rad dokumentieren: Sag, Druck, Klicks, Tokens.')}
+  ${b&&b.id?`<div class="stack" style="gap:14px">
+    ${panel(`${esc(b.brand+' '+b.model)} · ${esc(cust(b.customerId).name)}`,`<div class="form"><div class="field"><label for="sp_kg">Fahrergewicht mit Ausrüstung (kg)</label><input class="input num" id="sp_kg" type="number" step="0.5" inputmode="decimal" value="${esc(String((d&&d.riderKg)??''))}" data-change="suspSet" data-p="" data-k="riderKg"></div><div class="field"><label for="sp_who">Wer</label><select class="input" id="sp_who" data-change="suspSet" data-p="" data-k="who">${opts([...new Set([(d&&d.who),ui.lastWho,'Demo-Nutzer',...(S.team||[]).map(t=>t.name)].filter(Boolean))],(d&&d.who)||ui.lastWho||'Demo-Nutzer')}</select></div></div>
+      <div class="grid g2" style="margin-top:12px">${suspPart(d,'fork','Federgabel')}${suspPart(d,'shock','Dämpfer')}</div>
+      <div class="field" style="margin-top:10px"><label for="sp_note">Notiz</label><input class="input" id="sp_note" value="${esc((d&&d.note)||'')}" data-change="suspSet" data-p="" data-k="note" placeholder="z. B. Kunde fährt viel Bikepark"></div>
+      <div class="row" style="gap:8px;margin-top:12px"><button class="btn primary" data-act="suspSave">${ic('check')}Einstellung speichern</button><button class="btn ghost" data-act="suspBike" data-id="">Anderes Rad</button></div>
+      <details class="more" style="margin-top:10px"><summary>So gehst du vor</summary><ol class="how"><li>Fahrergewicht mit Rucksack, Schuhen und Helm.</li><li>Startdruck aus der Tabelle des Herstellers (oft auf der Gabel oder im Handbuch).</li><li>Luftkammern ausgleichen: ein paar Mal leicht einfedern.</li><li>Sag messen: Gummiring an den Abstreifer schieben, in Fahrposition aufsitzen, vorsichtig absteigen, Abstand messen.</li><li>Druck anpassen, bis der Sag passt. Dann Zugstufe: Rad soll zügig, aber ohne Nachwippen ausfedern.</li><li>Druckstufe nach Gefühl im Gelände, Tokens nur bei Durchschlägen.</li></ol><p class="faint" style="font-size:12.5px">Ziel-Sag laut Hersteller: <a href="${SUSP_SRC.fox[1]}" target="_blank" rel="noopener">${SUSP_SRC.fox[0]}</a> · <a href="${SUSP_SRC.rs[1]}" target="_blank" rel="noopener">${SUSP_SRC.rs[0]}</a>. Die Ampel (±2 % / ±5 %) ist eine Orientierung von FYF. Luftdruck kann FYF nicht aus dem Gewicht berechnen – der hängt vom Modell ab.</p></details>`)}
+    ${hist.length?panel(`Verlauf (${hist.length})`,`<div class="list">${hist.map(r=>`<details class="more"><summary>${fmtDate(r.date)} · ${esc(r.who||'')}${r.riderKg?` · ${fmtNum(r.riderKg)} kg`:''} · Gabel ${r.fork&&r.fork.psi?fmtNum(r.fork.psi)+' psi':'–'} · Dämpfer ${r.shock&&r.shock.psi?fmtNum(r.shock.psi)+' psi':'–'}</summary><div class="grid g2" style="margin-top:8px">${suspPart(r,'fork','Federgabel',true)}${suspPart(r,'shock','Dämpfer',true)}</div>${r.note?`<p class="muted" style="font-size:13.5px">${esc(r.note)}</p>`:''}<div class="row" style="gap:6px"><button class="btn sm" data-act="suspSheet" data-id="${r.id}">Kundenblatt</button><button class="btn sm ghost" data-act="suspLoad" data-id="${r.id}">Als Vorlage übernehmen</button></div></details>`).join('')}</div>`):''}
+  </div>`:`${panelFlush('',`<div class="panel-h"><input class="input search" type="search" id="spq" data-input="spq" placeholder="Rad oder Kunde suchen" value="${esc(ui.spq||'')}"><span class="muted" style="font-size:12px">${list.length} Fahrräder</span></div>${list.length?`<div class="tw"><table><thead><tr><th>Fahrrad</th><th>Typ</th><th>Gabel</th><th>Dämpfer</th><th>Zuletzt</th><th></th></tr></thead><tbody>${list.map(x=>{ const r=suspOf(x.id)[0]; const f=r&&r.fork||{}, sh=r&&r.shock||{}; const cf=suspCalc(f), cs=suspCalc(sh); return `<tr><td><b>${esc(x.brand+' '+x.model)}</b><div class="faint" style="font-size:12px">${esc(cust(x.customerId).name)}</div></td><td>${esc(x.type||'')}</td><td>${r&&(f.psi||f.sag)?`${f.psi?fmtNum(f.psi)+' psi':''}${cf&&cf.pct!=null?` · ${fmtNum(cf.pct)} %`:''}`:'<span class="faint">–</span>'}</td><td>${r&&(sh.psi||sh.sag)?`${sh.psi?fmtNum(sh.psi)+' psi':''}${cs&&cs.pct!=null?` · ${fmtNum(cs.pct)} %`:''}`:'<span class="faint">–</span>'}</td><td>${r?fmtDate(r.date):'<span class="faint">noch nie</span>'}</td><td class="r"><button class="btn sm ${r?'':'primary'}" data-act="suspBike" data-id="${x.id}">${r?'Öffnen':'Einstellen'}</button></td></tr>`; }).join('')}</tbody></table></div>`:'<div class="empty">Kein Fahrrad gefunden.</div>'}`)}
+  <p class="faint" style="font-size:12.5px">MTB und E-Bikes stehen oben. Die Werte erscheinen auch in der Fahrradakte.</p>`}`; };
+function suspSheetHtml(r){ const b=bike(r.bikeId)||{}, c=cust(b.customerId)||{}; const row=(p,l)=>{ const x=r[p]||{}; const cc=suspCalc(x); return Object.keys(x).length?`<div class="sec"><h3>${l}</h3><table><tbody>${SUSP_F.filter(([k])=>x[k]!=null&&x[k]!==''&&k!=='psiStart').map(([k,lb,u])=>`<tr><td>${lb}</td><td style="text-align:right">${esc(String(x[k]))}${u?' '+u:''}</td></tr>`).join('')}${cc&&cc.pct!=null?`<tr><td>Sag in Prozent</td><td style="text-align:right">${fmtNum(cc.pct)} %</td></tr>`:''}</tbody></table></div>`:''; };
+  return `<article class="report handout"><div class="rh"><div><h2 style="font-size:22px">Dein Fahrwerk</h2><div>${esc(c.name||'')} · ${esc((b.brand||'')+' '+(b.model||''))} · ${fmtDate(r.date)}</div></div><div style="text-align:right"><b>${esc(shopName()||'FYF')}</b><div class="fine">${esc(r.who||'')}</div></div></div>${r.riderKg?`<p>Eingestellt für ${fmtNum(r.riderKg)} kg mit Ausrüstung.</p>`:''}${row('fork','Federgabel')}${row('shock','Dämpfer')}${r.note?`<p>${esc(r.note)}</p>`:''}<p class="fine">Tipp: Luftdruck alle paar Wochen prüfen. Klicks werden von „ganz zu“ gezählt.</p></article><div class="row" style="margin-top:10px"><button class="btn primary" data-act="bmPrint">${ic('doc')}Drucken oder als PDF sichern</button></div>`; }
 
 VIEWS.sitzung = () => {
   const s=sess(ui.sess)||S.sessions[0]; ui.sess=s.id; if(!STEPS.some(x=>x[0]===ui.sessTab)) ui.sessTab=TABALIAS[ui.sessTab]||'anamnese';
@@ -4820,6 +4913,25 @@ function createSession(d){
 }
 
 const ACT = {
+  qfReset(){ ui.qf={}; render(); },
+  qfSave(){ const q=ui.qf||{}; const c=cust(q.cid), b=bike(q.bid); if(!c||!c.id||!b||!b.id){ toast('Kunde und Fahrrad wählen',true); return; }
+    const n=k=>{ const v=q[k]; if(v==null||v==='') return null; const x=Number(String(v).replace(',','.')); return isFinite(x)?x:null; }; const sh=n('sh'), kn=n('knee'), ins=n('inseam'), hg=n('height');
+    if(sh!=null&&(sh<400||sh>1000)){ toast('Sattelhöhe in mm prüfen (400–1000)',true); return; } if(kn!=null&&(kn<100||kn>180)){ toast('Kniewinkel prüfen (100–180°)',true); return; }
+    if(ins!=null&&(ins<50||ins>110)){ toast('Schrittlänge in cm prüfen',true); return; } if(hg!=null&&(hg<120||hg>215)){ toast('Körpergröße in cm prüfen',true); return; }
+    if(ins!=null&&(c.body.inseam==null||c.body.inseam==='')){ c.body.inseam=ins; c.est=(c.est||[]).filter(x=>x!=='inseam'); } if(hg!=null&&(c.body.height==null||c.body.height==='')){ c.body.height=hg; c.est=(c.est||[]).filter(x=>x!=='height'); }
+    const h={id:uid('h'),customerId:c.id,bikeId:b.id,date:today(),who:q.who||ui.lastWho||'Demo-Nutzer',height:hg,inseam:ins,start:qfStart(ins),sh,knee:kn,heel:!!q.heel,pain:!!q.pain,checks:{...(q.checks||{})},note:String(q.note||'').trim().slice(0,300)};
+    (S.handovers=S.handovers||[]).push(h); audit(`Quick-Fit Übergabe gespeichert: ${b.brand} ${b.model}`,c.id); save(); ui.qf={}; render(); openDrawer('Übergabeblatt',qfSheetHtml(h)); toast('Übergabe gespeichert'); },
+  qfSheet(el){ const h=(S.handovers||[]).find(x=>x.id===el.dataset.id); if(h) openDrawer('Übergabeblatt',qfSheetHtml(h)); },
+  suspBike(el){ ui.sp=ui.sp||{}; ui.sp.bid=el.dataset.id||null; const last=el.dataset.id?suspOf(el.dataset.id)[0]:null; ui.sp.draft=last?JSON.parse(JSON.stringify({riderKg:last.riderKg,who:last.who,fork:last.fork,shock:last.shock,note:''})):{fork:{target:25},shock:{target:25}}; if(el.dataset.go==='1'||ui.route!=='fahrwerk'){ closeDrawer(); go('fahrwerk'); } else render(); window.scrollTo({top:0}); },
+  suspLoad(el){ const r=(S.suspension||[]).find(x=>x.id===el.dataset.id); if(!r) return; ui.sp.draft=JSON.parse(JSON.stringify({riderKg:r.riderKg,who:r.who,fork:r.fork,shock:r.shock,note:''})); render(); window.scrollTo({top:0}); toast('Werte übernommen'); },
+  suspSave(){ const q=ui.sp||{}; const b=bike(q.bid); if(!b||!b.id) return; const d=q.draft||{}; const clean=x=>{ const o={}; SUSP_F.forEach(([k,,,t])=>{ const v=x&&x[k]; if(v==null||v==='') return; if(t){ const n=Number(String(v).replace(',','.')); if(isFinite(n)&&n>=0) o[k]=n; } else o[k]=String(v).slice(0,80); }); return o; };
+    const f=clean(d.fork), sh=clean(d.shock); const bad=[['Gabel',f],['Dämpfer',sh]].find(([,x])=>(x.travel&&x.sag&&x.sag>x.travel)||(x.target!=null&&(x.target<5||x.target>50))||(x.psi!=null&&x.psi>400));
+    if(bad){ toast(`${bad[0]}: Werte prüfen (Sag ≤ Federweg, Ziel 5–50 %, Druck ≤ 400 psi)`,true); return; }
+    const kg=Number(d.riderKg); const r={id:uid('sp'),bikeId:b.id,date:today(),who:d.who||ui.lastWho||'Demo-Nutzer',riderKg:isFinite(kg)&&kg>20&&kg<250?kg:null,fork:f,shock:sh,note:String(d.note||'').trim().slice(0,300)};
+    (S.suspension=S.suspension||[]).push(r); audit(`Fahrwerk eingestellt: ${b.brand} ${b.model}`,b.customerId); save(); render(); toast('Fahrwerk gespeichert'); },
+  suspSheet(el){ const r=(S.suspension||[]).find(x=>x.id===el.dataset.id); if(r) openDrawer('Kundenblatt Fahrwerk',suspSheetHtml(r)); },
+  shopType(el){ S.settings=S.settings||{}; S.settings.shopType=el.dataset.v; S.settings.mods=[...MOD_DEFAULT[el.dataset.v]]; S.settings.shopAsked=true; audit(`Ladentyp: ${(SHOP_TYPES.find(t=>t[0]===el.dataset.v)||[])[1]}`); save(); render(); toast('Bereiche angepasst – weitere unter Mehr → Ladentyp & Module'); },
+  shopTypeLater(){ S.settings=S.settings||{}; S.settings.shopAsked=true; save(); render(); },
   bmView(el){ ui.bmView=el.dataset.v; render(); },
   bmToggle(el){ const d=el.closest('details'); ui.bmOpen=!(d&&d.open); render(); },
   bmEdit(el){ const s=sess(el.dataset.id); const p=bmOf(s).points.find(x=>x.id===el.dataset.p); if(p) openDrawer('Punkt bearbeiten',bmPointForm(s,p)); },
@@ -5286,6 +5398,10 @@ const FORMS = {
 };
 
 const CHG = {
+  qfSet(el){ ui.qf=ui.qf||{}; const k=el.dataset.k; ui.qf[k]=el.type==='checkbox'?el.checked:el.value; if(k==='cid'){ ui.qf.bid=null; ['height','inseam'].forEach(x=>delete ui.qf[x]); const bs=bikesOf(el.value); if(bs.length===1) ui.qf.bid=bs[0].id; } if(k==='who') ui.lastWho=el.value; render(); },
+  qfCheck(el){ ui.qf=ui.qf||{}; ui.qf.checks=ui.qf.checks||{}; ui.qf.checks[el.dataset.k]=el.checked; },
+  suspSet(el){ const d=(ui.sp=ui.sp||{}).draft=(ui.sp.draft||{fork:{},shock:{}}); const p=el.dataset.p, k=el.dataset.k; if(p){ d[p]=d[p]||{}; d[p][k]=el.value; } else d[k]=el.value; if(k==='who') ui.lastWho=el.value; if(['travel','sag','target'].includes(k)) render(); },
+  modSet(el){ S.settings=S.settings||{}; let L=[...modsOn()]; const k=el.dataset.k; L=el.checked?[...new Set([...L,k])]:L.filter(x=>x!==k); S.settings.mods=L; save(); render(); },
   bmInReport(el){ const s=sess(el.dataset.id); bmOf(s).inReport=el.checked; save(); },
   portalSet(el){ const s=sess(el.dataset.id); const k=el.dataset.k; if(k==='report'){ S.shared[s.id]=el.checked; } else { s.portal=s.portal||{}; s.portal[k]=el.checked; } audit(`Portal-Freigabe ${k}: ${el.checked?'an':'aus'}`,s.id); save(); },
   portalMedia(el){ const s=sess(el.dataset.id); s.portal=s.portal||{}; const L=new Set(s.portal.media||[]); if(el.checked) L.add(el.dataset.m); else L.delete(el.dataset.m); s.portal.media=[...L]; save(); },

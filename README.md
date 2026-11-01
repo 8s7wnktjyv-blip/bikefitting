@@ -82,6 +82,13 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Übungsblatt für den Kunden: markierte Punkte plus Übungen (z. B. Selbstmassage, auf Keilen liegen), druckbar als PDF.
 - Im Fitting-Bericht nur, wenn eingeschaltet. FYF stellt keine Diagnose und zieht keine eigenen Schlüsse.
 
+## Ladentyp, Quick-Fit Übergabe, Fahrwerk (ab v.54)
+
+- Ladentyp (Dashboard oder Mehr → Ladentyp & Module): Fahrradhändler, E-Bike/Pendler, Werkstatt, Fitting-Studio. FYF zeigt dann nur passende Bereiche; jedes Modul (Bikefitting, Quick-Fit, Fahrwerk, Verkauf, Werkstatt) ist einzeln schaltbar. Ohne Auswahl bleibt alles sichtbar.
+- Quick-Fit Übergabe: neues Rad in etwa 10 Minuten einstellen – Körpergröße, Schrittlänge, Startwert Sattelhöhe (Schrittlänge × 0,883, nur Startwert), Kontrolle über Kniewinkel und Fersentest, Übergabe-Check, Übergabeblatt. Bei Beschwerden: Hinweis auf volles Fitting.
+- Fahrwerk (eigener Menüpunkt, bei Werkstatt/E-Bike auch unten in der Leiste): alle Räder mit aktuellen Werten; Gabel und Dämpfer mit Federweg/Hub, Ziel-Sag, Druck, Sag, Zug-/Druckstufe, Tokens. FYF rechnet Ziel-Sag in mm und Ist-Sag in %, mit Hinweis mehr/weniger Druck. Ziel-Sag laut FOX (25 %) und RockShox (Stahlfeder 25–35 %). Luftdruck wird nicht aus dem Gewicht berechnet. Verlauf je Rad, Kundenblatt.
+- Dashboard: Kennzahlen je nach Modulen, inklusive angenommener Produktempfehlungen mit Verkaufswert.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.
