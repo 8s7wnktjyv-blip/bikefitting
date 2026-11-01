@@ -37,6 +37,13 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Pflichtangaben (Ziele, Körpermaße, Fahrrad vermessen): Beim Abschließen erscheint eine Warnung. Trotzdem abschließen wird protokolliert.
 - Vorlagen Rennrad, Gravel, MTB, Triathlon, Trekking, Allroad: legen fest, welche Tests vorgeschlagen werden, je Fitting anpassbar. Berechnungen ändern sich dadurch nicht.
 
+## Fahrradgrafik, Änderungsprotokoll, Messmittel, Prüfung (ab v.46)
+
+- Fahrradgrafik (im Schritt „Anpassen“ und unter Bike-Vermessung → „Grafik“): Sattel, Stütze, Lenker, Vorbau, Steuerrohr, Tretlager, Kurbeln, Pedale, Cleats antippen; Werte vorher/nachher; Vorher-Position gestrichelt. **Schematisch, nicht maßstäblich** – verbindlich sind nur die Zahlen.
+- Änderungsprotokoll: je Änderung wer, wann, warum und Bewertung (noch offen / Kunde: besser, gleich, schlechter); Balkengrafik der Summe je Einstellung.
+- Messmittel (Datenbanken → Messmittel): Bezeichnung, Art, Hersteller, Modell, Methode, Genauigkeit nur laut Hersteller mit Quelle, Kalibrier- und Prüfdatum. Zuordnung zur Sitzung im Schritt „Messen“.
+- Prüfung der Daten: zusätzlich fehlende Messmethode, Änderungen ohne Begründung oder ohne Protokolleintrag, Unterschied Fußlänge links/rechts, vermutlich falsche Einheit, nicht dokumentierte Messmittel. Der Fitter kann jeden Hinweis als „korrekt“ bestätigen; FYF ändert keine Werte.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.

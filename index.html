@@ -680,6 +680,7 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.mitem{margin:0;display:flex;flex-direction:column;gap:6px;min-width:0}.mthumb{aspect-ratio:4/3;background:var(--sunk,#eee);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--faint,#888)}.mthumb img,.mthumb video{width:100%;height:100%;object-fit:cover;display:block}
 .ctabs{flex:0 0 auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line);position:sticky;top:-18px;z-index:3;background:var(--bg);margin:-18px -18px 0;padding:4px 10px 0;-webkit-overflow-scrolling:touch}.ctabs::-webkit-scrollbar{display:none}.ctab{flex:0 0 auto;background:none;border:0;border-bottom:2px solid transparent;padding:10px 12px;min-height:44px;font:inherit;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap}.ctab[aria-selected=true]{color:var(--fg);border-bottom-color:var(--accent);font-weight:600}.ctab .cnt{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:11px;line-height:18px;text-align:center}.ctab-b{gap:14px}.sbgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
 .flow{padding:0}.flow>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 14px;min-height:52px}.flow>summary::-webkit-details-marker{display:none}.flow[open] .flow-ar{transform:rotate(90deg)}.flowbar{height:4px;border-radius:2px;background:var(--line);margin-top:6px;overflow:hidden}.flowbar i{display:block;height:100%;background:var(--accent);border-radius:2px}.flowlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}.flowlist li{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}.flowlist li:last-child{border-bottom:0}.flowlist li>.grow,.flow>summary>.grow{flex:1 1 auto;min-width:0}.flowlist li.ok .grow{color:var(--muted)}.req{font-size:11px;padding:1px 6px;border-radius:8px;background:var(--accent-soft);color:var(--accent-strong,var(--accent));font-weight:600}.tplgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 12px}
+.bviz-wrap{position:relative;background:var(--il-bg,#f4f2ee);border-radius:12px;padding:6px}.bviz{width:100%;max-width:520px;display:block;margin:0 auto;height:auto}.bv-w{fill:none;stroke:var(--il-tire,#2b2f34);stroke-width:3;opacity:.55}.bv-f{stroke:var(--il-frame,#4a5058);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.bv-p{stroke:var(--accent);fill:var(--accent);stroke-width:4;stroke-linecap:round}.bv-old{stroke:var(--faint,#888);fill:none;stroke-width:3;stroke-dasharray:4 4;opacity:.9}.bv-bb{fill:var(--il-body,#2c3136)}.bv-c{fill:var(--il-body,#2c3136)}.bv-hs circle{fill:transparent;stroke:transparent;stroke-width:2;cursor:pointer}.bv-hs:hover circle,.bv-hs:focus circle{stroke:var(--accent);fill:var(--accent-soft)}.bv-hs.on circle{stroke:var(--accent);stroke-width:2.5;fill:var(--accent-soft)}.bviz-legend{display:flex;gap:12px;justify-content:center;font-size:12px;color:var(--muted)}.bviz-legend i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:4px}.lg-p{background:var(--accent)}.lg-o{border-top:2px dashed var(--faint)}.chips{display:flex;gap:6px;flex-wrap:wrap}.dbars{display:flex;flex-direction:column;gap:6px}.dbar{display:grid;grid-template-columns:minmax(90px,30%) 1fr 80px;gap:8px;align-items:center;font-size:13px}.dtrack{position:relative;height:10px;background:var(--surface-2,#eee);border-radius:5px}.dtrack:after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--faint)}.dtrack i{position:absolute;top:0;bottom:0;border-radius:5px}.dtrack i.pos{background:var(--accent)}.dtrack i.neg{background:var(--muted)}.dv{text-align:right}.input.sm{min-height:36px;padding:4px 8px;font-size:13px}
 </style>
 </head>
 <body>
@@ -1476,7 +1477,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER='2026-11-01.45';
+const APP_VER='2026-11-01.46';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1537,7 +1538,7 @@ const NAV_AREAS=[
   ['Bewegungsanalyse',[['motion','Bewegung & Video','motion','Winkel aus Video messen, Live-Analyse (Beta)']]],
   ['Produktempfehlungen',[['preise','Produkte & Preise','tag','Fitting-Pakete, deine Produkte, Gutscheine'],['lager','Angebote & Lager','box','Angebote aus dem Fitting, Bestand'],['werkstatt','Werkstatt','wrench','Aufträge, Kunden benachrichtigen, Wartung']]],
   ['Berichte',[['berichte','Berichte','doc','Alle Fitting-Berichte öffnen und drucken'],['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht (Textvorlagen)'],['portal','Kundenportal','portal','So sehen Kunden ihre Berichte (Vorschau)']]],
-  ['Datenbanken',[['geometrie','Geometrie-Bibliothek','grid','Rahmenmaße nach Hersteller, Größenberatung']]],
+  ['Datenbanken',[['geometrie','Geometrie-Bibliothek','grid','Rahmenmaße nach Hersteller, Größenberatung'],['messmittel','Messmittel','ruler','Geräte, Genauigkeit, Prüfdatum']]],
   ['Einstellungen',[['mehr','Einstellungen & Daten','gear','Laden, Sicherung, Darstellung'],['betrieb','Zahlen & Team','ops','Kennzahlen pro Monat, Team'],['qualitaet','Messdaten & Qualität','quality','Herkunft und Vollständigkeit aller Werte'],['hardware','Hardware Lab','hw','Geplante eigene Messhilfen (Konzept)'],['module','Alle Module','grid','Gesamtplan und Stand der Demo']]]
 ];
 const navVisible=items=>items.filter(m=>showExtra()||!EXTRA_ROUTES.includes(m[0]));
@@ -1621,7 +1622,8 @@ const srcChip = src => { const m={'vom Hersteller':'c-info','gemessen':'c-ok','m
 const opts = (arr,sel) => arr.map(a=>{const [v,l]=Array.isArray(a)?a:[a,a]; return `<option value="${esc(v)}" ${String(v)===String(sel)?'selected':''}>${esc(l)}</option>`;}).join('');
 
 /* ---------- Quality (FitQuality) ---------- */
-function quality(s){
+function quality(s){ const ack=s.qAck||{}; return qualityRaw(s).filter(x=>x[0]==='bad'||!ack[x[1]]); }
+function qualityRaw(s){
   const out=[]; { const n=Object.values(s.after).filter(a=>/Eingestellt nach Plan|Berechnet/.test(a.method)).length; if(n) out.push(['info',`${n} Wert${n>1?'e':''} nach Plan eingestellt oder berechnet – zum Abschluss am Rad nachmessen`,'Ergebnis']); }
   const c=cust(s.customerId);
   if(!c.consent) out.push(['bad','Einwilligung zur Datenverarbeitung fehlt','Vor Erfassung von Beschwerden einholen']);
@@ -1645,6 +1647,16 @@ function quality(s){
   const body=c.body; const missing=BODY.filter(([k])=>body[k]===null||body[k]===undefined||body[k]==='').map(b=>b[1]);
   if(missing.length) out.push(['info',`Körpermaße unvollständig: ${missing.join(', ')}`,'Kundenprofil']);
   if((c.est||[]).length) out.push(['info',`Körpermaße geschätzt, nicht gemessen: ${c.est.map(k=>BODY.find(b=>b[0]===k)[1]).join(', ')}`,'Kundenprofil']);
+  ['before','after'].forEach(side=>Object.values(s[side]).forEach(m=>{ if(MK[m.key]&&!String(m.method||'').trim()) out.push(['warn',`${MK[m.key].label} (${side==='before'?'vorher':'nachher'}): Messmethode fehlt`,'Messwerte']); }));
+  { const n=s.changes.filter(ch=>!String(ch.reason||'').trim()).length; if(n) out.push(['warn',`${n} Änderung${n>1?'en':''} ohne Begründung`,'Änderungsprotokoll']); }
+  Object.keys(s.after).forEach(k=>{ const a=s.after[k], b=s.before[k]; if(!MK[k]||/Berechnet/.test(a.method||'')) return; if(b&&Number(b.value)!==Number(a.value)&&!s.changes.some(ch=>ch.key===k)) out.push(['warn',`${MK[k].label}: Wert geändert ohne Eintrag im Änderungsprotokoll`,'Änderungsprotokoll']); });
+  { const L=Number(body.footL), R=Number(body.footR); if(L&&R&&!(c.est||[]).some(k=>k==='footL'||k==='footR')&&Math.abs(L-R)>10) out.push(['info',`Fußlänge links/rechts: ${Math.abs(L-R)} mm Unterschied – nachmessen oder bestätigen`,'Körpermaße']); }
+  { const e={...s.before,...s.after}; const v=k=>e[k]?Number(e[k].value):null;
+    if(v('saddleHeight')!=null&&v('saddleHeight')<120) out.push(['warn',`Sattelhöhe ${fmtNum(v('saddleHeight'))} mm – vermutlich in cm statt mm eingegeben`,'Einheit']);
+    if(v('reach')!=null&&v('reach')<100) out.push(['warn',`Sattel–Lenker ${fmtNum(v('reach'))} mm – vermutlich in cm statt mm eingegeben`,'Einheit']);
+    if(body.height!=null&&body.height!==''&&Number(body.height)>250) out.push(['warn',`Körpergröße ${fmtNum(body.height)} – vermutlich in mm statt cm eingegeben`,'Einheit']);
+    if(body.inseam!=null&&body.inseam!==''&&Number(body.inseam)>130) out.push(['warn',`Schrittlänge ${fmtNum(body.inseam)} – vermutlich in mm statt cm eingegeben`,'Einheit']); }
+  if((S.tools||[]).length&&!(s.tools||[]).length&&Object.keys(s.before).length) out.push(['info','Verwendete Messmittel nicht dokumentiert','Schritt Messen']);
   return out;
 }
 function qScore(s){
@@ -1788,8 +1800,10 @@ VIEWS.vermessung = () => {
   const KS=[['saddleHeight','Sattelhöhe'],['saddleSetback','Versatz'],['reach','Sattel–Lenker'],['drop','Überhöhung'],['kneeBDC','Kniewinkel']];
   const row=b=>{ const c=cust(b.customerId); const ss=S.sessions.filter(s=>s.bikeId===b.id); const ls=latestSess(ss); const op=openSessOf(ss);
     const cell=k=>{ const v=currentSetting(b.id,k); return v?`${fmtNum(v.value)} ${MK[k].unit}`:'<span class="faint">–</span>'; };
-    return `<tr><td><button class="btn sm ghost" data-act="openBike" data-id="${b.id}">${esc(b.brand+' '+b.model)}</button><div class="faint" style="font-size:12px">${esc(c.name)}</div></td>${KS.map(([k])=>`<td class="r num">${cell(k)}</td>`).join('')}<td>${ls?fmtDate(ls.date):'<span class="faint">nie</span>'}</td><td class="r">${op?`<button class="btn sm" data-act="openSession" data-id="${op.id}" data-tab="ausgang">Messen</button>`:`<button class="btn sm" data-act="newSession" data-cust="${c.id}" data-bike="${b.id}">Neues Fitting</button>`}</td></tr>`; };
+    return `<tr><td><button class="btn sm ghost" data-act="openBike" data-id="${b.id}">${esc(b.brand+' '+b.model)}</button><div class="faint" style="font-size:12px">${esc(c.name)}</div></td>${KS.map(([k])=>`<td class="r num">${cell(k)}</td>`).join('')}<td>${ls?`<button class="btn sm ghost" data-act="vizBike" data-id="${b.id}">Grafik</button> `:''}${ls?fmtDate(ls.date):'<span class="faint">nie</span>'}</td><td class="r">${op?`<button class="btn sm" data-act="openSession" data-id="${op.id}" data-tab="ausgang">Messen</button>`:`<button class="btn sm" data-act="newSession" data-cust="${c.id}" data-bike="${b.id}">Neues Fitting</button>`}</td></tr>`; };
+  const vb=ui.vizBike&&bike(ui.vizBike); const vs=vb&&vb.id?latestSess(S.sessions.filter(x=>x.bikeId===vb.id&&(Object.keys(x.before).length||Object.keys(x.after).length))):null;
   return `${head('Bike-Vermessung','Aktuelle Sitzposition je Fahrrad – der letzte gemessene oder eingestellte Wert aus den Fittings.')}
+  ${vb&&vb.id?panel(`${esc(vb.brand+' '+vb.model)} · ${esc(cust(vb.customerId).name)}`,vs?`<p class="faint" style="font-size:12.5px;margin:0 0 8px">Fitting vom ${fmtDate(vs.date)}: vorher und nachher.</p>`+bikeVizHtml(vb,vs.before,vs.after,{sid:vs.id}):'<span class="muted">Für dieses Rad gibt es noch keine Messwerte.</span>',`<button class="btn sm ghost" data-act="vizBike" data-id="">Schließen</button>`):''}
   ${panelFlush('',`<div class="panel-h"><input class="input search" type="search" id="measSearch" data-input="measSearch" placeholder="Rad oder Kunde suchen" value="${esc(ui.measSearch||'')}"><span class="muted" style="font-size:12px">${list.length} Fahrräder</span></div>
   ${list.length?`<div class="tw"><table><thead><tr><th>Fahrrad</th>${KS.map(([,l])=>`<th class="r">${l}</th>`).join('')}<th>Letztes Fitting</th><th></th></tr></thead><tbody>${list.map(row).join('')}</tbody></table></div>`:`<div class="empty">Kein Fahrrad gefunden.</div>`}`)}
   <p class="faint" style="font-size:12.5px">Gemessen wird im Fitting (Schritt „Messen“), mit Kontrollmessung und Anleitung je Messpunkt. Die Geometrie der Räder findest du unter Datenbanken.</p>`;
@@ -2012,6 +2026,52 @@ function flowPanel(s,c){
     <div class="stack" style="gap:4px"><h4 style="margin:0">Ergebnisse bisher</h4><p class="muted" style="font-size:13.5px;margin:0">${Object.keys(s.check||{}).length} Körpercheck-Werte · ${Object.keys(s.before).length} Messwerte vorher · ${Object.keys(s.after).length} nachher · ${s.changes.length} Änderungen · ${checkFindings(s).filter(x=>x.lvl!=='ok').length} Hinweise</p></div>
   </div></details>`;
 }
+
+/* --- Phase 5: Fahrradgrafik (schematisch), Änderungsprotokoll, Messmittel --- */
+const VIZ_PARTS={saddle:['Sattel',['saddleHeight','saddleSetback','saddleTilt','saddleFloor']],post:['Sattelstütze',['saddleHeight','saddleSetback']],bar:['Lenker',['reach','drop','barWidth','barFloor','hoodFloor','saddleToHood','barX','hoodX']],stem:['Vorbau',['stemLength','stemAngle','spacer','spacerAbove']],head:['Steuerrohr',['spacer','spacerAbove']],bb:['Tretlager',['bbHeight']],crank:['Kurbeln',['crankLength','kneeBDC']],pedal:['Pedale',['cleatFore']],cleat:['Cleats',['cleatFore','cleatRotL','cleatRotR']]};
+const vizKeys=p=>(VIZ_PARTS[p]?VIZ_PARTS[p][1]:[]).filter(k=>MK[k]);
+function vizGeom(e,flat){ const k=0.17, v=x=>e[x]?Number(e[x].value):null; const sh=v('saddleHeight')??720, sb=v('saddleSetback')??60, rc=v('reach')??(flat?560:520), dr=v('drop')??(flat?-20:60);
+  const BB=[150,160]; const sy=BB[1]-Math.sqrt(Math.max(1,sh*sh-sb*sb))*k, sx=BB[0]-sb*k; const by=sy+dr*k, bx=sx+Math.sqrt(Math.max(1,rc*rc-dr*dr))*k; return {BB,S:[sx,sy],B:[bx,by]}; }
+function bikeVizHtml(b,before,after,ctx){
+  const flat=['MTB','Trekking','E-Bike'].includes(b&&b.type); const hasA=after&&Object.keys(after).length; const g0=vizGeom(before||{},flat), g1=vizGeom({...(before||{}),...(after||{})},flat);
+  const sel=ui.vizPart||'saddle'; const BB=g1.BB, S=g1.S, B=g1.B; const fw=[BB[0]+118,BB[1]+2], rw=[BB[0]-92,BB[1]+2]; const ht=[B[0]-22,B[1]+18];
+  const bar=(P,cls)=>flat?`<line x1="${P[0]-2}" y1="${P[1]}" x2="${P[0]+14}" y2="${P[1]}" class="${cls}" stroke-width="5"/>`:`<path d="M${P[0]},${P[1]} q16,0 16,14 q0,14 -12,16" class="${cls}" fill="none" stroke-width="4"/>`;
+  const sad=(P,cls)=>`<path d="M${P[0]-22},${P[1]} L${P[0]+18},${P[1]-2}" class="${cls}" stroke-width="6" stroke-linecap="round"/>`;
+  const ghost=hasA&&(Math.abs(g0.S[0]-S[0])+Math.abs(g0.S[1]-S[1])+Math.abs(g0.B[0]-B[0])+Math.abs(g0.B[1]-B[1])>0.5);
+  const hs=[['saddle',S[0],S[1]-6],['post',(S[0]+BB[0])/2,(S[1]+BB[1])/2],['bar',B[0]+10,B[1]+6],['stem',(B[0]+ht[0])/2,(B[1]+ht[1])/2-2],['head',ht[0]+2,ht[1]+22],['bb',BB[0],BB[1]],['crank',BB[0]+12,BB[1]+22],['pedal',BB[0]+22,BB[1]+42],['cleat',BB[0]+38,BB[1]+42]];
+  const svg=`<svg viewBox="0 0 330 230" class="bviz" role="img" aria-label="Schematische Fahrradgrafik">
+    <circle cx="${rw[0]}" cy="${rw[1]}" r="52" class="bv-w"/><circle cx="${fw[0]}" cy="${fw[1]}" r="52" class="bv-w"/>
+    <path d="M${rw[0]},${rw[1]} L${BB[0]},${BB[1]} L${ht[0]},${ht[1]+28} L${fw[0]},${fw[1]} M${rw[0]},${rw[1]} L${S[0]+6},${S[1]+34} L${BB[0]},${BB[1]} M${S[0]+6},${S[1]+34} L${ht[0]},${ht[1]+8}" class="bv-f" fill="none"/>
+    <line x1="${ht[0]}" y1="${ht[1]}" x2="${ht[0]+4}" y2="${ht[1]+30}" class="bv-f" stroke-width="6"/>
+    ${ghost?`<line x1="${BB[0]}" y1="${BB[1]}" x2="${g0.S[0]}" y2="${g0.S[1]}" class="bv-old"/>${sad(g0.S,'bv-old')}<line x1="${ht[0]}" y1="${ht[1]}" x2="${g0.B[0]}" y2="${g0.B[1]}" class="bv-old"/>${bar(g0.B,'bv-old')}`:''}
+    <line x1="${BB[0]}" y1="${BB[1]}" x2="${S[0]}" y2="${S[1]}" class="bv-p"/>${sad(S,'bv-p')}
+    <line x1="${ht[0]}" y1="${ht[1]}" x2="${B[0]}" y2="${B[1]}" class="bv-p" stroke-width="5"/>${bar(B,'bv-p')}
+    <line x1="${BB[0]}" y1="${BB[1]}" x2="${BB[0]+20}" y2="${BB[1]+38}" class="bv-p" stroke-width="4"/><circle cx="${BB[0]}" cy="${BB[1]}" r="7" class="bv-bb"/><rect x="${BB[0]+12}" y="${BB[1]+38}" width="22" height="6" rx="2" class="bv-p"/><rect x="${BB[0]+30}" y="${BB[1]+36}" width="12" height="4" rx="1" class="bv-c"/>
+    ${hs.map(([p,x,y])=>`<g class="bv-hs ${p===sel?'on':''}" data-act="vizPick" data-p="${p}" tabindex="0" role="button" aria-label="${VIZ_PARTS[p][0]}"><circle cx="${x}" cy="${y}" r="13"/></g>`).join('')}
+  </svg>`;
+  const rows=vizKeys(sel).map(k=>{ const b0=before&&before[k], a1=after&&after[k]; if(!b0&&!a1) return `<tr><td>${MK[k].label}</td><td class="r faint">nicht erfasst</td><td class="r faint">–</td><td class="r"></td><td class="src"></td></tr>`; const d=b0&&a1?Number(a1.value)-Number(b0.value):null; const r=a1||b0;
+    return `<tr><td>${MK[k].label}</td><td class="r num">${b0?fmtNum(b0.value)+' '+MK[k].unit:'–'}</td><td class="r num">${a1?fmtNum(a1.value)+' '+MK[k].unit:'–'}</td><td class="r num">${d?(d>0?'+':'')+fmtNum(Math.round(d*10)/10):''}</td><td class="src">${esc(r.method||r.source||'')}</td></tr>`; }).join('');
+  const meas=ctx&&ctx.sid?vizKeys(sel).filter(k=>MEASURE_NOW.includes(k))[0]:null;
+  return `<div class="stack" style="gap:10px"><div class="bviz-wrap">${svg}<div class="bviz-legend"><span><i class="lg-p"></i>${hasA?'nachher':'aktuell'}</span>${ghost?'<span><i class="lg-o"></i>vorher</span>':''}</div></div>
+  <div class="chips">${Object.entries(VIZ_PARTS).map(([p,[l]])=>`<button class="chipbtn" data-act="vizPick" data-p="${p}" aria-pressed="${p===sel}">${l}</button>`).join('')}</div>
+  <div class="tw"><table><thead><tr><th>${VIZ_PARTS[sel][0]}</th><th class="r">Vorher</th><th class="r">Nachher</th><th class="r">Δ</th><th>Methode</th></tr></thead><tbody>${rows}</tbody></table></div>
+  ${meas?`<button class="btn sm" data-act="vizMeasure" data-id="${ctx.sid}" data-k="${meas}" style="align-self:flex-start">${MK[meas].label} messen</button>`:''}
+  <p class="faint" style="font-size:12px;margin:0"><b>Schematische Darstellung, nicht maßstäblich.</b> Die Lage von Sattel und Lenker folgt grob den erfassten Werten; fehlende Werte werden mit Standardwerten gezeichnet. Verbindlich sind nur die Zahlen in der Tabelle.</p></div>`;
+}
+const CH_RATE=['noch offen','Kunde: besser','Kunde: gleich','Kunde: schlechter'];
+function changeLogHtml(s){ if(!s.changes.length) return '';
+  const agg={}; s.changes.forEach(ch=>{ if(ch.from==null||ch.to==null||!MK[ch.key]) return; agg[ch.key]=agg[ch.key]||{first:ch.from,last:ch.to}; agg[ch.key].last=ch.to; });
+  const A=Object.entries(agg).map(([k,v])=>[k,Math.round((v.last-v.first)*10)/10]).filter(x=>x[1]); const mx=Math.max(1,...A.map(x=>Math.abs(x[1])));
+  const chart=A.length?`<div class="dbars" role="img" aria-label="Summe der Änderungen je Einstellung">${A.map(([k,d])=>`<div class="dbar"><span class="dl">${MK[k].label}</span><span class="dtrack"><i class="${d>0?'pos':'neg'}" style="width:${Math.round(Math.abs(d)/mx*50)}%;${d>0?'left:50%':'right:50%'}"></i></span><span class="dv num">${d>0?'+':''}${fmtNum(d)} ${MK[k].unit}</span></div>`).join('')}</div><p class="faint" style="font-size:12px;margin:0">Summe je Einstellung, erste bis letzte Änderung. Mitte = keine Änderung. Unterschiedliche Einheiten, Balken nur zum Überblick.</p>`:'';
+  return `<details class="more" open><summary>Änderungsprotokoll (${s.changes.length})</summary><div class="stack" style="margin-top:8px;gap:10px">${chart}
+  <div class="chg">${s.changes.map((ch,i)=>[ch,i]).reverse().map(([ch,i])=>{const m=MK[ch.key]||{label:ch.key,unit:''}, d=(ch.from!=null&&ch.to!=null)?Math.round((ch.to-ch.from)*10)/10:null;return `<div class="li" style="align-items:flex-start"><div class="grow" style="min-width:0"><div class="t">${m.label}: ${fmtNum(ch.from)} → ${fmtNum(ch.to)} ${m.unit} <span class="${d>0?'up':d<0?'down':''} num" style="font-size:13px">${d===null?'':(d>0?'+':'')+fmtNum(d)}</span></div><div class="sub" style="white-space:normal">Warum: ${esc(ch.reason||'– nicht angegeben –')}</div><div class="sub">Wann: ${esc(ch.time||'–')} · Wer: ${esc(ch.who||'nicht erfasst')}</div></div><select class="input sm" data-change="chRate" data-id="${s.id}" data-i="${i}" aria-label="Bewertung der Änderung" style="max-width:150px">${CH_RATE.map(r=>`<option ${r===(ch.rating||'noch offen')?'selected':''}>${r}</option>`).join('')}</select></div>`;}).join('')}</div></div></details>`; }
+const TOOL_KINDS=['Sitzknochen-Messvorlage','Messschieber','Maßband','Lot','Wasserwaage','Winkelmesser','Digitales Messgerät','Kamera','Druckmesssystem','Laser','Sonstiges'];
+function toolsUseHtml(s){ const T=S.tools||[]; const on=s.tools||[];
+  return `<details class="more" ${on.length?'':''}><summary>Verwendete Messmittel (${on.length})</summary><div class="stack" style="margin-top:8px;gap:6px">${T.length?`<div class="chips">${T.map(t=>`<button class="chipbtn" data-act="toolUse" data-id="${s.id}" data-t="${t.id}" aria-pressed="${on.includes(t.id)}">${esc(t.name)}</button>`).join('')}</div>`:`<p class="muted" style="font-size:13.5px;margin:0">Noch keine Messmittel angelegt. <button class="btn sm" data-nav="messmittel">Messmittel anlegen</button></p>`}<p class="faint" style="font-size:12px;margin:0">Antippen = bei dieser Sitzung verwendet. Genauigkeit nur laut Hersteller, siehe Messmittel.</p></div></details>`; }
+VIEWS.messmittel = () => { const T=S.tools||[]; const old=d=>d&&(Date.now()-new Date(d))/864e5>365;
+  return `${head('Messmittel','Welche Geräte du verwendest, wie genau sie laut Hersteller sind und wann sie zuletzt geprüft wurden.',`<button class="btn primary" data-act="toolEdit">${ic('plus')}Messmittel</button>`)}
+  ${panelFlush('',T.length?`<div class="tw"><table><thead><tr><th>Bezeichnung</th><th>Art</th><th>Hersteller / Modell</th><th>Genauigkeit laut Hersteller</th><th>Kalibriert</th><th>Zuletzt geprüft</th><th class="r">Sitzungen</th><th></th></tr></thead><tbody>${T.map(t=>{ const n=S.sessions.filter(x=>(x.tools||[]).includes(t.id)).length; return `<tr><td><b>${esc(t.name)}</b>${t.method?`<div class="faint" style="font-size:12px">${esc(t.method)}</div>`:''}</td><td>${esc(t.kind||'')}</td><td>${esc([t.maker,t.model].filter(Boolean).join(' ')||'–')}</td><td>${t.acc?esc(t.acc)+(t.accSrc?`<div class="faint" style="font-size:11.5px">Quelle: ${esc(t.accSrc)}</div>`:''):'<span class="faint">nicht angegeben</span>'}</td><td>${t.calib?fmtDate(t.calib):'<span class="faint">–</span>'}</td><td>${t.checked?fmtDate(t.checked)+(old(t.checked)?' <span class="chip c-warn nodot">über 12 Monate</span>':''):'<span class="faint">–</span>'}</td><td class="r num">${n}</td><td class="r"><button class="btn sm" data-act="toolEdit" data-id="${t.id}">Bearbeiten</button></td></tr>`; }).join('')}</tbody></table></div>`:`<div class="empty">${ic('ruler')}<span>Noch keine Messmittel. Lege die Geräte an, mit denen du misst.</span><div class="row" style="justify-content:center;gap:6px;flex-wrap:wrap">${['Maßband','Winkelmesser','Wasserwaage','Lot','Sitzknochen-Messvorlage','Messschieber'].map(k=>`<button class="btn sm" data-act="toolQuick" data-k="${k}">${k}</button>`).join('')}</div></div>`)}
+  <p class="faint" style="font-size:12.5px">Genauigkeit nur eintragen, wenn der Hersteller sie angibt, mit Quelle. FYF erfindet keine Werte. Welche Geräte bei einem Fitting benutzt wurden, wählst du im Schritt „Messen“.</p>`; };
 
 VIEWS.sitzung = () => {
   const s=sess(ui.sess)||S.sessions[0]; ui.sess=s.id; if(!STEPS.some(x=>x[0]===ui.sessTab)) ui.sessTab=TABALIAS[ui.sessTab]||'anamnese';
@@ -2463,7 +2523,8 @@ function measureCard(s,side,k,c,b){
       <div class="field"><label for="mu_${k}">± Genauigkeit (${m.unit})</label><input class="input num" id="mu_${k}" name="unc" type="number" step="0.1" min="0" inputmode="decimal" value="${cur&&cur.unc!=null?cur.unc:''}" placeholder="optional"></div></div></details>
     </form></div></section>`;
 }
-SESSTAB.ausgang = s => {
+SESSTAB.ausgang = s => { if(ui.wIdx==null) return SESSTAB.ausgang0(s).replace(/<\/div>\s*$/,'')+toolsUseHtml(s)+'</div>'; return SESSTAB.ausgang0(s); };
+SESSTAB.ausgang0 = s => {
   const c=cust(s.customerId), b=bike(s.bikeId), mk=makerValues(s);
   if(ui.wIdx!=null&&MEASURE_NOW[ui.wIdx]){ const i=ui.wIdx, k=MEASURE_NOW[i], m=MK[k], cur=s.before[k], h=HOW[k]||{m:'Maßband',steps:[],tool:''}, rg=measureRange(k,c,b);
     return wizFrame(i,MEASURE_NOW.length,m.label,esc(m.def||''),`${IL(k)}<form id="wizForm" class="stack" data-form="measure" data-wiz="1" data-id="${s.id}" data-side="before" data-i="${i}"><input type="hidden" name="key" value="${k}"><input type="hidden" name="source" value="gemessen">
@@ -3167,7 +3228,7 @@ function guidedHtml(s){
 function planApply(s,c){
   const from=s.after[c.key]?Number(s.after[c.key].value):(s.before[c.key]?Number(s.before[c.key].value):null);
   s.after[c.key]={key:c.key,value:c.to,method:'Eingestellt nach Plan',source:'manuell eingegeben',unc:null,time:nowStamp()};
-  s.changes.push({key:c.key,from,to:c.to,reason:(c.comp?'Ausgleich: ':'')+c.why.slice(0,160),time:nowStamp(),plan:true});
+  s.changes.push({key:c.key,from,to:c.to,reason:(c.comp?'Ausgleich: ':'')+c.why.slice(0,160),time:nowStamp(),plan:true,who:ui.lastWho||'Demo-Nutzer',rating:'noch offen'});
   (c.effects||[]).forEach(e=>{ if(e.key===c.key) return; const base=s.after[e.key]||s.before[e.key]; if(!base) return; const nv=Math.round((Number(base.value)+e.delta)*10)/10; s.after[e.key]={key:e.key,value:nv,method:'Berechnet',source:'berechnet',unc:3,time:nowStamp()}; });
   Object.entries(c.parts||{}).forEach(([k,v])=>{ const old=s.after[k]||s.before[k]; s.after[k]={key:k,value:v,method:'Eingestellt nach Plan',source:'manuell eingegeben',unc:null,time:nowStamp()}; s.changes.push({key:k,from:old?Number(old.value):null,to:v,reason:`Teil der Änderung ${MK[c.key].label}`,time:nowStamp(),plan:true}); });
   if(s.status==='geplant') s.status='in Arbeit'; audit(`Plan: ${MK[c.key].label} ${fmtNum(from)} → ${fmtNum(c.to)} ${MK[c.key].unit}`,s.id);
@@ -3189,11 +3250,13 @@ SESSTAB.anpassung = s => { if(s.plan&&ui.adjIdx!=null) return guidedHtml(s); con
       <div class="row" style="flex-wrap:nowrap;align-items:flex-start"><div class="field" style="flex:1"><label for="m_val_after">Neuer Wert</label><input class="input num" id="m_val_after" name="value" type="number" step="0.1" inputmode="decimal" required value="${esc(ui.prepVal||'')}"></div></div>
       <div id="chgEffects"></div>
       <div class="field"><label for="m_reason">Warum?</label><input class="input" id="m_reason" name="reason" required placeholder="z. B. Knie unten stark gebeugt" value="${esc(ui.prepReason||'')}"></div>
+      <div class="row" style="gap:10px;flex-wrap:wrap"><div class="field" style="flex:1;min-width:150px"><label for="m_who">Wer?</label><select class="input" id="m_who" name="who">${opts([...new Set([ui.lastWho,'Demo-Nutzer',...(S.team||[]).map(t=>t.name)].filter(Boolean))],ui.lastWho||'Demo-Nutzer')}</select></div><div class="field" style="flex:1;min-width:150px"><label for="m_rate">Bewertung</label><select class="input" id="m_rate" name="rating">${opts(CH_RATE,'noch offen')}</select></div></div>
       <details class="more"><summary>Methode und Genauigkeit</summary><div class="form" style="margin-top:8px"><div class="field"><label for="m_meth_after">Methode</label><select class="input" id="m_meth_after" name="method">${opts(METHODS,'Maßband')}</select></div><div class="field"><label for="m_src_after">Quelle</label><select class="input" id="m_src_after" name="source">${opts(SOURCES,'gemessen')}</select></div><div class="field"><label for="m_unc_after">± Genauigkeit</label><input class="input num" id="m_unc_after" name="unc" type="number" step="0.1" min="0" inputmode="decimal" placeholder="optional"></div></div></details>
       <div><button class="btn primary" type="submit">Änderung speichern</button></div>
     </form></div></section>
-  ${s.changes.length?`<div><div class="label" style="margin-bottom:4px">Bisher geändert (${s.changes.length})</div><div class="chg">${s.changes.slice().reverse().map(ch=>{const m=MK[ch.key], d=(ch.from!=null&&ch.to!=null)?ch.to-ch.from:null;return `<div class="li"><div class="grow"><div class="t">${m.label}: ${fmtNum(ch.from)} → ${fmtNum(ch.to)} ${m.unit} <span class="${d>0?'up':d<0?'down':''} num" style="font-size:13px">${d===null?'':(d>0?'+':'')+fmtNum(d)}</span></div><div class="sub" style="white-space:normal">${esc(ch.reason)}</div></div></div>`;}).join('')}</div></div>`:''}
   </div></details>
+  ${changeLogHtml(s)}
+  <details class="more" ${ui.vizOpen?'open':''}><summary data-act="vizToggle">Fahrradgrafik (schematisch)</summary><div style="margin-top:8px">${ui.vizOpen?bikeVizHtml(bike(s.bikeId),s.before,s.after,{sid:s.id}):''}</div></details>
   <div class="camcard"><span class="ico">${ic('camera')}</span><div style="flex:1;min-width:0"><b>Fahr-Analyse mit Kamera</b><span class="muted" style="font-size:13.5px">Optional · neue Position beim Fahren filmen und Winkel messen</span></div></div>
   <details class="more" ${vid.src?'open':''}><summary>Fahr-Analyse öffnen</summary><div style="margin-top:10px">${vidPanel(s,'after')}</div></details>
   </div>`; };
@@ -3267,7 +3330,9 @@ SESSTAB.qualitaet = s => {
   const q=quality(s); const sc=qScore(s);
   return `<div class="stack"><div class="row" style="justify-content:space-between"><div><h3>FitQuality</h3><p class="muted">Prüft Vollständigkeit, Messherkunft und Vergleichbarkeit nach festen Regeln.</p></div>${st('s')}</div>
   ${sc!==null?`<div><div class="row" style="justify-content:space-between"><span class="label">Datenqualität</span><span class="num">${sc} %</span></div><div class="bar"><i style="width:${sc}%"></i></div></div>`:'<div class="notice">'+ic('info')+'Sitzung ist noch geplant. Die Prüfung startet mit der ersten Messung.</div>'}
-  ${q.length?`<div class="list">${q.map(([l,t,src])=>`<div class="li" style="padding:9px 0"><span class="chip ${l==='bad'?'c-bad':l==='warn'?'c-warn':'c-info'}">${l==='bad'?'kritisch':l==='warn'?'Hinweis':'Info'}</span><div class="grow">${esc(t)}<div class="sub">${esc(src)}</div></div></div>`).join('')}</div>`:'<div class="notice acc">'+ic('quality')+'Keine Hinweise. Alle Pflichtwerte sind vorhanden.</div>'}</div>`;
+  ${q.length?`<div class="list">${q.map(([l,t,src])=>`<div class="li" style="padding:9px 0;flex-wrap:wrap"><span class="chip ${l==='bad'?'c-bad':l==='warn'?'c-warn':'c-info'}">${l==='bad'?'kritisch':l==='warn'?'Hinweis':'Info'}</span><div class="grow" style="min-width:0">${esc(t)}<div class="sub">${esc(src)}</div></div>${l!=='bad'?`<button class="btn sm ghost" data-act="qAck" data-id="${s.id}" data-t="${esc(t)}">Ist korrekt</button>`:''}</div>`).join('')}</div>`:'<div class="notice acc">'+ic('quality')+'Keine Hinweise. Alle Pflichtwerte sind vorhanden.</div>'}
+  ${Object.keys(s.qAck||{}).length?`<details class="more"><summary>Vom Fitter bestätigt (${Object.keys(s.qAck).length})</summary><div class="list" style="margin-top:6px">${Object.entries(s.qAck).map(([t,a])=>`<div class="li" style="padding:6px 0"><div class="grow" style="min-width:0">${esc(t)}<div class="sub">bestätigt ${esc(a.time||'')} · ${esc(a.who||'')}</div></div><button class="btn sm ghost" data-act="qAck" data-id="${s.id}" data-t="${esc(t)}" data-undo="1">Zurücknehmen</button></div>`).join('')}</div></details>`:''}
+  <p class="faint" style="font-size:12px">FYF ändert keine Werte automatisch. Du entscheidest, ob ein auffälliger Wert stimmt.</p></div>`;
 };
 SESSTAB.bericht = s => `<div class="stack"><div class="row" style="justify-content:space-between"><p class="muted" style="max-width:60ch">Der Bericht wird aus den erfassten Daten erzeugt. Freigegebene Berichte erscheinen im Kundenportal.</p>
   <div class="row"><button class="btn primary" data-act="genReport" data-id="${s.id}">${ic('doc')}Bericht erzeugen</button>${st('s')}</div></div>
@@ -4550,6 +4615,22 @@ function createSession(d){
 }
 
 const ACT = {
+  vizPick(el){ ui.vizPart=el.dataset.p; render(); },
+  vizToggle(el,e){ ui.vizOpen=!ui.vizOpen; render(); },
+  vizBike(el){ ui.vizBike=el.dataset.id||null; render(); if(ui.vizBike) window.scrollTo({top:0}); },
+  vizMeasure(el){ const s=sess(el.dataset.id); if(!s) return; ui.sess=s.id; ui.sessTab='ausgang'; ui.wIdx=MEASURE_NOW.indexOf(el.dataset.k); if(ui.wIdx<0) ui.wIdx=null; if(ui.route!=='sitzung') go('sitzung'); else render(); window.scrollTo({top:0}); },
+  qAck(el){ const s=sess(el.dataset.id); s.qAck=s.qAck||{}; const t=el.dataset.t; if(el.dataset.undo==='1'){ delete s.qAck[t]; audit(`Prüfhinweis wieder offen: ${t}`,s.id); } else { s.qAck[t]={time:nowStamp(),who:ui.lastWho||'Demo-Nutzer'}; audit(`Prüfhinweis als korrekt bestätigt: ${t}`,s.id); } save(); render(); },
+  toolUse(el){ const s=sess(el.dataset.id); s.tools=s.tools||[]; const t=el.dataset.t; const i=s.tools.indexOf(t); if(i<0) s.tools.push(t); else s.tools.splice(i,1); save(); render(); },
+  toolQuick(el){ (S.tools=S.tools||[]).push({id:uid('t'),name:el.dataset.k,kind:TOOL_KINDS.includes(el.dataset.k)?el.dataset.k:'Sonstiges',maker:'',model:'',method:'',acc:'',accSrc:'',calib:'',checked:''}); audit(`Messmittel angelegt: ${el.dataset.k}`); save(); render(); toast('Angelegt – Hersteller und Genauigkeit über „Bearbeiten“ ergänzen'); },
+  toolEdit(el){ const t=(S.tools||[]).find(x=>x.id===el.dataset.id)||{}; const f=(n,l,v,typ,ph)=>`<div class="field"><label for="tl_${n}">${l}</label><input class="input" id="tl_${n}" name="${n}" ${typ?`type="${typ}"`:''} value="${esc(v||'')}" ${ph?`placeholder="${esc(ph)}"`:''}></div>`;
+    openDrawer(t.id?'Messmittel bearbeiten':'Messmittel anlegen',`<form class="form" data-form="tool" data-id="${t.id||''}">
+    <div class="field wide"><label for="tl_name">Bezeichnung</label><input class="input" id="tl_name" name="name" required value="${esc(t.name||'')}" placeholder="z. B. Digitaler Winkelmesser"></div>
+    <div class="field"><label for="tl_kind">Art</label><select class="input" id="tl_kind" name="kind">${opts(TOOL_KINDS,t.kind||'Sonstiges')}</select></div>
+    ${f('maker','Hersteller',t.maker)}${f('model','Modell',t.model)}${f('method','Messmethode',t.method,'','z. B. Goniometer am Knie')}
+    ${f('acc','Genauigkeit laut Hersteller',t.acc,'','leer lassen, wenn nicht angegeben')}${f('accSrc','Quelle der Angabe',t.accSrc,'','z. B. Datenblatt, Link')}
+    ${f('calib','Kalibriert am (falls relevant)',t.calib,'date')}${f('checked','Zuletzt überprüft am',t.checked,'date')}
+    <div class="wide row"><button class="btn primary" type="submit">Speichern</button>${t.id?`<button class="btn danger" type="button" data-act="toolDel" data-id="${t.id}">Löschen</button>`:''}</div></form>`); },
+  toolDel(el){ const t=(S.tools||[]).find(x=>x.id===el.dataset.id); if(!t) return; S.tools=S.tools.filter(x=>x.id!==t.id); S.sessions.forEach(x=>{ if(x.tools) x.tools=x.tools.filter(i=>i!==t.id); }); audit(`Messmittel gelöscht: ${t.name}`); save(); closeDrawer(); render(); toast('Gelöscht'); },
   custTab(el){ customerDrawer(el.dataset.id,el.dataset.k); },
   purchaseNew(el){ const c=cust(el.dataset.id); if(!c) return; const bs=bikesOf(c.id); openDrawer('Kauf erfassen',`<form class="form" data-form="purchase" data-id="${c.id}">
     <div class="field wide"><label for="pu_i">Artikel</label><input class="input" id="pu_i" name="items" required placeholder="z. B. Sattel 143 mm, Einlagen"></div>
@@ -4837,6 +4918,10 @@ function importJson(t){
 function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
 
 const FORMS = {
+  tool(f,data){ const name=String(data.get('name')||'').trim(); if(!name){ toast('Bitte Bezeichnung angeben',true); return; } const g=k=>String(data.get(k)||'').trim().slice(0,200);
+    const d=k=>{ const v=g(k); return v&&!isNaN(new Date(v))&&v<=today()?v:''; }; if(g('calib')&&!d('calib')||g('checked')&&!d('checked')){ toast('Datum prüfen (nicht in der Zukunft)',true); return; }
+    const rec={name,kind:TOOL_KINDS.includes(g('kind'))?g('kind'):'Sonstiges',maker:g('maker'),model:g('model'),method:g('method'),acc:g('acc'),accSrc:g('accSrc'),calib:d('calib'),checked:d('checked')};
+    S.tools=S.tools||[]; const t=S.tools.find(x=>x.id===f.dataset.id); if(t) Object.assign(t,rec); else S.tools.push({id:uid('t'),...rec}); audit(`Messmittel ${t?'geändert':'angelegt'}: ${name}`); save(); closeDrawer(); render(); toast('Gespeichert'); },
   liveNote(f,data){ const s=sess(f.dataset.id); const x=String(data.get('x')||'').trim().slice(0,500); if(!x){ toast('Bitte Text eingeben',true); return; } (s.liveNotes=s.liveNotes||[]).push({t:nowStamp(),x}); audit('Notiz im Termin gespeichert',s.id); save(); render(); toast('Notiz gespeichert'); },
   purchase(f,data){ const c=cust(f.dataset.id); if(!c){ toast('Kunde nicht gefunden',true); return; } const items=String(data.get('items')||'').trim(); const total=Number(String(data.get('total')||'').replace(',','.')); const date=String(data.get('date')||'');
     if(!items){ toast('Bitte Artikel angeben',true); return; } if(!isFinite(total)||total<0||total>100000){ toast('Betrag prüfen',true); return; } if(!date||date>today()){ toast('Datum prüfen',true); return; }
@@ -4905,7 +4990,8 @@ const FORMS = {
     if(isNaN(v)){toast('Bitte einen Zahlenwert eingeben',true);return;} if(!reason){toast('Bitte eine Begründung angeben',true);return;}
     const from=s.after[k]?s.after[k].value:(s.before[k]?s.before[k].value:null);
     const unc=data.get('unc'); const oldA=s.after[k]; s.after[k]={key:k,value:v,method:data.get('method'),source:data.get('source'),unc:unc===''?null:Number(unc),time:nowStamp()}; if(k==='kneeBDC') kneeMerge(oldA,s.after[k]);
-    s.changes.push({key:k,from,to:v,reason,time:nowStamp()}); if(s.status!=='abgeschlossen') s.status='in Arbeit'; else s.version++;
+    const who=String(data.get('who')||'').trim()||'Demo-Nutzer'; ui.lastWho=who; const rating=CH_RATE.includes(data.get('rating'))?data.get('rating'):'noch offen';
+    s.changes.push({key:k,from,to:v,reason,time:nowStamp(),who,rating}); if(s.status!=='abgeschlossen') s.status='in Arbeit'; else s.version++;
     if(data.get('follow')&&from!=null){ const end={...s.before}; Object.assign(end,s.after); sideEffects(s,k,v-from).filter(e=>e.delta!=null&&MK[e.key]&&!e.comp&&['saddleSetback','reach','drop','saddleHeight'].includes(e.key)&&e.key!==k).forEach(e=>{ const base=s.after[e.key]||s.before[e.key]; if(!base) return; const nv=Math.round((Number(base.value)+e.delta)*10)/10; s.after[e.key]={key:e.key,value:nv,method:'Berechnet',source:'berechnet',unc:3,time:nowStamp()}; s.changes.push({key:e.key,from:Number(base.value),to:nv,reason:`Folge von ${MK[k].label} ${v-from>0?'+':''}${fmtNum(Math.round((v-from)*10)/10)} ${MK[k].unit} (berechnet)`,time:nowStamp()}); }); }
     audit(`${MK[k].label}: ${fmtNum(from)} → ${fmtNum(v)} ${MK[k].unit}${s.status==='abgeschlossen'?` (neue Version ${s.version})`:''}`,s.id); save(); render(); toast(from==null?'Änderung dokumentiert – kein Ausgangswert vorhanden':'Änderung dokumentiert'); },
   newSession(f,data){ S.lastFitter=String(data.get('fitter')||'').trim()||S.lastFitter; const id=createSession({cid:data.get('cid'),bid:data.get('bid'),date:data.get('date'),time:data.get('time'),type:data.get('type'),fitter:data.get('fitter'),copy:data.get('copy')==='on'}); save(); closeDrawer(); ui.sess=id; ui.sessTab='anamnese'; go('sitzung'); toast('Sitzung angelegt'); },
@@ -4944,6 +5030,7 @@ const FORMS = {
 };
 
 const CHG = {
+  chRate(el){ const s=sess(el.dataset.id); const ch=s.changes[Number(el.dataset.i)]; if(!ch) return; ch.rating=CH_RATE.includes(el.value)?el.value:'noch offen'; audit(`Bewertung ${MK[ch.key]?MK[ch.key].label:ch.key}: ${ch.rating}`,s.id); save(); },
   tplSet(el){ const s=sess(el.dataset.id); s.tpl=el.value; delete s.tplTests; audit(`Vorlage gewählt: ${el.value}`,s.id); save(); render(); },
   tplTest(el){ const s=sess(el.dataset.id); const L=[...tplTests(s)]; const k=el.dataset.k; const i=L.indexOf(k); if(el.checked&&i<0) L.push(k); if(!el.checked&&i>=0) L.splice(i,1); s.tplTests=L; save(); render(); },
   mediaAdd(el){ const owner=el.dataset.owner, files=[...(el.files||[])]; if(!files.length) return; const c=owner.startsWith('c:')?cust(owner.slice(2)):cust((bike(owner.slice(2))||{}).customerId);
@@ -4993,7 +5080,7 @@ const CHG = {
   nsCust(el){ const sel=document.getElementById('ns_b'); sel.innerHTML=bikesOf(el.value).map(b=>`<option value="${b.id}">${esc(b.brand+' '+b.model)}</option>`).join('')||'<option value="">Kein Fahrrad – bitte zuerst anlegen</option>'; }
 };
 
-const CONFIRM_ACTS=new Set(['mediaDel','delGeo','delGeoRow','delItem','delMark','delMeasure','delPos','packDel','photoDel','prodDel']);
+const CONFIRM_ACTS=new Set(['toolDel','liveNoteDel','mediaDel','delGeo','delGeoRow','delItem','delMark','delMeasure','delPos','packDel','photoDel','prodDel']);
 document.addEventListener('click',e=>{
   const nav=e.target.closest('[data-nav]'); if(nav){ e.preventDefault(); closeDrawer(); go(nav.dataset.nav); return; }
   const a=e.target.closest('[data-act]'); if(a&&ACT[a.dataset.act]&&CONFIRM_ACTS.has(a.dataset.act)&&a.dataset.armed!=='1'){ e.preventDefault(); a.dataset.armed='1'; const old=a.innerHTML; a.classList.add('armed'); a.innerHTML='Wirklich löschen?'; a.setAttribute('aria-live','polite'); setTimeout(()=>{ if(a.isConnected&&a.dataset.armed==='1'){ a.dataset.armed=''; a.classList.remove('armed'); a.innerHTML=old; } },3500); return; }
