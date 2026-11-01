@@ -62,6 +62,13 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Im Fitting (Ergebnis → Angebot): Produktempfehlungen mit Begründung aus Sitzknochen, Fußgewölbe, Pedalsystem und Kniespur; annehmen, ablehnen oder zurücksetzen. Angenommene erscheinen im Bericht.
 - Datenbanken → Wissen: Fachbegriffe, alle Messverfahren und Körpertests mit Skizzen, mit Suche.
 
+## Datenschutz, Rollen, Portal, Server vorbereitet (ab v.50)
+
+- Rollen (Demo, Einstellungen): Admin, Fitter, Mitarbeiter mit unterschiedlichen Rechten. In der Demo nur in der Oberfläche geprüft.
+- Kundenportal: Freigabe je Fitting für Bericht, angenommene Produktempfehlungen, Übungen, Nachkontrolltermine und einzelne Fotos. Das Portal zeigt nur Freigegebenes des gewählten Kunden.
+- Auskunft und Löschen: Kundenakte → Persönliche Daten → „Daten exportieren“ bzw. „Kunde löschen“ (nur Admin, Name bestätigen). Löscht auch Fotos/Videos auf dem Gerät und den Kunden in Browser-Sicherungen; Protokoll wird anonymisiert.
+- Datenschicht `STORE` für einen späteren Server-Adapter. Unterlagen: `docs/DATENSCHICHT.md`, `docs/LOESCHKONZEPT.md`, `docs/supabase/schema.sql` (Tabellen mit Betriebs-Trennung und Zugriffsregeln je Rolle; nicht ausgeführt, kein Projekt angelegt).
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.

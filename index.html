@@ -1477,13 +1477,16 @@ function ensurePermanent(){
 
 /* ---------- State ---------- */
 const KEY = 'fitframe-demo-v3';
+/* Datenschicht: Alle Lese-/Schreibzugriffe auf den Gesamtzustand laufen über STORE.
+   Später ersetzbar durch einen Server-Adapter (z. B. Supabase) mit derselben Schnittstelle – siehe docs/DATENSCHICHT.md. */
+const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-01.49';
+const APP_VER='2026-11-01.50';
 let loadIssue = null;
 function load(){
   let raw=null;
-  try{ raw=localStorage.getItem(KEY); }catch(e){ storageOk=false; return seed(); }
+  try{ raw=STORE.read(); }catch(e){ storageOk=false; return seed(); }
   if(raw){
     try{ const d=JSON.parse(raw); if(d && d.version===3 && Array.isArray(d.customers)) return d; loadIssue='Gespeicherte Daten hatten ein unbekanntes Format.'; }
     catch(e){ loadIssue='Gespeicherte Daten waren nicht lesbar.'; }
@@ -1509,7 +1512,7 @@ function mergeData(d){
   return n;
 }
 let lastSave=null;
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); const back=JSON.parse(localStorage.getItem(KEY)); storageOk=!!(back&&back.customers&&back.customers.length===S.customers.length); lastSave=new Date(); }catch(e){ storageOk=false; } savePill(); }
+function save(){ try{ const back=JSON.parse(STORE.write(JSON.stringify(S))); storageOk=!!(back&&back.customers&&back.customers.length===S.customers.length); lastSave=new Date(); }catch(e){ storageOk=false; } savePill(); }
 function savePill(){ const b=document.getElementById('savePill'); if(!b) return; b.className='savepill '+(storageOk?'ok':'bad'); b.textContent=storageOk?(lastSave?`✓ gespeichert ${lastSave.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`:'✓ Speicher bereit'):'⚠ Nicht gespeichert'; }
 function storageTest(){ try{ const k='fitframe-test'; localStorage.setItem(k,'1'); const ok=localStorage.getItem(k)==='1'; localStorage.removeItem(k); return ok; }catch(e){ return false; } }
 const inAppBrowser=/iPhone|iPad/.test(navigator.userAgent)&&!/Safari\//.test(navigator.userAgent)&&!navigator.standalone;
@@ -1825,6 +1828,8 @@ VIEWS.mehr = () => `
   ${shopHtml()}
   ${dataPanel()}
   ${statsHtml()}
+  ${panel('Rolle und Datenspeicherung',`<div class="stack"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span style="max-width:52ch">Rolle (Demo)<br><span class="muted" style="font-size:13.5px">Admin: alles. Fitter: keine Preise, kein Löschen von Kunden. Mitarbeiter: messen und dokumentieren, nichts löschen oder abschließen. Echte Rechte prüft später der Server.</span></span><div class="seg">${ROLES.map(r=>`<button data-act="roleSet" data-v="${r}" aria-pressed="${role()===r}">${r}</button>`).join('')}</div></div>
+  <hr><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span style="max-width:52ch">Speicherort<br><span class="muted" style="font-size:13.5px">${esc(STORE.kind)}. Fotos und Videos: nur auf diesem Gerät (IndexedDB). Eine Server-Datenbank ist vorbereitet, aber nicht angeschlossen.</span></span></div></div>`)}
   ${panel('Einstellungen',`<div class="stack"><div class="row" style="justify-content:space-between"><span>Darstellung</span><div class="seg"><button data-act="setTheme" data-v="light" aria-pressed="${theme==='light'}">Hell</button><button data-act="setTheme" data-v="dark" aria-pressed="${theme==='dark'}">Dunkel</button></div></div>
   <hr><div class="row" style="justify-content:space-between"><span style="max-width:52ch">Profi-Bereiche: Werkstatt, Kundenportal, Team & Zahlen, Schreibhilfe, Messdaten, Hardware Lab<br><span class="muted" style="font-size:13.5px">Teils nur Vorschau. Ausgeblendet bleibt FYF aufs Fitting und den Verkauf konzentriert.</span></span><div class="seg"><button data-act="setExtra" data-v="1" aria-pressed="${showExtra()}">Zeigen</button><button data-act="setExtra" data-v="0" aria-pressed="${!showExtra()}">Ausblenden</button></div></div>
   ${S.demoRemoved?'':`<hr><div class="row" style="justify-content:space-between"><span style="max-width:52ch">Beispielkunden entfernen<br><span class="muted" style="font-size:13.5px">Löscht nur die 4 erfundenen Kunden mit ihren Rädern und Fittings. Deine eigenen Einträge bleiben.</span></span><button class="btn" data-act="removeDemo">Entfernen</button></div>`}
@@ -1921,7 +1926,7 @@ function customerDrawer(id,tab){
     <hr><div class="stack"><h3>Letzte Fittings</h3>${ss.slice(0,3).map(sessRow).join('')||'<span class="muted">Noch keine Sitzung.</span>'}${ss.length>3?`<button class="btn sm ghost" data-act="custTab" data-id="${c.id}" data-k="historie" style="align-self:flex-start">Alle ${ss.length} anzeigen</button>`:''}</div>`;
   else if(T==='person') body=`${consentRow}
     <dl class="dl"><dt>E-Mail</dt><dd>${esc(c.email)}</dd><dt>Telefon</dt><dd class="mono">${esc(c.phone)}</dd><dt>Kunde seit</dt><dd>${fmtDate(c.since)}</dd><dt>Disziplin</dt><dd>${esc(c.discipline)}</dd>${prof}${c.consentInfo?`<dt>Einwilligung</dt><dd>${esc(c.consentInfo.date||'')}${c.consentInfo.health?' · Gesundheitsangaben':''}${c.consentInfo.media?' · Fotos/Videos':''}</dd>`:''}</dl>
-    <div class="row" style="gap:6px"><button class="btn sm" data-act="editCustomer" data-id="${c.id}">Stammdaten bearbeiten</button>${c.consent?`<button class="btn sm ghost" data-act="consent" data-id="${c.id}">Einwilligung ändern</button>`:''}</div>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="editCustomer" data-id="${c.id}">Stammdaten bearbeiten</button>${c.consent?`<button class="btn sm ghost" data-act="consent" data-id="${c.id}">Einwilligung ändern</button>`:''}<button class="btn sm ghost" data-act="custExport" data-id="${c.id}">Daten exportieren (Auskunft)</button>${PERMANENT_IDS.includes(c.id)?'':`<button class="btn sm ghost danger" data-act="custDelete" data-id="${c.id}">Kunde löschen</button>`}</div>
     <hr>${bodyTypeHtml(c)}<div class="stack"><div class="row" style="justify-content:space-between"><h3>Körpermaße</h3><button class="btn sm" type="button" data-act="estBody" data-id="${c.id}">Fehlende aus Körpergröße schätzen</button></div><p class="faint" style="font-size:12px">Diese Maße speisen die Simulation. Eingetragene Werte haben Vorrang vor Schätzungen.</p>
     ${bodyFormHtml(c,'drawer')}</div>`;
   else if(T==='koerper') body=custBodyHtml(c,ss);
@@ -2126,6 +2131,30 @@ VIEWS.wissen = () => { const q=(ui.wq||'').toLowerCase(); const m=t=>!q||t.toLow
   ${panel(`Körpertests (${T.length})`,T.length?T.map(t=>`<details class="more"><summary>${esc(t.label)} · ${esc(t.tool)}</summary>${IL(t.k)}<p class="muted" style="font-size:13.5px">${esc(t.why)}</p><ol class="how">${(t.steps||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ol></details>`).join(''):'<span class="muted">Kein Treffer.</span>')}
   ${panel('Datenbanken',`<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-nav="geometrie">Geometrie-Bibliothek</button><button class="btn sm" data-nav="produktdb">Produktdatenbank</button><button class="btn sm" data-nav="messmittel">Messmittel</button></div>`)}
   <p class="faint" style="font-size:12.5px">Erklärungen für die Praxis, keine medizinische Beratung.</p>`; };
+
+/* --- Phase 9: Rollen (Demo), Portal-Freigaben, Löschkonzept --- */
+const ROLES=['Admin','Fitter','Mitarbeiter'];
+const role=()=>ROLES.includes(S.role)?S.role:'Admin';
+const DENY_F=['custDelete','custDeleteGo','reset','resetConfirm','removeDemo','removeDemoConfirm','pdbEdit','packDel','prodDel','packAdd','prodAdd','toolDel'];
+const DENY={Admin:[],Fitter:DENY_F,Mitarbeiter:[...DENY_F,'delMeasure','delPos','delItem','delGeo','delGeoRow','delMark','mediaDel','finishSession','qAck','recSet','toolEdit','toolQuick','liveNoteDel','flowSkip']};
+const DENY_FORM={Admin:[],Fitter:['pdb','custDelete'],Mitarbeiter:['pdb','custDelete','tool']};
+function allowed(act,form){ const r=role(); return form?!DENY_FORM[r].includes(form):!DENY[r].includes(act); }
+function mediaGC(){ return mdb().then(db=>new Promise(res=>{ const keep=new Set((S.media||[]).map(m=>m.id)); const t=db.transaction('m','readwrite'); const st=t.objectStore('m'); const q=st.getAllKeys(); q.onsuccess=()=>{ q.result.filter(k=>!keep.has(k)).forEach(k=>st.delete(k)); }; t.oncomplete=()=>res(true); t.onerror=()=>res(false); })).catch(()=>false); }
+const PERMANENT_IDS=['p-dominik-boehm'];
+function custDataOf(cid){ const c=cust(cid); const bs=S.bikes.filter(b=>b.customerId===cid).map(b=>b.id); const ss=S.sessions.filter(x=>x.customerId===cid); const sids=ss.map(x=>x.id);
+  return {customer:c,bikes:S.bikes.filter(b=>b.customerId===cid),sessions:ss,sales:(S.sales||[]).filter(x=>x.customerId===cid),workshop:(S.workshop||[]).filter(w=>w.customerId===cid),services:(S.services||[]).filter(x=>bs.includes(x.bikeId)),messages:(S.messages||{})[cid]||[],media:(S.media||[]).filter(m=>m.owner==='c:'+cid||bs.some(b=>m.owner==='b:'+b)||sids.some(i=>m.owner==='s:'+i)).map(({id,owner,kind,name,date,note,phase})=>({id,owner,kind,name,date,note,phase}))}; }
+function deleteCustomer(cid){ const d=custDataOf(cid); const bs=d.bikes.map(b=>b.id), sids=d.sessions.map(x=>x.id), mids=new Set(d.media.map(m=>m.id));
+  S.customers=S.customers.filter(c=>c.id!==cid); S.bikes=S.bikes.filter(b=>b.customerId!==cid); S.sessions=S.sessions.filter(x=>x.customerId!==cid); S.sales=(S.sales||[]).filter(x=>x.customerId!==cid); S.workshop=(S.workshop||[]).filter(w=>w.customerId!==cid); S.services=(S.services||[]).filter(x=>!bs.includes(x.bikeId));
+  if(S.messages) delete S.messages[cid]; sids.forEach(i=>{ if(S.shared) delete S.shared[i]; }); S.media=(S.media||[]).filter(m=>!mids.has(m.id)); mids.forEach(id=>{ if(mediaURLs[id]){ URL.revokeObjectURL(mediaURLs[id]); delete mediaURLs[id]; } });
+  const nm=String((d.customer||{}).name||'').trim(); S.audit=(S.audit||[]).map(a=>a.ref===cid||sids.includes(a.ref)||(nm&&String(a.what||'').includes(nm))?{...a,what:'[Eintrag zu gelöschtem Kunden]',ref:''}:a); audit(`Kunde gelöscht (DSGVO): ${bs.length} Räder, ${sids.length} Fittings, ${mids.size} Medien entfernt`); return {bikes:bs.length,sessions:sids.length,media:mids.size}; }
+function scrubBackups(cid){ let n=0; try{ backupKeys().filter(k=>/^fitframe-(before|rescue)-/.test(k)).forEach(k=>{ try{ const d=JSON.parse(localStorage.getItem(k)); if(!d||!Array.isArray(d.customers)||!d.customers.some(c=>c.id===cid)) return; const keep=S; S=d; try{ deleteCustomer(cid); } finally { S=keep; } localStorage.setItem(k,JSON.stringify(d)); n++; }catch(e){} }); }catch(e){} return n; }
+function portalHtml(s){ const P=s.portal||{}; const imgs=mediaOf('s:'+s.id).filter(m=>m.kind==='image'); const box=(k,l,on)=>`<label class="row" style="gap:6px;font-size:14px;flex-wrap:nowrap"><input type="checkbox" data-change="portalSet" data-id="${s.id}" data-k="${k}" ${on?'checked':''}><span>${l}</span></label>`;
+  return `<details class="more"><summary>Für das Kundenportal freigeben</summary><div class="stack" style="margin-top:8px;gap:6px">${box('report','Bericht',!!S.shared[s.id])}${box('recs','Angenommene Produktempfehlungen',P.recs)}${box('exercises','Übungen und Hinweise zur Eingewöhnung',P.exercises)}${box('follow','Nachkontrolltermine',P.follow)}
+  ${imgs.length?`<div class="label" style="margin-top:4px">Fotos</div><div class="mgrid">${imgs.map(m=>`<label class="mitem" style="cursor:pointer"><div class="mthumb" data-media="${m.id}"></div><span class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-change="portalMedia" data-id="${s.id}" data-m="${m.id}" ${(P.media||[]).includes(m.id)?'checked':''}>freigeben</span></label>`).join('')}</div>`:''}
+  <p class="faint" style="font-size:12px;margin:0">Der Kunde sieht nur, was hier angehakt ist – und nur seine eigenen Daten. In der Demo wird das nur lokal gespeichert.</p></div></details>`; }
+function portalReleasedHtml(c){ const ss=sessOf(c.id).filter(s=>s.portal&&(s.portal.recs||s.portal.exercises||(s.portal.media||[]).length));
+  return ss.length?ss.map(s=>{ const P=s.portal; const rec=(s.recs||[]).filter(r=>r.status==='angenommen'); const ex=P.exercises?exercisesFor(s):[]; const im=(P.media||[]).map(id=>(S.media||[]).find(m=>m.id===id)).filter(Boolean);
+    return `<div class="stack" style="gap:6px"><b>${fmtDate(s.date)} · ${esc(s.type)}</b>${P.recs?(rec.length?`<ul style="margin:0;padding-left:18px">${rec.map(r=>`<li>${esc(r.name)}</li>`).join('')}</ul>`:'<span class="muted">Keine angenommenen Empfehlungen.</span>'):''}${ex.length?`<div class="sub">Übungen: ${ex.map(e=>esc(e.t)).join(', ')}</div>`:''}${im.length?`<div class="mgrid">${im.map(m=>`<figure class="mitem"><div class="mthumb" data-media="${m.id}"></div></figure>`).join('')}</div>`:''}</div>`; }).join('<hr>'):'<span class="muted">Noch nichts freigegeben.</span>'; }
 
 VIEWS.sitzung = () => {
   const s=sess(ui.sess)||S.sessions[0]; ui.sess=s.id; if(!STEPS.some(x=>x[0]===ui.sessTab)) ui.sessTab=TABALIAS[ui.sessTab]||'anamnese';
@@ -3391,7 +3420,7 @@ SESSTAB.qualitaet = s => {
 };
 SESSTAB.bericht = s => `<div class="stack"><div class="row" style="justify-content:space-between"><p class="muted" style="max-width:60ch">Der Bericht wird aus den erfassten Daten erzeugt. Freigegebene Berichte erscheinen im Kundenportal.</p>
   <div class="row"><button class="btn primary" data-act="genReport" data-id="${s.id}">${ic('doc')}Bericht erzeugen</button>${st('s')}</div></div>
-  <div class="row"><label class="row" style="font-size:13px"><input type="checkbox" data-change="share" data-id="${s.id}" ${S.shared[s.id]?'checked':''}> Im Kundenportal freigeben</label></div>
+  ${portalHtml(s)}
   <div id="reportBox">${ui.reportFor===s.id?reportHtml(s):'<div class="empty">Noch kein Bericht erzeugt.</div>'}</div></div>`;
 SESSTAB.ergebnis = s => {
   const q=quality(s), crit=q.filter(x=>x[0]!=='info').length; const t=ui.resTab||'vergleich';
@@ -4577,8 +4606,9 @@ VIEWS.portal = () => {
     ${panelFlush('BikePassport',bikesOf(c.id).map(b=>{const sh=currentSetting(b.id,'saddleHeight'),r=currentSetting(b.id,'reach'),cf=currentSetting(b.id,'cleatFore');return `<div class="li"><div class="grow"><div class="t">${esc(b.brand+' '+b.model)}</div><div class="sub">${esc(b.type)} · Größe ${esc(b.size)} · <span class="mono">${esc(b.frameNo)}</span></div><div class="row" style="margin-top:6px">${sh?`<span class="chip nodot">Sattelhöhe ${fmtNum(sh.value)} mm</span>`:''}${r?`<span class="chip nodot">Sattel–Lenker ${fmtNum(r.value)} mm</span>`:''}${cf?`<span class="chip nodot">Cleat ${fmtNum(cf.value)} mm</span>`:''}${!sh?'<span class="chip nodot">noch kein Fitting</span>':''}</div></div></div>`;}).join('')||'<div class="empty">Kein Fahrrad.</div>',`<span class="faint" style="font-size:12px">QR-Code zeigt später nur einen Verweis, keine Kundendaten</span>`)}
     ${panelFlush('Berichte',shared.length?`<div class="list">${shared.map(s=>`<div class="li click" data-act="portalReport" data-id="${s.id}"><span class="mono faint" style="font-size:12px">${fmtDate(s.date)}</span><div class="grow">${esc(s.type)} · ${esc(bike(s.bikeId).model)}</div>${ic('doc','width="18" height="18"')}</div>`).join('')}</div>`:'<div class="empty">Noch keine freigegebenen Berichte.</div>')}
     ${panelFlush('Freigaben',wos.length?`<div class="list">${wos.map(w=>{const tot=w.positions.reduce((a,p)=>a+p.qty*p.price,0);return `<div class="li"><div class="grow"><div class="t">${esc(w.title)}</div><div class="sub">${w.id} · Kostenvoranschlag ${eur(tot)}</div></div>${w.status==='Freigabe ausstehend'?`<button class="btn sm primary" data-act="approve" data-id="${w.id}">Freigeben</button><button class="btn sm" data-act="decline" data-id="${w.id}">Ablehnen</button>`:w.approval?`<span class="chip c-ok">freigegeben ${fmtDate(w.approval.time)}</span>`:woChip(w.status)}</div>`;}).join('')}</div>`:'<div class="empty">Keine offenen Freigaben.</div>')}
-    ${panelFlush('Termine & Follow-up',`<div class="list">${[...ss.filter(s=>s.date>=today()).map(s=>`<div class="li"><span class="mono faint" style="font-size:12px">${fmtDate(s.date)}</span><div class="grow">${esc(s.type)} um ${esc(s.time)}</div>${sessChip(s.status)}</div>`),...ss.flatMap(s=>s.followUps.filter(f=>f.status==='offen').map(f=>`<div class="li"><span class="mono faint" style="font-size:12px">${fmtDate(f.due)}</span><div class="grow">Nachkontrolle (${f.days} Tage)</div><span class="chip c-info">offen</span></div>`))].join('')||'<div class="empty">Keine anstehenden Termine.</div>'}</div>`)}
+    ${panelFlush('Termine & Follow-up',`<div class="list">${[...ss.filter(s=>s.date>=today()).map(s=>`<div class="li"><span class="mono faint" style="font-size:12px">${fmtDate(s.date)}</span><div class="grow">${esc(s.type)} um ${esc(s.time)}</div>${sessChip(s.status)}</div>`),...ss.filter(s=>s.portal&&s.portal.follow).flatMap(s=>s.followUps.filter(f=>f.status==='offen').map(f=>`<div class="li"><span class="mono faint" style="font-size:12px">${fmtDate(f.due)}</span><div class="grow">Nachkontrolle (${f.days} Tage)</div><span class="chip c-info">offen</span></div>`))].join('')||'<div class="empty">Keine anstehenden Termine.</div>'}</div>`)}
   </div>
+  ${panel('Freigegebene Inhalte',portalReleasedHtml(c))}
   ${panel('Nachrichten',`<div class="stack">${msgs.map(m=>`<div class="notice ${m.from==='Betrieb'?'':'acc'}" style="flex-direction:column;gap:2px"><span class="label">${esc(m.from)} · ${esc(m.time)}</span><span>${esc(m.text)}</span></div>`).join('')||'<span class="muted">Noch keine Nachrichten.</span>'}
   <form class="row" data-form="message" data-id="${c.id}" style="flex-wrap:nowrap"><input class="input" name="text" id="msgText" placeholder="Nachricht an den Betrieb" required><button class="btn primary" type="submit">Senden</button></form></div>`)}`;
 };
@@ -4725,6 +4755,11 @@ function createSession(d){
 }
 
 const ACT = {
+  roleSet(el){ S.role=ROLES.includes(el.dataset.v)?el.dataset.v:'Admin'; audit(`Rolle gewechselt: ${S.role}`); save(); render(); toast(`Rolle: ${S.role}`); },
+  custExport(el){ const d=custDataOf(el.dataset.id); if(!d.customer) return; const txt=JSON.stringify({app:'FYF',art:'Auskunft nach Art. 15 DSGVO',exported:nowStamp(),hinweis:'Fotos/Videos sind nur als Liste enthalten; die Dateien liegen auf dem Gerät.',daten:d},null,2); ui.lastExport=txt;
+    try{ const blob=new Blob([txt],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`fyf-auskunft-${(d.customer.name||'kunde').replace(/[^a-z0-9äöüß]+/gi,'-').toLowerCase()}-${today()}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); }catch(e){} audit('Datenauskunft exportiert',d.customer.id); save(); toast('Export erstellt'); },
+  custDelete(el){ const c=cust(el.dataset.id); if(!c||!c.id) return; if(PERMANENT_IDS.includes(c.id)){ toast('Diese Daten sind dauerhaft gesperrt',true); return; } const d=custDataOf(c.id);
+    openDrawer('Kunde endgültig löschen',`<form class="stack" data-form="custDelete" data-id="${c.id}"><div class="notice warn">${ic('warn')}<div>Gelöscht werden: Kunde, ${d.bikes.length} Räder, ${d.sessions.length} Fittings, ${d.sales.length} Käufe, ${d.workshop.length} Werkstattaufträge, ${d.media.length} Fotos/Videos. Das lässt sich nicht rückgängig machen. Exportiere vorher die Daten, falls der Kunde eine Kopie möchte.</div></div><div class="field"><label for="cd_n">Zur Bestätigung den Namen eingeben: <b>${esc(c.name)}</b></label><input class="input" id="cd_n" name="name" required autocomplete="off"></div><div class="row"><button class="btn danger" type="submit">Endgültig löschen</button><button class="btn" type="button" data-act="custExport" data-id="${c.id}">Erst exportieren</button><button class="btn ghost" type="button" data-act="close">Abbrechen</button></div></form>`); },
   recSet(el){ const s=sess(el.dataset.id); const pid=el.dataset.p; const p=products().find(x=>x.id===pid)||{name:pid}; s.recs=(s.recs||[]).filter(r=>r.prodId!==pid); const r=recsFor(s).find(x=>x.prodId===pid);
     if(el.dataset.v){ s.recs.push({prodId:pid,name:p.name,reason:r?r.reason:'',status:el.dataset.v,time:nowStamp()}); audit(`Empfehlung ${el.dataset.v}: ${p.name}`,s.id); } save(); render(); },
   pdbTab(el){ ui.pdbTab=el.dataset.v; render(); },
@@ -4814,11 +4849,11 @@ const ACT = {
   shareReport(el){ const s=sess(el.dataset.id); const t=reportText(s); if(navigator.share){ navigator.share({title:'Fitting-Bericht',text:t}).catch(()=>{}); } else copyText(t); },
   setExtra(el){ S.settings=S.settings||{}; S.settings.extra=el.dataset.v==='1'; save(); render(); toast(S.settings.extra?'Zusatzbereiche eingeblendet':'Zusatzbereiche ausgeblendet'); },
   removeDemo(){ openDrawer('Beispielkunden entfernen',`<div class="stack"><p>Entfernt werden die 4 erfundenen Kunden mit ihren Rädern, Fittings, Werkstattaufträgen und Beispiel-Lagerartikeln.</p><div class="notice">${ic('info')}<div>Deine eigenen Kunden, Räder und Fittings bleiben. Vorher wird automatisch eine Sicherung in diesem Browser angelegt (Mehr → Deine Daten sichern).</div></div><div class="row"><button class="btn danger" data-act="removeDemoConfirm">Beispielkunden entfernen</button><button class="btn" data-act="close">Abbrechen</button></div></div>`); },
-  removeDemoConfirm(){ const n=removeDemo(); closeDrawer(); render(); toast(`${n} Beispielkunden entfernt. Deine Einträge sind geblieben.`); },
+  removeDemoConfirm(){ const n=removeDemo(); mediaGC(); closeDrawer(); render(); toast(`${n} Beispielkunden entfernt. Deine Einträge sind geblieben.`); },
   menu(){ document.getElementById('side').classList.toggle('open'); },
   close(){ closeDrawer(); closeMenu(); },
   reset(){ const own=S.customers.filter(c=>!['c1','c2','c3','c4'].includes(c.id)).length; openDrawer('Demo zurücksetzen',`<div class="notice warn">${ic('warn')}<div>Dabei werden <b>alle deine Einträge gelöscht</b>${own?`, auch ${own} selbst angelegte Kunden`:''}. Lade vorher eine Sicherung herunter.</div></div><div class="row"><button class="btn" data-act="exportData">Erst sichern</button><button class="btn danger" data-act="resetConfirm">Trotzdem alles löschen</button><button class="btn" data-act="close">Abbrechen</button></div>`); },
-  resetConfirm(){ try{ localStorage.setItem('fitframe-rescue-'+Date.now(), JSON.stringify(S)); }catch(e){} S=seed(); S.appVer=APP_VER; ensurePermanent(); save(); closeDrawer(); ui.reportFor=null; ui.aiOut=null; render(); toast('Demo-Daten wiederhergestellt'); },
+  resetConfirm(){ try{ localStorage.setItem('fitframe-rescue-'+Date.now(), JSON.stringify(S)); }catch(e){} S=seed(); S.appVer=APP_VER; ensurePermanent(); save(); mediaGC(); closeDrawer(); ui.reportFor=null; ui.aiOut=null; render(); toast('Demo-Daten wiederhergestellt'); },
   apptFilter(el){ ui.apptFilter=el.dataset.v; render(); },
   fuFilter(el){ ui.fuFilter=el.dataset.v; render(); },
   newSession(el){ if(!S.customers.length){ toast('Bitte zuerst einen Kunden anlegen',true); ACT.newCustomer(); return; } newSessionDrawer(el.dataset.cust||S.customers[0].id,el.dataset.bike); },
@@ -5049,6 +5084,7 @@ function importJson(t){
 function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
 
 const FORMS = {
+  custDelete(f,data){ const c=cust(f.dataset.id); if(!c||!c.id||PERMANENT_IDS.includes(c.id)) return; if(String(data.get('name')||'').trim().toLowerCase()!==c.name.trim().toLowerCase()){ toast('Name stimmt nicht überein',true); return; } const r=deleteCustomer(c.id); const nb=scrubBackups(c.id); save(); mediaGC(); closeDrawer(); go('kunden'); toast(`Gelöscht: ${r.sessions} Fittings, ${r.bikes} Räder, ${r.media} Medien${nb?`, auch aus ${nb} Sicherung${nb>1?'en':''} in diesem Browser`:''}`); },
   pdb(f,data){ const name=String(data.get('name')||'').trim(); if(!name){ toast('Bitte Namen angeben',true); return; } const num=k=>{ const v=String(data.get(k)??'').trim().replace(',','.'); if(v==='') return null; const n=Number(v); return isFinite(n)&&n>=0?n:NaN; };
     const rec={name,cat:PROD_CATS.includes(data.get('cat'))?data.get('cat'):'Sonstiges',price:num('price')??0,cost:num('cost'),width:num('width'),use:String(data.get('use')||'').trim(),arch:data.getAll('arch'),system:data.get('system')||'',float:num('float'),release:String(data.get('release')||'').trim(),src:String(data.get('src')||'').trim()};
     if([rec.price,rec.cost,rec.width,rec.float].some(x=>Number.isNaN(x))){ toast('Zahlen prüfen (keine negativen Werte)',true); return; } if(rec.src&&!/^https?:\/\//.test(rec.src)){ toast('Quelle bitte als Link (https://…)',true); return; }
@@ -5168,6 +5204,8 @@ const FORMS = {
 };
 
 const CHG = {
+  portalSet(el){ const s=sess(el.dataset.id); const k=el.dataset.k; if(k==='report'){ S.shared[s.id]=el.checked; } else { s.portal=s.portal||{}; s.portal[k]=el.checked; } audit(`Portal-Freigabe ${k}: ${el.checked?'an':'aus'}`,s.id); save(); },
+  portalMedia(el){ const s=sess(el.dataset.id); s.portal=s.portal||{}; const L=new Set(s.portal.media||[]); if(el.checked) L.add(el.dataset.m); else L.delete(el.dataset.m); s.portal.media=[...L]; save(); },
   cmpC(el){ ui.cmpC=el.value; ui.cmpA=null; ui.cmpB=null; render(); },
   mediaPhase(el){ const m=(S.media||[]).find(x=>x.id===el.dataset.id); if(!m) return; m.phase=['vorher','nachher'].includes(el.value)?el.value:''; save(); },
   chRate(el){ const s=sess(el.dataset.id); const ch=s.changes[Number(el.dataset.i)]; if(!ch) return; ch.rating=CH_RATE.includes(el.value)?el.value:'noch offen'; audit(`Bewertung ${MK[ch.key]?MK[ch.key].label:ch.key}: ${ch.rating}`,s.id); save(); },
@@ -5223,11 +5261,12 @@ const CHG = {
 const CONFIRM_ACTS=new Set(['toolDel','liveNoteDel','mediaDel','delGeo','delGeoRow','delItem','delMark','delMeasure','delPos','packDel','photoDel','prodDel']);
 document.addEventListener('click',e=>{
   const nav=e.target.closest('[data-nav]'); if(nav){ e.preventDefault(); closeDrawer(); go(nav.dataset.nav); return; }
+  { const a0=e.target.closest('[data-act]'); if(a0&&ACT[a0.dataset.act]&&!allowed(a0.dataset.act)){ e.preventDefault(); toast(`Keine Berechtigung für diese Aktion (Rolle: ${role()})`,true); return; } }
   const a=e.target.closest('[data-act]'); if(a&&ACT[a.dataset.act]&&CONFIRM_ACTS.has(a.dataset.act)&&a.dataset.armed!=='1'){ e.preventDefault(); a.dataset.armed='1'; const old=a.innerHTML; a.classList.add('armed'); a.innerHTML='Wirklich löschen?'; a.setAttribute('aria-live','polite'); setTimeout(()=>{ if(a.isConnected&&a.dataset.armed==='1'){ a.dataset.armed=''; a.classList.remove('armed'); a.innerHTML=old; } },3500); return; }
   if(a&&ACT[a.dataset.act]){ e.preventDefault(); try{ ACT[a.dataset.act](a); }catch(err){ console.error(err); toast('Aktion fehlgeschlagen: '+err.message,true); } }
 });
 document.addEventListener('submit',e=>{
-  const f=e.target.closest('[data-form]'); if(!f) return; e.preventDefault();
+  const f=e.target.closest('[data-form]'); if(!f) return; e.preventDefault(); if(!allowed(null,f.dataset.form)){ toast(`Keine Berechtigung (Rolle: ${role()})`,true); return; }
   if(f.dataset.form==='newSession' && !new FormData(f).get('bid')){ toast('Bitte zuerst ein Fahrrad für diesen Kunden anlegen',true); return; }
   try{ FORMS[f.dataset.form](f,new FormData(f)); }catch(err){ console.error(err); toast('Speichern fehlgeschlagen: '+err.message,true); }
 });
