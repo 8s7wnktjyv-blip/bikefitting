@@ -692,6 +692,7 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 @media (prefers-reduced-motion:reduce){.drawer,.anim-in,.anim-next,.anim-prev{animation:none!important}}
 .bm-wrap{background:var(--il-bg,#f4f2ee);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:center}.bmap{width:100%;max-width:min(300px,60vh);height:auto;display:block;cursor:crosshair;touch-action:manipulation}.bmap.ro{cursor:default}.bm-body{fill:var(--surface,#fff);stroke:var(--il-frame,#4a5058);stroke-width:2}.bm-line{fill:none;stroke:var(--il-frame,#4a5058);stroke-width:1.2;opacity:.6}.bm-lbl{font-size:9px;fill:var(--muted,#666)}.bm-link{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}.bm-pt{cursor:pointer}.bm-pt circle{stroke:#fff;stroke-width:1.5}.bm-n{font-size:7px;fill:#fff;font-weight:700;pointer-events:none}.bm-leg{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font-size:12px;color:var(--muted)}.bm-leg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}.bm-dot{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;flex:0 0 auto}.bm-sheet{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.bm-sheet figure{margin:0;text-align:center}.bm-sheet .bmap{max-width:200px;margin:0 auto}.print-handout .report:not(.handout){display:none!important}@media print{.bm-pt circle,.bm-dot{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 .susp-col .field{gap:3px}.susp-col .input{min-height:40px}
+#tour{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:80;display:flex;justify-content:center;padding:0 12px;pointer-events:none}.tour-card{pointer-events:auto;width:min(520px,100%);background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:14px 16px;display:flex;flex-direction:column;gap:8px}.tourbar{height:4px;background:var(--line);border-radius:2px;overflow:hidden}.tourbar i{display:block;height:100%;background:var(--accent)}@media (min-width:1000px){#tour{bottom:20px;justify-content:flex-end;padding-right:24px}}@media print{#tour{display:none!important}}
 </style>
 </head>
 <body>
@@ -1493,7 +1494,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-01.54';
+const APP_VER='2026-11-01.55';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1727,6 +1728,7 @@ VIEWS.dashboard = () => {
   ${!storageOk||inAppBrowser?`<div class="notice warn">${ic('warn')}<div><b>${!storageOk?'Achtung: Hier wird nichts gespeichert.':'Achtung: eingebetteter Browser.'}</b> ${!storageOk?'Wahrscheinlich privater Modus.':'Daten können verloren gehen.'} Öffne den Link direkt in Safari. <button class="btn sm" data-act="saveInfo">Mehr dazu</button></div></div>`:''}
   ${loadIssue?`<div class="notice warn">${ic('warn')}<div><b>${esc(loadIssue)}</b> Eine Kopie wurde gesichert. Unter Mehr → Deine Daten sichern kannst du sie wiederherstellen.</div></div>`:''}
   ${heroHtml(greet,todays,upcoming)}
+  ${backupNudge()}
   ${setupHtml()}
   ${!(S.settings||{}).shopType&&!(S.settings||{}).shopAsked?panel('Ladentyp wählen',shopTypeHtml(true),`<button class="btn sm ghost" data-act="shopTypeLater">Später</button>`):''}
   ${kpiTiles()}
@@ -1736,6 +1738,7 @@ VIEWS.dashboard = () => {
     ${modOn('fahrwerk')?`<button class="tile" data-nav="fahrwerk"><span class="ti">${ic('susp')}</span><b>Fahrwerk</b><span>Gabel und Dämpfer</span></button>`:''}
     <button class="tile" data-act="newCustomer"><span class="ti">${ic('users')}</span><b>Neuer Kunde</b><span>Akte anlegen</span></button>
     <button class="tile" data-act="lastReport"><span class="ti">${ic('doc')}</span><b>Letzter Bericht</b><span>${S.sessions.filter(x=>x.status==='abgeschlossen').length?'zuletzt abgeschlossenes Fitting':'noch keiner'}</span></button>
+    <button class="tile" data-act="tourStart"><span class="ti">${ic('fit')}</span><b>Demo-Tour</b><span>2 Minuten, die wichtigsten Funktionen</span></button>
     <button class="tile" data-act="findCustomer"><span class="ti">${ic('users')}</span><b>Kunde suchen</b><span>${S.customers.length} Kunden gespeichert</span></button>
   </div>
   <div class="grid g-main">
@@ -1785,7 +1788,7 @@ function dataPanel(){
   const bk=backupKeys(); const own=S.customers.filter(c=>!isDemoCust(c.id)).length;
   return panel('Deine Daten sichern',`<div class="stack">
   <div class="notice warn">${ic('warn')}<div><b>Wo deine Einträge liegen:</b> nur in diesem Browser auf diesem Gerät, unter dieser Adresse (<span class="mono">${esc(location.host||'lokale Datei')}</span>). Ein anderer Link, ein anderes Gerät oder der private Modus haben eigene, leere Daten. Safari kann Daten von Webseiten löschen, die du länger als 7 Tage nicht geöffnet hast. Sichere deshalb regelmäßig.</div></div>
-  <p>${S.customers.length} Kunden gespeichert, davon ${own} selbst angelegt.</p>
+  <p>${S.customers.length} Kunden gespeichert, davon ${own} selbst angelegt. <b>Letzte Sicherung:</b> ${S.lastBackup?esc(S.lastBackup):'noch nie'}.</p>
   <div class="row"><button class="btn primary" data-act="exportData">Sicherung herunterladen</button><button class="btn" data-act="exportCopy">${ic('copy')}Als Text kopieren</button></div>
   <details class="more"><summary>Sicherung laden</summary><div class="stack" style="margin-top:10px"><p class="muted" style="font-size:13.5px">Fehlende Kunden, Fahrräder und Fittings werden ergänzt. Vorhandene Einträge bleiben unverändert.</p>
   <input class="input" type="file" id="importFile" accept=".json,application/json" data-change="importFile">
@@ -2309,6 +2312,22 @@ VIEWS.fahrwerk = () => { const q=(ui.sp=ui.sp||{}); const L=S.bikes.filter(b=>cu
   <p class="faint" style="font-size:12.5px">MTB und E-Bikes stehen oben. Die Werte erscheinen auch in der Fahrradakte.</p>`}`; };
 function suspSheetHtml(r){ const b=bike(r.bikeId)||{}, c=cust(b.customerId)||{}; const row=(p,l)=>{ const x=r[p]||{}; const cc=suspCalc(x); return Object.keys(x).length?`<div class="sec"><h3>${l}</h3><table><tbody>${SUSP_F.filter(([k])=>x[k]!=null&&x[k]!==''&&k!=='psiStart').map(([k,lb,u])=>`<tr><td>${lb}</td><td style="text-align:right">${esc(String(x[k]))}${u?' '+u:''}</td></tr>`).join('')}${cc&&cc.pct!=null?`<tr><td>Sag in Prozent</td><td style="text-align:right">${fmtNum(cc.pct)} %</td></tr>`:''}</tbody></table></div>`:''; };
   return `<article class="report handout"><div class="rh"><div><h2 style="font-size:22px">Dein Fahrwerk</h2><div>${esc(c.name||'')} · ${esc((b.brand||'')+' '+(b.model||''))} · ${fmtDate(r.date)}</div></div><div style="text-align:right"><b>${esc(shopName()||'FYF')}</b><div class="fine">${esc(r.who||'')}</div></div></div>${r.riderKg?`<p>Eingestellt für ${fmtNum(r.riderKg)} kg mit Ausrüstung.</p>`:''}${row('fork','Federgabel')}${row('shock','Dämpfer')}${r.note?`<p>${esc(r.note)}</p>`:''}<p class="fine">Tipp: Luftdruck alle paar Wochen prüfen. Klicks werden von „ganz zu“ gezählt.</p></article><div class="row" style="margin-top:10px"><button class="btn primary" data-act="bmPrint">${ic('doc')}Drucken oder als PDF sichern</button></div>`; }
+
+/* --- Sicherungs-Erinnerung und Demo-Tour --- */
+const backupAge=()=>{ const d=S.lastBackup; if(!d) return null; return Math.floor((new Date(today())-new Date(d.slice(0,10)))/864e5); };
+function backupNudge(){ const own=S.customers.filter(c=>!isDemoCust(c.id)).length; if(!own) return ''; const a=backupAge(); if(a!=null&&a<7) return ''; if(S.backupSnooze&&S.backupSnooze>=today()) return '';
+  return `<div class="notice warn" style="align-items:center;flex-wrap:wrap">${ic('warn')}<div style="flex:1;min-width:200px"><b>${a==null?'Noch keine Sicherung':`Letzte Sicherung vor ${a} Tagen`}.</b> Deine Daten liegen nur auf diesem Gerät. Einmal pro Woche sichern.</div><div class="row" style="gap:6px"><button class="btn sm primary" data-act="exportData">Jetzt sichern</button><button class="btn sm ghost" data-act="backupSnooze">Morgen erinnern</button></div></div>`; }
+const DEMO_SID=()=>{ const x=S.sessions.find(q=>q.customerId==='c1'&&q.status==='abgeschlossen'); return x&&x.id; };
+const TOUR=[
+  {t:'Größenberatung beim Neuradkauf',x:'„Körper zuerst“: Aus Körpermaßen schlägt FYF passende Rahmengrößen aus der Geometrie-Bibliothek vor. Weniger Fehlkäufe und Rückgaben.',go(){ if(cust('c1')&&cust('c1').id){ go('kunden'); ACT.nbOpen({dataset:{id:'c1'}}); } else go('geometrie'); }},
+  {t:'Quick-Fit bei der Übergabe',x:'Neues Rad in 10 Minuten einstellen: Startwert Sattelhöhe, Kontrolle per Kniewinkel, Übergabe-Check und Übergabeblatt für den Kunden.',go(){ closeDrawer(); const b=bikesOf('c1')[0]; ui.qf=b?{cid:'c1',bid:b.id}:{}; go('quickfit'); }},
+  {t:'Fahrwerk für die Werkstatt',x:'Gabel und Dämpfer je Rad: Ziel-Sag nach Herstellerangabe, Druck, Klicks, Verlauf. Der Mechaniker sieht alles auf einen Blick.',go(){ closeDrawer(); ui.sp={}; go('fahrwerk'); }},
+  {t:'Professioneller Fitting-Bericht',x:'16 Abschnitte, nur aus echten Daten, mit Logo des Ladens – als PDF zum Mitgeben oder Versenden.',go(){ closeDrawer(); const id=DEMO_SID(); if(id) ACT.openReport({dataset:{id}}); else go('berichte'); }},
+  {t:'Empfehlungen mit Begründung',x:'Sattel, Einlagen und Cleats passend zu Sitzknochen, Füßen und Pedalsystem – mit Herstellerquelle. Angenommene Empfehlungen zählen als Umsatz.',go(){ closeDrawer(); const id=DEMO_SID(); if(id){ ui.sess=id; ui.sessTab='ergebnis'; ui.resTab='angebot'; ui.wIdx=null; go('sitzung'); } else go('produktdb'); }},
+  {t:'Alles auf einen Blick',x:'Das Dashboard zeigt Kunden, Termine, Übergaben, Fahrwerk und den Umsatz aus Empfehlungen. Jeder Laden schaltet nur die Module ein, die er braucht.',go(){ closeDrawer(); go('dashboard'); }}];
+function tourRender(){ let el=document.getElementById('tour'); if(ui.tour==null){ if(el) el.remove(); return; } if(!el){ el=document.createElement('div'); el.id='tour'; document.body.appendChild(el); }
+  const i=ui.tour, st=TOUR[i]; el.innerHTML=`<div class="tour-card" role="dialog" aria-label="Demo-Tour"><div class="row" style="justify-content:space-between;align-items:center"><span class="label">Demo-Tour · ${i+1} von ${TOUR.length}</span><button class="iconbtn" data-act="tourEnd" aria-label="Tour beenden">${ic('x')}</button></div><b style="font-size:17px">${esc(st.t)}</b><p style="margin:0;font-size:14.5px">${esc(st.x)}</p><div class="tourbar"><i style="width:${Math.round((i+1)/TOUR.length*100)}%"></i></div><div class="row" style="justify-content:space-between"><button class="btn sm ghost" data-act="tourPrev" ${i?'':'disabled'}>Zurück</button><button class="btn sm primary" data-act="${i<TOUR.length-1?'tourNext':'tourEnd'}">${i<TOUR.length-1?'Weiter':'Fertig'}</button></div></div>`; }
+function tourGo(i){ ui.tour=i; try{ TOUR[i].go(); }catch(e){ console.error(e); } tourRender(); window.scrollTo({top:0}); }
 
 VIEWS.sitzung = () => {
   const s=sess(ui.sess)||S.sessions[0]; ui.sess=s.id; if(!STEPS.some(x=>x[0]===ui.sessTab)) ui.sessTab=TABALIAS[ui.sessTab]||'anamnese';
@@ -4913,6 +4932,11 @@ function createSession(d){
 }
 
 const ACT = {
+  backupSnooze(){ const d=new Date(); d.setDate(d.getDate()+1); S.backupSnooze=iso(d); save(); render(); },
+  tourStart(){ tourGo(0); },
+  tourNext(){ if(ui.tour!=null&&ui.tour<TOUR.length-1) tourGo(ui.tour+1); },
+  tourPrev(){ if(ui.tour>0) tourGo(ui.tour-1); },
+  tourEnd(){ ui.tour=null; tourRender(); },
   qfReset(){ ui.qf={}; render(); },
   qfSave(){ const q=ui.qf||{}; const c=cust(q.cid), b=bike(q.bid); if(!c||!c.id||!b||!b.id){ toast('Kunde und Fahrrad wählen',true); return; }
     const n=k=>{ const v=q[k]; if(v==null||v==='') return null; const x=Number(String(v).replace(',','.')); return isFinite(x)?x:null; }; const sh=n('sh'), kn=n('knee'), ins=n('inseam'), hg=n('height');
@@ -5065,8 +5089,8 @@ const ACT = {
   liveNoteDel(el){ const s=sess(el.dataset.id); (s.liveNotes||[]).splice(Number(el.dataset.i),1); save(); render(); },
   addComp(el){ const s=sess(el.dataset.id); const f=checkFindings(s).find(x=>x.title===el.dataset.t); s.comp.push({t:`${f.title} – ${f.text.split('.')[0]}`,status:'geplant'}); audit(`Ausgleich eingeplant: ${f.title}`,s.id); save(); render(); toast('Ausgleich eingeplant'); },
   prepChange(el){ ui.prepKey=el.dataset.key; ui.prepVal=el.dataset.v||''; ui.prepReason=el.dataset.reason||''; render(); const h=document.getElementById('changeHead'); if(h) h.scrollIntoView({behavior:'smooth',block:'start'}); const v=document.getElementById('m_val_after'); if(v) v.focus({preventScroll:true}); },
-  exportData(){ const txt=JSON.stringify({app:'FYF',exported:nowStamp(),data:S}); try{ const blob=new Blob([txt],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`fyf-sicherung-${today()}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); toast('Sicherung erstellt. Falls kein Download startet: „Als Text kopieren“ nutzen'); }catch(e){ toast('Download nicht möglich – bitte „Als Text kopieren“ nutzen',true); } },
-  exportCopy(){ copyText(JSON.stringify({app:'FYF',exported:nowStamp(),data:S})); toast('Sicherung kopiert – füge sie z. B. in eine Notiz oder Mail an dich ein'); },
+  exportData(){ S.lastBackup=nowStamp(); save(); setTimeout(render,0); const txt=JSON.stringify({app:'FYF',exported:nowStamp(),data:S}); try{ const blob=new Blob([txt],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`fyf-sicherung-${today()}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); toast('Sicherung erstellt. Falls kein Download startet: „Als Text kopieren“ nutzen'); }catch(e){ toast('Download nicht möglich – bitte „Als Text kopieren“ nutzen',true); } },
+  exportCopy(){ S.lastBackup=nowStamp(); save(); setTimeout(render,0); copyText(JSON.stringify({app:'FYF',exported:nowStamp(),data:S})); toast('Sicherung kopiert – füge sie z. B. in eine Notiz oder Mail an dich ein'); },
   importText(){ const t=document.getElementById('importText').value.trim(); if(!t){ toast('Bitte zuerst den Sicherungstext einfügen',true); return; } importJson(t); },
   restoreKey(el){ try{ importJson(localStorage.getItem(el.dataset.k)); }catch(e){ toast('Sicherung nicht lesbar',true); } },
   vidMode(el){ vid.mode=el.dataset.v; vid.pts=[]; render(); },

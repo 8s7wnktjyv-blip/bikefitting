@@ -89,6 +89,11 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Fahrwerk (eigener Menüpunkt, bei Werkstatt/E-Bike auch unten in der Leiste): alle Räder mit aktuellen Werten; Gabel und Dämpfer mit Federweg/Hub, Ziel-Sag, Druck, Sag, Zug-/Druckstufe, Tokens. FYF rechnet Ziel-Sag in mm und Ist-Sag in %, mit Hinweis mehr/weniger Druck. Ziel-Sag laut FOX (25 %) und RockShox (Stahlfeder 25–35 %). Luftdruck wird nicht aus dem Gewicht berechnet. Verlauf je Rad, Kundenblatt.
 - Dashboard: Kennzahlen je nach Modulen, inklusive angenommener Produktempfehlungen mit Verkaufswert.
 
+## Sicherungs-Erinnerung und Demo-Tour (ab v.55)
+
+- Sobald eigene Daten vorhanden sind, erinnert das Dashboard, wenn noch nie oder vor mehr als 7 Tagen gesichert wurde („Jetzt sichern“ oder „Morgen erinnern“). Datum der letzten Sicherung unter Mehr → Deine Daten sichern.
+- Demo-Tour (Kachel auf dem Dashboard): 6 Schritte in etwa 2 Minuten – Größenberatung, Quick-Fit, Fahrwerk, Bericht, Empfehlungen mit Umsatz, Dashboard. Nutzt die Beispielkunden, verändert keine Daten.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.
