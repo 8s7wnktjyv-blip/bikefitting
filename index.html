@@ -1477,7 +1477,7 @@ function ensurePermanent(){
 const KEY = 'fitframe-demo-v3';
 let S;
 let storageOk = true;
-const APP_VER='2026-11-01.46';
+const APP_VER='2026-11-01.47';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1858,14 +1858,14 @@ function mediaHtml(owner,c){
   const L=mediaOf(owner), ok=mediaOk(c);
   return `<div class="stack"><div class="row" style="justify-content:space-between"><h3>Fotos & Videos</h3>${ok?`<label class="btn sm">${ic('plus')}Hinzufügen<input type="file" accept="image/*,video/*" multiple hidden data-change="mediaAdd" data-owner="${owner}"></label>`:''}</div>
   ${ok?'':`<p class="muted" style="font-size:13px">Fotos und Videos erst nach Einwilligung des Kunden für Fotos/Videos.${c?` <button class="btn sm" data-act="consent" data-id="${c.id}">${c.consent?'Einwilligung ergänzen':'Einwilligung erfassen'}</button>`:''}</p>`}
-  ${L.length?`<div class="mgrid">${L.map(m=>`<figure class="mitem"><div class="mthumb" data-media="${m.id}">${m.kind==='video'?'Video':'Foto'} wird geladen …</div><figcaption><input class="input" value="${esc(m.note||'')}" placeholder="Notiz, z. B. Seite vorher" data-change="mediaNote" data-id="${m.id}" aria-label="Notiz zum ${m.kind==='video'?'Video':'Foto'}"><div class="row" style="justify-content:space-between"><span class="faint" style="font-size:11.5px">${fmtDate(m.date)} · ${m.kind==='video'?'Video':'Foto'} · ${fmtSize(m.size)}</span><button class="btn sm ghost danger" data-act="mediaDel" data-id="${m.id}">Löschen</button></div></figcaption></figure>`).join('')}</div>`:(ok?'<span class="muted">Noch keine Fotos oder Videos.</span>':'')}
+  ${L.length?`<div class="mgrid">${L.map(m=>`<figure class="mitem"><div class="mthumb" data-media="${m.id}">${m.kind==='video'?'Video':'Foto'} wird geladen …</div><figcaption><input class="input" value="${esc(m.note||'')}" placeholder="Notiz, z. B. Seite vorher" data-change="mediaNote" data-id="${m.id}" aria-label="Notiz zum ${m.kind==='video'?'Video':'Foto'}">${owner.startsWith('s:')?`<select class="input sm" data-change="mediaPhase" data-id="${m.id}" aria-label="Vorher oder nachher"><option value="" ${!m.phase?'selected':''}>– Zeitpunkt –</option><option ${m.phase==='vorher'?'selected':''}>vorher</option><option ${m.phase==='nachher'?'selected':''}>nachher</option></select>`:''}<div class="row" style="justify-content:space-between"><span class="faint" style="font-size:11.5px">${fmtDate(m.date)} · ${m.kind==='video'?'Video':'Foto'} · ${fmtSize(m.size)}</span><span class="row" style="gap:4px">${m.kind==='video'?`<button class="btn sm ghost" data-act="mediaStill" data-id="${m.id}">Standbild</button>`:''}<button class="btn sm ghost danger" data-act="mediaDel" data-id="${m.id}">Löschen</button></span></div></figcaption></figure>`).join('')}</div>`:(ok?'<span class="muted">Noch keine Fotos oder Videos.</span>':'')}
   ${ok||L.length?'<p class="faint" style="font-size:12px">Nur auf diesem Gerät gespeichert. Nicht in der Text-Sicherung enthalten.</p>':''}</div>`;
 }
 function mediaHydrate(){ document.querySelectorAll('[data-media]').forEach(el=>{ const id=el.dataset.media, m=(S.media||[]).find(x=>x.id===id); if(!m) return;
   const show=url=>{ el.innerHTML=m.kind==='video'?`<video src="${url}" controls playsinline preload="metadata"></video>`:`<img src="${url}" alt="${esc(m.note||m.name||'Foto')}">`; };
   if(mediaURLs[id]) return show(mediaURLs[id]);
   mGet(id).then(r=>{ if(!r||!r.blob){ el.textContent='Datei fehlt auf diesem Gerät'; return; } mediaURLs[id]=URL.createObjectURL(r.blob); show(mediaURLs[id]); }).catch(()=>{ el.textContent='Speicher nicht verfügbar'; }); }); }
-function reopenOwner(owner){ const [t,id]=[owner.slice(0,1),owner.slice(2)]; if(t==='c') customerDrawer(id); else if(t==='b') bikeDrawer(id); }
+function reopenOwner(owner){ const [t,id]=[owner.slice(0,1),owner.slice(2)]; if(t==='c') customerDrawer(id); else if(t==='b') bikeDrawer(id); else render(); }
 function ageOf(d){ if(!d) return null; const b=new Date(d), n=new Date(); if(isNaN(b)) return null; let a=n.getFullYear()-b.getFullYear(); if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate())) a--; return a; }
 function purchasesHtml(c){ const L=(S.sales||[]).filter(x=>x.customerId===c.id).sort((a,b)=>b.date.localeCompare(a.date)); const sum=L.filter(x=>x.status!=='Angebot'&&x.status!=='abgelehnt').reduce((a,x)=>a+(Number(x.total)||0),0);
   return `<div class="stack"><div class="row" style="justify-content:space-between"><h3>Produktkäufe</h3><button class="btn sm" data-act="purchaseNew" data-id="${c.id}">${ic('plus')}Kauf erfassen</button></div>
@@ -3323,7 +3323,8 @@ SESSTAB.vergleich = s => {
   <label class="row" style="font-size:13px"><input type="checkbox" id="onlyChanged" data-change="onlyChanged" ${ui.cmpChanged?'checked':''}> nur geänderte Werte</label></div>
   ${bikeSvg(s,ui.fitView)}
   ${compactCompare(rows,ui.cmpChanged)}
-  ${s.feedback.length?`<div><h3>Kundenfeedback (subjektiv)</h3><div class="list">${s.feedback.map(f=>`<div class="li" style="padding:8px 0"><span class="mono faint" style="font-size:12px">${fmtDate(f.date)}</span><div class="grow">${esc(f.text)}</div><span class="chip nodot">Komfort ${f.score}/10</span></div>`).join('')}</div></div>`:''}
+  ${fbHtml(s)}
+  <details class="more" ${mediaOf('s:'+s.id).length?'open':''}><summary>Fotos, Videos und Standbilder dieser Sitzung (${mediaOf('s:'+s.id).length})</summary><div style="margin-top:8px">${mediaHtml('s:'+s.id,cust(s.customerId))}</div></details>
   <p class="faint" style="font-size:12px">Vergleiche zeigen Veränderungen der Einstellung. Ob eine Änderung eine Verbesserung verursacht hat, ist damit nicht belegt.</p></div>`;
 };
 SESSTAB.qualitaet = s => {
@@ -3608,20 +3609,54 @@ function reportText(s){
   return [`Fitting-Bericht – ${c.name} – ${b.brand} ${b.model} – ${fmtDate(s.date)}`,shopName()?shopName():'','',`Ziel: ${s.anamnesis.goal||'–'}`,'','Änderungen:',...(s.changes.length?s.changes.map(ch=>`- ${MK[ch.key].label}: ${fmtNum(ch.from)} → ${fmtNum(ch.to)} ${MK[ch.key].unit} (${ch.reason})`):['- keine']),'','Endposition:',...Object.keys(MK).filter(k=>end[k]).map(k=>`- ${MK[k].label}: ${fmtNum(end[k].value)} ${MK[k].unit}`),'',s.notes?`Beobachtungen: ${s.notes}`:'',isDemoCust(s.customerId)?'(Demo-Daten, kein medizinischer Befund)':'(Kein medizinischer Befund)'].filter((x,i,a)=>!(x===''&&a[i-1]==='')).join('\n');
 }
 
+/* --- Phase 6: Feedback (7 Fragen), Nachkontroll-Intervalle, Vergleich, Medien je Sitzung --- */
+const FB_Q=[['pos','Wie fühlt sich die neue Sitzposition an?',['angenehm','gewöhnungsbedürftig','unangenehm']],['pain','Haben sich Beschwerden verändert?',['weniger','gleich','mehr','keine Beschwerden']],['press','Gibt es neue Druckstellen?',['nein','ja']],['comfort','Ist die Position komfortabler?',['ja','gleich','nein']],['load','Wie fühlt sich die Belastung an?',['gut verteilt','ungleich verteilt','unklar']],['long','Probleme bei längeren Fahrten?',['nein','ja','noch nicht getestet']]];
+const fuDaysDefault=()=>{ const d=S.shop&&Array.isArray(S.shop.fuDays)&&S.shop.fuDays.length?S.shop.fuDays:[30]; return d.filter(x=>x>0&&x<=365); };
+function fbForm(s,i,kind){ return `<form class="form" data-form="feedback" data-id="${s.id}" data-i="${i??''}" data-kind="${kind}">
+  ${FB_Q.map(([k,q,o])=>`<div class="field wide"><span class="label">${esc(q)}</span><input type="hidden" id="fb_${k}" name="q_${k}" value=""><div class="bigchips">${o.map(v=>`<button type="button" class="chipbtn" data-act="chip" data-t="fb_${k}" data-m="set" data-v="${esc(v)}" aria-pressed="false">${esc(v)}</button>`).join('')}</div>${k==='press'||k==='long'?`<input class="input" name="q_${k}Text" placeholder="${k==='press'?'Wo genau?':'Was genau, nach wie vielen km/Stunden?'}" style="margin-top:6px">`:''}</div>`).join('')}
+  <div class="field"><label for="fb_s">Gesamtzufriedenheit (1–10)</label><input class="input num" id="fb_s" name="score" type="number" min="1" max="10" inputmode="numeric" required></div>
+  <div class="field wide"><label for="fb_t">Aussage der Kundin / des Kunden (wörtlich)</label><textarea class="input" id="fb_t" name="text" rows="3"></textarea></div>
+  ${i!=null&&i!==''?'<div class="wide"><label><input type="checkbox" name="done" checked> Nachkontrolle damit erledigt</label></div>':''}
+  <div class="wide"><button class="btn primary" type="submit">Feedback speichern</button></div><p class="wide faint" style="font-size:12px">Subjektive Angaben des Kunden. FYF wertet sie nicht als Beleg für eine Verbesserung.</p></form>`; }
+function fbAnswers(f){ if(!f.q) return ''; return FB_Q.filter(([k])=>f.q[k]).map(([k,q])=>`<div class="sub" style="white-space:normal">${esc(q)} <b>${esc(f.q[k])}</b>${f.q[k+'Text']?` – ${esc(f.q[k+'Text'])}`:''}</div>`).join(''); }
+function fbHtml(s){ const L=s.feedback||[]; const first=L.find(f=>f.kind!=='Nachkontrolle'&&f.q), lastFu=[...L].reverse().find(f=>f.kind==='Nachkontrolle'&&f.q);
+  return `<div class="stack" style="gap:8px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Kundenfeedback (subjektiv)</h3><button class="btn sm" data-act="fbOpen" data-id="${s.id}">${ic('plus')}Feedback erfassen</button></div>
+  ${L.length?`<div class="list">${L.map(f=>`<div class="li" style="padding:8px 0;align-items:flex-start"><span class="mono faint" style="font-size:12px">${fmtDate(f.date)}</span><div class="grow" style="min-width:0">${f.kind?`<div class="sub">${esc(f.kind)}</div>`:''}${f.text?`<div>${esc(f.text)}</div>`:''}${fbAnswers(f)}</div><span class="chip nodot">${f.q?'Zufriedenheit':'Komfort'} ${f.score}/10</span></div>`).join('')}</div>`:'<span class="muted">Noch kein Feedback.</span>'}
+  ${first&&lastFu?`<details class="more"><summary>Fitting und Nachkontrolle nebeneinander</summary><div class="tw" style="margin-top:6px"><table><thead><tr><th>Frage</th><th>Fitting ${fmtDate(first.date)}</th><th>Nachkontrolle ${fmtDate(lastFu.date)}</th></tr></thead><tbody>${FB_Q.map(([k,q])=>`<tr><td>${esc(q)}</td><td>${esc(first.q[k]||'–')}</td><td>${esc(lastFu.q[k]||'–')}</td></tr>`).join('')}<tr><td>Zufriedenheit</td><td class="num">${first.score}/10</td><td class="num">${lastFu.score}/10</td></tr></tbody></table></div></details>`:''}</div>`; }
+function sessMediaThumbs(sid){ const L=mediaOf('s:'+sid); return L.length?`<div class="mgrid">${L.map(m=>`<figure class="mitem"><div class="mthumb" data-media="${m.id}">…</div><figcaption class="faint" style="font-size:11.5px">${esc([m.phase,m.note].filter(Boolean).join(' · ')||fmtDate(m.date))}</figcaption></figure>`).join('')}</div>`:''; }
+function cmpExtraHtml(A,B){
+  const g=(x,k)=>{ const e={...x.before,...x.after}; return e[k]?Number(e[k].value):null; };
+  const keys=Object.keys(MK).filter(k=>g(A,k)!=null&&g(B,k)!=null&&g(A,k)!==g(B,k)); const D=keys.map(k=>[k,Math.round((g(B,k)-g(A,k))*10)/10]); const mx=Math.max(1,...D.map(x=>Math.abs(x[1])));
+  const chart=D.length?`<div class="dbars">${D.map(([k,d])=>`<div class="dbar"><span class="dl">${MK[k].label}</span><span class="dtrack"><i class="${d>0?'pos':'neg'}" style="width:${Math.round(Math.abs(d)/mx*50)}%;${d>0?'left:50%':'right:50%'}"></i></span><span class="dv num">${d>0?'+':''}${fmtNum(d)} ${MK[k].unit}</span></div>`).join('')}</div>`:'<span class="muted">Keine unterschiedlichen Endwerte.</span>';
+  const fA=checkFindings(A).filter(x=>x.lvl!=='ok'), fB=checkFindings(B).filter(x=>x.lvl!=='ok'); const ck=(x,k)=>{ const v=(x.check||{})[k]; return v==null||v===''?'–':esc(String(v)); };
+  const lastFb=x=>{ const f=(x.feedback||[]).slice(-1)[0]; return f?`${f.score}/10${f.q&&f.q.pain?' · Beschwerden '+esc(f.q.pain):''}${f.text?`<div class="faint" style="font-size:12px">${esc(f.text)}</div>`:''}`:'–'; };
+  const rows=[['Ziel',esc(A.anamnesis.goal||'–'),esc(B.anamnesis.goal||'–')],['Beschwerden',esc(A.anamnesis.complaints||'–'),esc(B.anamnesis.complaints||'–')],['Sitzknochen (mm)',ck(A,'sitBone'),ck(B,'sitBone')],['Beinlänge L / R (cm)',`${ck(A,'legLenL')} / ${ck(A,'legLenR')}`,`${ck(B,'legLenL')} / ${ck(B,'legLenR')}`],['Finger-Boden (cm)',ck(A,'hamstring'),ck(B,'hamstring')],['Hinweise Körpercheck',String(fA.length),String(fB.length)],['Änderungen',`${A.changes.length}${A.changes.length?`<div class="faint" style="font-size:12px">${esc([...new Set(A.changes.map(c=>MK[c.key]?MK[c.key].label:c.key))].join(', '))}</div>`:''}`,`${B.changes.length}${B.changes.length?`<div class="faint" style="font-size:12px">${esc([...new Set(B.changes.map(c=>MK[c.key]?MK[c.key].label:c.key))].join(', '))}</div>`:''}`],['Letztes Feedback',lastFb(A),lastFb(B)]];
+  const pics=x=>{ const P=x.photos||{}; return `${['before','after'].filter(k=>P[k]).map(k=>`<figure class="mitem"><div class="mthumb"><img src="${P[k]}" alt="Position ${k==='before'?'vorher':'nachher'}"></div><figcaption class="faint" style="font-size:11.5px">${k==='before'?'vorher':'nachher'}</figcaption></figure>`).join('')}`; };
+  const hasPics=pics(A)||pics(B)||mediaOf('s:'+A.id).length||mediaOf('s:'+B.id).length;
+  return `<h4 style="margin:14px 0 6px">Unterschied der Endwerte (B − A)</h4>${chart}
+  <h4 style="margin:14px 0 6px">Körper, Beschwerden, Anpassungen, Feedback</h4><div class="tw"><table><thead><tr><th></th><th>A · ${fmtDate(A.date)}</th><th>B · ${fmtDate(B.date)}</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table></div>
+  ${hasPics?`<h4 style="margin:14px 0 6px">Fotos, Videos, Standbilder</h4><div class="grid g2"><div class="stack" style="gap:6px"><b>A · ${fmtDate(A.date)}</b><div class="mgrid">${pics(A)}</div>${sessMediaThumbs(A.id)}</div><div class="stack" style="gap:6px"><b>B · ${fmtDate(B.date)}</b><div class="mgrid">${pics(B)}</div>${sessMediaThumbs(B.id)}</div></div>`:''}
+  <p class="faint" style="font-size:12px;margin-top:10px">Die Übersicht zeigt Unterschiede. Ob sich etwas verbessert hat, sagt nur die Rückmeldung des Kunden – FYF bewertet das nicht.</p>`;
+}
+
 VIEWS.verlauf = () => {
   const withMulti=S.customers.filter(c=>sessOf(c.id).filter(s=>Object.keys(s.before).length).length>=1);
   const candidates=S.sessions.filter(s=>Object.keys(s.before).length||Object.keys(s.after).length);
   if(!candidates.length) return `${head('Verlauf & Vergleich','Endpositionen zweier Sitzungen nebeneinander.')}<div class="empty">${ic('history')}<span>Noch keine Sitzung mit Messwerten.</span></div>`;
-  const A=sess(ui.cmpA)||candidates[0], B=sess(ui.cmpB)||candidates[1]||candidates[0]; ui.cmpA=A.id; ui.cmpB=B.id;
+  const custs=[...new Set(candidates.map(s=>s.customerId))].filter(id=>cust(id)&&cust(id).id);
+  if(sess(ui.cmpA)) ui.cmpC=sess(ui.cmpA).customerId; if(!custs.includes(ui.cmpC)) ui.cmpC=custs[0];
+  const own=candidates.filter(s=>s.customerId===ui.cmpC).sort((a,b)=>a.date.localeCompare(b.date));
+  let A=sess(ui.cmpA); if(!A||A.customerId!==ui.cmpC) A=own[0]; let B=sess(ui.cmpB); if(!B||B.customerId!==ui.cmpC) B=own[own.length-1]||A; ui.cmpA=A.id; ui.cmpB=B.id;
   const sameBike=A&&B&&A.bikeId===B.bikeId;
   const endA=A?{...A.before,...A.after}:{}, endB=B?{...B.before,...B.after}:{};
   const rows=compareRows(endA,endB);
   const cid=A?A.customerId:'c1'; const series=S.sessions.filter(s=>s.customerId===cid&&s.bikeId===(A?A.bikeId:'b1')&&Object.keys(s.before).length).sort((a,b)=>a.date.localeCompare(b.date));
   return `
   ${head('Verlauf & Vergleich','FitReplay: Endpositionen zweier Sitzungen nebeneinander und die Entwicklung über alle Termine.',st('i'))}
-  ${panel('Sitzungen vergleichen',`<div class="form"><div class="field"><label for="cmpA">Sitzung A</label><select class="input" id="cmpA" data-change="cmpA">${candidates.map(s=>`<option value="${s.id}" ${s.id===ui.cmpA?'selected':''}>${fmtDate(s.date)} · ${esc(cust(s.customerId).name)} · ${esc(s.type)}</option>`).join('')}</select></div>
-  <div class="field"><label for="cmpB">Sitzung B</label><select class="input" id="cmpB" data-change="cmpB">${candidates.map(s=>`<option value="${s.id}" ${s.id===ui.cmpB?'selected':''}>${fmtDate(s.date)} · ${esc(cust(s.customerId).name)} · ${esc(s.type)}</option>`).join('')}</select></div></div>
-  <div style="margin-top:12px">${!sameBike?`<div class="notice warn" style="margin-bottom:12px">${ic('warn')}Die Sitzungen betreffen unterschiedliche Fahrräder. Werte sind nur eingeschränkt vergleichbar.</div>`:''}${compareTable(rows,false,'Endstand A','Endstand B')}</div>`)}
+  ${panel('Sitzungen vergleichen',`<div class="form"><div class="field wide"><label for="cmpC">Kunde</label><select class="input" id="cmpC" data-change="cmpC">${custs.map(id=>`<option value="${id}" ${id===ui.cmpC?'selected':''}>${esc(cust(id).name)} (${candidates.filter(s=>s.customerId===id).length})</option>`).join('')}</select></div><div class="field"><label for="cmpA">Sitzung A</label><select class="input" id="cmpA" data-change="cmpA">${own.map(s=>`<option value="${s.id}" ${s.id===ui.cmpA?'selected':''}>${fmtDate(s.date)} · ${esc(s.type)} · ${esc(bike(s.bikeId).model)}</option>`).join('')}</select></div>
+  <div class="field"><label for="cmpB">Sitzung B</label><select class="input" id="cmpB" data-change="cmpB">${own.map(s=>`<option value="${s.id}" ${s.id===ui.cmpB?'selected':''}>${fmtDate(s.date)} · ${esc(s.type)} · ${esc(bike(s.bikeId).model)}</option>`).join('')}</select></div></div>
+  ${own.length<2?'<p class="muted" style="font-size:13.5px">Dieser Kunde hat erst eine Sitzung mit Messwerten.</p>':''}
+  <div style="margin-top:12px">${!sameBike?`<div class="notice warn" style="margin-bottom:12px">${ic('warn')}Die Sitzungen betreffen unterschiedliche Fahrräder. Werte sind nur eingeschränkt vergleichbar.</div>`:''}${compareTable(rows,false,'Endstand A','Endstand B')}${cmpExtraHtml(A,B)}</div>`)}
   ${panel(`Entwicklung über alle Sitzungen · ${esc(cust(cid).name)}, ${esc(bike(A?A.bikeId:'b1').model)}`,series.length?trendChart(series):'<div class="empty">Keine Daten.</div>')}`;
 };
 function trendChart(series){
@@ -3651,11 +3686,13 @@ VIEWS.followup = () => {
   <div class="notice">${ic('info')}<div>Erinnerungen per E-Mail oder SMS sind ${st('x')}. In der Demo wird der Versand nur protokolliert.</div></div>
   ${panelFlush('Nachkontrollen',items.length?`<div class="list">${items.map(f=>`<div class="li"><div class="avatar">${initials(cust(f.s.customerId).name)}</div><div class="grow"><div class="t">${esc(cust(f.s.customerId).name)} · ${f.days}-Tage-Kontrolle</div><div class="sub">nach ${esc(f.s.type)} vom ${fmtDate(f.s.date)} · ${esc(bike(f.s.bikeId).model)} · fällig ${fmtDate(f.due)}</div></div>
     ${f.status==='erledigt'?'<span class="chip c-ok">erledigt</span>':f.due<td?'<span class="chip c-bad">überfällig</span>':'<span class="chip c-info">offen</span>'}
-    ${f.status==='offen'?`<button class="btn sm" data-act="remind" data-id="${f.s.id}">Erinnern</button><button class="btn sm" data-act="fuFeedback" data-id="${f.s.id}" data-i="${f.i}">Rückmeldung</button><button class="btn sm primary" data-act="fuNewSession" data-id="${f.s.id}" data-i="${f.i}">Neue Sitzung</button>`:''}</div>`).join('')}</div>`:'<div class="empty">Keine offenen Nachkontrollen.</div>',
+    ${f.status==='offen'?`<button class="btn sm" data-act="remind" data-id="${f.s.id}">Erinnern</button><button class="btn sm" data-act="fuFeedback" data-id="${f.s.id}" data-i="${f.i}">Rückmeldung</button><button class="btn sm primary" data-act="fuNewSession" data-id="${f.s.id}" data-i="${f.i}">Neue Sitzung</button>`:''}<button class="btn sm ghost" data-act="fuCompare" data-id="${f.s.id}">Vergleich</button></div>`).join('')}</div>`:'<div class="empty">Keine offenen Nachkontrollen.</div>',
     `<div class="seg"><button data-act="fuFilter" data-v="offen" aria-pressed="${ui.fuFilter==='offen'}">Offen</button><button data-act="fuFilter" data-v="alle" aria-pressed="${ui.fuFilter==='alle'}">Alle</button></div>`)}
   ${panel('Follow-up planen',`<form class="form" data-form="followup"><div class="field"><label for="fu_s">Sitzung</label><select class="input" id="fu_s" name="sid">${done.map(s=>`<option value="${s.id}">${fmtDate(s.date)} · ${esc(cust(s.customerId).name)} · ${esc(s.type)}</option>`).join('')}</select></div>
-  <div class="field"><label for="fu_d">Intervall</label><select class="input" id="fu_d" name="days">${opts([['7','7 Tage'],['30','30 Tage'],['90','90 Tage'],['180','180 Tage']],'30')}</select></div>
-  <div class="wide"><button class="btn primary" type="submit">Nachkontrolle anlegen</button></div></form>`)}`;
+  <div class="field"><label for="fu_d">Intervall</label><select class="input" id="fu_d" name="days">${opts([['14','2 Wochen'],['28','4 Wochen'],['7','7 Tage'],['30','30 Tage'],['90','90 Tage'],['180','180 Tage']],'14')}</select></div>
+  <div class="field"><label for="fu_c">oder eigene Anzahl Tage</label><input class="input num" id="fu_c" name="custom" type="number" min="1" max="365" inputmode="numeric" placeholder="frei"></div>
+  <div class="wide"><button class="btn primary" type="submit">Nachkontrolle anlegen</button></div></form>`)}
+  ${panel('Standard beim Abschluss eines Fittings',`<p class="muted" style="font-size:13.5px;margin:0 0 8px">Diese Nachkontrollen legt FYF automatisch an, wenn du ein Fitting abschließt.</p><div class="chips">${[[14,'2 Wochen'],[28,'4 Wochen'],[30,'30 Tage'],[90,'3 Monate']].map(([d,l])=>`<button class="chipbtn" data-act="fuDefault" data-d="${d}" aria-pressed="${fuDaysDefault().includes(d)}">${l}</button>`).join('')}${fuDaysDefault().filter(d=>![14,28,30,90].includes(d)).map(d=>`<button class="chipbtn" data-act="fuDefault" data-d="${d}" aria-pressed="true">${d} Tage</button>`).join('')}</div><form class="row" style="gap:6px;margin-top:8px;flex-wrap:nowrap" data-form="fuDefaultAdd"><input class="input num" name="d" type="number" min="1" max="365" placeholder="eigene Tage" aria-label="Eigene Tage" style="max-width:140px"><button class="btn sm" type="submit">Hinzufügen</button></form>`)}`;
 };
 
 VIEWS.qualitaet = () => {
@@ -4584,7 +4621,7 @@ VIEWS.module = () => `
   ${panel('Über diese Demo',`<p class="muted" style="max-width:70ch">Eine einzige HTML-Datei ohne Server. Änderungen werden nur lokal in diesem Browser gespeichert und sind auf anderen Geräten nicht sichtbar. „Demo zurücksetzen“ stellt die Beispieldaten wieder her. Alle Personen, Fahrräder, Preise und Messwerte sind erfunden und keine fachlichen Vorgaben.</p>`)}`;
 
 /* ---------- After render hooks ---------- */
-function afterRender(){
+function afterRender(){ if(typeof mediaHydrate==='function') setTimeout(mediaHydrate,0);
   labelTables(document.getElementById('view'));
   cancelAnimationFrame(motion.raf); motion.playing=false; motion.last=0;
   if(ui.route==='motion'){ const cv=document.getElementById('motionCanvas'); if(cv){ drawMotion(cv); } wireVid(); }
@@ -4615,6 +4652,10 @@ function createSession(d){
 }
 
 const ACT = {
+  fuDefault(el){ const d=Number(el.dataset.d); S.shop=S.shop||{}; let L=fuDaysDefault(); L=L.includes(d)?L.filter(x=>x!==d):[...L,d].sort((a,b)=>a-b); if(!L.length){ toast('Mindestens ein Intervall',true); return; } S.shop.fuDays=L; audit(`Standard-Nachkontrollen: ${L.join(', ')} Tage`); save(); render(); },
+  mediaStill(el){ const id=el.dataset.id, m=(S.media||[]).find(x=>x.id===id); const v=document.querySelector(`[data-media="${id}"] video`); if(!m||!v||!v.videoWidth){ toast('Video erst abspielen und an der gewünschten Stelle anhalten',true); return; }
+    const c=document.createElement('canvas'); const sc=Math.min(1,1600/v.videoWidth); c.width=Math.round(v.videoWidth*sc); c.height=Math.round(v.videoHeight*sc); c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+    c.toBlob(b=>{ if(!b){ toast('Standbild nicht möglich',true); return; } const nid=uid('m'); const t=Math.round(v.currentTime*10)/10; mPut({id:nid,blob:b,type:'image/jpeg'}).then(()=>{ S.media.push({id:nid,owner:m.owner,kind:'image',name:`Standbild ${t}s`,type:'image/jpeg',size:b.size,date:today(),note:`Standbild bei ${fmtNum(t)} s`,phase:m.phase||'',from:id}); audit('Standbild gespeichert'); save(); reopenOwner(m.owner); toast('Standbild gespeichert'); }).catch(()=>toast('Speichern fehlgeschlagen',true)); },'image/jpeg',0.9); },
   vizPick(el){ ui.vizPart=el.dataset.p; render(); },
   vizToggle(el,e){ ui.vizOpen=!ui.vizOpen; render(); },
   vizBike(el){ ui.vizBike=el.dataset.id||null; render(); if(ui.vizBike) window.scrollTo({top:0}); },
@@ -4882,7 +4923,9 @@ const ACT = {
   copyReport(el){ copyText(reportText(sess(el.dataset.id))); },
   portalReport(el){ const s=sess(el.dataset.id); openDrawer('Bericht',reportHtml(s)); },
   remind(el){ const s=sess(el.dataset.id); audit(`Erinnerung an ${cust(s.customerId).name} vorgemerkt (kein Versand)`,s.id); save(); toast('Erinnerung protokolliert – Versand braucht eine Integration'); },
-  fuFeedback(el){ const s=sess(el.dataset.id); openDrawer('Rückmeldung erfassen',`<form class="form" data-form="feedback" data-id="${s.id}" data-i="${el.dataset.i}"><div class="field"><label for="fb_s">Komfort (1–10, subjektiv)</label><input class="input num" id="fb_s" name="score" type="number" min="1" max="10" value="7" required></div><div class="field wide"><label for="fb_t">Aussage der Kundin / des Kunden</label><textarea class="input" id="fb_t" name="text" required></textarea></div><div class="wide"><label><input type="checkbox" name="done" checked> Nachkontrolle damit erledigt</label></div><div class="wide"><button class="btn primary" type="submit">Speichern</button></div></form>`); },
+  fuFeedback(el){ const s=sess(el.dataset.id); openDrawer('Feedback zur Nachkontrolle',fbForm(s,el.dataset.i,'Nachkontrolle')); },
+  fbOpen(el){ const s=sess(el.dataset.id); openDrawer('Feedback zum Fitting',fbForm(s,null,'Fitting')); },
+  fuCompare(el){ const s=sess(el.dataset.id); const later=S.sessions.filter(x=>x.customerId===s.customerId&&x.date>=s.date&&x.id!==s.id&&(Object.keys(x.before).length||Object.keys(x.after).length)).sort((a,b)=>b.date.localeCompare(a.date))[0]; ui.cmpC=s.customerId; ui.cmpA=s.id; ui.cmpB=later?later.id:s.id; go('verlauf'); },
   fuNewSession(el){ const s=sess(el.dataset.id); const id=createSession({cid:s.customerId,bid:s.bikeId,date:today(),time:'',type:'Nachkontrolle',fitter:s.fitter,copy:true}); s.followUps[Number(el.dataset.i)].status='erledigt'; save(); ui.sess=id; ui.sessTab='ausgang'; go('sitzung'); toast('Nachkontrolle angelegt, Ausgangswerte aus Vorsitzung übernommen'); },
   motionSide(el){ ui.motionSide=el.dataset.v; motion.range=null; render(); },
   motionPlay(){ motion.playing=!motion.playing; motion.last=0; const b=document.getElementById('playBtn'); if(b) b.innerHTML=motion.playing?ic('pause')+'Pause':ic('play')+'Abspielen'; if(motion.playing) motion.raf=requestAnimationFrame(motionStep); },
@@ -4995,8 +5038,11 @@ const FORMS = {
     if(data.get('follow')&&from!=null){ const end={...s.before}; Object.assign(end,s.after); sideEffects(s,k,v-from).filter(e=>e.delta!=null&&MK[e.key]&&!e.comp&&['saddleSetback','reach','drop','saddleHeight'].includes(e.key)&&e.key!==k).forEach(e=>{ const base=s.after[e.key]||s.before[e.key]; if(!base) return; const nv=Math.round((Number(base.value)+e.delta)*10)/10; s.after[e.key]={key:e.key,value:nv,method:'Berechnet',source:'berechnet',unc:3,time:nowStamp()}; s.changes.push({key:e.key,from:Number(base.value),to:nv,reason:`Folge von ${MK[k].label} ${v-from>0?'+':''}${fmtNum(Math.round((v-from)*10)/10)} ${MK[k].unit} (berechnet)`,time:nowStamp()}); }); }
     audit(`${MK[k].label}: ${fmtNum(from)} → ${fmtNum(v)} ${MK[k].unit}${s.status==='abgeschlossen'?` (neue Version ${s.version})`:''}`,s.id); save(); render(); toast(from==null?'Änderung dokumentiert – kein Ausgangswert vorhanden':'Änderung dokumentiert'); },
   newSession(f,data){ S.lastFitter=String(data.get('fitter')||'').trim()||S.lastFitter; const id=createSession({cid:data.get('cid'),bid:data.get('bid'),date:data.get('date'),time:data.get('time'),type:data.get('type'),fitter:data.get('fitter'),copy:data.get('copy')==='on'}); save(); closeDrawer(); ui.sess=id; ui.sessTab='anamnese'; go('sitzung'); toast('Sitzung angelegt'); },
-  followup(f,data){ const s=sess(data.get('sid')); const days=Number(data.get('days')); const due=new Date(s.date+'T12:00'); due.setDate(due.getDate()+days); s.followUps.push({days,due:iso(due),status:'offen'}); audit(`Nachkontrolle (${days} Tage) angelegt`,s.id); save(); render(); toast(`Nachkontrolle für ${fmtDate(iso(due))} angelegt`); },
-  feedback(f,data){ const s=sess(f.dataset.id); s.feedback.push({date:today(),score:Number(data.get('score')),text:String(data.get('text')).trim()}); if(data.get('done')==='on') s.followUps[Number(f.dataset.i)].status='erledigt'; audit(`Rückmeldung erfasst (${data.get('score')}/10)`,s.id); save(); closeDrawer(); render(); toast('Rückmeldung gespeichert'); },
+  fuDefaultAdd(f,data){ const d=Number(data.get('d')); if(!(d>=1&&d<=365)){ toast('1 bis 365 Tage',true); return; } S.shop=S.shop||{}; const L=fuDaysDefault().filter(x=>x!==d); L.push(d); S.shop.fuDays=L.sort((a,b)=>a-b); save(); render(); },
+  followup(f,data){ const s=sess(data.get('sid')); const cu=Number(data.get('custom')); if(String(data.get('custom')||'')!==''&&!(cu>=1&&cu<=365)){ toast('Eigene Tage: 1 bis 365',true); return; } const days=cu>=1?cu:Number(data.get('days')); const due=new Date(s.date+'T12:00'); due.setDate(due.getDate()+days); s.followUps.push({days,due:iso(due),status:'offen'}); audit(`Nachkontrolle (${days} Tage) angelegt`,s.id); save(); render(); toast(`Nachkontrolle für ${fmtDate(iso(due))} angelegt`); },
+  feedback(f,data){ const s=sess(f.dataset.id); const sc=Number(data.get('score')); if(!(sc>=1&&sc<=10)){ toast('Zufriedenheit 1–10 eingeben',true); return; } const q={}; FB_Q.forEach(([k,,o])=>{ const v=data.get('q_'+k); if(v&&o.includes(v)) q[k]=v; const tx=String(data.get('q_'+k+'Text')||'').trim().slice(0,300); if(tx) q[k+'Text']=tx; });
+    const i=f.dataset.i; const kind=f.dataset.kind||(i!==''&&i!=null?'Nachkontrolle':'Fitting');
+    s.feedback.push({date:today(),score:sc,text:String(data.get('text')||'').trim().slice(0,1000),q,kind,...(i!==''&&i!=null?{fu:Number(i)}:{})}); if(data.get('done')==='on'&&i!==''&&i!=null&&s.followUps[Number(i)]) s.followUps[Number(i)].status='erledigt'; audit(`Rückmeldung erfasst (${data.get('score')}/10)`,s.id); save(); closeDrawer(); render(); toast('Rückmeldung gespeichert'); },
   cleatTransfer(f,data){ const s=sess(data.get('sid')); const fore=parseFloat(data.get('fore')); const rot=data.get('rot');
     s.before.cleatFore=s.before.cleatFore||{...mv('cleatFore',fore,'CleatLab (Prototyp, nicht validiert)','manuell eingegeben',null),time:nowStamp()};
     if(s.before.cleatFore.value!==fore){ s.after.cleatFore={...mv('cleatFore',fore,'CleatLab (Prototyp, nicht validiert)','manuell eingegeben',null),time:nowStamp()}; }
@@ -5030,10 +5076,12 @@ const FORMS = {
 };
 
 const CHG = {
+  cmpC(el){ ui.cmpC=el.value; ui.cmpA=null; ui.cmpB=null; render(); },
+  mediaPhase(el){ const m=(S.media||[]).find(x=>x.id===el.dataset.id); if(!m) return; m.phase=['vorher','nachher'].includes(el.value)?el.value:''; save(); },
   chRate(el){ const s=sess(el.dataset.id); const ch=s.changes[Number(el.dataset.i)]; if(!ch) return; ch.rating=CH_RATE.includes(el.value)?el.value:'noch offen'; audit(`Bewertung ${MK[ch.key]?MK[ch.key].label:ch.key}: ${ch.rating}`,s.id); save(); },
   tplSet(el){ const s=sess(el.dataset.id); s.tpl=el.value; delete s.tplTests; audit(`Vorlage gewählt: ${el.value}`,s.id); save(); render(); },
   tplTest(el){ const s=sess(el.dataset.id); const L=[...tplTests(s)]; const k=el.dataset.k; const i=L.indexOf(k); if(el.checked&&i<0) L.push(k); if(!el.checked&&i>=0) L.splice(i,1); s.tplTests=L; save(); render(); },
-  mediaAdd(el){ const owner=el.dataset.owner, files=[...(el.files||[])]; if(!files.length) return; const c=owner.startsWith('c:')?cust(owner.slice(2)):cust((bike(owner.slice(2))||{}).customerId);
+  mediaAdd(el){ const owner=el.dataset.owner, files=[...(el.files||[])]; if(!files.length) return; const c=owner.startsWith('c:')?cust(owner.slice(2)):owner.startsWith('s:')?cust((sess(owner.slice(2))||{}).customerId):cust((bike(owner.slice(2))||{}).customerId);
     if(!mediaOk(c)){ toast('Erst Einwilligung für Fotos/Videos erfassen',true); return; } let ok=0, done=0; const fin=()=>{ if(++done<files.length) return; if(ok){ audit(`${ok} Foto/Video gespeichert (${c.name})`,c.id); save(); } reopenOwner(owner); if(ok) toast(ok===1?'Gespeichert':ok+' Dateien gespeichert'); };
     files.forEach(f=>{ const kind=/^video\//.test(f.type)?'video':/^image\//.test(f.type)?'image':null; if(!kind){ toast(`${f.name}: nur Fotos oder Videos`,true); return fin(); } if(f.size>MEDIA_MAX[kind]){ toast(`${f.name}: zu groß (max. ${MEDIA_MAX[kind]/1e6} MB)`,true); return fin(); }
       const id=uid('m'); mPut({id,blob:f,type:f.type}).then(()=>{ (S.media=S.media||[]).push({id,owner,kind,name:f.name.slice(0,80),type:f.type,size:f.size,date:today(),note:''}); ok++; fin(); }).catch(()=>{ toast('Speichern fehlgeschlagen – Speicher voll oder privates Fenster?',true); fin(); }); }); },
@@ -5066,7 +5114,7 @@ const CHG = {
     if(el.dataset.fill&&!g){ const sw=document.getElementById('nb_s_wrap'); if(sw) sw.hidden=false; } },
   advGeo(el){ ui.advGeo=el.value; render(); },
   compDone(el){ const s=sess(el.dataset.id); const cp=s.comp[Number(el.dataset.i)]; cp.status=el.checked?'umgesetzt':'geplant'; audit(`Ausgleich ${cp.status}: ${cp.t}`,s.id); save(); render(); },
-  sessStatus(el){ const s=sess(el.dataset.id); const old=s.status; s.status=el.value; if(el.value==='abgeschlossen'&&!s.followUps.length){ const due=new Date(s.date+'T12:00'); due.setDate(due.getDate()+30); s.followUps.push({days:30,due:iso(due),status:'offen'}); toast('Abgeschlossen – Nachkontrolle in 30 Tagen angelegt'); } else toast(`Status: ${el.value}`); audit(`Status ${cust(s.customerId).name}: ${old} → ${el.value}`,s.id); save(); render(); },
+  sessStatus(el){ const s=sess(el.dataset.id); const old=s.status; s.status=el.value; if(el.value==='abgeschlossen'&&!s.followUps.length){ const D=fuDaysDefault(); D.forEach(d=>{ const due=new Date(s.date+'T12:00'); due.setDate(due.getDate()+d); s.followUps.push({days:d,due:iso(due),status:'offen'}); }); toast(`Abgeschlossen – Nachkontrolle${D.length>1?'n':''} nach ${D.join(' und ')} Tagen angelegt`); } else toast(`Status: ${el.value}`); audit(`Status ${cust(s.customerId).name}: ${old} → ${el.value}`,s.id); save(); render(); },
   pickSession(el){ ui.wIdx=null; ui.sess=el.value; ui.advGeo=null; vid.pts=[]; render(); },
   onlyChanged(el){ ui.cmpChanged=el.checked; render(); },
   share(el){ S.shared[el.dataset.id]=el.checked; audit(`Bericht ${el.checked?'im Portal freigegeben':'Freigabe entzogen'}`,el.dataset.id); save(); toast(el.checked?'Im Kundenportal sichtbar':'Nicht mehr im Kundenportal sichtbar'); },

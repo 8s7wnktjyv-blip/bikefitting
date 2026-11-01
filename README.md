@@ -44,6 +44,13 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Messmittel (Datenbanken → Messmittel): Bezeichnung, Art, Hersteller, Modell, Methode, Genauigkeit nur laut Hersteller mit Quelle, Kalibrier- und Prüfdatum. Zuordnung zur Sitzung im Schritt „Messen“.
 - Prüfung der Daten: zusätzlich fehlende Messmethode, Änderungen ohne Begründung oder ohne Protokolleintrag, Unterschied Fußlänge links/rechts, vermutlich falsche Einheit, nicht dokumentierte Messmittel. Der Fitter kann jeden Hinweis als „korrekt“ bestätigen; FYF ändert keine Werte.
 
+## Vergleich, Feedback, Nachkontrollen, Medien je Sitzung (ab v.47)
+
+- Verlauf & Vergleich: erst Kunde wählen, dann zwei seiner Sitzungen. Endwerte, Balken der Unterschiede (B − A), Ziel, Beschwerden, Sitzknochen, Beinlänge, Beweglichkeit, Änderungen, Feedback, Fotos/Standbilder. Ohne Aussage „besser“ – das sagt nur der Kunde.
+- Feedback mit 7 Fragen (Sitzposition, Beschwerden, Druckstellen, Komfort, Belastung, lange Fahrten, Zufriedenheit 1–10) beim Fitting und bei der Nachkontrolle, nebeneinander vergleichbar.
+- Nachkontrollen: Standard beim Abschluss frei wählbar (2 Wochen, 4 Wochen, 30 Tage, 3 Monate oder eigene Tage); einzelne Nachkontrolle mit frei wählbaren Tagen; „Vergleich“ öffnet Erst-Fitting und letzte Sitzung.
+- Fotos, Videos und Standbilder je Sitzung (mit Einwilligung, nur auf dem Gerät), Zeitpunkt vorher/nachher; aus einem Video lässt sich ein Standbild speichern.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.
