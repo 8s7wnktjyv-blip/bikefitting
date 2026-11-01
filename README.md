@@ -20,6 +20,13 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Kunde: Geburtsdatum (mit Alter), Gewicht, Trainingsstunden pro Woche, Kilometer pro Jahr, Ziele/Hinweise. Werte außerhalb plausibler Grenzen werden abgelehnt.
 - Produktkäufe je Kunde erfassen (Artikel, Betrag, Datum, Rad, Status), mit Summe.
 - Fahrrad: Komponenten (Material, Schaltgruppe, Kurbel, Lenker, Vorbau, Sattel, Sattelbreite, Stütze, Cleats). Leere Felder bleiben leer; Kurbel, Lenker und Vorbau werden sonst aus dem letzten Fitting angezeigt und so gekennzeichnet.
+- Kundenakte in 8 Tabs (ab v.44): Übersicht, Persönliche Daten, Körperanalyse, Fahrräder, Fitting-Historie, Produkte, Dokumente, Nachkontrollen.
+- Körperanalyse (ab v.44):
+  - Sitzknochen mit bis zu 3 Einzelmessungen, Methode und Sitzhaltung. FYF bildet den Mittelwert; bei mehr als 5 mm Streuung erscheint ein Hinweis. Verlauf über alle Sitzungen.
+  - Füße links/rechts: Länge, Breite, Gewölbe, Vorfuß, Fußstellung, Kniespur.
+  - Neue Tests: Fußbreite, Fußstellung, Beinachse, Hüftrotation, Rumpfstabilität, Einbeinstand – jeweils mit Anleitung und Skizze.
+  - Jeder Auswahl-Test hat „nicht eindeutig“; das fließt nicht in die Auswertung ein.
+  - Messwert, Beobachtung und Einschätzung des Fitters werden getrennt gespeichert und angezeigt. Hinweise von FYF sind Faustregeln, keine Diagnose.
 - Fotos und Videos je Kunde und je Rad. Nur mit eigener Einwilligung für Fotos/Videos. Gespeichert nur auf dem Gerät (IndexedDB, Fotos bis 15 MB, Videos bis 80 MB), nicht in der Text-Sicherung.
 
 ## Ablauf eines Fittings
