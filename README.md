@@ -8,6 +8,13 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Alle Daten werden nur lokal im Browser gespeichert (`localStorage`). Sie sind unverschlüsselt und nicht auf anderen Geräten sichtbar.
 - Die Beispielkunden sind erfunden. „Mehr → Demo zurücksetzen“ lädt sie neu.
 
+## Aufbau (ab v.42)
+
+- Menü in 10 Bereichen: Dashboard, Kunden, Bikefitting, Körperanalyse, Bike-Vermessung, Bewegungsanalyse, Produktempfehlungen, Berichte, Datenbanken, Einstellungen.
+- Dashboard: Kennzahlen, Schnellaktionen, letzte Fittings, zuletzt bearbeitete Kunden, Aktivitäten. Das Diagramm erscheint erst ab 3 abgeschlossenen Fittings, nur mit echten Daten.
+- Neue Übersichten: Körperanalyse (je Kunde), Bike-Vermessung (aktuelle Werte je Rad), Berichte (Filter und Suche).
+- Löschen braucht zwei Klicks („Wirklich löschen?“). Größere Bedienelemente auf Touch-Geräten.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.
