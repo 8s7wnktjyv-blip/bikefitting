@@ -69,6 +69,11 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Auskunft und Löschen: Kundenakte → Persönliche Daten → „Daten exportieren“ bzw. „Kunde löschen“ (nur Admin, Name bestätigen). Löscht auch Fotos/Videos auf dem Gerät und den Kunden in Browser-Sicherungen; Protokoll wird anonymisiert.
 - Datenschicht `STORE` für einen späteren Server-Adapter. Unterlagen: `docs/DATENSCHICHT.md`, `docs/LOESCHKONZEPT.md`, `docs/supabase/schema.sql` (Tabellen mit Betriebs-Trennung und Zugriffsregeln je Rolle; nicht ausgeführt, kein Projekt angelegt).
 
+## Praxistest (v.52)
+
+- Durchgehender Test mit fiktivem Kunden „TEST Max Praxistest“ in 14 Schritten (Kunde → Rad → Fitting → Körper → Sitzknochen → Maße → Vermessung → Bewegung → Anpassung → Produkte → Bericht → Nachkontrolle → neue Sitzung → Vergleich) am Handy-, Tablet- und PC-Format: bestanden.
+- Dabei behoben: Kurbellänge, Vorbau und Lenkerbreite aus der Fahrradakte werden beim Messen als Herstellerangabe übernommen.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.

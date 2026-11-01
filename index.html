@@ -1489,7 +1489,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-01.51';
+const APP_VER='2026-11-01.52';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2598,7 +2598,9 @@ function measureForm(s,side,isChange){
 const MAKER={stemLength:'stem',barWidth:'bar',crankLength:'crank'};
 const MEASURE_NOW=['saddleHeight','kneeBDC','saddleSetback','reach','drop','cleatFore','saddleTilt','spacer','spacerAbove','stemAngle','bbHeight','saddleFloor','barFloor','hoodFloor','saddleToHood'];
 function makerValues(s){ const b=bike(s.bikeId); const g=b&&b.geo&&geoById(b.geo.id); const r=g&&geoRow(g,b.geo.size); if(!r) return null; const vals={}; Object.entries(MAKER).forEach(([k,c])=>{ if(r[c]!=null) vals[k]=r[c]; }); return {vals,g,r}; }
-function applyMaker(s){ const m=makerValues(s); if(!m) return 0; let n=0; Object.entries(m.vals).forEach(([k,v])=>{ if(!s.before[k]){ s.before[k]={...mv(k,v,'Herstellerangabe','vom Hersteller',null),time:nowStamp()}; n++; } }); if(n) audit(`${n} Serienwerte vom Hersteller übernommen (${m.g.brand} ${m.g.model}, ${m.r.size})`,s.id); return n; }
+function applyMaker(s){ let n=0; const bk=bike(s.bikeId)||{}, P=bk.parts||{}; const fromBike={crankLength:P.crank,stemLength:P.stem,barWidth:P.bar,stemAngle:P.stemAngle}; let nb=0;
+  Object.entries(fromBike).forEach(([k,v])=>{ if(MK[k]&&v!=null&&v!==''&&!s.before[k]){ s.before[k]={...mv(k,Number(v),'Herstellerangabe','vom Hersteller',null),time:nowStamp(),from:'Fahrradakte'}; nb++; } }); if(nb) audit(`${nb} Werte aus der Fahrradakte übernommen (Komponenten)`,s.id); n+=nb;
+  const m=makerValues(s); if(!m) return n; let nm=0; Object.entries(m.vals).forEach(([k,v])=>{ if(!s.before[k]){ s.before[k]={...mv(k,v,'Herstellerangabe','vom Hersteller',null),time:nowStamp()}; nm++; } }); if(nm) audit(`${nm} Serienwerte vom Hersteller übernommen (${m.g.brand} ${m.g.model}, ${m.r.size})`,s.id); return n+nm; }
 function measureCard(s,side,k,c,b){
   const m=MK[k], cur=s[side][k], h=HOW[k]||{m:'Maßband',steps:[],tool:''}; const rg=measureRange(k,c,b);
   return `<section class="panel" style="box-shadow:none"><div class="panel-b stack" style="gap:10px">
