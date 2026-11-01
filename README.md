@@ -55,6 +55,13 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 
 16 nummerierte Abschnitte, nur aus gespeicherten Daten; Fehlendes steht als „Nicht erfasst“: Kundendaten, Fahrrad, Anlass, Beschwerden, Körperanalyse (mit Beobachtung/Einschätzung des Fitters), Sitzknochen, relevante Messwerte (mit Messmitteln), Ausgangsposition, Anpassungen (mit wer/Bewertung), Endposition, Vorher-Nachher, Fotos/Standbilder, Produktempfehlungen, Eingewöhnung, Nachkontrolle, Datum/Fitter mit Unterschriftsfeld. Drucken oder als PDF sichern.
 
+## Produktdatenbank, Empfehlungen, Wissen (ab v.49)
+
+- Datenbanken → Produktdatenbank: Sättel (Breite, Einsatz), Einlagen (Gewölbe), Cleats (System, Float, Auslösung). Fachdaten nur laut Hersteller mit Quellenlink; ohne Quelle als „ohne Quelle“ markiert. Verkaufs- und Einkaufspreis mit Marge.
+- Belegte Quellen: Shimano (SPD-SL SM-SH10/11/12, SPD SM-SH51/56), LOOK (Kéo 0°/4,5°/9°), Specialized (Power Expert 143/155/168 mm, Body Geometry SL Einlagen), SQlab (611 Ergowave 13–16 cm), CURREX (BikePro Low/Medium/High).
+- Im Fitting (Ergebnis → Angebot): Produktempfehlungen mit Begründung aus Sitzknochen, Fußgewölbe, Pedalsystem und Kniespur; annehmen, ablehnen oder zurücksetzen. Angenommene erscheinen im Bericht.
+- Datenbanken → Wissen: Fachbegriffe, alle Messverfahren und Körpertests mit Skizzen, mit Suche.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.
