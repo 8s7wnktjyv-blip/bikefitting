@@ -15,6 +15,13 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Neue Übersichten: Körperanalyse (je Kunde), Bike-Vermessung (aktuelle Werte je Rad), Berichte (Filter und Suche).
 - Löschen braucht zwei Klicks („Wirklich löschen?“). Größere Bedienelemente auf Touch-Geräten.
 
+## Kunden- und Fahrradakte (ab v.43)
+
+- Kunde: Geburtsdatum (mit Alter), Gewicht, Trainingsstunden pro Woche, Kilometer pro Jahr, Ziele/Hinweise. Werte außerhalb plausibler Grenzen werden abgelehnt.
+- Produktkäufe je Kunde erfassen (Artikel, Betrag, Datum, Rad, Status), mit Summe.
+- Fahrrad: Komponenten (Material, Schaltgruppe, Kurbel, Lenker, Vorbau, Sattel, Sattelbreite, Stütze, Cleats). Leere Felder bleiben leer; Kurbel, Lenker und Vorbau werden sonst aus dem letzten Fitting angezeigt und so gekennzeichnet.
+- Fotos und Videos je Kunde und je Rad. Nur mit eigener Einwilligung für Fotos/Videos. Gespeichert nur auf dem Gerät (IndexedDB, Fotos bis 15 MB, Videos bis 80 MB), nicht in der Text-Sicherung.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.
