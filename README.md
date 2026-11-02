@@ -94,6 +94,13 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Sobald eigene Daten vorhanden sind, erinnert das Dashboard, wenn noch nie oder vor mehr als 7 Tagen gesichert wurde („Jetzt sichern“ oder „Morgen erinnern“). Datum der letzten Sicherung unter Mehr → Deine Daten sichern.
 - Demo-Tour (Kachel auf dem Dashboard): 6 Schritte in etwa 2 Minuten – Größenberatung, Quick-Fit, Fahrwerk, Bericht, Empfehlungen mit Umsatz, Dashboard. Nutzt die Beispielkunden, verändert keine Daten.
 
+## Zurück-Knopf, eigenes Dashboard, Messset (ab v.57)
+
+- Zurück: Pfeil oben links, außerdem Wischen bzw. Zurück im Browser. Ein offenes Fenster schließt zuerst; im Fitting geht es an dieselbe Stelle zurück.
+- Dashboard anpassen: „Dashboard anpassen“ → jeden Bereich nach oben/unten schieben oder ausblenden; „Standard“ stellt alles zurück.
+- Seitenvergleich links/rechts, Test Schulterbeweglichkeit, gemeinsame Zeitleiste in der Kundenakte, Videos vorher/nachher nebeneinander (synchron, bildweise, langsam), Ansicht je Video (v.56).
+- FYF-Messset (Datenbanken → Messmittel): Inhalt des geplanten Sets, mit einem Tippen als Messmittel anlegen. Prototyp, Genauigkeit noch nicht geprüft. Konzept: `docs/KONZEPT-MESSSET.md`.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.

@@ -693,6 +693,8 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 .bm-wrap{background:var(--il-bg,#f4f2ee);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:center}.bmap{width:100%;max-width:min(300px,60vh);height:auto;display:block;cursor:crosshair;touch-action:manipulation}.bmap.ro{cursor:default}.bm-body{fill:var(--surface,#fff);stroke:var(--il-frame,#4a5058);stroke-width:2}.bm-line{fill:none;stroke:var(--il-frame,#4a5058);stroke-width:1.2;opacity:.6}.bm-lbl{font-size:9px;fill:var(--muted,#666)}.bm-link{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}.bm-pt{cursor:pointer}.bm-pt circle{stroke:#fff;stroke-width:1.5}.bm-n{font-size:7px;fill:#fff;font-weight:700;pointer-events:none}.bm-leg{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font-size:12px;color:var(--muted)}.bm-leg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}.bm-dot{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;flex:0 0 auto}.bm-sheet{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.bm-sheet figure{margin:0;text-align:center}.bm-sheet .bmap{max-width:200px;margin:0 auto}.print-handout .report:not(.handout){display:none!important}@media print{.bm-pt circle,.bm-dot{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 .susp-col .field{gap:3px}.susp-col .input{min-height:40px}
 #tour{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:80;display:flex;justify-content:center;padding:0 12px;pointer-events:none}.tour-card{pointer-events:auto;width:min(520px,100%);background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:14px 16px;display:flex;flex-direction:column;gap:8px}.tourbar{height:4px;background:var(--line);border-radius:2px;overflow:hidden}.tourbar i{display:block;height:100%;background:var(--accent)}@media (min-width:1000px){#tour{bottom:20px;justify-content:flex-end;padding-right:24px}}@media print{#tour{display:none!important}}
+.tl{display:flex;flex-direction:column}.tl-i{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}.tl-i:last-child{border-bottom:0}.tl-i.click{cursor:pointer}.tl-d{font-size:12px;color:var(--faint);min-width:74px;padding-top:2px}.tl-k{font-size:11px;font-weight:600;padding:2px 7px;border-radius:8px;background:var(--surface-2,#eee);color:var(--muted);white-space:nowrap}.tl-k.k-fitting{background:var(--accent-soft);color:var(--accent-strong,var(--accent))}.vcmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mthumb.vc{aspect-ratio:auto;min-height:120px;background:#000}.mthumb.vc video{object-fit:contain}
+.dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}.dgrid>.dw{min-width:0;display:flex;flex-direction:column;gap:16px}.dgrid>.dw.full{grid-column:1/-1}.dgrid>.dw>.grid{margin:0}@media (max-width:900px){.dgrid{grid-template-columns:1fr}}.dw.edit{outline:2px dashed var(--line);outline-offset:4px;border-radius:12px;padding:4px}.dw.off{opacity:.55}.dw-ctl{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface-2,#eee);border-radius:10px;padding:6px 10px;font-size:14px}.back-btn svg{width:22px;height:22px}
 </style>
 </head>
 <body>
@@ -702,6 +704,7 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
   <div class="main">
     <header class="topbar">
       <button class="iconbtn menu-btn" data-act="menu" aria-label="Menü öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <button class="iconbtn back-btn" id="backBtn" data-act="navBack" aria-label="Zurück" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 5l-7 7 7 7"/></svg></button>
       <div class="crumb" id="crumb">FYF</div>
       <div class="spacer"></div>
       <button class="savepill" id="savePill" data-act="saveInfo" aria-label="Speicherstatus"></button>
@@ -940,6 +943,7 @@ const IL = (()=>{
     legAxis:()=>svg([[60,0],[160,1],[260,2]].map(([x,t])=>{ const k=t===1?[x-6,x+6]:t===2?[x-12,x+12]:[x-4,x+4]; return ln(x-14,20,k[0],90,'p',6)+ln(k[0],90,x-6,160,'p',6)+ln(x+14,20,k[1],90,'p',6)+ln(k[1],90,x+6,160,'p',6); }).join('')+floor(162)+tx(60,180,'gerade','middle','s')+tx(160,180,'X','middle','s')+tx(260,180,'O','middle','s'),'Beinachse','0 0 320 188'),
     hipRot:()=>svg(`<rect x="30" y="70" width="170" height="14" rx="4" class="il-f"/>`+ln(70,62,170,62,'p',9)+ln(170,62,170,150,'p',7)+ln(170,62,230,140,'h',6)+arc(170,62,40,270,305)+tx(250,120,'Unterschenkel','start','s')+tx(250,134,'nach außen','start','s'),'Hüftrotation im Sitzen'),
     trunk:()=>svg(floor(150)+ci(70,112,11,'p',1)+ln(84,118,270,138,'h',8)+ln(90,122,90,148,'p',6)+ln(90,148,130,148,'p',6)+tx(160,90,'Körper gerade halten')+tx(160,106,'Zeit stoppen','middle','s'),'Unterarmstütz'),
+    shoulderMob:()=>svg(ci(160,20,11,'p',1)+ln(160,32,160,110,'p',9)+ln(140,40,180,40,'p',6)+ln(180,40,186,14,'p',5)+ln(186,14,166,70,'h',5)+ln(140,40,136,96,'p',5)+ln(136,96,158,84,'h',5)+arw(166,72,158,84)+tx(220,80,'Abstand','start','s')+tx(220,94,'der Finger','start','s')+floor(170),'Schulterbeweglichkeit'),
     singleLeg:()=>svg(ci(160,16,11,'p',1)+ln(160,28,160,90,'p',8)+ln(160,90,156,166,'p',7)+ln(160,90,190,120,'p',6)+ln(190,120,176,146,'p',6)+ln(140,40,180,40,'p',6)+floor(168)+tx(250,90,'30 s halten','middle','s'),'Einbeinstand'),
     sitBone:()=>svg(`<rect x="60" y="40" width="200" height="110" rx="10" class="il-f" style="stroke-width:3"/>`+ci(120,96,12,'h')+ci(200,96,12,'h')+arw(120,96,200,96)+tx(160,84,'Mitte zu Mitte')+tx(160,170,'Abdrücke auf Wellpappe','middle','s'),'Sitzknochenabstand')
   };
@@ -1137,7 +1141,8 @@ const CHECKS = [
   {k:'legAxis',label:'Beinachse im Stand',type:'sel',opts:['gerade','X-Stellung','O-Stellung','nicht eindeutig'],side:false,tool:'Augenmaß',why:'Die Beinachse beeinflusst, wie das Knie beim Treten läuft.',steps:['Person steht barfuß, Füße geschlossen, Knie locker gestreckt.','Von vorn schauen: Berühren sich Knie und Innenknöchel gleichzeitig (gerade), nur die Knie (X) oder nur die Knöchel (O)?']},
   {k:'hipRot',label:'Hüftrotation (Innendrehung im Sitzen)',type:'sel',opts:['frei','etwas eingeschränkt','deutlich eingeschränkt','nicht eindeutig'],side:true,tool:'Liege oder Tisch',why:'Eine steife Hüfte kann das Knie beim Treten seitlich führen.',steps:['Person sitzt aufrecht auf der Liegenkante, Knie 90° gebeugt, Oberschenkel liegen auf.','Unterschenkel langsam nach außen schwenken lassen (die Hüfte dreht dabei nach innen). Der Oberschenkel bleibt liegen.','Beide Seiten vergleichen: frei, etwas oder deutlich eingeschränkt.']},
   {k:'trunk',label:'Rumpfstabilität (Unterarmstütz)',type:'num',unit:'s',step:5,side:false,tool:'Stoppuhr, Matte',why:'Ein stabiler Rumpf hält das Becken auf dem Sattel ruhig.',steps:['Unterarmstütz: Ellbogen unter den Schultern, Körper gerade von Kopf bis Ferse.','Zeit stoppen, bis die Hüfte absinkt oder die Haltung nicht mehr sauber ist.','Bei 120 s abbrechen.']},
-  {k:'singleLeg',label:'Einbeinstand (30 s, Augen offen)',type:'sel',opts:['stabil','wackelig','nicht möglich','nicht eindeutig'],side:true,tool:'Stoppuhr',why:'Zeigt Gleichgewicht und Stabilität von Fuß, Knie und Hüfte je Seite.',steps:['Person steht barfuß auf einem Bein, Hände an der Hüfte.','30 Sekunden halten.','Stabil: ruhig. Wackelig: deutliches Ausgleichen. Nicht möglich: Fuß setzt ab.']}
+  {k:'singleLeg',label:'Einbeinstand (30 s, Augen offen)',type:'sel',opts:['stabil','wackelig','nicht möglich','nicht eindeutig'],side:true,tool:'Stoppuhr',why:'Zeigt Gleichgewicht und Stabilität von Fuß, Knie und Hüfte je Seite.',steps:['Person steht barfuß auf einem Bein, Hände an der Hüfte.','30 Sekunden halten.','Stabil: ruhig. Wackelig: deutliches Ausgleichen. Nicht möglich: Fuß setzt ab.']},
+  {k:'shoulderMob',label:'Schulterbeweglichkeit (Hände hinter dem Rücken)',type:'num',unit:'cm',step:0.5,side:true,tool:'Maßband',why:'Eingeschränkte Schultern machen eine gestreckte Haltung am Lenker anstrengend. Seitenunterschiede zeigen sich oft auch am Lenker.',steps:['Person steht aufrecht.','Eine Hand von oben über die Schulter auf den Rücken, die andere von unten hinter den Rücken.','Abstand der Mittelfingerspitzen messen. Berühren sich die Finger = 0 cm.','Seite = Arm, der oben ist. Dann Arme tauschen.']}
 ];
 const CK_FOOT=['footWidth','arch','forefoot','footAngle','kneeTrack'];
 const chkVal=(s,k,side)=> (s.check||{})[k+(side||'')];
@@ -1174,6 +1179,7 @@ function checkFindings(s){
     if(v('hipRot',sd)==='deutlich eingeschränkt') add('info','fitting',`Hüftrotation ${n}: deutlich eingeschränkt`,'Kann die Kniespur beeinflussen. Beim Fahren von vorn beobachten, Cleat-Drehung nicht erzwingen.');
     if(v('singleLeg',sd)==='wackelig'||v('singleLeg',sd)==='nicht möglich') add('info','fitting',`Einbeinstand ${n}: ${v('singleLeg',sd)}`,'Geringe Stabilität auf dieser Seite. Beim Fahren auf seitliches Ausweichen von Knie und Becken achten.');
   });
+  { const sL=v('shoulderMob','L'), sR=v('shoulderMob','R'); if(sL!==undefined&&sL!==''&&sR!==undefined&&sR!==''&&Math.abs(Number(sL)-Number(sR))>=5) add('info','fitting',`Schulterbeweglichkeit: ${fmtNum(Math.abs(Number(sL)-Number(sR)))} cm Seitenunterschied`,'Beim Fahren auf ungleichen Griff und schiefe Schultern achten. Faustregel, keine Bewertung.'); }
   if(v('legAxis')==='X-Stellung') add('info','fitting','Beinachse: X-Stellung','Kniespur beim Treten besonders beobachten (Video von vorn).');
   if(v('legAxis')==='O-Stellung') add('info','fitting','Beinachse: O-Stellung','Seitliche Cleat-Position und Pedalachsenlänge beim Fahren beobachten.');
   const tr=v('trunk'); if(tr!==undefined&&tr!==''&&Number(tr)<30) add('info','fitting',`Rumpfstabilität: ${Number(tr)} s`,'Eher kurz gehalten. Moderate Überhöhung wählen, Rumpfübungen empfehlen.');
@@ -1494,7 +1500,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-01.55';
+const APP_VER='2026-11-02.57';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1607,10 +1613,25 @@ function renderNav(){
   document.getElementById('bottomnav').innerHTML = mainNav().map(([r,l,i])=>`<button data-nav="${r}" ${(ui.route===r||(r==='mehr'&&isMore(ui.route)))?'aria-current="page"':''}>${ic(i)}<span>${l}</span></button>`).join('');
   document.getElementById('crumb').textContent = AREA_OF[ui.route]&&AREA_OF[ui.route]!==TITLES[ui.route]&&ui.route!=='dashboard'?`${AREA_OF[ui.route]} / ${TITLES[ui.route]}`:(TITLES[ui.route]||'');
 }
-function go(r){
-  if(!VIEWS[r]) r='dashboard';
+/* --- Dashboard-Widgets: ein-/ausblenden und anordnen --- */
+const DASH_W=[['hero','Begrüßung und nächster Termin',1],['kpis','Kennzahlen',1],['tiles','Schnellzugriffe',1],['today','Heute und demnächst',0],['att','Braucht deine Aufmerksamkeit',0],['last','Letzte Fittings',0],['chart','Fittings pro Monat',0],['recent','Zuletzt bearbeitete Kunden',0],['activity','Aktivitäten',0]];
+function dashOrder(){ const st=(S.settings||{}).dash; const known=DASH_W.map(w=>w[0]); let L=Array.isArray(st)?st.filter(x=>x&&known.includes(x.id)):[]; known.forEach(id=>{ if(!L.some(x=>x.id===id)) L.push({id,on:true}); }); return L; }
+function dashWidgets(base){ const ex=dashExtras(); const W={...base,...ex}; const L=dashOrder(); const edit=!!ui.dashEdit;
+  const items=L.map((x,i)=>{ const def=DASH_W.find(w=>w[0]===x.id); const html=W[x.id]||''; if(!edit&&(!x.on||!html)) return '';
+    const ctl=edit?`<div class="dw-ctl"><b>${esc(def[1])}</b><span class="row" style="gap:4px"><button class="btn sm" data-act="dashMove" data-id="${x.id}" data-d="-1" ${i?'':'disabled'} aria-label="Nach oben">▲</button><button class="btn sm" data-act="dashMove" data-id="${x.id}" data-d="1" ${i<L.length-1?'':'disabled'} aria-label="Nach unten">▼</button><button class="btn sm ${x.on?'':'primary'}" data-act="dashToggle" data-id="${x.id}">${x.on?'Ausblenden':'Einblenden'}</button></span></div>`:'';
+    return `<div class="dw ${def[2]?'full':''} ${edit?'edit':''} ${x.on?'':'off'}" data-w="${x.id}">${ctl}${edit&&!x.on?'':(html||(edit?'<p class="faint" style="font-size:13px;margin:6px 0">Gerade keine Inhalte.</p>':''))}</div>`; }).join('');
+  return `<div class="row" style="justify-content:flex-end;gap:6px;margin:-4px 0 8px">${edit?'<button class="btn sm ghost" data-act="dashReset">Standard</button>':''}<button class="btn sm ${edit?'primary':'ghost'}" data-act="dashEdit">${edit?'Fertig':'Dashboard anpassen'}</button></div><div class="dgrid">${items}</div>`; }
+
+/* --- Zurück-Navigation (Knopf oben + Wischen/Zurück im Browser) --- */
+const navSnap=()=>({route:ui.route,sess:ui.sess,sessTab:ui.sessTab,wIdx:ui.wIdx,resTab:ui.resTab});
+function navPop(){ const st=ui.navStack||[]; const p=st.pop(); if(!p){ if(ui.route!=='dashboard') go('dashboard',{noPush:1}); return; } Object.assign(ui,{sess:p.sess,sessTab:p.sessTab,wIdx:p.wIdx,resTab:p.resTab}); go(p.route,{noPush:1}); }
+function navBack(){ if(document.querySelector('.drawer')){ closeDrawer(); return; } if((ui.navStack||[]).length&&history.state&&history.state.fyf){ history.back(); return; } navPop(); }
+
+function go(r,o){
+  if(!VIEWS[r]) r='dashboard'; o=o||{};
+  if(!o.noPush&&ui.route&&(ui.route!==r||r==='sitzung')){ const st=(ui.navStack=ui.navStack||[]); const sn=navSnap(); const last=st[st.length-1]; if(!last||JSON.stringify(last)!==JSON.stringify(sn)) st.push(sn); if(st.length>30) st.shift(); try{ history.pushState({fyf:1},'','#'+r); }catch(e){} }
   ui.route = r;
-  try{ if(location.hash.slice(1)!==r) history.replaceState(null,'','#'+r); }catch(e){}
+  try{ if(location.hash.slice(1)!==r) history.replaceState({fyf:1},'','#'+r); }catch(e){}
   closeMenu(); render(); window.scrollTo(0,0);
 }
 let lastNav={route:null,tab:null,w:null,sess:null};
@@ -1727,12 +1748,10 @@ VIEWS.dashboard = () => {
   return `
   ${!storageOk||inAppBrowser?`<div class="notice warn">${ic('warn')}<div><b>${!storageOk?'Achtung: Hier wird nichts gespeichert.':'Achtung: eingebetteter Browser.'}</b> ${!storageOk?'Wahrscheinlich privater Modus.':'Daten können verloren gehen.'} Öffne den Link direkt in Safari. <button class="btn sm" data-act="saveInfo">Mehr dazu</button></div></div>`:''}
   ${loadIssue?`<div class="notice warn">${ic('warn')}<div><b>${esc(loadIssue)}</b> Eine Kopie wurde gesichert. Unter Mehr → Deine Daten sichern kannst du sie wiederherstellen.</div></div>`:''}
-  ${heroHtml(greet,todays,upcoming)}
   ${backupNudge()}
   ${setupHtml()}
   ${!(S.settings||{}).shopType&&!(S.settings||{}).shopAsked?panel('Ladentyp wählen',shopTypeHtml(true),`<button class="btn sm ghost" data-act="shopTypeLater">Später</button>`):''}
-  ${kpiTiles()}
-  <div class="tiles">
+  ${dashWidgets({hero:heroHtml(greet,todays,upcoming),kpis:kpiTiles(),tiles:`  <div class="tiles">
     ${modOn('fitting')?`<button class="tile main" data-act="newSession"><span class="ti">${ic('plus')}</span><b>Neues Fitting</b><span>Kunde wählen und loslegen</span></button>`:''}
     ${modOn('quickfit')?`<button class="tile ${modOn('fitting')?'':'main'}" data-nav="quickfit"><span class="ti">${ic('handover')}</span><b>Quick-Fit Übergabe</b><span>Neues Rad einstellen</span></button>`:''}
     ${modOn('fahrwerk')?`<button class="tile" data-nav="fahrwerk"><span class="ti">${ic('susp')}</span><b>Fahrwerk</b><span>Gabel und Dämpfer</span></button>`:''}
@@ -1741,16 +1760,10 @@ VIEWS.dashboard = () => {
     <button class="tile" data-act="tourStart"><span class="ti">${ic('fit')}</span><b>Demo-Tour</b><span>2 Minuten, die wichtigsten Funktionen</span></button>
     <button class="tile" data-act="findCustomer"><span class="ti">${ic('users')}</span><b>Kunde suchen</b><span>${S.customers.length} Kunden gespeichert</span></button>
   </div>
-  <div class="grid g-main">
-    <div class="stack">
-      <section class="panel" id="today"><div class="panel-h"><h3>Heute</h3></div>${todays.length?`<div class="list">${todays.map(appt).join('')}</div>`:`<div class="empty">${ic('fit')}<span>Heute ist frei. Lust auf ein neues Fitting?</span><button class="btn sm primary" data-act="newSession">Fitting anlegen</button></div>`}</section>
-      ${upcoming.length?`<section class="panel"><div class="panel-h"><h3>Demnächst</h3></div><div class="list">${upcoming.map(s=>{const c=cust(s.customerId);return `<div class="li click" data-act="openSession" data-id="${s.id}"><span class="time" style="color:var(--muted)">${fmtDate(s.date).slice(0,6)}</span><div class="grow"><div class="t">${esc(c.name)}</div><div class="sub">${esc(s.type)} um ${esc(s.time)}</div></div>${ic('arrow','width="18" height="18" style="color:var(--faint)"')}</div>`;}).join('')}</div></section>`:''}
-    </div>
-    <section class="panel"><div class="panel-h"><h3>Braucht deine Aufmerksamkeit</h3>${att.length?`<span class="chip c-acc nodot">${att.length}</span>`:''}</div>
+`,today:`<section class="panel" id="today"><div class="panel-h"><h3>Heute</h3></div>${todays.length?`<div class="list">${todays.map(appt).join('')}</div>`:`<div class="empty">${ic('fit')}<span>Heute ist frei. Lust auf ein neues Fitting?</span><button class="btn sm primary" data-act="newSession">Fitting anlegen</button></div>`}</section>
+      ${upcoming.length?`<section class="panel"><div class="panel-h"><h3>Demnächst</h3></div><div class="list">${upcoming.map(s=>{const c=cust(s.customerId);return `<div class="li click" data-act="openSession" data-id="${s.id}"><span class="time" style="color:var(--muted)">${fmtDate(s.date).slice(0,6)}</span><div class="grow"><div class="t">${esc(c.name)}</div><div class="sub">${esc(s.type)} um ${esc(s.time)}</div></div>${ic('arrow','width="18" height="18" style="color:var(--faint)"')}</div>`;}).join('')}</div></section>`:''}`,att:`<section class="panel"><div class="panel-h"><h3>Braucht deine Aufmerksamkeit</h3>${att.length?`<span class="chip c-acc nodot">${att.length}</span>`:''}</div>
       ${att.length?`<div class="list">${att.map(x=>`<div class="li click" ${x.a}><div class="avatar" style="background:var(--surface-2);color:var(--muted)">${ic(x.icon,'width="17" height="17"')}</div><div class="grow"><div class="t">${esc(x.t)}</div><div class="sub">${esc(x.sub)}</div></div>${x.chip}</div>`).join('')}</div>`:`<div class="empty">${ic('check')}<span>Alles erledigt. Nichts wartet auf dich.</span></div>`}
-    </section>
-  </div>
-  ${dashExtras()}`;
+    </section>`})}`;
 };
 
 function heroHtml(greet,todays,upcoming){
@@ -1824,11 +1837,7 @@ function fittingChart(){ const fin=S.sessions.filter(s=>s.status==='abgeschlosse
 function dashExtras(){
   const rec=recentCustomers(5), last=[...S.sessions].sort((a,b)=>(b.date+(b.time||'')).localeCompare(a.date+(a.time||''))).slice(0,5), act=(S.audit||[]).slice(0,6);
   const sx=s=>{ const c=cust(s.customerId)||{name:'?'}, b=bike(s.bikeId)||{brand:'',model:''}; return `<div class="li click" data-act="openSession" data-id="${s.id}"><span class="mono faint" style="font-size:12px">${fmtDate(s.date)}</span><div class="grow"><div class="t">${esc(c.name)}</div><div class="sub">${esc(s.type)} · ${esc((b.brand+' '+b.model).trim())}</div></div>${sessChip(s.status)}</div>`; };
-  return `<div class="grid g-main">
-    <div class="stack">${panel('Letzte Fittings',last.length?`<div class="list">${last.map(sx).join('')}</div>`:'<div class="empty">Noch keine Fittings.</div>',`<button class="btn sm ghost" data-nav="berichte">Alle Berichte</button>`)}${fittingChart()}</div>
-    <div class="stack">${panel('Zuletzt bearbeitete Kunden',rec.length?`<div class="list">${rec.map(c=>`<div class="li click" data-act="openCustomer" data-id="${c.id}"><div class="avatar">${initials(c.name)}</div><div class="grow"><div class="t">${esc(c.name)}</div><div class="sub">${bikesOf(c.id).length} Rad · ${sessOf(c.id).length} Fittings</div></div></div>`).join('')}</div>`:'<div class="empty">Noch keine Kunden.</div>')}
-    ${panel('Aktivitäten',act.length?`<div class="list">${act.map(a=>`<div class="li"><span class="mono faint" style="font-size:11.5px;min-width:86px">${esc((a.time||'').slice(5,16).replace(/^(\d\d)-(\d\d)/,'$2.$1.'))}</span><div class="grow"><div class="sub" style="white-space:normal;color:var(--ink)">${esc(a.what)}</div></div></div>`).join('')}</div>`:'<div class="empty">Noch keine Aktivitäten.</div>')}</div>
-  </div>`; }
+  return {last:panel('Letzte Fittings',last.length?`<div class="list">${last.map(sx).join('')}</div>`:'<div class="empty">Noch keine Fittings.</div>',`<button class="btn sm ghost" data-nav="berichte">Alle Berichte</button>`),chart:fittingChart(),recent:panel('Zuletzt bearbeitete Kunden',rec.length?`<div class="list">${rec.map(c=>`<div class="li click" data-act="openCustomer" data-id="${c.id}"><div class="avatar">${initials(c.name)}</div><div class="grow"><div class="t">${esc(c.name)}</div><div class="sub">${bikesOf(c.id).length} Rad · ${sessOf(c.id).length} Fittings</div></div></div>`).join('')}</div>`:'<div class="empty">Noch keine Kunden.</div>'),activity:panel('Aktivitäten',act.length?`<div class="list">${act.map(a=>`<div class="li"><span class="mono faint" style="font-size:11.5px;min-width:86px">${esc((a.time||'').slice(5,16).replace(/^(\d\d)-(\d\d)/,'$2.$1.'))}</span><div class="grow"><div class="sub" style="white-space:normal;color:var(--ink)">${esc(a.what)}</div></div></div>`).join('')}</div>`:'<div class="empty">Noch keine Aktivitäten.</div>')}; }
 /* Körperanalyse: Überblick je Kunde */
 VIEWS.koerper = () => {
   const q=(ui.bodySearch||'').toLowerCase(); const list=S.customers.filter(c=>!q||c.name.toLowerCase().includes(q));
@@ -1909,7 +1918,7 @@ function mediaHtml(owner,c){
   const L=mediaOf(owner), ok=mediaOk(c);
   return `<div class="stack"><div class="row" style="justify-content:space-between"><h3>Fotos & Videos</h3>${ok?`<label class="btn sm">${ic('plus')}Hinzufügen<input type="file" accept="image/*,video/*" multiple hidden data-change="mediaAdd" data-owner="${owner}"></label>`:''}</div>
   ${ok?'':`<p class="muted" style="font-size:13px">Fotos und Videos erst nach Einwilligung des Kunden für Fotos/Videos.${c?` <button class="btn sm" data-act="consent" data-id="${c.id}">${c.consent?'Einwilligung ergänzen':'Einwilligung erfassen'}</button>`:''}</p>`}
-  ${L.length?`<div class="mgrid">${L.map(m=>`<figure class="mitem"><div class="mthumb" data-media="${m.id}">${m.kind==='video'?'Video':'Foto'} wird geladen …</div><figcaption><input class="input" value="${esc(m.note||'')}" placeholder="Notiz, z. B. Seite vorher" data-change="mediaNote" data-id="${m.id}" aria-label="Notiz zum ${m.kind==='video'?'Video':'Foto'}">${owner.startsWith('s:')?`<select class="input sm" data-change="mediaPhase" data-id="${m.id}" aria-label="Vorher oder nachher"><option value="" ${!m.phase?'selected':''}>– Zeitpunkt –</option><option ${m.phase==='vorher'?'selected':''}>vorher</option><option ${m.phase==='nachher'?'selected':''}>nachher</option></select>`:''}<div class="row" style="justify-content:space-between"><span class="faint" style="font-size:11.5px">${fmtDate(m.date)} · ${m.kind==='video'?'Video':'Foto'} · ${fmtSize(m.size)}</span><span class="row" style="gap:4px">${m.kind==='video'?`<button class="btn sm ghost" data-act="mediaStill" data-id="${m.id}">Standbild</button>`:''}<button class="btn sm ghost danger" data-act="mediaDel" data-id="${m.id}">Löschen</button></span></div></figcaption></figure>`).join('')}</div>`:(ok?'<span class="muted">Noch keine Fotos oder Videos.</span>':'')}
+  ${L.length?`<div class="mgrid">${L.map(m=>`<figure class="mitem"><div class="mthumb" data-media="${m.id}">${m.kind==='video'?'Video':'Foto'} wird geladen …</div><figcaption><input class="input" value="${esc(m.note||'')}" placeholder="Notiz, z. B. Seite vorher" data-change="mediaNote" data-id="${m.id}" aria-label="Notiz zum ${m.kind==='video'?'Video':'Foto'}">${owner.startsWith('s:')?`<select class="input sm" data-change="mediaView" data-id="${m.id}" aria-label="Ansicht"><option value="" ${!m.view?'selected':''}>– Ansicht –</option>${VIEW_OPTS.map(v=>`<option ${m.view===v?'selected':''}>${v}</option>`).join('')}</select>`:''}${owner.startsWith('s:')?`<select class="input sm" data-change="mediaPhase" data-id="${m.id}" aria-label="Vorher oder nachher"><option value="" ${!m.phase?'selected':''}>– Zeitpunkt –</option><option ${m.phase==='vorher'?'selected':''}>vorher</option><option ${m.phase==='nachher'?'selected':''}>nachher</option></select>`:''}<div class="row" style="justify-content:space-between"><span class="faint" style="font-size:11.5px">${fmtDate(m.date)} · ${m.kind==='video'?'Video':'Foto'} · ${fmtSize(m.size)}</span><span class="row" style="gap:4px">${m.kind==='video'?`<button class="btn sm ghost" data-act="mediaStill" data-id="${m.id}">Standbild</button>`:''}<button class="btn sm ghost danger" data-act="mediaDel" data-id="${m.id}">Löschen</button></span></div></figcaption></figure>`).join('')}</div>`:(ok?'<span class="muted">Noch keine Fotos oder Videos.</span>':'')}
   ${ok||L.length?'<p class="faint" style="font-size:12px">Nur auf diesem Gerät gespeichert. Nicht in der Text-Sicherung enthalten.</p>':''}</div>`;
 }
 function mediaHydrate(){ document.querySelectorAll('[data-media]').forEach(el=>{ const id=el.dataset.media, m=(S.media||[]).find(x=>x.id===id); if(!m) return;
@@ -1946,6 +1955,7 @@ function custBodyHtml(c,ss){
   <h4 style="margin:4px 0 0">Körpermaße</h4>${meas}
   <h4 style="margin:4px 0 0">Füße links / rechts</h4>${feet}
   <h4 style="margin:4px 0 0">Sitzknochen</h4>${sb}
+  ${sideCmpHtml(ls,c)}
   <h4 style="margin:4px 0 0">Tests</h4><div class="list">${tests.map(t=>{ const no=nt[t.k]; return `<div class="li" style="padding:8px 0;align-items:flex-start"><div class="grow" style="min-width:0"><div class="t">${esc(t.label)}</div><div class="sub" style="white-space:normal">Messwert: ${val(t)}</div>${no&&no.obs?`<div class="sub" style="white-space:normal">Beobachtung: ${esc(no.obs)}</div>`:''}${no&&no.int?`<div class="sub" style="white-space:normal">Einschätzung: ${esc(no.int)}</div>`:''}</div></div>`; }).join('')}</div>
   ${CK_FOOT.concat('sitBone').some(k=>nt[k])?`<div class="stack" style="gap:4px">${CK_FOOT.concat('sitBone').filter(k=>nt[k]).map(k=>`<div class="sub" style="white-space:normal"><b>${esc(CHECKS.find(x=>x.k===k).label)}:</b> ${nt[k].obs?'Beobachtung: '+esc(nt[k].obs):''}${nt[k].obs&&nt[k].int?' · ':''}${nt[k].int?'Einschätzung: '+esc(nt[k].int):''}</div>`).join('')}</div>`:''}
   <h4 style="margin:4px 0 0">Hinweise (Faustregeln)</h4>${f.length?`<div class="stack" style="gap:6px">${f.map(x=>`<div class="ckx-f ${x.lvl}"><b>${esc(x.title)}</b><span>${esc(x.text)}</span></div>`).join('')}</div>`:'<span class="muted">Keine Auffälligkeiten.</span>'}
@@ -1976,7 +1986,7 @@ function customerDrawer(id,tab){
     ${bodyFormHtml(c,'drawer')}</div>`;
   else if(T==='koerper') body=custBodyHtml(c,ss);
   else if(T==='raeder') body=`<div class="stack"><div class="row" style="justify-content:space-between"><h3>Fahrräder</h3><div class="row" style="gap:6px"><button class="btn sm" data-act="nbOpen" data-id="${c.id}">${ic('fit')}Passendes Neurad finden</button><button class="btn sm" data-act="newBike" data-id="${c.id}">${ic('plus')}Fahrrad</button></div></div>${bikeList}</div>`;
-  else if(T==='historie') body=`<div class="stack"><div class="row" style="justify-content:space-between"><h3>Fitting-Historie</h3><button class="btn sm" data-act="newSession" data-cust="${c.id}">${ic('plus')}Sitzung</button></div>
+  else if(T==='historie') body=`<div class="stack"><h3>Alle Termine und Ereignisse</h3>${timelineHtml(c)}</div><hr><div class="stack"><div class="row" style="justify-content:space-between"><h3>Fitting-Historie</h3><button class="btn sm" data-act="newSession" data-cust="${c.id}">${ic('plus')}Sitzung</button></div>
     ${ss.map(sessRow).join('')||'<span class="muted">Noch keine Sitzung.</span>'}
     ${ss.length>1?`<button class="btn sm" data-act="compareCustomer" data-id="${c.id}">Sitzungen vergleichen</button>`:''}</div>`;
   else if(T==='produkte') body=purchasesHtml(c);
@@ -2031,12 +2041,12 @@ function stepDone(s,c,k){
   return s.status==='abgeschlossen';
 }
 /* --- Phase 4: Geführter Ablauf (12 Schritte) und Fitting-Vorlagen --- */
-const BODY_K=['pain','legLen','pelvis','shoulder','kneeTrack','arch','forefoot','footWidth','footAngle','legAxis'], MOB_K=['hamstring','hipFlex','ankle','hipRot','trunk','singleLeg'];
+const BODY_K=['pain','legLen','pelvis','shoulder','kneeTrack','arch','forefoot','footWidth','footAngle','legAxis'], MOB_K=['hamstring','hipFlex','ankle','hipRot','trunk','singleLeg','shoulderMob'];
 const FIT_TPL={
   Rennrad:{tests:['pain','legLen','pelvis','kneeTrack','arch','forefoot','hamstring','hipFlex','ankle','sitBone','trunk'],focus:['Sattelhöhe und Kniewinkel','Sattel–Lenker-Abstand und Überhöhung','Cleat-Position und -Drehung']},
   Gravel:{tests:['pain','legLen','pelvis','kneeTrack','arch','forefoot','hamstring','hipFlex','sitBone','trunk','singleLeg'],focus:['Komfort auf langen Fahrten','Überhöhung moderat, Griffpositionen','Sattel und Sitzknochen']},
   MTB:{tests:['pain','legLen','kneeTrack','arch','ankle','hipFlex','sitBone','trunk','singleLeg'],focus:['Sattelhöhe (auch mit Variostütze)','Lenkerbreite und Cockpit-Höhe','Brems- und Schalthebel-Position']},
-  Triathlon:{tests:['pain','legLen','kneeTrack','hamstring','hipFlex','hipRot','sitBone','trunk'],focus:['Hüftwinkel in Aero-Position','Position der Armauflagen','Sattel für vorgeneigtes Sitzen']},
+  Triathlon:{tests:['pain','legLen','kneeTrack','hamstring','hipFlex','hipRot','sitBone','trunk','shoulderMob'],focus:['Hüftwinkel in Aero-Position','Position der Armauflagen','Sattel für vorgeneigtes Sitzen']},
   Trekking:{tests:['pain','legLen','pelvis','shoulder','arch','hamstring','sitBone'],focus:['Aufrechte, entspannte Haltung','Griffe und Handgelenke','Sattel und Sitzknochen']},
   Allroad:{tests:['pain','legLen','pelvis','kneeTrack','arch','forefoot','hamstring','hipFlex','sitBone','trunk'],focus:['Komfort und Kontrolle','Überhöhung moderat','Cleats und Füße']}
 };
@@ -2122,9 +2132,13 @@ function changeLogHtml(s){ if(!s.changes.length) return '';
 const TOOL_KINDS=['Sitzknochen-Messvorlage','Messschieber','Maßband','Lot','Wasserwaage','Winkelmesser','Digitales Messgerät','Kamera','Druckmesssystem','Laser','Sonstiges'];
 function toolsUseHtml(s){ const T=S.tools||[]; const on=s.tools||[];
   return `<details class="more" ${on.length?'':''}><summary>Verwendete Messmittel (${on.length})</summary><div class="stack" style="margin-top:8px;gap:6px">${T.length?`<div class="chips">${T.map(t=>`<button class="chipbtn" data-act="toolUse" data-id="${s.id}" data-t="${t.id}" aria-pressed="${on.includes(t.id)}">${esc(t.name)}</button>`).join('')}</div>`:`<p class="muted" style="font-size:13.5px;margin:0">Noch keine Messmittel angelegt. <button class="btn sm" data-nav="messmittel">Messmittel anlegen</button></p>`}<p class="faint" style="font-size:12px;margin:0">Antippen = bei dieser Sitzung verwendet. Genauigkeit nur laut Hersteller, siehe Messmittel.</p></div></details>`; }
+const FYF_SET=[['Tretlager-Zentrierer für Maßband','Sattelhöhe','3D-Druck'],['Lot-Halter für Sattelspitze','Sattelversatz, Knielot','3D-Druck'],['Handy-Halter Sattel/Lenker','Sattelneigung, Lenkerneigung (Handy als Winkelmesser)','3D-Druck'],['Kurbel-Feststeller unten/waagerecht','Kniewinkel, Knielot','3D-Druck'],['Sitzknochen-Messrahmen mit Skala','Sitzknochenabstand (mit Wellpappe)','3D-Druck'],['Cleat-Schablone mit Gradskala','Cleat-Position und -Drehung','3D-Druck'],['Fuß-Messbrett (zweiteilig)','Fußlänge, Fußbreite','3D-Druck'],['Maßband','Längen, Körpermaße','zugekauft'],['Goniometer (Winkelmesser)','Kniewinkel, Hüftwinkel','zugekauft']];
+function fyfSetHtml(){ const have=(S.tools||[]).filter(t=>t.set==='FYF').length;
+  return panel('FYF-Messset',`<p class="muted" style="margin:0 0 8px;font-size:14px">Das Set zur Software: zusammen mit Rollentrainer und Handy oder Tablet reicht es für ein Fitting. <b>Prototyp – Inhalt und Genauigkeit noch nicht geprüft.</b></p><div class="tw"><table><thead><tr><th>Teil</th><th>Wofür</th><th>Herkunft</th></tr></thead><tbody>${FYF_SET.map(([n,w,h])=>`<tr><td>${esc(n)}</td><td>${esc(w)}</td><td>${esc(h)}</td></tr>`).join('')}</tbody></table></div><div class="row" style="margin-top:8px;gap:8px">${have?`<span class="chip c-ok nodot">${have} Teile angelegt</span>`:`<button class="btn sm primary" data-act="fyfSetAdd">Set als Messmittel anlegen</button>`}</div><p class="faint" style="font-size:12px;margin:6px 0 0">Nicht im Set: Rollentrainer, Handy/Tablet, Stativ. Genauigkeit wird erst nach Prüfung eingetragen.</p>`); }
 VIEWS.messmittel = () => { const T=S.tools||[]; const old=d=>d&&(Date.now()-new Date(d))/864e5>365;
   return `${head('Messmittel','Welche Geräte du verwendest, wie genau sie laut Hersteller sind und wann sie zuletzt geprüft wurden.',`<button class="btn primary" data-act="toolEdit">${ic('plus')}Messmittel</button>`)}
   ${panelFlush('',T.length?`<div class="tw"><table><thead><tr><th>Bezeichnung</th><th>Art</th><th>Hersteller / Modell</th><th>Genauigkeit laut Hersteller</th><th>Kalibriert</th><th>Zuletzt geprüft</th><th class="r">Sitzungen</th><th></th></tr></thead><tbody>${T.map(t=>{ const n=S.sessions.filter(x=>(x.tools||[]).includes(t.id)).length; return `<tr><td><b>${esc(t.name)}</b>${t.method?`<div class="faint" style="font-size:12px">${esc(t.method)}</div>`:''}</td><td>${esc(t.kind||'')}</td><td>${esc([t.maker,t.model].filter(Boolean).join(' ')||'–')}</td><td>${t.acc?esc(t.acc)+(t.accSrc?`<div class="faint" style="font-size:11.5px">Quelle: ${esc(t.accSrc)}</div>`:''):'<span class="faint">nicht angegeben</span>'}</td><td>${t.calib?fmtDate(t.calib):'<span class="faint">–</span>'}</td><td>${t.checked?fmtDate(t.checked)+(old(t.checked)?' <span class="chip c-warn nodot">über 12 Monate</span>':''):'<span class="faint">–</span>'}</td><td class="r num">${n}</td><td class="r"><button class="btn sm" data-act="toolEdit" data-id="${t.id}">Bearbeiten</button></td></tr>`; }).join('')}</tbody></table></div>`:`<div class="empty">${ic('ruler')}<span>Noch keine Messmittel. Lege die Geräte an, mit denen du misst.</span><div class="row" style="justify-content:center;gap:6px;flex-wrap:wrap">${['Maßband','Winkelmesser','Wasserwaage','Lot','Sitzknochen-Messvorlage','Messschieber'].map(k=>`<button class="btn sm" data-act="toolQuick" data-k="${k}">${k}</button>`).join('')}</div></div>`)}
+  ${fyfSetHtml()}
   <p class="faint" style="font-size:12.5px">Genauigkeit nur eintragen, wenn der Hersteller sie angibt, mit Quelle. FYF erfindet keine Werte. Welche Geräte bei einem Fitting benutzt wurden, wählst du im Schritt „Messen“.</p>`; };
 
 /* --- Phase 8: Produktdatenbank (nur belegte Daten), Empfehlungen, Wissensbereich --- */
@@ -2328,6 +2342,32 @@ const TOUR=[
 function tourRender(){ let el=document.getElementById('tour'); if(ui.tour==null){ if(el) el.remove(); return; } if(!el){ el=document.createElement('div'); el.id='tour'; document.body.appendChild(el); }
   const i=ui.tour, st=TOUR[i]; el.innerHTML=`<div class="tour-card" role="dialog" aria-label="Demo-Tour"><div class="row" style="justify-content:space-between;align-items:center"><span class="label">Demo-Tour · ${i+1} von ${TOUR.length}</span><button class="iconbtn" data-act="tourEnd" aria-label="Tour beenden">${ic('x')}</button></div><b style="font-size:17px">${esc(st.t)}</b><p style="margin:0;font-size:14.5px">${esc(st.x)}</p><div class="tourbar"><i style="width:${Math.round((i+1)/TOUR.length*100)}%"></i></div><div class="row" style="justify-content:space-between"><button class="btn sm ghost" data-act="tourPrev" ${i?'':'disabled'}>Zurück</button><button class="btn sm primary" data-act="${i<TOUR.length-1?'tourNext':'tourEnd'}">${i<TOUR.length-1?'Weiter':'Fertig'}</button></div></div>`; }
 function tourGo(i){ ui.tour=i; try{ TOUR[i].go(); }catch(e){ console.error(e); } tourRender(); window.scrollTo({top:0}); }
+
+/* --- Seitenvergleich links/rechts --- */
+function sideRows(s,c){ const B=(c&&c.body)||{}; const v=(k,sd)=>chkVal(s,k,sd); const e={...s.before,...s.after}; const ev=k=>e[k]?Number(e[k].value):undefined;
+  const R=[['Beinlänge','cm',v('legLen','L'),v('legLen','R')],['Fußlänge','mm',B.footL,B.footR],...['footWidth','arch','forefoot','footAngle','kneeTrack','hipFlex','hipRot','ankle','singleLeg','shoulderMob'].map(k=>{ const t=CHECKS.find(x=>x.k===k); return [t.label.replace(/ \\(.*\\)$/,''),t.unit||'',v(k,'L'),v(k,'R')]; }),['Video: Knie pendelt','mm',ev('kneeSwayL'),ev('kneeSwayR')],['Video: Knie innen (+) / außen (−)','mm',ev('kneeInL'),ev('kneeInR')],['Cleat-Rotation','°',ev('cleatRotL'),ev('cleatRotR')]];
+  return R.filter(r=>(r[2]!==undefined&&r[2]!==null&&r[2]!=='')||(r[3]!==undefined&&r[3]!==null&&r[3]!=='')); }
+function sideCmpHtml(s,c){ const R=sideRows(s,c); if(!R.length) return '';
+  const f=(x,u)=>x===undefined||x===null||x===''?'–':typeof x==='number'||(!isNaN(Number(x))&&String(x).trim()!=='')?`${fmtNum(Number(x))}${u?' '+u:''}`:esc(String(x));
+  const d=(a,b,u)=>{ if([a,b].some(x=>x===undefined||x===null||x==='')) return '<span class="faint">–</span>'; const na=Number(a), nb=Number(b); if(!isNaN(na)&&!isNaN(nb)&&String(a).trim()!==''&&String(b).trim()!==''){ const x=Math.round((nb-na)*10)/10; return x?`<span class="chip c-info nodot">${x>0?'R +':'L +'}${fmtNum(Math.abs(x))}${u?' '+u:''}</span>`:'gleich'; } return a===b?'gleich':'<span class="chip c-info nodot">verschieden</span>'; };
+  return `<div class="stack" style="gap:6px"><h4 style="margin:0">Seitenvergleich links / rechts</h4><div class="tw"><table><thead><tr><th>Merkmal</th><th class="r">Links</th><th class="r">Rechts</th><th class="r">Unterschied</th></tr></thead><tbody>${R.map(([l,u,a,b])=>`<tr><td>${esc(l)}</td><td class="r">${f(a,u)}</td><td class="r">${f(b,u)}</td><td class="r">${d(a,b,u)}</td></tr>`).join('')}</tbody></table></div><p class="faint" style="font-size:12px;margin:0">Unterschiede sind Beobachtungen, keine Bewertung. Video-Werte sind Orientierungswerte.</p></div>`; }
+/* --- Gemeinsame Terminhistorie --- */
+function timelineHtml(c){ const ss=sessOf(c.id), bs=bikesOf(c.id).map(b=>b.id); const bn=id=>{ const b=bike(id)||{}; return ((b.brand||'')+' '+(b.model||'')).trim(); }; const E=[];
+  ss.forEach(s=>{ E.push({d:s.date,k:'Fitting',t:`${s.type} · ${bn(s.bikeId)}`,sub:`${s.changes.length} Änderungen · ${s.status}`,a:`data-act="openSession" data-id="${s.id}"`}); (s.followUps||[]).forEach(f=>E.push({d:f.due,k:'Nachkontrolle',t:`Nach ${f.days} Tagen · ${bn(s.bikeId)}`,sub:f.status==='offen'&&f.due<today()?'überfällig':f.status,a:`data-act="openSession" data-id="${s.id}"`})); (s.feedback||[]).forEach(fb=>E.push({d:fb.date,k:'Feedback',t:`${fb.kind||'Rückmeldung'} · ${fb.score}/10`,sub:fb.text||'',a:`data-act="openSession" data-id="${s.id}"`})); });
+  (S.handovers||[]).filter(h=>h.customerId===c.id).forEach(h=>E.push({d:h.date,k:'Übergabe',t:`Quick-Fit · ${bn(h.bikeId)}`,sub:h.sh?`Sattelhöhe ${fmtNum(h.sh)} mm`:'',a:`data-act="qfSheet" data-id="${h.id}"`}));
+  (S.suspension||[]).filter(r=>bs.includes(r.bikeId)).forEach(r=>E.push({d:r.date,k:'Fahrwerk',t:bn(r.bikeId),sub:`Gabel ${r.fork&&r.fork.psi?fmtNum(r.fork.psi)+' psi':'–'} · Dämpfer ${r.shock&&r.shock.psi?fmtNum(r.shock.psi)+' psi':'–'}`,a:`data-act="suspSheet" data-id="${r.id}"`}));
+  (S.sales||[]).filter(x=>x.customerId===c.id).forEach(x=>E.push({d:x.date,k:'Kauf',t:x.items,sub:`${eur(Number(x.total)||0)} · ${x.status}`,a:''}));
+  (S.workshop||[]).filter(w=>w.customerId===c.id).forEach(w=>E.push({d:w.created,k:'Werkstatt',t:w.title,sub:`${w.id} · ${w.status}`,a:`data-act="openWO" data-id="${w.id}"`}));
+  E.sort((a,b)=>String(b.d).localeCompare(String(a.d)));
+  return E.length?`<div class="tl">${E.map(e=>`<div class="tl-i ${e.a?'click':''}" ${e.a}><span class="tl-d mono">${fmtDate(e.d)}</span><span class="tl-k k-${e.k.toLowerCase().replace(/[^a-zäöü]/g,'')}">${e.k}</span><div class="grow" style="min-width:0"><div class="t">${esc(e.t)}</div>${e.sub?`<div class="sub">${esc(e.sub)}</div>`:''}</div></div>`).join('')}</div>`:'<span class="muted">Noch keine Einträge.</span>'; }
+/* --- Video vorher/nachher nebeneinander --- */
+const VIEW_OPTS=['Seite','vorn','hinten'];
+function videoCmpHtml(listA,listB,labA,labB){ const A=listA.filter(m=>m.kind==='video'), B=listB.filter(m=>m.kind==='video'); if(!A.length||!B.length) return '';
+  const pick=(L,cur,pref)=>L.find(m=>m.id===cur)||L.find(m=>m.phase===pref)||L[0]; const a=pick(A,ui.vcA,'vorher'), b=pick(B,ui.vcB,'nachher'); const lab=m=>esc([m.phase,m.view,m.note].filter(Boolean).join(' · ')||fmtDate(m.date));
+  return `<div class="stack" style="gap:8px"><h4 style="margin:0">Video vorher / nachher</h4><div class="vcmp"><div class="stack" style="gap:4px"><select class="input sm" data-change="vcPick" data-k="vcA" aria-label="Video links">${A.map(m=>`<option value="${m.id}" ${m.id===a.id?'selected':''}>${esc(labA)}: ${lab(m)}</option>`).join('')}</select><div class="mthumb vc" data-media="${a.id}"></div></div><div class="stack" style="gap:4px"><select class="input sm" data-change="vcPick" data-k="vcB" aria-label="Video rechts">${B.map(m=>`<option value="${m.id}" ${m.id===b.id?'selected':''}>${esc(labB)}: ${lab(m)}</option>`).join('')}</select><div class="mthumb vc" data-media="${b.id}"></div></div></div>
+  <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm primary" data-act="vcPlay">Beide abspielen / anhalten</button><button class="btn sm" data-act="vcStep" data-d="-1">‹ Bild</button><button class="btn sm" data-act="vcStep" data-d="1">Bild ›</button><button class="btn sm" data-act="vcRate">Tempo ${ui.vcRate||1}×</button><button class="btn sm ghost" data-act="vcRestart">Zum Anfang</button></div>
+  <p class="faint" style="font-size:12px;margin:0">Gleiche Kameraposition und Ansicht (Seite, vorn, hinten) wählen, sonst sind die Bilder nicht vergleichbar. Winkel misst du unter „Bewegung &amp; Video“.</p></div>`; }
+const vcVids=()=>[...document.querySelectorAll('.vcmp video')];
 
 VIEWS.sitzung = () => {
   const s=sess(ui.sess)||S.sessions[0]; ui.sess=s.id; if(!STEPS.some(x=>x[0]===ui.sessTab)) ui.sessTab=TABALIAS[ui.sessTab]||'anamnese';
@@ -2625,7 +2665,7 @@ function ckSummary(s,c,it){
 }
 function ckFlag(s,it){ const w=it.label.split(' ')[0].toLowerCase(); return checkFindings(s).some(x=>x.lvl!=='ok'&&x.title.toLowerCase().includes(w)); }
 /* Erklärungen zu jedem Körpercheck-Punkt: Was ist los, was bedeutet es fürs Rad, was tun */
-const CK_KEYW={pain:'Schmerzen',legLen:'Beinlänge',pelvis:'Becken',shoulder:'Schultern',kneeTrack:'Knie ',arch:'Fußgewölbe',forefoot:'Vorfuß',hamstring:'Rückseite',hipFlex:'Hüfte',ankle:'Sprunggelenk',sitBone:'Sitzknochen',footWidth:'Fußbreite',footAngle:'Fußstellung',legAxis:'Beinachse',hipRot:'Hüftrotation',trunk:'Rumpfstabilität',singleLeg:'Einbeinstand'};
+const CK_KEYW={pain:'Schmerzen',legLen:'Beinlänge',pelvis:'Becken',shoulder:'Schultern',kneeTrack:'Knie ',arch:'Fußgewölbe',forefoot:'Vorfuß',hamstring:'Rückseite',hipFlex:'Hüfte',ankle:'Sprunggelenk',sitBone:'Sitzknochen',footWidth:'Fußbreite',footAngle:'Fußstellung',legAxis:'Beinachse',hipRot:'Hüftrotation',trunk:'Rumpfstabilität',singleLeg:'Einbeinstand',shoulderMob:'Schulterbeweglichkeit'};
 const CK_KB={
   pain:{mean:'Mit akuten Schmerzen lässt sich die richtige Position nicht sicher finden. Der Körper weicht dem Schmerz aus.',todo:['Fitting verschieben oder nur grob einstellen.','Erst ärztlich oder physiotherapeutisch abklären lassen.']},
   legLen:{mean:'Ein kürzeres Bein lässt das Becken auf dem Sattel zur kurzen Seite kippen. Folge: einseitige Belastung von Knie, Hüfte und unterem Rücken, oft Sitzbeschwerden auf einer Seite.',
@@ -2717,6 +2757,7 @@ SESSTAB.koerper = (s,c) => {
   ${(()=>{ const tt=tplTests(s); const inT=items.map((it,i)=>[it,i]).filter(([it])=>it.k==='grund'||tt.includes(it.k)||ckDone(s,c,it)), outT=items.map((it,i)=>[it,i]).filter(([it])=>!(it.k==='grund'||tt.includes(it.k)||ckDone(s,c,it)));
     return `<p class="faint" style="font-size:12.5px;margin:0">Vorlage ${esc(tplName(s))}: ${tt.length} Tests vorgeschlagen. Anpassen im geführten Ablauf oben.</p><div class="ovl">${inT.map(([it,i])=>ckRow(s,c,it,i)).join('')}</div>${outT.length?`<details class="more"><summary>Weitere Tests (${outT.length}, nicht in der Vorlage)</summary><div class="ovl" style="margin-top:6px">${outT.map(([it,i])=>ckRow(s,c,it,i)).join('')}</div></details>`:''}`; })()}
   ${done>2?footHtml(s):''}
+  ${sideCmpHtml(s,c)}
   <details class="more" ${(ui.bmOpen??!!(s.bodyMap&&s.bodyMap.points&&s.bodyMap.points.length))?'open':''}><summary data-act="bmToggle">Befundkarte: Punkte, Zusammenhänge, Tests, Übungsblatt${s.bodyMap&&s.bodyMap.points&&s.bodyMap.points.length?` (${s.bodyMap.points.length})`:''}</summary><div style="margin-top:10px">${bmHtml(s,false)}</div></details>
   <details class="more"><summary>Warum zuerst der Körpercheck?</summary><p class="muted" style="margin-top:6px">Das Rad wird an den Körper angepasst. Ist ein Bein kürzer oder steht ein Fuß schräg, gleichst du das zuerst aus. Sonst stellst du das Rad auf eine schiefe Haltung ein. FYF stellt keine Diagnosen. Bei Schmerzen oder großen Unterschieden: Fachleute hinzuziehen.</p></details>
   <button class="btn ghost" data-act="openCustomer" data-id="${c.id}" style="align-self:flex-start">Alle Körpermaße bearbeiten</button>
@@ -3583,6 +3624,7 @@ SESSTAB.vergleich = s => {
   ${bikeSvg(s,ui.fitView)}
   ${compactCompare(rows,ui.cmpChanged)}
   ${fbHtml(s)}
+  ${videoCmpHtml(mediaOf('s:'+s.id),mediaOf('s:'+s.id),'Links','Rechts')}
   <details class="more" ${mediaOf('s:'+s.id).length?'open':''}><summary>Fotos, Videos und Standbilder dieser Sitzung (${mediaOf('s:'+s.id).length})</summary><div style="margin-top:8px">${mediaHtml('s:'+s.id,cust(s.customerId))}</div></details>
   <p class="faint" style="font-size:12px">Vergleiche zeigen Veränderungen der Einstellung. Ob eine Änderung eine Verbesserung verursacht hat, ist damit nicht belegt.</p></div>`;
 };
@@ -3914,6 +3956,7 @@ function cmpExtraHtml(A,B){
   const hasPics=pics(A)||pics(B)||mediaOf('s:'+A.id).length||mediaOf('s:'+B.id).length;
   return `<h4 style="margin:14px 0 6px">Unterschied der Endwerte (B − A)</h4>${chart}
   <h4 style="margin:14px 0 6px">Körper, Beschwerden, Anpassungen, Feedback</h4><div class="tw"><table><thead><tr><th></th><th>A · ${fmtDate(A.date)}</th><th>B · ${fmtDate(B.date)}</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table></div>
+  ${videoCmpHtml(mediaOf('s:'+A.id),mediaOf('s:'+B.id),'A '+fmtDate(A.date),'B '+fmtDate(B.date))}
   ${hasPics?`<h4 style="margin:14px 0 6px">Fotos, Videos, Standbilder</h4><div class="grid g2"><div class="stack" style="gap:6px"><b>A · ${fmtDate(A.date)}</b><div class="mgrid">${pics(A)}</div>${sessMediaThumbs(A.id)}</div><div class="stack" style="gap:6px"><b>B · ${fmtDate(B.date)}</b><div class="mgrid">${pics(B)}</div>${sessMediaThumbs(B.id)}</div></div>`:''}
   <p class="faint" style="font-size:12px;margin-top:10px">Die Übersicht zeigt Unterschiede. Ob sich etwas verbessert hat, sagt nur die Rückmeldung des Kunden – FYF bewertet das nicht.</p>`;
 }
@@ -4901,7 +4944,7 @@ VIEWS.module = () => `
   ${panel('Über diese Demo',`<p class="muted" style="max-width:70ch">Eine einzige HTML-Datei ohne Server. Änderungen werden nur lokal in diesem Browser gespeichert und sind auf anderen Geräten nicht sichtbar. „Demo zurücksetzen“ stellt die Beispieldaten wieder her. Alle Personen, Fahrräder, Preise und Messwerte sind erfunden und keine fachlichen Vorgaben.</p>`)}`;
 
 /* ---------- After render hooks ---------- */
-function afterRender(){ if(typeof mediaHydrate==='function') setTimeout(mediaHydrate,0);
+function afterRender(){ { const bb=document.getElementById('backBtn'); if(bb) bb.hidden=!((ui.navStack||[]).length||ui.route!=='dashboard'); } if(typeof mediaHydrate==='function') setTimeout(mediaHydrate,0);
   labelTables(document.getElementById('view'));
   cancelAnimationFrame(motion.raf); motion.playing=false; motion.last=0;
   if(ui.route==='motion'){ const cv=document.getElementById('motionCanvas'); if(cv){ drawMotion(cv); } wireVid(); }
@@ -4932,6 +4975,16 @@ function createSession(d){
 }
 
 const ACT = {
+  fyfSetAdd(){ S.tools=S.tools||[]; if(S.tools.some(t=>t.set==='FYF')){ toast('Schon angelegt'); return; } FYF_SET.forEach(([n,w,h])=>S.tools.push({id:uid('t'),set:'FYF',name:n,kind:/Maßband/.test(n)?'Maßband':/Goniometer/.test(n)?'Winkelmesser':/Lot/.test(n)?'Lot':/Sitzknochen/.test(n)?'Sitzknochen-Messvorlage':'Sonstiges',maker:h==='3D-Druck'?'FYF (Prototyp)':'',model:'',method:w,acc:'',accSrc:'',calib:'',checked:''})); audit('FYF-Messset als Messmittel angelegt'); save(); render(); toast(`${FYF_SET.length} Teile angelegt`); },
+  navBack(){ navBack(); },
+  dashEdit(){ ui.dashEdit=!ui.dashEdit; render(); },
+  dashMove(el){ const L=dashOrder(); const i=L.findIndex(x=>x.id===el.dataset.id), j=i+Number(el.dataset.d); if(i<0||j<0||j>=L.length) return; [L[i],L[j]]=[L[j],L[i]]; S.settings=S.settings||{}; S.settings.dash=L; save(); render(); },
+  dashToggle(el){ const L=dashOrder(); const x=L.find(y=>y.id===el.dataset.id); if(!x) return; x.on=!x.on; S.settings=S.settings||{}; S.settings.dash=L; save(); render(); },
+  dashReset(){ S.settings=S.settings||{}; delete S.settings.dash; save(); render(); toast('Standard-Anordnung'); },
+  vcPlay(){ const V=vcVids(); if(!V.length) return; const go=V.some(v=>v.paused); V.forEach(v=>{ v.playbackRate=ui.vcRate||1; if(go){ const p=v.play(); if(p&&p.catch) p.catch(()=>{}); } else v.pause(); }); },
+  vcStep(el){ const d=Number(el.dataset.d)/30; vcVids().forEach(v=>{ v.pause(); v.currentTime=Math.max(0,Math.min((v.duration||1e9),v.currentTime+d)); }); },
+  vcRate(){ const R=[1,0.5,0.25]; ui.vcRate=R[(R.indexOf(ui.vcRate||1)+1)%R.length]; vcVids().forEach(v=>v.playbackRate=ui.vcRate); const b=document.querySelector('[data-act=vcRate]'); if(b) b.textContent=`Tempo ${ui.vcRate}×`; },
+  vcRestart(){ vcVids().forEach(v=>{ v.pause(); v.currentTime=0; }); },
   backupSnooze(){ const d=new Date(); d.setDate(d.getDate()+1); S.backupSnooze=iso(d); save(); render(); },
   tourStart(){ tourGo(0); },
   tourNext(){ if(ui.tour!=null&&ui.tour<TOUR.length-1) tourGo(ui.tour+1); },
@@ -5422,6 +5475,8 @@ const FORMS = {
 };
 
 const CHG = {
+  vcPick(el){ ui[el.dataset.k]=el.value; render(); },
+  mediaView(el){ const m=(S.media||[]).find(x=>x.id===el.dataset.id); if(!m) return; m.view=VIEW_OPTS.includes(el.value)?el.value:''; save(); },
   qfSet(el){ ui.qf=ui.qf||{}; const k=el.dataset.k; ui.qf[k]=el.type==='checkbox'?el.checked:el.value; if(k==='cid'){ ui.qf.bid=null; ['height','inseam'].forEach(x=>delete ui.qf[x]); const bs=bikesOf(el.value); if(bs.length===1) ui.qf.bid=bs[0].id; } if(k==='who') ui.lastWho=el.value; render(); },
   qfCheck(el){ ui.qf=ui.qf||{}; ui.qf.checks=ui.qf.checks||{}; ui.qf.checks[el.dataset.k]=el.checked; },
   suspSet(el){ const d=(ui.sp=ui.sp||{}).draft=(ui.sp.draft||{fork:{},shock:{}}); const p=el.dataset.p, k=el.dataset.k; if(p){ d[p]=d[p]||{}; d[p][k]=el.value; } else d[k]=el.value; if(k==='who') ui.lastWho=el.value; if(['travel','sag','target'].includes(k)) render(); },
@@ -5496,6 +5551,7 @@ document.addEventListener('submit',e=>{
 document.addEventListener('change',e=>{ if(e.target&&e.target.id==='m_key_after') changePreview(); const el=e.target.closest('[data-change]'); if(el&&CHG[el.dataset.change]){ try{ CHG[el.dataset.change](el); }catch(err){ console.error(err); toast('Fehler: '+err.message,true);} } });
 document.addEventListener('input',e=>{ if(e.target&&(e.target.id==='m_val_after')) changePreview(); if(e.target&&e.target.dataset&&e.target.dataset.lo!==undefined) liveRange(e.target); const el=e.target.closest('[data-input]'); if(!el) return; ui[el.dataset.input]=el.value; ui.focus=el.id; render(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); closeMenu(); } });
+window.addEventListener('popstate',()=>{ try{ if(document.querySelector('.drawer')){ closeDrawer(); try{ history.pushState({fyf:1},'','#'+ui.route); }catch(e){} return; } navPop(); }catch(err){ console.error(err); } });
 
 applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
