@@ -1518,7 +1518,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-03.60';
+const APP_VER='2026-11-03.61';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1823,7 +1823,7 @@ function qScore(s){
 const VIEWS = {};
 
 function setupSteps(){ const own=S.customers.filter(c=>!isDemoCust(c.id)); return [
-  {k:'shop',t:'Laden eintragen',d:'Name, Adresse, Logo – erscheint im Bericht.',done:!!shopName(),a:'data-nav="mehr"'},
+  {k:'shop',t:'Laden eintragen',d:'Name, Adresse, Logo – erscheint im Bericht.',done:!!shopName(),a:'data-act="goShop"'},
   {k:'prices',t:'Preise & Produkte prüfen',d:'Fitting-Pakete und die Produkte, die du verkaufst.',done:!!(S.setup&&S.setup.prices),a:'data-nav="preise"'},
   {k:'cust',t:'Ersten eigenen Kunden anlegen',d:'Dann ein Fitting starten.',done:own.length>0,a:'data-act="newCustomer"'},
   {k:'demo',t:'Beispielkunden entfernen',d:'Wenn du mit echten Daten arbeitest.',done:!!S.demoRemoved,a:'data-act="removeDemo"'}]; }
@@ -1974,7 +1974,7 @@ VIEWS.berichte = () => {
 VIEWS.mehr = () => `
   ${head('Alle Bereiche','Alle Bereiche von FYF, nach Arbeitsschritt geordnet. Darunter Laden, Datensicherung und Einstellungen.')}
   ${moreNav().map(([g,items])=>`<div class="stack"><h2>${g}</h2><div class="tiles">${items.map(([r,l,i,d])=>`<button class="tile" data-nav="${r}"><span class="ti">${ic(i)}</span><b>${l}</b><span>${d}</span></button>`).join('')}</div></div>`).join('')}
-  ${shopHtml()}
+  <div id="shopBox" style="scroll-margin-top:90px">${shopHtml()}</div>
   ${dataPanel()}${cloudPanel()}
   ${statsHtml()}
   ${panel('Ladentyp & Module',shopTypeHtml(false))}
@@ -5098,6 +5098,7 @@ function createSession(d){
 }
 
 const ACT = {
+  goShop(){ go('mehr'); setTimeout(()=>{ const e=document.getElementById('shopBox'); if(e) e.scrollIntoView({block:'start'}); },150); },
   cloudReset(){ CL={}; clSave(); render(); toast('Cloud-Verbindung entfernt. Daten auf dem Gerät bleiben.'); },
   cloudLogout(){ CL={url:CL.url,key:CL.key}; clSave(); render(); toast('Abgemeldet. Daten auf dem Gerät bleiben.'); },
   cloudSync(){ cloudPull(); },
