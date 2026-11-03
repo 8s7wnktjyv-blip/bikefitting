@@ -1242,6 +1242,9 @@ const GEO=[
  {id:'canyon-ultimate-cf-sl-7',brand:'Canyon',model:'Ultimate CF SL 7',year:null,type:'Rennrad',src:'https://www.canyon.com/en-ch/productpdf/geometry/?pid=3790',rows:[
   ['3XS',483,358,497,390,73.9,70.2,104,405,958,_,697,70,370,165],['2XS',498,372,516,420,73.9,71.5,115,405,965,_,720,80,370,165],['XS',520,378,529,450,73.9,71.2,107,410,979,_,748,90,390,170],['S',539,390,546,480,73.9,72.8,121,410,983,_,775,90,390,170],
   ['M',560,393,555,510,73.9,73.3,142,410,987,_,801,100,410,172.5],['L',580,401,569,540,73.9,73.5,162,413,1004,_,828,110,410,172.5],['XL',606,419,594,570,73.9,73.5,188,415,1029,_,851,110,410,175],['2XL',624,429,610,600,73.9,73.8,206,415,1042,_,874,120,430,175]]},
+ {id:'canyon-aeroad-cf-slx-7-di2',brand:'Canyon',model:'Aeroad CF SLX 7 Di2',year:null,type:'Rennrad',src:'https://www.canyon.com/en-de/productpdf/geometry/?pid=4531&isComplexCustomization=false',note:'Aktuelle 4. Generation laut Hersteller (Stand 11/2026). Tretlager-Versatz laut Canyon 70 mm. Lenkerbreite wählbar, daher ohne Wert. Vorbau = Cockpit-Maß laut Canyon.',rows:[
+  ['2XS',498,372,520,441,73.5,70,88,410,975,_,720,80,_,160],['XS',520,378,532,471,73.5,71.2,107,410,979,_,748,90,_,160],['S',539,390,549,501,73.5,72.8,121,410,982,_,775,90,_,165],['M',560,393,559,531,73.5,73.25,142,410,988,_,801,100,_,165],
+  ['L',580,401,572,561,73.5,73.3,162,413,1003,_,828,110,_,170],['XL',606,419,598,591,73.5,73.5,188,415,1029,_,851,110,_,170],['2XL',624,429,613,621,73.5,73.8,206,415,1042,_,874,120,_,170]]},
  {id:'canyon-grizl-cf-sl-7',brand:'Canyon',model:'Grizl CF SL 7',year:null,type:'Gravel',src:'https://www.canyon.com/en-us/productpdf/geometry/?pid=3244',rows:[
   ['2XS',522,377,522,432,73.5,70,121,420,1007,_,737,70,400,170],['XS',537,382,531,462,73.5,71,133,420,1007,_,761,70,400,170],['S',556,397,552,492,73.5,71,118,435,1036,_,789,70,420,170],['M',579,402,564,522,73.5,72.25,138,435,1037,_,816,80,440,172.5],
   ['L',605,409,578,552,73.5,72.5,164,435,1050,_,845,90,440,175],['XL',626,427,602,582,73.5,72.75,185,435,1072,_,870,90,460,175],['2XL',644,436,617,612,73.5,72.75,204,435,1086,_,892,100,460,175]]},
@@ -1518,7 +1521,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-03.61';
+const APP_VER='2026-11-03.62';
 let loadIssue = null;
 function load(){
   let raw=null;
