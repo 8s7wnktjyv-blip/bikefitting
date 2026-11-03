@@ -1617,6 +1617,12 @@ async function cloudInit(){
     else if(CL.url&&CL.key){ clSetSession({access_token:q.get('access_token'),refresh_token:q.get('refresh_token'),expires_at:q.get('expires_at'),expires_in:q.get('expires_in')},CL.pendingEmail); delete CL.pendingEmail; clSave(); setTimeout(()=>{ try{ go('mehr'); setTimeout(()=>{ const bx=document.getElementById('cloudBox'); if(bx) bx.scrollIntoView({block:'center'}); },200); }catch(e){} toast('Angemeldet'); },400); }
     else setTimeout(()=>toast('Der Link wurde in einem anderen Browser geöffnet. Bitte lange auf den Link tippen und „In Safari öffnen“ wählen.',true),300);
     try{ history.replaceState({fyf:1},'',location.pathname+location.search+'#'+(ui.route||'dashboard')); }catch(e){} }
+  if(/^#cfg=/.test(h)){ let c=null; try{ c=JSON.parse(unb64u(h.slice(5))); }catch(e){}
+    const url=c&&String(c.u||'').trim().replace(/\/+$/,''), key=c&&String(c.k||'').trim(), er=c?clCfgErr(url,key):'QR-Code nicht lesbar';
+    try{ history.replaceState({fyf:1},'',location.pathname+location.search+'#mehr'); }catch(e){}
+    if(er) setTimeout(()=>toast(er,true),300);
+    else if(CL.session&&clBase()===url) setTimeout(()=>toast('Dieses Gerät ist schon verbunden'),300);
+    else { CL={url,key}; clSave(); setTimeout(()=>{ try{ go('mehr'); setTimeout(()=>{ const bx=document.getElementById('cloudBox'); if(bx) bx.scrollIntoView({block:'center'}); },200); }catch(e){} toast('Verbunden. Jetzt mit deiner E-Mail anmelden.'); },400); } }
   if(!(CL.url&&CL.key&&CL.session)) { savePill(); return; }
   try{ if(!CL.tenant&&!(await cloudFindTenant())){ clStatus('setup'); return; } await cloudPull(); }catch(e){ clStatus('err',e.message); } }
 function cloudBody(){
@@ -1636,8 +1642,15 @@ function cloudBody(){
   return `<div class="row" style="gap:8px;flex-wrap:wrap">${chip}<span class="muted" style="font-size:13.5px">${esc(CL.session.email||'')} · Stand ${Number(CL.ver)||0} · zuletzt ${esc(t)}</span></div>
     ${st==='err'?`<p class="notice warn" style="margin:0">${ic('warn')}<span>${esc(CL.msg||'Unbekannter Fehler')}. Deine Daten sind auf diesem Gerät gespeichert und werden später hochgeladen.</span></p>`:''}
     ${st==='conflict'?`<div class="notice warn">${ic('warn')}<div><b>${esc(CL.msg)}</b><br>Wähle, welcher Stand gilt. Der andere wird vorher als Kopie im Browser gesichert.<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm primary" data-act="cloudTakeServer">Stand aus der Cloud übernehmen</button><button class="btn sm" data-act="cloudTakeLocal">Meinen Stand hochladen</button></div></div></div>`:''}
-    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="cloudSync">Jetzt abgleichen</button><button class="btn sm ghost" data-act="cloudLogout">Abmelden</button></div>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="cloudSync">Jetzt abgleichen</button><button class="btn sm" data-act="cloudQR">${ic('plus')} Weiteres Gerät verbinden</button><button class="btn sm ghost" data-act="cloudLogout">Abmelden</button></div>
     <p class="faint" style="font-size:12px;margin:0">Fotos und Videos bleiben vorerst nur auf dem Gerät. Die Cloud bewahrt die letzten 30 Stände auf.</p>`; }
+function clCfgErr(url,key){
+  if(!/^(https:\/\/[a-z0-9.-]+|http:\/\/(localhost|127\.0\.0\.1))(:\d+)?$/i.test(url)) return 'Adresse bitte so: https://xxxx.supabase.co';
+  let role=''; try{ const p=key.split('.')[1]; if(p) role=JSON.parse(atob(p.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-p.length%4)%4))).role||''; }catch(e){}
+  if(/^sb_secret_/.test(key)||role==='service_role') return 'Das ist der geheime Schlüssel. Bitte nur den öffentlichen (anon / publishable) eintragen.';
+  if(key.length<20) return 'Schlüssel prüfen'; return ''; }
+// QR für weitere Geräte: enthält nur Projekt-Adresse und öffentlichen Schlüssel, keine Anmeldung. Anmelden muss man sich auf dem neuen Gerät selbst.
+function cloudLink(){ return location.origin+location.pathname+'#cfg='+b64u(JSON.stringify({u:clBase(),k:CL.key})); }
 function cloudPanel(){ return panel('Cloud-Speicherung',`<div class="stack" id="cloudBox">${cloudBody()}</div>`); }
 
 function storageTest(){ try{ const k='fitframe-test'; localStorage.setItem(k,'1'); const ok=localStorage.getItem(k)==='1'; localStorage.removeItem(k); return ok; }catch(e){ return false; } }
@@ -5214,6 +5227,13 @@ const ACT = {
     inv.status='storniert'; invoices().unshift(st); audit(`Rechnung ${inv.no} storniert (${st.no})`); save(); render(); openDrawer('Stornorechnung '+st.no,invOpenHtml(st)); toast('Stornorechnung '+st.no+' erstellt'); },
 
   goShop(){ go('mehr'); setTimeout(()=>{ const e=document.getElementById('shopBox'); if(e) e.scrollIntoView({block:'start'}); },150); },
+  cloudQR(){ const link=cloudLink();
+    openDrawer('Weiteres Gerät verbinden',`<div class="stack"><ol style="margin:0;padding-left:20px;line-height:1.6"><li>Auf dem iPad oder Handy die Kamera öffnen und diesen Code scannen. Am PC: Link unten kopieren und im Browser öffnen.</li><li>Die App öffnet sich mit der Cloud schon eingetragen.</li><li>Dort deine E-Mail eingeben, Anmelde-Link öffnen – fertig. Danach sind alle Kunden da.</li></ol>
+      <div id="clQR" style="background:#fff;padding:12px;border-radius:12px;max-width:260px;margin:0 auto;width:100%"><span class="faint" style="font-size:12px">QR-Code lädt …</span></div>
+      <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="cloudLinkCopy">Link kopieren</button></div>
+      <p class="faint" style="font-size:12px;margin:0">Der Code enthält nur die Projekt-Adresse und den öffentlichen Schlüssel – keine Anmeldung. Ohne Login per E-Mail sieht niemand deine Daten.</p></div>`);
+    (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ const b=document.getElementById('clQR'); if(b) b.innerHTML=qrSvg(link); }).catch(()=>{ const b=document.getElementById('clQR'); if(b) b.innerHTML='<span class="faint" style="font-size:12px">QR-Code braucht Internet. Nimm den Link.</span>'; }); },
+  cloudLinkCopy(){ const link=cloudLink(); (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(link):Promise.reject()).then(()=>toast('Link kopiert')).catch(()=>{ prompt('Link kopieren:',link); }); },
   cloudReset(){ CL={}; clSave(); render(); toast('Cloud-Verbindung entfernt. Daten auf dem Gerät bleiben.'); },
   cloudLogout(){ CL={url:CL.url,key:CL.key}; clSave(); render(); toast('Abgemeldet. Daten auf dem Gerät bleiben.'); },
   cloudSync(){ cloudPull(); },
@@ -5604,10 +5624,7 @@ const FORMS = {
     audit(`Rechnung ${inv.no} erstellt (${eur(invCalc(inv).total)})`,inv.sessionId||undefined); save(); render(); openDrawer('Rechnung '+inv.no,invOpenHtml(inv)); toast('Rechnung '+inv.no+' erstellt'); },
 
   cloudCfg(f,data){ const url=String(data.get('url')||'').trim().replace(/\/+$/,''), key=String(data.get('key')||'').trim();
-    if(!/^(https:\/\/[a-z0-9.-]+|http:\/\/(localhost|127\.0\.0\.1))(:\d+)?$/i.test(url)){ toast('Adresse bitte so: https://xxxx.supabase.co',true); return; }
-    let role=''; try{ const p=key.split('.')[1]; if(p) role=JSON.parse(atob(p.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-p.length%4)%4))).role||''; }catch(e){}
-    if(/^sb_secret_/.test(key)||role==='service_role'){ toast('Das ist der geheime Schlüssel. Bitte nur den öffentlichen (anon / publishable) eintragen.',true); return; }
-    if(key.length<20){ toast('Schlüssel prüfen',true); return; } CL={url,key}; clSave(); audit('Cloud-Verbindung eingetragen'); render(); toast('Verbunden. Jetzt anmelden.'); },
+    const er=clCfgErr(url,key); if(er){ toast(er,true); return; } CL={url,key}; clSave(); audit('Cloud-Verbindung eingetragen'); render(); toast('Verbunden. Jetzt anmelden.'); },
   async cloudMail(f,data){ const email=String(data.get('email')||'').trim(); if(!/^\S+@\S+\.\S+$/.test(email)){ toast('E-Mail prüfen',true); return; }
     try{ await clRaw('/auth/v1/otp?redirect_to='+encodeURIComponent(location.origin+location.pathname),{method:'POST',body:JSON.stringify({email,create_user:true})},false); CL.pendingEmail=email; clSave(); render(); toast('E-Mail gesendet'); }
     catch(e){ toast('Senden fehlgeschlagen: '+e.message,true); } },
