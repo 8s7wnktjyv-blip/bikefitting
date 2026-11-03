@@ -48,7 +48,7 @@ Eingebaut unter **Mehr → Cloud-Speicherung**. Aus, solange keine Supabase-Verb
 - Anmeldung per E-Mail-Code oder Link (Supabase Auth). Nur der öffentliche Schlüssel wird eingetragen; der geheime `service_role`/`sb_secret_`-Schlüssel wird abgelehnt.
 - Einrichten der Verbindung und Anlegen des Ladens nur mit Rolle Admin.
 - Noch nicht in der Cloud: Fotos und Videos (bleiben in IndexedDB auf dem Gerät).
-- Getestet: SQL mit Postgres 16 (Konflikt, Rechte, fremder Laden gesperrt, direkte Schreibzugriffe gesperrt); App gegen einen nachgebauten Supabase-Server (Anmelden, Laden anlegen, zweites Gerät, Konflikt, Abmelden). Gegen echtes Supabase noch nicht getestet.
+- Getestet: SQL mit Postgres 16 (Konflikt, Rechte, fremder Laden gesperrt, direkte Schreibzugriffe gesperrt); App gegen einen nachgebauten Supabase-Server (Anmelden, Laden anlegen, zweites Gerät, Konflikt, Abmelden). Am 03.11.2026 mit echtem Supabase (Region Frankfurt, Free-Tarif) erfolgreich eingerichtet: Anmeldung per Link, Laden angelegt, Stand hochgeladen. Nötig war zusätzlich das Grant für `authenticated` (jetzt in start.sql).
 
 ### Einrichten (Inhaber, am iPhone möglich)
 1. supabase.com → kostenloses Konto → „New project“, Region **Frankfurt (eu-central-1)**, Datenbank-Passwort sicher aufbewahren (nicht in FYF eintragen).
