@@ -418,6 +418,16 @@ canvas{max-width:100%;display:block}
 .pimg img{width:100%;height:100%;object-fit:cover;display:block}
 .pimg em{position:absolute;left:3px;top:3px;font-style:normal;font-size:9px;font-weight:700;line-height:1.3;background:rgba(255,255,255,.88);color:#4a555c;padding:1px 4px;border-radius:4px}
 .rprods{display:flex;flex-wrap:wrap;gap:12px;margin:4px 0 12px}.rprods figure{margin:0;width:112px;font-size:11.5px;line-height:1.3}.rprods .pimg{width:112px;height:84px;margin-bottom:4px}
+.invdoc{background:#fff;color:#1c2326;padding:22px;border-radius:12px;font-size:13px;line-height:1.45;max-width:760px}
+.invdoc .inv-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.invdoc .inv-logo{max-height:46px;max-width:160px;display:block;margin-bottom:6px}.invdoc .inv-contact{text-align:right;color:#4a555c}
+.invdoc .inv-addr{margin:22px 0 14px;min-height:80px}.invdoc .inv-addr small{display:block;font-size:10px;color:#6b757c;text-decoration:underline;margin-bottom:4px}
+.invdoc h2{font-size:20px;margin:6px 0 10px}.invdoc .inv-kv{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;margin-bottom:12px}.invdoc .inv-kv span{color:#4a555c}
+.invdoc .inv-items{width:100%;border-collapse:collapse;margin:6px 0 10px}.invdoc .inv-items th,.invdoc .inv-items td{border-bottom:1px solid #e3e6e8;padding:6px 4px;text-align:left;vertical-align:top}.invdoc .inv-items .r{text-align:right;white-space:nowrap}
+@media (max-width:600px){.invdoc{padding:14px;font-size:12px}.invdoc .inv-items{table-layout:fixed}.invdoc .inv-items th,.invdoc .inv-items td{padding:5px 2px;font-size:11px}.invdoc .inv-items th:nth-child(1),.invdoc .inv-items td:nth-child(1){width:22px}.invdoc .inv-items th:nth-child(3),.invdoc .inv-items td:nth-child(3){width:34px}.invdoc .inv-items th:nth-child(4),.invdoc .inv-items td:nth-child(4),.invdoc .inv-items th:nth-child(5),.invdoc .inv-items td:nth-child(5){width:70px;white-space:normal}.invdoc .inv-items td{overflow-wrap:anywhere}}
+.invdoc .inv-sum{display:grid;grid-template-columns:1fr auto;gap:2px 16px;max-width:300px;margin-left:auto}.invdoc .inv-sum b{text-align:right}.invdoc .inv-sum .tot{font-size:15px;font-weight:800;border-top:2px solid #1c2326;padding-top:4px}
+.invdoc .inv-foot{border-top:1px solid #e3e6e8;margin-top:18px;padding-top:8px;display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:#4a555c}
+.inv-preview{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+@media print{ body.print-inv .report,body.print-inv .report *{visibility:hidden!important} body.print-inv .invdoc,body.print-inv .invdoc *{visibility:visible!important} body.print-inv .invdoc{position:absolute;left:0;top:0;width:100%;max-width:none;border-radius:0;padding:12mm} body.print-inv .inv-preview{border:0} }
 .offname{position:relative}.offname.hasimg{padding-right:62px;min-height:40px}.offname .offimg{position:absolute;right:0;top:0;font-size:0}
 .chip svg{width:13px;height:13px;margin-right:3px;vertical-align:-2px}
 .empty>svg:first-child{width:54px;height:54px;padding:14px;border-radius:50%;background:var(--accent-soft);color:var(--accent)}
@@ -1521,7 +1531,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-03.62';
+const APP_VER='2026-11-03.63';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1662,7 +1672,7 @@ const NAV_AREAS=[
   ['Bike-Vermessung',[['vermessung','Bike-Vermessung','ruler','Aktuelle Sitzposition je Fahrrad'],['quickfit','Quick-Fit Übergabe','handover','Neues Rad in 10 Minuten einstellen und übergeben']]],
   ['Fahrwerk',[['fahrwerk','Fahrwerk','susp','Gabel und Dämpfer: Sag, Druck, Klicks je Rad']]],
   ['Bewegungsanalyse',[['motion','Bewegung & Video','motion','Winkel aus Video messen, Live-Analyse (Beta)']]],
-  ['Produktempfehlungen',[['preise','Produkte & Preise','tag','Fitting-Pakete, deine Produkte, Gutscheine'],['lager','Angebote & Lager','box','Angebote aus dem Fitting, Bestand'],['werkstatt','Werkstatt','wrench','Aufträge, Kunden benachrichtigen, Wartung']]],
+  ['Produktempfehlungen',[['preise','Produkte & Preise','tag','Fitting-Pakete, deine Produkte, Gutscheine'],['rechnungen','Rechnungen','doc','Rechnungen, E-Rechnung, offen und bezahlt'],['lager','Angebote & Lager','box','Angebote aus dem Fitting, Bestand'],['werkstatt','Werkstatt','wrench','Aufträge, Kunden benachrichtigen, Wartung']]],
   ['Berichte',[['berichte','Berichte','doc','Alle Fitting-Berichte öffnen und drucken'],['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht (Textvorlagen)'],['portal','Kundenportal','portal','So sehen Kunden ihre Berichte (Vorschau)']]],
   ['Datenbanken',[['geometrie','Geometrie-Bibliothek','grid','Rahmenmaße nach Hersteller, Größenberatung'],['messmittel','Messmittel','ruler','Geräte, Genauigkeit, Prüfdatum'],['produktdb','Produktdatenbank','tag','Sättel, Einlagen, Cleats mit Quelle'],['wissen','Wissen','book','Fachbegriffe, Messverfahren, Tests']]],
   ['Einstellungen',[['mehr','Einstellungen & Daten','gear','Laden, Sicherung, Darstellung'],['betrieb','Zahlen & Team','ops','Kennzahlen pro Monat, Team'],['qualitaet','Messdaten & Qualität','quality','Herkunft und Vollständigkeit aller Werte'],['hardware','Hardware Lab','hw','Geplante eigene Messhilfen (Konzept)'],['module','Alle Module','grid','Gesamtplan und Stand der Demo']]]
@@ -1753,7 +1763,7 @@ function applyTheme(){
 }
 function labelTables(root){
   (root||document).querySelectorAll('table').forEach(t=>{
-    if(t.closest('.report')) return; const ths=[...t.querySelectorAll('thead th')]; if(!ths.length) return;
+    if(t.closest('.report')||t.closest('.invdoc')) return; const ths=[...t.querySelectorAll('thead th')]; if(!ths.length) return;
     t.classList.add('rcard');
     t.querySelectorAll('tbody tr').forEach(tr=>[...tr.children].forEach((td,i)=>{ if(!td.hasAttribute('data-l')) td.setAttribute('data-l',(ths[i]||{}).textContent||''); }));
   });
@@ -2298,8 +2308,8 @@ VIEWS.wissen = () => { const q=(ui.wq||'').toLowerCase(); const m=t=>!q||t.toLow
 const ROLES=['Admin','Fitter','Mitarbeiter'];
 const role=()=>ROLES.includes(S.role)?S.role:'Admin';
 const DENY_F=['custDelete','custDeleteGo','reset','resetConfirm','removeDemo','removeDemoConfirm','pdbEdit','packDel','prodDel','packAdd','prodAdd','toolDel','cloudReset','pdbImgDel'];
-const DENY={Admin:[],Fitter:DENY_F,Mitarbeiter:[...DENY_F,'bmDel','delMeasure','delPos','delItem','delGeo','delGeoRow','delMark','mediaDel','finishSession','qAck','recSet','toolEdit','toolQuick','liveNoteDel','flowSkip']};
-const DENY_FORM={Admin:[],Fitter:['pdb','custDelete','cloudCfg','cloudTenant'],Mitarbeiter:['pdb','custDelete','tool','cloudCfg','cloudTenant']};
+const DENY={Admin:[],Fitter:DENY_F,Mitarbeiter:[...DENY_F,'invStorno','invPaid','bmDel','delMeasure','delPos','delItem','delGeo','delGeoRow','delMark','mediaDel','finishSession','qAck','recSet','toolEdit','toolQuick','liveNoteDel','flowSkip']};
+const DENY_FORM={Admin:[],Fitter:['pdb','custDelete','cloudCfg','cloudTenant'],Mitarbeiter:['pdb','custDelete','tool','cloudCfg','cloudTenant','invCreate']};
 function allowed(act,form){ const r=role(); return form?!DENY_FORM[r].includes(form):!DENY[r].includes(act); }
 function mediaGC(){ return mdb().then(db=>new Promise(res=>{ const keep=new Set((S.media||[]).map(m=>m.id)); const t=db.transaction('m','readwrite'); const st=t.objectStore('m'); const q=st.getAllKeys(); q.onsuccess=()=>{ q.result.filter(k=>!keep.has(k)).forEach(k=>st.delete(k)); }; t.oncomplete=()=>res(true); t.onerror=()=>res(false); })).catch(()=>false); }
 const PERMANENT_IDS=['p-dominik-boehm'];
@@ -3870,7 +3880,7 @@ function offerHtml(s){
   const it=s.offer.items; const sum=it.filter(x=>x.on).reduce((a,x)=>a+x.qty*x.price,0);
   return `<div class="offer"><div class="row" style="justify-content:space-between"><h3>Angebot aus dem Fitting</h3><button class="btn sm ghost" data-act="offerRebuild" data-id="${s.id}">Neu berechnen</button></div>
   ${it.length?`<div class="offlist">${it.map((x,i)=>`<div class="offrow ${x.on?'':'off'}"><input type="checkbox" ${x.on?'checked':''} data-change="offerOn" data-id="${s.id}" data-i="${i}" aria-label="Position übernehmen"><div class="offname${x.cat!=='Paket'?' hasimg':''}">${x.cat!=='Paket'?`<span class="offimg">${prodImg(products().find(q=>q.id===x.pid)||{cat:x.cat,name:x.name},52)}</span>`:''}${x.cat==="Paket"?`<select class="input" style="min-height:36px" data-change="offerProd" data-id="${s.id}" data-i="${i}" aria-label="Fitting-Paket">${fitPacks().map(p=>`<option value="${p.id}" ${p.id===x.pid?"selected":""}>${esc(p.name)}</option>`).join("")}</select>`:(x.alts&&x.alts.length>1)?`<b>${esc(x.name)}</b><select class="input" style="min-height:34px;margin-top:4px;font-size:13.5px" data-change="offerProd" data-id="${s.id}" data-i="${i}" aria-label="Anderes Produkt wählen">${x.alts.map(id=>{ const p=products().find(z=>z.id===id); return p?`<option value="${p.id}" ${p.id===x.pid?"selected":""}>${esc(p.name)} – ${eur(p.price)}</option>`:""; }).join("")}</select>`:`<b>${esc(x.name)}</b>`}<span class="faint">${esc(x.cat)} · ${esc(x.why)}${x.note?` · ${esc(x.note)}`:""}</span></div><div class="offnum"><label><span>Menge</span><input class="input num" type="number" min="0" value="${x.qty}" data-change="offerQty" data-id="${s.id}" data-i="${i}"></label><label><span>Preis €</span><input class="input num" type="number" step="0.5" min="0" value="${x.price}" data-change="offerPrice" data-id="${s.id}" data-i="${i}"></label><b class="num">${eur(x.on?x.qty*x.price:0)}</b></div></div>`).join('')}</div>
-  <div class="row" style="justify-content:space-between"><b class="num" style="font-size:18px">Summe ${eur(sum)}</b><div class="row" style="gap:6px"><button class="btn" data-act="offerCopy" data-id="${s.id}">Text kopieren</button><button class="btn" data-act="offerWO" data-id="${s.id}">Als Werkstattauftrag</button><button class="btn primary" data-act="offerSale" data-id="${s.id}">Als Verkauf anlegen</button></div></div>
+  <div class="row" style="justify-content:space-between"><b class="num" style="font-size:18px">Summe ${eur(sum)}</b><div class="row" style="gap:6px"><button class="btn" data-act="offerCopy" data-id="${s.id}">Text kopieren</button><button class="btn" data-act="offerWO" data-id="${s.id}">Als Werkstattauftrag</button><button class="btn" data-act="offerSale" data-id="${s.id}">Als Verkauf anlegen</button><button class="btn primary" data-act="invNew" data-sess="${s.id}">Rechnung erstellen</button></div></div>
   <p class="faint" style="font-size:12.5px">Einstellarbeiten sind im Fitting-Paket enthalten. Produkte und Preise aus deiner Liste (Mehr → Fitting-Preise und Produkte). Preise hier für diesen Kunden änderbar, Positionen ohne Haken kommen nicht ins Angebot.</p>`
   :'<p class="muted">Laut Plan sind keine neuen Teile nötig.</p>'}</div>`;
 }
@@ -4746,6 +4756,89 @@ const showExtra=()=>!!(S.settings&&S.settings.extra);
 const DEMO_IDS={customers:['c1','c2','c3','c4']};
 const isDemoCust=id=>DEMO_IDS.customers.includes(id)&&!S.demoRemoved;
 function shopName(){ return (S.shop&&S.shop.name)||''; }
+/* ---------- Rechnungen und E-Rechnung (XRechnung 3.0, Syntax CII) ----------
+   Rechnungsnummern fortlaufend je Jahr. Verkäufer- und Käuferdaten werden beim Erstellen eingefroren (Rechnungen nie nachträglich ändern; Korrektur per Storno). */
+const VAT_RATE=19;
+const r2=v=>Math.round((Number(v)+Number.EPSILON)*100)/100;
+const r4=v=>Math.round((Number(v)+Number.EPSILON)*10000)/10000;
+function addDays(d,n){ const x=new Date((d||today())+'T12:00:00'); x.setDate(x.getDate()+Number(n||0)); return x.toISOString().slice(0,10); }
+function invoices(){ return S.invoices=S.invoices||[]; }
+function invNextNo(date){ const y=(date||today()).slice(0,4); S.invSeq=S.invSeq||{}; const used=invoices().filter(i=>i.no.startsWith('RE-'+y+'-')).map(i=>Number(i.no.slice(8))||0); const n=Math.max(S.invSeq[y]||0,...used,0)+1; S.invSeq[y]=n; return `RE-${y}-${String(n).padStart(4,'0')}`; }
+function invCalc(inv){ const gross=inv.mode!=='netto';
+  const lines=(inv.items||[]).map(x=>{ const q=Number(x.qty)||0, p=Number(x.price)||0; const unit=gross?r4(p/(1+VAT_RATE/100)):r4(p); return {...x,qty:q,unit,net:r2(q*unit)}; });
+  const basis=r2(lines.reduce((a,l)=>a+l.net,0)); const tax=r2(basis*VAT_RATE/100); return {lines,basis,tax,total:r2(basis+tax)}; }
+function ibanOk(i){ i=String(i||'').replace(/\s+/g,'').toUpperCase(); if(!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(i)) return false; const r=(i.slice(4)+i.slice(0,4)).replace(/[A-Z]/g,c=>String(c.charCodeAt(0)-55)); let m=0; for(const ch of r) m=(m*10+Number(ch))%97; return m===1; }
+function sellerInfo(){ const p=S.shop||{}; const m=String(p.addr||'').match(/^(.*?),\s*(\d{4,5})\s+(.+)$/);
+  return {name:p.name||'',owner:p.owner||'',street:m?m[1].trim():String(p.addr||'').trim(),zip:m?m[2]:'',city:m?m[3].trim():'',phone:p.phone||'',email:p.email||'',web:p.web||'',taxNo:p.taxNo||'',vatId:p.vatId||'',iban:String(p.iban||'').replace(/\s+/g,'').toUpperCase(),bic:String(p.bic||'').replace(/\s+/g,'').toUpperCase(),bank:p.bank||'',logo:p.logo||''}; }
+function sellerMissing(){ const s=sellerInfo(), m=[]; if(!s.name) m.push('Name'); if(!s.zip||!s.city) m.push('Adresse im Format „Straße, PLZ Ort“'); if(!s.phone) m.push('Telefon'); if(!s.email) m.push('E-Mail'); if(!s.taxNo&&!s.vatId) m.push('Steuernummer oder USt-ID'); if(!s.iban) m.push('IBAN'); return m; }
+function buyerMissingX(b){ const m=[]; if(!b.name) m.push('Name'); if(!b.street) m.push('Straße'); if(!b.zip) m.push('PLZ'); if(!b.city) m.push('Ort'); if(!b.email) m.push('E-Mail'); return m; }
+const fmtIban=i=>String(i||'').replace(/(.{4})/g,'$1 ').trim();
+const xesc=t=>String(t??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const d102=d=>`<udt:DateTimeString format="102">${String(d||'').replace(/-/g,'')}</udt:DateTimeString>`;
+const a2=v=>r2(v).toFixed(2);
+function invXml(inv){ const s=inv.seller, b=inv.buyer, c=invCalc(inv), cn=inv.type==='storno';
+  const addr=x=>`<ram:PostalTradeAddress><ram:PostcodeCode>${xesc(x.zip)}</ram:PostcodeCode><ram:LineOne>${xesc(x.street)}</ram:LineOne><ram:CityName>${xesc(x.city)}</ram:CityName><ram:CountryID>DE</ram:CountryID></ram:PostalTradeAddress>`;
+  const lines=c.lines.map((l,i)=>`<ram:IncludedSupplyChainTradeLineItem><ram:AssociatedDocumentLineDocument><ram:LineID>${i+1}</ram:LineID></ram:AssociatedDocumentLineDocument><ram:SpecifiedTradeProduct><ram:Name>${xesc(l.name)}</ram:Name></ram:SpecifiedTradeProduct><ram:SpecifiedLineTradeAgreement><ram:NetPriceProductTradePrice><ram:ChargeAmount>${l.unit.toFixed(4)}</ram:ChargeAmount></ram:NetPriceProductTradePrice></ram:SpecifiedLineTradeAgreement><ram:SpecifiedLineTradeDelivery><ram:BilledQuantity unitCode="C62">${l.qty}</ram:BilledQuantity></ram:SpecifiedLineTradeDelivery><ram:SpecifiedLineTradeSettlement><ram:ApplicableTradeTax><ram:TypeCode>VAT</ram:TypeCode><ram:CategoryCode>S</ram:CategoryCode><ram:RateApplicablePercent>${VAT_RATE}</ram:RateApplicablePercent></ram:ApplicableTradeTax><ram:SpecifiedTradeSettlementLineMonetarySummation><ram:LineTotalAmount>${a2(l.net)}</ram:LineTotalAmount></ram:SpecifiedTradeSettlementLineMonetarySummation></ram:SpecifiedLineTradeSettlement></ram:IncludedSupplyChainTradeLineItem>`).join('');
+  const tax=[s.vatId?`<ram:SpecifiedTaxRegistration><ram:ID schemeID="VA">${xesc(s.vatId)}</ram:ID></ram:SpecifiedTaxRegistration>`:'',s.taxNo?`<ram:SpecifiedTaxRegistration><ram:ID schemeID="FC">${xesc(s.taxNo)}</ram:ID></ram:SpecifiedTaxRegistration>`:''].join('');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rsm:CrossIndustryInvoice xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100" xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100" xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100" xmlns:qdt="urn:un:unece:uncefact:data:standard:QualifiedDataType:100">
+<rsm:ExchangedDocumentContext><ram:BusinessProcessSpecifiedDocumentContextParameter><ram:ID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</ram:ID></ram:BusinessProcessSpecifiedDocumentContextParameter><ram:GuidelineSpecifiedDocumentContextParameter><ram:ID>urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0</ram:ID></ram:GuidelineSpecifiedDocumentContextParameter></rsm:ExchangedDocumentContext>
+<rsm:ExchangedDocument><ram:ID>${xesc(inv.no)}</ram:ID><ram:TypeCode>${cn?381:380}</ram:TypeCode><ram:IssueDateTime>${d102(inv.date)}</ram:IssueDateTime>${inv.note?`<ram:IncludedNote><ram:Content>${xesc(inv.note)}</ram:Content></ram:IncludedNote>`:''}</rsm:ExchangedDocument>
+<rsm:SupplyChainTradeTransaction>${lines}
+<ram:ApplicableHeaderTradeAgreement><ram:BuyerReference>${xesc(b.ref||b.name)}</ram:BuyerReference>
+<ram:SellerTradeParty><ram:Name>${xesc(s.name)}</ram:Name><ram:DefinedTradeContact><ram:PersonName>${xesc(s.owner||s.name)}</ram:PersonName><ram:TelephoneUniversalCommunication><ram:CompleteNumber>${xesc(s.phone)}</ram:CompleteNumber></ram:TelephoneUniversalCommunication><ram:EmailURIUniversalCommunication><ram:URIID>${xesc(s.email)}</ram:URIID></ram:EmailURIUniversalCommunication></ram:DefinedTradeContact>${addr(s)}<ram:URIUniversalCommunication><ram:URIID schemeID="EM">${xesc(s.email)}</ram:URIID></ram:URIUniversalCommunication>${tax}</ram:SellerTradeParty>
+<ram:BuyerTradeParty><ram:Name>${xesc(b.company||b.name)}</ram:Name>${addr(b)}<ram:URIUniversalCommunication><ram:URIID schemeID="EM">${xesc(b.email)}</ram:URIID></ram:URIUniversalCommunication></ram:BuyerTradeParty>
+</ram:ApplicableHeaderTradeAgreement>
+<ram:ApplicableHeaderTradeDelivery><ram:ActualDeliverySupplyChainEvent><ram:OccurrenceDateTime>${d102(inv.serviceDate||inv.date)}</ram:OccurrenceDateTime></ram:ActualDeliverySupplyChainEvent></ram:ApplicableHeaderTradeDelivery>
+<ram:ApplicableHeaderTradeSettlement><ram:PaymentReference>${xesc(inv.no)}</ram:PaymentReference><ram:InvoiceCurrencyCode>EUR</ram:InvoiceCurrencyCode>
+<ram:SpecifiedTradeSettlementPaymentMeans><ram:TypeCode>58</ram:TypeCode><ram:PayeePartyCreditorFinancialAccount><ram:IBANID>${xesc(s.iban)}</ram:IBANID><ram:AccountName>${xesc(s.owner||s.name)}</ram:AccountName></ram:PayeePartyCreditorFinancialAccount>${s.bic?`<ram:PayeeSpecifiedCreditorFinancialInstitution><ram:BICID>${xesc(s.bic)}</ram:BICID></ram:PayeeSpecifiedCreditorFinancialInstitution>`:''}</ram:SpecifiedTradeSettlementPaymentMeans>
+<ram:ApplicableTradeTax><ram:CalculatedAmount>${a2(c.tax)}</ram:CalculatedAmount><ram:TypeCode>VAT</ram:TypeCode><ram:BasisAmount>${a2(c.basis)}</ram:BasisAmount><ram:CategoryCode>S</ram:CategoryCode><ram:RateApplicablePercent>${VAT_RATE}</ram:RateApplicablePercent></ram:ApplicableTradeTax>
+<ram:SpecifiedTradePaymentTerms><ram:Description>${cn?'Der Betrag wird erstattet oder verrechnet.':'Zahlbar ohne Abzug bis '+xesc(fmtDate(inv.due))+'.'}</ram:Description>${cn?'':`<ram:DueDateDateTime>${d102(inv.due)}</ram:DueDateDateTime>`}</ram:SpecifiedTradePaymentTerms>
+<ram:SpecifiedTradeSettlementHeaderMonetarySummation><ram:LineTotalAmount>${a2(c.basis)}</ram:LineTotalAmount><ram:TaxBasisTotalAmount>${a2(c.basis)}</ram:TaxBasisTotalAmount><ram:TaxTotalAmount currencyID="EUR">${a2(c.tax)}</ram:TaxTotalAmount><ram:GrandTotalAmount>${a2(c.total)}</ram:GrandTotalAmount><ram:DuePayableAmount>${a2(c.total)}</ram:DuePayableAmount></ram:SpecifiedTradeSettlementHeaderMonetarySummation>
+${cn&&inv.ref?`<ram:InvoiceReferencedDocument><ram:IssuerAssignedID>${xesc(inv.ref)}</ram:IssuerAssignedID>${inv.refDate?`<ram:FormattedIssueDateTime><qdt:DateTimeString format="102">${String(inv.refDate).replace(/-/g,'')}</qdt:DateTimeString></ram:FormattedIssueDateTime>`:''}</ram:InvoiceReferencedDocument>`:''}
+</ram:ApplicableHeaderTradeSettlement>
+</rsm:SupplyChainTradeTransaction>
+</rsm:CrossIndustryInvoice>
+`; }
+function invDoc(inv){ const s=inv.seller, b=inv.buyer, c=invCalc(inv), sg=inv.type==='storno'?-1:1, m=v=>eur(sg*v);
+  return `<article class="invdoc"><div class="inv-head"><div>${s.logo?`<img src="${s.logo}" alt="Logo" class="inv-logo">`:''}<b>${esc(s.name)}</b><br>${esc(s.street)}<br>${esc(s.zip)} ${esc(s.city)}</div><div class="inv-contact">${s.phone?'Telefon '+esc(s.phone)+'<br>':''}${esc(s.email)}${s.web?'<br>'+esc(s.web):''}</div></div>
+  <div class="inv-addr"><small>${esc(s.name)} · ${esc(s.street)} · ${esc(s.zip)} ${esc(s.city)}</small>${b.company?esc(b.company)+'<br>':''}${esc(b.name)}<br>${esc(b.street)}<br>${esc(b.zip)} ${esc(b.city)}</div>
+  <h2>${inv.type==='storno'?'Stornorechnung':'Rechnung'}</h2>
+  <div class="inv-kv"><span>Rechnungsnummer</span><b>${esc(inv.no)}</b><span>Rechnungsdatum</span><b>${fmtDate(inv.date)}</b><span>Leistungsdatum</span><b>${fmtDate(inv.serviceDate||inv.date)}</b>${inv.ref?`<span>Storno zu</span><b>${esc(inv.ref)}${inv.refDate?' vom '+fmtDate(inv.refDate):''}</b>`:''}</div>
+  <table class="inv-items"><thead><tr><th>Pos.</th><th>Bezeichnung</th><th class="r">Menge</th><th class="r">Einzelpreis netto</th><th class="r">Betrag netto</th></tr></thead><tbody>${c.lines.map((l,i)=>`<tr><td>${i+1}</td><td>${esc(l.name)}</td><td class="r">${String(l.qty).replace('.',',')}</td><td class="r">${eur(sg*l.unit)}</td><td class="r">${m(l.net)}</td></tr>`).join('')}</tbody></table>
+  <div class="inv-sum"><span>Summe netto</span><b>${m(c.basis)}</b><span>zzgl. ${VAT_RATE} % MwSt.</span><b>${m(c.tax)}</b><span class="tot">Rechnungsbetrag</span><b class="tot">${m(c.total)}</b></div>
+  ${inv.note?`<p>${esc(inv.note)}</p>`:''}
+  <p>${inv.type==='storno'?'Der Betrag wird erstattet oder mit offenen Beträgen verrechnet.':`Bitte überweisen Sie den Rechnungsbetrag bis <b>${fmtDate(inv.due)}</b> ohne Abzug.<br>Verwendungszweck: <b>${esc(inv.no)}</b>`}</p>
+  <div class="inv-foot"><span>${esc(s.owner||s.name)}</span><span>IBAN ${esc(fmtIban(s.iban))}${s.bic?' · BIC '+esc(s.bic):''}${s.bank?' · '+esc(s.bank):''}</span><span>${s.vatId?'USt-ID '+esc(s.vatId):''}${s.vatId&&s.taxNo?' · ':''}${s.taxNo?'Steuernummer '+esc(s.taxNo):''}</span></div></article>`; }
+function invStatusChip(i){ return i.type==='storno'?'<span class="chip nodot">Storno</span>':i.status==='bezahlt'?'<span class="chip nodot c-ok">bezahlt</span>':i.status==='storniert'?'<span class="chip nodot">storniert</span>':(i.due&&i.due<today()?'<span class="chip nodot c-bad">überfällig</span>':'<span class="chip nodot c-warn">offen</span>'); }
+VIEWS.rechnungen = () => { const L=invoices().slice().sort((a,b)=>(b.date+b.no).localeCompare(a.date+a.no)); const miss=sellerMissing(); const y=today().slice(0,4);
+  const open=L.filter(i=>i.type!=='storno'&&i.status==='offen'), paidY=L.filter(i=>i.type!=='storno'&&i.status==='bezahlt'&&i.date.startsWith(y));
+  return `${head('Rechnungen','Mit allen Pflichtangaben, als PDF und als E-Rechnung (XRechnung). Rechnungen werden nie geändert, nur storniert.',`<button class="btn primary" data-act="invNew">${ic('plus')}Neue Rechnung</button>`)}
+  ${miss.length?`<div class="notice warn">${ic('warn')}<div><b>Für Rechnungen fehlt noch:</b> ${esc(miss.join(', '))}. <button class="btn sm" data-act="goShop">Jetzt unter „Dein Laden“ eintragen</button></div></div>`:''}
+  <div class="kpis"><div class="kpi"><b class="num">${open.length}</b><span>offen</span><i>${eur(open.reduce((a,i)=>a+invCalc(i).total,0))}</i></div><div class="kpi"><b class="num">${paidY.length}</b><span>bezahlt ${y}</span><i>${eur(paidY.reduce((a,i)=>a+invCalc(i).total,0))}</i></div></div>
+  ${panelFlush('',L.length?`<div class="list">${L.map(i=>`<button class="li click" data-act="invOpen" data-id="${i.id}"><div class="grow" style="min-width:0"><div class="t">${esc(i.no)} · ${esc(i.buyer.company||i.buyer.name)}</div><div class="sub">${fmtDate(i.date)}${i.ref?' · zu '+esc(i.ref):''}</div></div><b class="num">${eur((i.type==='storno'?-1:1)*invCalc(i).total)}</b>${invStatusChip(i)}</button>`).join('')}</div>`:`<div class="empty">${ic('doc')}<span>Noch keine Rechnung. Im Fitting unter Ergebnis → Angebot auf „Rechnung erstellen“ tippen oder hier eine neue anlegen.</span></div>`)}
+  <p class="faint" style="font-size:12.5px">Rechnungen 10 Jahre aufbewahren. Die E-Rechnung (XML) ist ab 2028 für Rechnungen an Firmen Pflicht. Keine Steuerberatung.</p>`; };
+function invFormHtml(pre){ const C=S.customers.slice().sort((a,b)=>a.name.localeCompare(b.name)); const b=pre.buyer||{}; const rows=[...(pre.items||[]),{},{},{}];
+  const f=(n,l,v,t,ph,w)=>`<div class="field${w?' wide':''}"><label for="iv_${n}">${l}</label><input class="input${t==='number'?' num':''}" id="iv_${n}" name="${n}" ${t?`type="${t}"`:''} ${t==='number'?'step="any"':''} value="${esc(v??'')}" ${ph?`placeholder="${esc(ph)}"`:''}></div>`;
+  return `<form class="form" data-form="invCreate" data-sess="${esc(pre.sessionId||'')}">
+  <div class="field wide"><label for="iv_cust">Kunde</label><select class="input" id="iv_cust" name="customerId" data-change="invCust"><option value="">– frei eingeben –</option>${C.map(c=>`<option value="${c.id}" ${c.id===pre.customerId?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div>
+  ${f('name','Name',b.name,'','Vor- und Nachname',true)}${f('company','Firma (optional)',b.company,'','nur bei Firmenkunden',true)}
+  ${f('street','Straße und Hausnummer',b.street,'','',true)}${f('zip','PLZ',b.zip,'','')}${f('city','Ort',b.city,'','')}${f('email','E-Mail',b.email,'email','für die E-Rechnung',true)}
+  <div class="field wide"><label for="iv_mode">Preise</label><select class="input" id="iv_mode" name="mode"><option value="brutto" ${pre.mode!=='netto'?'selected':''}>inkl. MwSt. (Endkunde)</option><option value="netto" ${pre.mode==='netto'?'selected':''}>netto, zzgl. MwSt. (Firmenkunde)</option></select></div>
+  ${f('date','Rechnungsdatum',pre.date||today(),'date')}${f('serviceDate','Leistungsdatum',pre.serviceDate||today(),'date')}${f('days','Zahlungsziel (Tage)',pre.days??14,'number')}
+  <div class="field wide"><label>Positionen</label><div class="stack" style="gap:6px">${rows.map((x,i)=>`<div class="row" style="gap:6px;flex-wrap:nowrap"><input class="input" name="n_${i}" value="${esc(x.name||'')}" placeholder="Bezeichnung" aria-label="Bezeichnung ${i+1}" style="flex:1 1 auto;min-width:0"><input class="input num" name="q_${i}" type="number" step="any" min="0" value="${esc(x.qty??(x.name?1:''))}" placeholder="Menge" aria-label="Menge ${i+1}" style="width:64px"><input class="input num" name="p_${i}" type="number" step="0.01" min="0" value="${esc(x.price??'')}" placeholder="Preis €" aria-label="Preis ${i+1}" style="width:96px"></div>`).join('')}</div><p class="faint" style="font-size:12px;margin:4px 0 0">Leere Zeilen werden ignoriert. Preis je Stück, wie oben unter „Preise“ gewählt.</p></div>
+  ${f('note','Hinweis auf der Rechnung (optional)',pre.note,'','',true)}
+  <div class="wide"><button class="btn primary" type="submit">Rechnung erstellen</button></div>
+  <p class="wide faint" style="font-size:12px;margin:0">Nach dem Erstellen ist die Rechnung festgeschrieben. Fehler korrigierst du per Storno und neuer Rechnung.</p></form>`; }
+function invOpenHtml(inv){ const miss=buyerMissingX(inv.buyer); const hasStorno=invoices().some(x=>x.type==='storno'&&x.ref===inv.no);
+  return `<div class="stack"><div class="row" style="gap:6px;flex-wrap:wrap">${invStatusChip(inv)}<b>${esc(inv.no)}</b><span class="muted">${eur((inv.type==='storno'?-1:1)*invCalc(inv).total)}</span></div>
+  <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn primary" data-act="invPrint">PDF / Drucken</button><button class="btn" data-act="invXmlDl" data-id="${inv.id}" ${miss.length?'disabled':''}>E-Rechnung (XML)</button>
+  ${inv.type!=='storno'&&inv.status!=='storniert'?`<button class="btn" data-act="invPaid" data-id="${inv.id}">${inv.status==='bezahlt'?'Wieder offen':'Als bezahlt markieren'}</button>`:''}
+  ${inv.type!=='storno'&&!hasStorno?`<button class="btn ghost" data-act="invStorno" data-id="${inv.id}">Stornieren</button>`:''}</div>
+  ${miss.length?`<p class="faint" style="font-size:12.5px;margin:0">E-Rechnung nicht möglich, es fehlt beim Kunden: ${esc(miss.join(', '))}. Für Endkunden reicht das PDF.</p>`:`<p class="faint" style="font-size:12.5px;margin:0">Für Firmenkunden die XML-Datei (E-Rechnung) per E-Mail senden, das PDF zur Ansicht dazu.</p>`}
+  ${inv.paidAt?`<p class="faint" style="font-size:12.5px;margin:0">Bezahlt am ${fmtDate(inv.paidAt)}</p>`:''}
+  <div class="inv-preview">${invDoc(inv)}</div></div>`; }
+
 function shopHtml(){ const p=S.shop||{};
   return panel('Dein Laden',`<div class="stack"><p class="muted" style="font-size:14px">Erscheint oben im Bericht und in der Einwilligung.</p>
   <form class="form" data-form="shop">
@@ -4754,6 +4847,13 @@ function shopHtml(){ const p=S.shop||{};
     <div class="field"><label for="sh_p">Telefon</label><input class="input" id="sh_p" name="phone" type="tel" value="${esc(p.phone||'')}"></div>
     <div class="field"><label for="sh_e">E-Mail</label><input class="input" id="sh_e" name="email" type="email" value="${esc(p.email||'')}"></div>
     <div class="field wide"><label for="sh_w">Website</label><input class="input" id="sh_w" name="web" value="${esc(p.web||'')}"></div>
+    <div class="field wide"><h4 style="margin:6px 0 0">Für Rechnungen</h4><p class="faint" style="font-size:12.5px;margin:2px 0 0">Adresse bitte als „Straße Nr, PLZ Ort“. Diese Angaben stehen auf jeder Rechnung.</p></div>
+    <div class="field wide"><label for="sh_o">Inhaber (Vor- und Nachname)</label><input class="input" id="sh_o" name="owner" value="${esc(p.owner||'')}"></div>
+    <div class="field"><label for="sh_t">Steuernummer</label><input class="input" id="sh_t" name="taxNo" value="${esc(p.taxNo||'')}" placeholder="z. B. 216/123/45678"></div>
+    <div class="field"><label for="sh_v">USt-ID (falls vorhanden)</label><input class="input" id="sh_v" name="vatId" value="${esc(p.vatId||'')}" placeholder="DE123456789"></div>
+    <div class="field wide"><label for="sh_i">IBAN</label><input class="input" id="sh_i" name="iban" value="${esc(fmtIban(p.iban||''))}" autocomplete="off" inputmode="text"></div>
+    <div class="field"><label for="sh_b">BIC (optional)</label><input class="input" id="sh_b" name="bic" value="${esc(p.bic||'')}"></div>
+    <div class="field"><label for="sh_bk">Bank (optional)</label><input class="input" id="sh_bk" name="bank" value="${esc(p.bank||'')}"></div>
     <div class="wide"><button class="btn primary" type="submit">Speichern</button></div></form>
   <div class="row">${p.logo?`<img src="${p.logo}" alt="Logo" style="max-height:48px;max-width:160px;border-radius:6px;background:#fff;padding:4px">`:'<span class="muted">Noch kein Logo</span>'}<label class="btn" for="shopLogo">Logo wählen</label><input class="vh" type="file" id="shopLogo" accept="image/*" data-change="shopLogo">${p.logo?'<button class="btn ghost" data-act="shopLogoDel">Entfernen</button>':''}</div></div>`);
 }
@@ -5101,6 +5201,18 @@ function createSession(d){
 }
 
 const ACT = {
+  invNew(el){ const miss=sellerMissing(); const sid=el.dataset.sess; let pre={};
+    if(sid){ const s=sess(sid); const c=cust(s.customerId)||{}; const it=(s.offer&&s.offer.items||[]).filter(x=>x.on&&x.qty>0); pre={sessionId:sid,customerId:c.id,buyer:{name:c.name,email:c.email,...(c.invAddr||{})},items:it.map(x=>({name:x.name,qty:x.qty,price:x.price})),serviceDate:s.date,mode:(c.invAddr&&c.invAddr.company)?'netto':'brutto'}; }
+    openDrawer('Rechnung erstellen',(miss.length?`<div class="notice warn">${ic('warn')}<div><b>Erst deine Rechnungsdaten eintragen:</b> ${esc(miss.join(', '))}. <button class="btn sm" data-act="goShopClose">Zu „Dein Laden“</button></div></div>`:'')+invFormHtml(pre)); },
+  goShopClose(){ closeDrawer(); ACT.goShop(); },
+  invOpen(el){ const inv=invoices().find(x=>x.id===el.dataset.id); if(!inv) return; openDrawer((inv.type==='storno'?'Stornorechnung ':'Rechnung ')+inv.no,invOpenHtml(inv)); },
+  invPrint(){ if(window.self!==window.top){ toast('Drucken geht hier nicht. Öffne die App über den GitHub-Link.',true); return; } document.body.classList.add('print-inv'); const off=()=>{ document.body.classList.remove('print-inv'); window.removeEventListener('afterprint',off); }; window.addEventListener('afterprint',off); try{ window.print(); }catch(e){ off(); } setTimeout(off,60000); },
+  invXmlDl(el){ const inv=invoices().find(x=>x.id===el.dataset.id); if(!inv) return; const miss=buyerMissingX(inv.buyer); if(miss.length){ toast('Für die E-Rechnung fehlt: '+miss.join(', '),true); return; } download(inv.no+'.xml',invXml(inv),'application/xml'); audit(`E-Rechnung ${inv.no} heruntergeladen`); toast('E-Rechnung gespeichert'); },
+  invPaid(el){ const inv=invoices().find(x=>x.id===el.dataset.id); if(!inv) return; if(inv.status==='bezahlt'){ inv.status='offen'; delete inv.paidAt; } else { inv.status='bezahlt'; inv.paidAt=today(); } audit(`Rechnung ${inv.no}: ${inv.status}`); save(); render(); openDrawer('Rechnung '+inv.no,invOpenHtml(inv)); },
+  invStorno(el){ const inv=invoices().find(x=>x.id===el.dataset.id); if(!inv) return; if(el.dataset.ok!=='1'){ el.dataset.ok='1'; el.textContent='Wirklich stornieren?'; el.classList.add('danger'); return; }
+    const st={...JSON.parse(JSON.stringify(inv)),id:uid('inv'),no:invNextNo(today()),date:today(),type:'storno',ref:inv.no,refDate:inv.date,status:'storniert',note:'Storno der Rechnung '+inv.no}; delete st.paidAt; delete st.due;
+    inv.status='storniert'; invoices().unshift(st); audit(`Rechnung ${inv.no} storniert (${st.no})`); save(); render(); openDrawer('Stornorechnung '+st.no,invOpenHtml(st)); toast('Stornorechnung '+st.no+' erstellt'); },
+
   goShop(){ go('mehr'); setTimeout(()=>{ const e=document.getElementById('shopBox'); if(e) e.scrollIntoView({block:'start'}); },150); },
   cloudReset(){ CL={}; clSave(); render(); toast('Cloud-Verbindung entfernt. Daten auf dem Gerät bleiben.'); },
   cloudLogout(){ CL={url:CL.url,key:CL.key}; clSave(); render(); toast('Abgemeldet. Daten auf dem Gerät bleiben.'); },
@@ -5483,6 +5595,14 @@ function importJson(t){
 function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
 
 const FORMS = {
+  invCreate(f,data){ const miss=sellerMissing(); if(miss.length){ toast('Erst Rechnungsdaten eintragen: '+miss.join(', '),true); return; } const g=k=>String(data.get(k)||'').trim();
+    const buyer={name:g('name'),company:g('company'),street:g('street'),zip:g('zip'),city:g('city'),email:g('email')}; if(!buyer.name){ toast('Bitte Namen angeben',true); return; } if(buyer.zip&&!/^\d{5}$/.test(buyer.zip)){ toast('PLZ bitte 5-stellig',true); return; }
+    const items=[]; for(let i=0;i<40;i++){ if(!data.has('n_'+i)) break; const n=g('n_'+i); if(!n) continue; const q=Number(String(data.get('q_'+i)||'').replace(',','.')), p=Number(String(data.get('p_'+i)||'').replace(',','.')); if(!(q>0)||!(p>=0)){ toast(`Zeile ${i+1}: Menge und Preis prüfen`,true); return; } items.push({name:n.slice(0,200),qty:q,price:p}); }
+    if(!items.length){ toast('Mindestens eine Position angeben',true); return; } const date=g('date')||today(); if(date>today()){ toast('Rechnungsdatum nicht in der Zukunft',true); return; } const days=Math.max(0,Math.min(90,Number(g('days'))||0));
+    const cid=g('customerId'); const inv={id:uid('inv'),no:invNextNo(date),date,serviceDate:g('serviceDate')||date,due:addDays(date,days),customerId:cid||null,sessionId:f.dataset.sess||null,mode:g('mode')==='netto'?'netto':'brutto',seller:sellerInfo(),buyer,items,note:g('note').slice(0,300),status:'offen',type:'rechnung',created:nowStamp()};
+    invoices().unshift(inv); const c=cid&&cust(cid); if(c&&c.id){ c.invAddr={company:buyer.company,street:buyer.street,zip:buyer.zip,city:buyer.city}; if(!c.email&&buyer.email) c.email=buyer.email; }
+    audit(`Rechnung ${inv.no} erstellt (${eur(invCalc(inv).total)})`,inv.sessionId||undefined); save(); render(); openDrawer('Rechnung '+inv.no,invOpenHtml(inv)); toast('Rechnung '+inv.no+' erstellt'); },
+
   cloudCfg(f,data){ const url=String(data.get('url')||'').trim().replace(/\/+$/,''), key=String(data.get('key')||'').trim();
     if(!/^(https:\/\/[a-z0-9.-]+|http:\/\/(localhost|127\.0\.0\.1))(:\d+)?$/i.test(url)){ toast('Adresse bitte so: https://xxxx.supabase.co',true); return; }
     let role=''; try{ const p=key.split('.')[1]; if(p) role=JSON.parse(atob(p.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-p.length%4)%4))).role||''; }catch(e){}
@@ -5522,7 +5642,9 @@ const FORMS = {
   voucher(f,data){ const pk=fitPacks().find(p=>p.id===data.get('pack')); const val=pk?pk.price:Math.max(0,Number(data.get('value'))||0); if(!pk&&!val){ toast('Wert eingeben',true); return; } S.vouchers=S.vouchers||[]; let code; do{ code=voucherCode(); }while(S.vouchers.some(v=>v.code===code)); const u=new Date(); u.setFullYear(u.getFullYear()+3); u.setMonth(11,31); const v={code,title:pk?pk.name:'Wertgutschein',value:val,for:String(data.get('for')||'').trim(),date:today(),until:iso(u),status:'offen'}; S.vouchers.push(v); audit(`Gutschein ${code} erstellt`); save(); render(); openDrawer('Gutschein',voucherCard(v)); },
   prodAdd(f,data){ const v=String(data.get('variant')||''); const p={id:uid('pr'),cat:data.get('cat'),name:String(data.get('name')||'').trim(),price:Math.max(0,Number(String(data.get('price')).replace(',','.'))||0)}; if(v.startsWith('arch:')) p.arch=[v.slice(5)]; if(v.startsWith('system:')) p.system=v.slice(7); const w=Number(data.get('width')); if(w) p.width=w; const k=Number(data.get('pack')); if(k>1) p.pack=k; products().push(p); save(); render(); toast('Produkt hinzugefügt'); },
   prices(f,data){ S.prices=S.prices||{}; Object.keys(PRICE_DEFAULT).forEach(k=>{ const v=parseFloat(String(data.get(k)||'').replace(',','.')); if(isFinite(v)&&v>=0) S.prices[k]=v; }); save(); render(); toast('Preise gespeichert – gilt ab dem nächsten Angebot (oder „Neu berechnen“)'); },
-  shop(f,data){ S.shop=S.shop||{}; ['name','addr','phone','email','web'].forEach(k=>S.shop[k]=String(data.get(k)||'').trim()); save(); render(); toast('Ladendaten gespeichert'); },
+  shop(f,data){ const g=k=>String(data.get(k)||'').trim(); const iban=g('iban').replace(/\s+/g,'').toUpperCase(), vat=g('vatId').replace(/\s+/g,'').toUpperCase(), bic=g('bic').replace(/\s+/g,'').toUpperCase();
+    if(iban&&!ibanOk(iban)){ toast('IBAN ist nicht gültig – bitte prüfen',true); return; } if(vat&&!/^DE\d{9}$/.test(vat)){ toast('USt-ID bitte im Format DE123456789',true); return; } if(bic&&!/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bic)){ toast('BIC prüfen (8 oder 11 Zeichen)',true); return; }
+    S.shop=S.shop||{}; ['name','addr','phone','email','web','owner','taxNo','bank'].forEach(k=>S.shop[k]=g(k)); S.shop.iban=iban; S.shop.vatId=vat; S.shop.bic=bic; save(); render(); toast('Ladendaten gespeichert'); },
   anaOne(f,data){ const s=sess(f.dataset.id); const i=Number(f.dataset.i); const k=ANA_Q[i][0]; s.anamnesis[k]=String(data.get(k)||'').trim(); if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit'; audit(`Ziel/Anamnese: ${ANA_Q[i][1]}`,s.id); save();
     ui.wIdx=i+1<ANA_Q.length?i+1:null; render(); window.scrollTo({top:0}); if(ui.wIdx==null) toast('Alle Fragen beantwortet'); },
   anaNotes(f,data){ const s=sess(f.dataset.id); s.notes=data.get('notes'); save(); toast('Notizen gespeichert'); },
@@ -5624,6 +5746,8 @@ const FORMS = {
 };
 
 const CHG = {
+  invCust(el){ const c=cust(el.value); const f=el.closest('form'); if(!c||!c.id||!f) return; const a=c.invAddr||{}; const set=(n,v)=>{ const i=f.querySelector(`[name="${n}"]`); if(i&&v!=null) i.value=v; }; set('name',c.name); set('email',c.email||''); set('company',a.company||''); set('street',a.street||''); set('zip',a.zip||''); set('city',a.city||''); },
+
   vcPick(el){ ui[el.dataset.k]=el.value; render(); },
   mediaView(el){ const m=(S.media||[]).find(x=>x.id===el.dataset.id); if(!m) return; m.view=VIEW_OPTS.includes(el.value)?el.value:''; save(); },
   qfSet(el){ ui.qf=ui.qf||{}; const k=el.dataset.k; ui.qf[k]=el.type==='checkbox'?el.checked:el.value; if(k==='cid'){ ui.qf.bid=null; ['height','inseam'].forEach(x=>delete ui.qf[x]); const bs=bikesOf(el.value); if(bs.length===1) ui.qf.bid=bs[0].id; } if(k==='who') ui.lastWho=el.value; render(); },
