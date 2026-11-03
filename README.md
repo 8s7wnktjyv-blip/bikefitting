@@ -5,7 +5,7 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 ## Öffnen
 
 - `index.html` im Browser öffnen (iPhone, iPad, Mac, PC).
-- Alle Daten werden nur lokal im Browser gespeichert (`localStorage`). Sie sind unverschlüsselt und nicht auf anderen Geräten sichtbar.
+- Alle Daten werden lokal im Browser gespeichert (`localStorage`). Optional ab v.59: Cloud-Speicherung über Supabase (Mehr → Cloud-Speicherung, Anleitung in `docs/DATENSCHICHT.md`).
 - Die Beispielkunden sind erfunden. „Mehr → Demo zurücksetzen“ lädt sie neu.
 
 ## Aufbau (ab v.42)

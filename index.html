@@ -418,7 +418,7 @@ canvas{max-width:100%;display:block}
 .pimg img{width:100%;height:100%;object-fit:cover;display:block}
 .pimg em{position:absolute;left:3px;top:3px;font-style:normal;font-size:9px;font-weight:700;line-height:1.3;background:rgba(255,255,255,.88);color:#4a555c;padding:1px 4px;border-radius:4px}
 .rprods{display:flex;flex-wrap:wrap;gap:12px;margin:4px 0 12px}.rprods figure{margin:0;width:112px;font-size:11.5px;line-height:1.3}.rprods .pimg{width:112px;height:84px;margin-bottom:4px}
-.offrow .pimg{align-self:center}
+.offname{position:relative}.offname.hasimg{padding-right:62px;min-height:40px}.offname .offimg{position:absolute;right:0;top:0;font-size:0}
 .chip svg{width:13px;height:13px;margin-right:3px;vertical-align:-2px}
 .empty>svg:first-child{width:54px;height:54px;padding:14px;border-radius:50%;background:var(--accent-soft);color:var(--accent)}
 .toast .tk{width:16px;height:16px;vertical-align:-3px;margin-right:6px}
@@ -1518,7 +1518,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-02.57';
+const APP_VER='2026-11-03.59';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1548,12 +1548,84 @@ function mergeData(d){
   return n;
 }
 let lastSave=null;
-function save(){ try{ const back=JSON.parse(STORE.write(JSON.stringify(S))); storageOk=!!(back&&back.customers&&back.customers.length===S.customers.length); lastSave=new Date(); }catch(e){ storageOk=false; } savePill(); }
-function savePill(){ const b=document.getElementById('savePill'); if(!b) return; b.className='savepill '+(storageOk?'ok':'bad'); b.textContent=storageOk?(lastSave?`✓ gespeichert ${lastSave.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`:'✓ Speicher bereit'):'⚠ Nicht gespeichert'; }
+function save(){ try{ const back=JSON.parse(STORE.write(JSON.stringify(S))); storageOk=!!(back&&back.customers&&back.customers.length===S.customers.length); lastSave=new Date(); }catch(e){ storageOk=false; } savePill(); cloudQueue(); }
+function savePill(){ const b=document.getElementById('savePill'); if(!b) return; b.className='savepill '+(storageOk?'ok':'bad'); b.textContent=storageOk?(lastSave?`✓ gespeichert ${lastSave.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`:'✓ Speicher bereit'):'⚠ Nicht gespeichert'; if(storageOk&&typeof cloudOn==='function'&&cloudOn()){ const tm=CL.lastSync?new Date(CL.lastSync).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):''; b.textContent=CL.status==='busy'?'☁ speichert …':CL.status==='conflict'||CL.status==='err'?'⚠ Cloud prüfen':`✓ Cloud ${tm}`; if(CL.status==='conflict'||CL.status==='err') b.className='savepill bad'; } }
+/* ---------- Cloud-Speicherung (optional, Supabase) ----------
+   Aus, bis der Laden unter Mehr → Deine Daten sichern eine Supabase-Adresse und den öffentlichen Schlüssel einträgt und sich anmeldet.
+   Gespeichert wird der komplette Stand je Laden (docs/supabase/start.sql). Fotos/Videos bleiben vorerst auf dem Gerät. */
+const CLOUD_KEY='fyf-cloud';
+let CL=(()=>{ try{ return JSON.parse(localStorage.getItem(CLOUD_KEY))||{}; }catch(e){ return {}; } })();
+let clTimer=null, clBusy=false, clAgain=false;
+function clSave(){ try{ localStorage.setItem(CLOUD_KEY,JSON.stringify(CL)); }catch(e){} }
+const clBase=()=>String(CL.url||'').trim().replace(/\/+$/,'');
+const cloudOn=()=>!!(CL.url&&CL.key&&CL.session&&CL.tenant);
+function clUid(){ try{ const p=CL.session.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'); return JSON.parse(atob(p+'='.repeat((4-p.length%4)%4))).sub; }catch(e){ return null; } }
+function clSetSession(j,email){ CL.session={access_token:j.access_token,refresh_token:j.refresh_token,expires_at:Number(j.expires_at)||Math.floor(Date.now()/1000)+(Number(j.expires_in)||3600),email:(j.user&&j.user.email)||email||(CL.session&&CL.session.email)||''}; clSave(); }
+async function clRaw(path,opt={},auth=true){
+  const h={apikey:CL.key,'Content-Type':'application/json',...(opt.headers||{})}; if(auth&&CL.session) h.Authorization='Bearer '+CL.session.access_token;
+  let r; try{ r=await fetch(clBase()+path,{...opt,headers:h}); }catch(e){ const er=new Error('Keine Verbindung zum Server'); er.offline=true; throw er; }
+  const t=await r.text(); let j=null; try{ j=t?JSON.parse(t):null; }catch(e){}
+  if(!r.ok){ const er=new Error((j&&(j.message||j.msg||j.error_description||j.error))||('Fehler '+r.status)); er.status=r.status; throw er; } return j; }
+async function clRefresh(){ const s=CL.session; if(!s||!s.refresh_token) return; if(s.expires_at&&Date.now()/1000<s.expires_at-90) return;
+  try{ clSetSession(await clRaw('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:s.refresh_token})},false)); }
+  catch(e){ if(e.offline) throw e; CL.session=null; clSave(); throw new Error('Anmeldung abgelaufen. Bitte neu anmelden.'); } }
+async function clApi(path,opt){ await clRefresh(); return clRaw(path,opt,true); }
+function clStatus(st,msg){ CL.status=st; CL.msg=msg||''; clSave(); savePill(); const box=document.getElementById('cloudBox'); if(box) box.innerHTML=cloudBody(); }
+function cloudQueue(){ if(!cloudOn()) return; CL.dirty=true; clSave(); clearTimeout(clTimer); clTimer=setTimeout(cloudPush,2500); }
+async function cloudPush(force){
+  if(!cloudOn()) return; if(clBusy){ clAgain=true; return; } if(CL.status==='conflict'&&!force) return;
+  clBusy=true; clStatus('busy');
+  try{ const v=await clApi('/rest/v1/rpc/save_state',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_data:S,p_expected:Number(force?force:CL.ver)||0})});
+    CL.ver=Number(v)||CL.ver; CL.dirty=false; CL.lastSync=new Date().toISOString(); clStatus('ok'); }
+  catch(e){ const m=String(e.message||''); const c=m.match(/FYF_CONFLICT (\d+)/); if(c){ CL.serverVer=Number(c[1]); clStatus('conflict','Auf einem anderen Gerät wurde inzwischen gespeichert.'); } else clStatus('err',m); }
+  finally{ clBusy=false; if(clAgain){ clAgain=false; cloudPush(); } } }
+async function cloudPull(){
+  if(!cloudOn()) return; clStatus('busy');
+  try{ const rows=await clApi(`/rest/v1/tenant_state?tenant_id=eq.${encodeURIComponent(CL.tenant)}&select=version,data,updated_at`,{method:'GET'}); const row=rows&&rows[0];
+    if(!row){ CL.ver=0; clSave(); CL.status='ok'; return cloudPush(); }
+    const sv=Number(row.version)||0;
+    if(sv===Number(CL.ver)){ clStatus('ok'); if(CL.dirty) cloudPush(); return; }
+    const firstOwn=!Number(CL.ver)&&S.customers.some(c=>!isDemoCust(c.id));
+    if(sv>Number(CL.ver||0)&&!CL.dirty&&!firstOwn){ cloudApply(row.data,sv); return; }
+    CL.serverVer=sv; clStatus('conflict',firstOwn?'Auf diesem Gerät gibt es eigene Kunden, und in der Cloud liegt schon ein Stand.':'In der Cloud liegt ein neuerer Stand, und auf diesem Gerät gibt es ungespeicherte Änderungen.'); }
+  catch(e){ clStatus('err',e.message); } }
+function cloudApply(data,ver){
+  if(!data||data.version!==3||!Array.isArray(data.customers)){ clStatus('err','Stand aus der Cloud hat ein unbekanntes Format. Nichts geändert.'); return; }
+  try{ localStorage.setItem('fitframe-rescue-'+Date.now(),JSON.stringify(S)); }catch(e){}
+  S=data; CL.ver=ver; CL.dirty=false; CL.lastSync=new Date().toISOString(); clSave();
+  try{ STORE.write(JSON.stringify(S)); lastSave=new Date(); }catch(e){}
+  clStatus('ok'); render(); toast('Stand aus der Cloud geladen'); }
+async function cloudLoadServer(){ try{ const rows=await clApi(`/rest/v1/tenant_state?tenant_id=eq.${encodeURIComponent(CL.tenant)}&select=version,data`,{method:'GET'}); if(rows&&rows[0]) cloudApply(rows[0].data,Number(rows[0].version)); }catch(e){ clStatus('err',e.message); } }
+async function cloudFindTenant(){ const uid=clUid(); if(!uid) throw new Error('Anmeldung unvollständig'); const m=await clApi(`/rest/v1/memberships?user_id=eq.${uid}&select=tenant_id,role`,{method:'GET'}); if(m&&m[0]){ CL.tenant=m[0].tenant_id; CL.role=m[0].role; CL.ver=CL.ver||0; clSave(); return true; } return false; }
+async function cloudInit(){
+  const h=location.hash||''; if(/access_token=/.test(h)){ const q=new URLSearchParams(h.replace(/^#/,'')); if(CL.url&&CL.key){ clSetSession({access_token:q.get('access_token'),refresh_token:q.get('refresh_token'),expires_at:q.get('expires_at'),expires_in:q.get('expires_in')},CL.pendingEmail); } try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
+  if(!(CL.url&&CL.key&&CL.session)) { savePill(); return; }
+  try{ if(!CL.tenant&&!(await cloudFindTenant())){ clStatus('setup'); return; } await cloudPull(); }catch(e){ clStatus('err',e.message); } }
+function cloudBody(){
+  const st=CL.status, t=CL.lastSync?new Date(CL.lastSync).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'noch nie';
+  if(!CL.url||!CL.key) return `<p class="muted" style="font-size:14px;margin:0">Aus. Deine Daten liegen nur auf diesem Gerät. Mit der Cloud-Speicherung sind sie gesichert und auf iPad, Handy und PC gleich.</p>
+    <form class="form" data-form="cloudCfg"><div class="field wide"><label for="cl_url">Projekt-Adresse (Supabase)</label><input class="input" id="cl_url" name="url" placeholder="https://xxxx.supabase.co" inputmode="url" autocomplete="off" required></div>
+    <div class="field wide"><label for="cl_key">Öffentlicher Schlüssel (anon / publishable key)</label><input class="input" id="cl_key" name="key" autocomplete="off" required></div>
+    <div class="wide"><button class="btn primary" type="submit">Verbinden</button></div></form><p class="faint" style="font-size:12px;margin:0">Nur den öffentlichen Schlüssel eintragen, nie den geheimen „service_role“-Schlüssel.</p>`;
+  if(!CL.session) return `<p class="muted" style="font-size:14px;margin:0">Verbunden mit ${esc(clBase().replace(/^https?:\/\//,''))}. Jetzt anmelden.</p>
+    <form class="form" data-form="cloudMail"><div class="field wide"><label for="cl_mail">E-Mail</label><input class="input" id="cl_mail" name="email" type="email" required value="${esc(CL.pendingEmail||'')}" autocomplete="email"></div><div class="wide"><button class="btn primary" type="submit">Anmelde-Code senden</button></div></form>
+    ${CL.pendingEmail?`<form class="form" data-form="cloudCode"><div class="field"><label for="cl_code">Code aus der E-Mail</label><input class="input num" id="cl_code" name="code" inputmode="numeric" autocomplete="one-time-code" required></div><div class="wide"><button class="btn primary" type="submit">Anmelden</button></div></form><p class="faint" style="font-size:12px;margin:0">Statt Code kannst du auch den Link in der E-Mail auf diesem Gerät öffnen.</p>`:''}
+    <div><button class="btn sm ghost" data-act="cloudReset">Verbindung entfernen</button></div>`;
+  if(!CL.tenant) return `<p class="muted" style="font-size:14px;margin:0">Angemeldet als ${esc(CL.session.email||'')}. Noch kein Laden in der Cloud.</p>
+    <form class="form" data-form="cloudTenant"><div class="field wide"><label for="cl_t">Name des Ladens</label><input class="input" id="cl_t" name="name" required value="${esc(shopName()||'')}"></div><div class="wide"><button class="btn primary" type="submit">Laden anlegen und Daten hochladen</button></div></form>
+    <div><button class="btn sm ghost" data-act="cloudLogout">Abmelden</button></div>`;
+  const chip=st==='ok'?'<span class="chip nodot c-ok">gesichert</span>':st==='busy'?'<span class="chip nodot">speichert …</span>':st==='conflict'?'<span class="chip nodot c-warn">Konflikt</span>':st==='err'?'<span class="chip nodot c-bad">Fehler</span>':'<span class="chip nodot">bereit</span>';
+  return `<div class="row" style="gap:8px;flex-wrap:wrap">${chip}<span class="muted" style="font-size:13.5px">${esc(CL.session.email||'')} · Stand ${Number(CL.ver)||0} · zuletzt ${esc(t)}</span></div>
+    ${st==='err'?`<p class="notice warn" style="margin:0">${ic('warn')}<span>${esc(CL.msg||'Unbekannter Fehler')}. Deine Daten sind auf diesem Gerät gespeichert und werden später hochgeladen.</span></p>`:''}
+    ${st==='conflict'?`<div class="notice warn">${ic('warn')}<div><b>${esc(CL.msg)}</b><br>Wähle, welcher Stand gilt. Der andere wird vorher als Kopie im Browser gesichert.<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm primary" data-act="cloudTakeServer">Stand aus der Cloud übernehmen</button><button class="btn sm" data-act="cloudTakeLocal">Meinen Stand hochladen</button></div></div></div>`:''}
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="cloudSync">Jetzt abgleichen</button><button class="btn sm ghost" data-act="cloudLogout">Abmelden</button></div>
+    <p class="faint" style="font-size:12px;margin:0">Fotos und Videos bleiben vorerst nur auf dem Gerät. Die Cloud bewahrt die letzten 30 Stände auf.</p>`; }
+function cloudPanel(){ return panel('Cloud-Speicherung',`<div class="stack" id="cloudBox">${cloudBody()}</div>`); }
+
 function storageTest(){ try{ const k='fitframe-test'; localStorage.setItem(k,'1'); const ok=localStorage.getItem(k)==='1'; localStorage.removeItem(k); return ok; }catch(e){ return false; } }
 const inAppBrowser=/iPhone|iPad/.test(navigator.userAgent)&&!/Safari\//.test(navigator.userAgent)&&!navigator.standalone;
 function audit(what,ref){ S.audit.unshift({time:nowStamp(),who:'Demo-Nutzer',what,ref:ref||''}); }
-S = load(); try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){} S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; }); S.geoCustom=S.geoCustom||[]; S.bikes.forEach(b=>{ if(!b.geo&&b.brand==='Canyon'&&b.model==='Endurace CF 7'&&b.size==='M') b.geo={id:'canyon-endurace-cf-7',size:'M'}; }); (function(){ const sd=seed(); sd.sessions.forEach(d=>{ const x=S.sessions.find(y=>y.id===d.id); if(x&&!Object.keys(x.check).length&&Object.keys(d.check||{}).length&&x.customerId===d.customerId){ x.check=d.check; x.comp=d.comp; } }); })();
+S = load(); setTimeout(()=>{ try{ cloudInit(); }catch(e){} },0); try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){} S.customers.forEach(c=>{ c.est=c.est||[]; }); S.sessions.forEach(x=>{ x.check=x.check||{}; x.comp=x.comp||[]; }); S.geoCustom=S.geoCustom||[]; S.bikes.forEach(b=>{ if(!b.geo&&b.brand==='Canyon'&&b.model==='Endurace CF 7'&&b.size==='M') b.geo={id:'canyon-endurace-cf-7',size:'M'}; }); (function(){ const sd=seed(); sd.sessions.forEach(d=>{ const x=S.sessions.find(y=>y.id===d.id); if(x&&!Object.keys(x.check).length&&Object.keys(d.check||{}).length&&x.customerId===d.customerId){ x.check=d.check; x.comp=d.comp; } }); })();
 
 snapshotBeforeUpdate(); ensurePermanent(); fixDominikBike(); fixDominikCockpit();
 const ui = {route:'dashboard', sess:'s4', sessTab:'anamnese', cust:null, search:'', bikeSearch:'', woFilter:'alle', invSearch:'', invCat:'alle', aiSess:'s1', aiOut:null, portalCust:'c1', motionSess:'s1', motionSide:'after', cmpA:'s1', cmpB:'s2', cmpChanged:true, fitView:'both', hwSel:'cleatlab', cleatSys:'SPD-SL', apptFilter:'heute', fuFilter:'offen'};
@@ -1898,7 +1970,7 @@ VIEWS.mehr = () => `
   ${head('Alle Bereiche','Alle Bereiche von FYF, nach Arbeitsschritt geordnet. Darunter Laden, Datensicherung und Einstellungen.')}
   ${moreNav().map(([g,items])=>`<div class="stack"><h2>${g}</h2><div class="tiles">${items.map(([r,l,i,d])=>`<button class="tile" data-nav="${r}"><span class="ti">${ic(i)}</span><b>${l}</b><span>${d}</span></button>`).join('')}</div></div>`).join('')}
   ${shopHtml()}
-  ${dataPanel()}
+  ${dataPanel()}${cloudPanel()}
   ${statsHtml()}
   ${panel('Ladentyp & Module',shopTypeHtml(false))}
   ${panel('Rolle und Datenspeicherung',`<div class="stack"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span style="max-width:52ch">Rolle (Demo)<br><span class="muted" style="font-size:13.5px">Admin: alles. Fitter: keine Preise, kein Löschen von Kunden. Mitarbeiter: messen und dokumentieren, nichts löschen oder abschließen. Echte Rechte prüft später der Server.</span></span><div class="seg">${ROLES.map(r=>`<button data-act="roleSet" data-v="${r}" aria-pressed="${role()===r}">${r}</button>`).join('')}</div></div>
@@ -2217,9 +2289,9 @@ VIEWS.wissen = () => { const q=(ui.wq||'').toLowerCase(); const m=t=>!q||t.toLow
 /* --- Phase 9: Rollen (Demo), Portal-Freigaben, Löschkonzept --- */
 const ROLES=['Admin','Fitter','Mitarbeiter'];
 const role=()=>ROLES.includes(S.role)?S.role:'Admin';
-const DENY_F=['custDelete','custDeleteGo','reset','resetConfirm','removeDemo','removeDemoConfirm','pdbEdit','packDel','prodDel','packAdd','prodAdd','toolDel'];
+const DENY_F=['custDelete','custDeleteGo','reset','resetConfirm','removeDemo','removeDemoConfirm','pdbEdit','packDel','prodDel','packAdd','prodAdd','toolDel','cloudReset','pdbImgDel'];
 const DENY={Admin:[],Fitter:DENY_F,Mitarbeiter:[...DENY_F,'bmDel','delMeasure','delPos','delItem','delGeo','delGeoRow','delMark','mediaDel','finishSession','qAck','recSet','toolEdit','toolQuick','liveNoteDel','flowSkip']};
-const DENY_FORM={Admin:[],Fitter:['pdb','custDelete'],Mitarbeiter:['pdb','custDelete','tool']};
+const DENY_FORM={Admin:[],Fitter:['pdb','custDelete','cloudCfg','cloudTenant'],Mitarbeiter:['pdb','custDelete','tool','cloudCfg','cloudTenant']};
 function allowed(act,form){ const r=role(); return form?!DENY_FORM[r].includes(form):!DENY[r].includes(act); }
 function mediaGC(){ return mdb().then(db=>new Promise(res=>{ const keep=new Set((S.media||[]).map(m=>m.id)); const t=db.transaction('m','readwrite'); const st=t.objectStore('m'); const q=st.getAllKeys(); q.onsuccess=()=>{ q.result.filter(k=>!keep.has(k)).forEach(k=>st.delete(k)); }; t.oncomplete=()=>res(true); t.onerror=()=>res(false); })).catch(()=>false); }
 const PERMANENT_IDS=['p-dominik-boehm'];
@@ -3789,7 +3861,7 @@ function offerHtml(s){
   if(!s.offer||!s.offer.items||s.offer.items.some(x=>!x.cat)) { s.offer={items:offerBuild(s),date:today()}; }
   const it=s.offer.items; const sum=it.filter(x=>x.on).reduce((a,x)=>a+x.qty*x.price,0);
   return `<div class="offer"><div class="row" style="justify-content:space-between"><h3>Angebot aus dem Fitting</h3><button class="btn sm ghost" data-act="offerRebuild" data-id="${s.id}">Neu berechnen</button></div>
-  ${it.length?`<div class="offlist">${it.map((x,i)=>`<div class="offrow ${x.on?'':'off'}"><input type="checkbox" ${x.on?'checked':''} data-change="offerOn" data-id="${s.id}" data-i="${i}" aria-label="Position übernehmen"><div class="offname">${x.cat!=='Paket'?`<span style="float:right;margin:0 0 6px 10px">${prodImg(products().find(q=>q.id===x.pid)||{cat:x.cat,name:x.name},52)}</span>`:''}${x.cat==="Paket"?`<select class="input" style="min-height:36px" data-change="offerProd" data-id="${s.id}" data-i="${i}" aria-label="Fitting-Paket">${fitPacks().map(p=>`<option value="${p.id}" ${p.id===x.pid?"selected":""}>${esc(p.name)}</option>`).join("")}</select>`:(x.alts&&x.alts.length>1)?`<b>${esc(x.name)}</b><select class="input" style="min-height:34px;margin-top:4px;font-size:13.5px" data-change="offerProd" data-id="${s.id}" data-i="${i}" aria-label="Anderes Produkt wählen">${x.alts.map(id=>{ const p=products().find(z=>z.id===id); return p?`<option value="${p.id}" ${p.id===x.pid?"selected":""}>${esc(p.name)} – ${eur(p.price)}</option>`:""; }).join("")}</select>`:`<b>${esc(x.name)}</b>`}<span class="faint">${esc(x.cat)} · ${esc(x.why)}${x.note?` · ${esc(x.note)}`:""}</span></div><div class="offnum"><label><span>Menge</span><input class="input num" type="number" min="0" value="${x.qty}" data-change="offerQty" data-id="${s.id}" data-i="${i}"></label><label><span>Preis €</span><input class="input num" type="number" step="0.5" min="0" value="${x.price}" data-change="offerPrice" data-id="${s.id}" data-i="${i}"></label><b class="num">${eur(x.on?x.qty*x.price:0)}</b></div></div>`).join('')}</div>
+  ${it.length?`<div class="offlist">${it.map((x,i)=>`<div class="offrow ${x.on?'':'off'}"><input type="checkbox" ${x.on?'checked':''} data-change="offerOn" data-id="${s.id}" data-i="${i}" aria-label="Position übernehmen"><div class="offname${x.cat!=='Paket'?' hasimg':''}">${x.cat!=='Paket'?`<span class="offimg">${prodImg(products().find(q=>q.id===x.pid)||{cat:x.cat,name:x.name},52)}</span>`:''}${x.cat==="Paket"?`<select class="input" style="min-height:36px" data-change="offerProd" data-id="${s.id}" data-i="${i}" aria-label="Fitting-Paket">${fitPacks().map(p=>`<option value="${p.id}" ${p.id===x.pid?"selected":""}>${esc(p.name)}</option>`).join("")}</select>`:(x.alts&&x.alts.length>1)?`<b>${esc(x.name)}</b><select class="input" style="min-height:34px;margin-top:4px;font-size:13.5px" data-change="offerProd" data-id="${s.id}" data-i="${i}" aria-label="Anderes Produkt wählen">${x.alts.map(id=>{ const p=products().find(z=>z.id===id); return p?`<option value="${p.id}" ${p.id===x.pid?"selected":""}>${esc(p.name)} – ${eur(p.price)}</option>`:""; }).join("")}</select>`:`<b>${esc(x.name)}</b>`}<span class="faint">${esc(x.cat)} · ${esc(x.why)}${x.note?` · ${esc(x.note)}`:""}</span></div><div class="offnum"><label><span>Menge</span><input class="input num" type="number" min="0" value="${x.qty}" data-change="offerQty" data-id="${s.id}" data-i="${i}"></label><label><span>Preis €</span><input class="input num" type="number" step="0.5" min="0" value="${x.price}" data-change="offerPrice" data-id="${s.id}" data-i="${i}"></label><b class="num">${eur(x.on?x.qty*x.price:0)}</b></div></div>`).join('')}</div>
   <div class="row" style="justify-content:space-between"><b class="num" style="font-size:18px">Summe ${eur(sum)}</b><div class="row" style="gap:6px"><button class="btn" data-act="offerCopy" data-id="${s.id}">Text kopieren</button><button class="btn" data-act="offerWO" data-id="${s.id}">Als Werkstattauftrag</button><button class="btn primary" data-act="offerSale" data-id="${s.id}">Als Verkauf anlegen</button></div></div>
   <p class="faint" style="font-size:12.5px">Einstellarbeiten sind im Fitting-Paket enthalten. Produkte und Preise aus deiner Liste (Mehr → Fitting-Preise und Produkte). Preise hier für diesen Kunden änderbar, Positionen ohne Haken kommen nicht ins Angebot.</p>`
   :'<p class="muted">Laut Plan sind keine neuen Teile nötig.</p>'}</div>`;
@@ -5021,6 +5093,12 @@ function createSession(d){
 }
 
 const ACT = {
+  cloudReset(){ CL={}; clSave(); render(); toast('Cloud-Verbindung entfernt. Daten auf dem Gerät bleiben.'); },
+  cloudLogout(){ CL={url:CL.url,key:CL.key}; clSave(); render(); toast('Abgemeldet. Daten auf dem Gerät bleiben.'); },
+  cloudSync(){ cloudPull(); },
+  cloudTakeServer(){ cloudLoadServer(); },
+  cloudTakeLocal(){ cloudPush(CL.serverVer||0); },
+
   fyfSetAdd(){ S.tools=S.tools||[]; if(S.tools.some(t=>t.set==='FYF')){ toast('Schon angelegt'); return; } FYF_SET.forEach(([n,w,h])=>S.tools.push({id:uid('t'),set:'FYF',name:n,kind:/Maßband/.test(n)?'Maßband':/Goniometer/.test(n)?'Winkelmesser':/Lot/.test(n)?'Lot':/Sitzknochen/.test(n)?'Sitzknochen-Messvorlage':'Sonstiges',maker:h==='3D-Druck'?'FYF (Prototyp)':'',model:'',method:w,acc:'',accSrc:'',calib:'',checked:''})); audit('FYF-Messset als Messmittel angelegt'); save(); render(); toast(`${FYF_SET.length} Teile angelegt`); },
   navBack(){ navBack(); },
   dashEdit(){ ui.dashEdit=!ui.dashEdit; render(); },
@@ -5396,6 +5474,20 @@ function importJson(t){
 function copyText(t){ try{ navigator.clipboard.writeText(t).then(()=>toast('Kopiert'),()=>toast('Kopieren nicht möglich – bitte Text markieren',true)); }catch(e){ toast('Kopieren nicht möglich – bitte Text markieren',true); } }
 
 const FORMS = {
+  cloudCfg(f,data){ const url=String(data.get('url')||'').trim().replace(/\/+$/,''), key=String(data.get('key')||'').trim();
+    if(!/^(https:\/\/[a-z0-9.-]+|http:\/\/(localhost|127\.0\.0\.1))(:\d+)?$/i.test(url)){ toast('Adresse bitte so: https://xxxx.supabase.co',true); return; }
+    let role=''; try{ const p=key.split('.')[1]; if(p) role=JSON.parse(atob(p.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-p.length%4)%4))).role||''; }catch(e){}
+    if(/^sb_secret_/.test(key)||role==='service_role'){ toast('Das ist der geheime Schlüssel. Bitte nur den öffentlichen (anon / publishable) eintragen.',true); return; }
+    if(key.length<20){ toast('Schlüssel prüfen',true); return; } CL={url,key}; clSave(); audit('Cloud-Verbindung eingetragen'); render(); toast('Verbunden. Jetzt anmelden.'); },
+  async cloudMail(f,data){ const email=String(data.get('email')||'').trim(); if(!/^\S+@\S+\.\S+$/.test(email)){ toast('E-Mail prüfen',true); return; }
+    try{ await clRaw('/auth/v1/otp?redirect_to='+encodeURIComponent(location.origin+location.pathname),{method:'POST',body:JSON.stringify({email,create_user:true})},false); CL.pendingEmail=email; clSave(); render(); toast('E-Mail gesendet'); }
+    catch(e){ toast('Senden fehlgeschlagen: '+e.message,true); } },
+  async cloudCode(f,data){ const token=String(data.get('code')||'').replace(/\s/g,''); if(!/^\d{6,10}$/.test(token)){ toast('Code prüfen',true); return; }
+    try{ const j=await clRaw('/auth/v1/verify',{method:'POST',body:JSON.stringify({type:'email',email:CL.pendingEmail,token})},false); clSetSession(j,CL.pendingEmail); delete CL.pendingEmail; clSave(); render(); toast('Angemeldet'); await cloudInit(); render(); }
+    catch(e){ toast('Anmeldung fehlgeschlagen: '+e.message,true); } },
+  async cloudTenant(f,data){ try{ const id=await clApi('/rest/v1/rpc/create_tenant',{method:'POST',body:JSON.stringify({p_name:String(data.get('name')||'').trim()})}); CL.tenant=id; CL.role='admin'; CL.ver=0; clSave(); audit('Laden in der Cloud angelegt'); await cloudPull(); render(); }
+    catch(e){ toast('Anlegen fehlgeschlagen: '+e.message,true); } },
+
   bmPoint(f,data){ const s=sess(f.dataset.id); const bm=bmOf(s); const x=Number(data.get('x')), y=Number(data.get('y')); const view=BM_VIEWS.some(v=>v[0]===data.get('view'))?data.get('view'):'front'; if(!isFinite(x)||!isFinite(y)){ toast('Position fehlt',true); return; }
     const sv=String(data.get('sev')??'').trim(); const sev=sv===''?null:Number(sv); if(sev!=null&&!(sev>=0&&sev<=10)){ toast('Stärke 0 bis 10',true); return; }
     const rec={x:Math.max(0,Math.min(200,x)),y:Math.max(0,Math.min(400,y)),view,type:BM_TYPES.some(t=>t[0]===data.get('type'))?data.get('type'):'druck',area:String(data.get('area')||'').trim().slice(0,80),side:data.get('side')||'–',sev,note:String(data.get('note')||'').trim().slice(0,300),home:data.get('home')==='on'};
