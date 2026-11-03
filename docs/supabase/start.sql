@@ -110,3 +110,8 @@ revoke all on function create_tenant(text) from public, anon;
 revoke all on function save_state(uuid, jsonb, int) from public, anon;
 grant execute on function create_tenant(text) to authenticated;
 grant execute on function save_state(uuid, jsonb, int) to authenticated;
+
+-- Leserechte für angemeldete Nutzer. Neue Supabase-Projekte vergeben diese nicht mehr automatisch.
+-- Was jemand tatsächlich sieht, begrenzen weiterhin die Regeln (RLS) oben.
+grant usage on schema public to authenticated;
+grant select on tenants, memberships, tenant_state, tenant_state_history to authenticated;
