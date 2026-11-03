@@ -47,7 +47,8 @@ Eingebaut unter **Mehr → Cloud-Speicherung**. Aus, solange keine Supabase-Verb
 - Die Cloud hebt die letzten 30 Stände je Laden auf (`tenant_state_history`, nur Admin lesbar).
 - Anmeldung per E-Mail-Code oder Link (Supabase Auth). Nur der öffentliche Schlüssel wird eingetragen; der geheime `service_role`/`sb_secret_`-Schlüssel wird abgelehnt.
 - Einrichten der Verbindung und Anlegen des Ladens nur mit Rolle Admin.
-- Noch nicht in der Cloud: Fotos und Videos (bleiben in IndexedDB auf dem Gerät).
+- Fotos und Videos: Datei im privaten Bucket `media` unter `<tenant>/<id>` (`docs/supabase/media.sql`, lokal mit Postgres 16 und nachgebautem storage-Schema getestet). `m.cloud=1` = hochgeladen. Fehlt eine Datei auf einem Gerät, wird sie beim Anzeigen aus der Cloud geladen. Über 50 MB bleibt sie nur auf dem Gerät. Löschen (einzeln oder ganzer Kunde) löscht auch in der Cloud.
+- Weiteres Gerät: QR-Code/Link mit `#cfg=` (nur Adresse + öffentlicher Schlüssel). Anmeldung danach per E-Mail-Link.
 - Getestet: SQL mit Postgres 16 (Konflikt, Rechte, fremder Laden gesperrt, direkte Schreibzugriffe gesperrt); App gegen einen nachgebauten Supabase-Server (Anmelden, Laden anlegen, zweites Gerät, Konflikt, Abmelden). Am 03.11.2026 mit echtem Supabase (Region Frankfurt, Free-Tarif) erfolgreich eingerichtet: Anmeldung per Link, Laden angelegt, Stand hochgeladen. Nötig war zusätzlich das Grant für `authenticated` (jetzt in start.sql).
 
 ### Einrichten (Inhaber, am iPhone möglich)

@@ -27,7 +27,7 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
   - Neue Tests: Fußbreite, Fußstellung, Beinachse, Hüftrotation, Rumpfstabilität, Einbeinstand – jeweils mit Anleitung und Skizze.
   - Jeder Auswahl-Test hat „nicht eindeutig“; das fließt nicht in die Auswertung ein.
   - Messwert, Beobachtung und Einschätzung des Fitters werden getrennt gespeichert und angezeigt. Hinweise von FYF sind Faustregeln, keine Diagnose.
-- Fotos und Videos je Kunde und je Rad. Nur mit eigener Einwilligung für Fotos/Videos. Gespeichert nur auf dem Gerät (IndexedDB, Fotos bis 15 MB, Videos bis 80 MB), nicht in der Text-Sicherung.
+- Fotos und Videos je Kunde und je Rad. Nur mit eigener Einwilligung für Fotos/Videos. Gespeichert auf dem Gerät (IndexedDB, Fotos bis 15 MB, Videos bis 80 MB); mit Cloud zusätzlich im privaten Supabase-Speicher „media“ (bis 50 MB je Datei, `docs/supabase/media.sql`).
 
 ## Geführter Ablauf und Vorlagen (ab v.45)
 

@@ -1565,7 +1565,7 @@ function save(){ try{ const back=JSON.parse(STORE.write(JSON.stringify(S))); sto
 function savePill(){ const b=document.getElementById('savePill'); if(!b) return; b.className='savepill '+(storageOk?'ok':'bad'); b.textContent=storageOk?(lastSave?`✓ gespeichert ${lastSave.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`:'✓ Speicher bereit'):'⚠ Nicht gespeichert'; if(storageOk&&typeof cloudOn==='function'&&cloudOn()){ const tm=CL.lastSync?new Date(CL.lastSync).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):''; b.textContent=CL.status==='busy'?'☁ speichert …':CL.status==='conflict'||CL.status==='err'?'⚠ Cloud prüfen':`✓ Cloud ${tm}`; if(CL.status==='conflict'||CL.status==='err') b.className='savepill bad'; } }
 /* ---------- Cloud-Speicherung (optional, Supabase) ----------
    Aus, bis der Laden unter Mehr → Deine Daten sichern eine Supabase-Adresse und den öffentlichen Schlüssel einträgt und sich anmeldet.
-   Gespeichert wird der komplette Stand je Laden (docs/supabase/start.sql). Fotos/Videos bleiben vorerst auf dem Gerät. */
+   Gespeichert wird der komplette Stand je Laden (docs/supabase/start.sql). Fotos/Videos liegen als Dateien im privaten Speicher „media“ unter <Laden>/<id> (docs/supabase/media.sql). */
 const CLOUD_KEY='fyf-cloud';
 let CL=(()=>{ try{ return JSON.parse(localStorage.getItem(CLOUD_KEY))||{}; }catch(e){ return {}; } })();
 let clTimer=null, clBusy=false, clAgain=false;
@@ -1590,7 +1590,7 @@ async function cloudPush(force){
   if(!cloudOn()) return; if(clBusy){ clAgain=true; return; } if(CL.status==='conflict'&&!force) return;
   clBusy=true; clStatus('busy');
   try{ const v=await clApi('/rest/v1/rpc/save_state',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_data:S,p_expected:Number(force?force:CL.ver)||0})});
-    CL.ver=Number(v)||CL.ver; CL.dirty=false; CL.lastSync=new Date().toISOString(); clStatus('ok'); }
+    CL.ver=Number(v)||CL.ver; CL.dirty=false; CL.lastSync=new Date().toISOString(); clStatus('ok'); setTimeout(mediaSync,50); }
   catch(e){ const m=String(e.message||''); const c=m.match(/FYF_CONFLICT (\d+)/); if(c){ CL.serverVer=Number(c[1]); clStatus('conflict','Auf einem anderen Gerät wurde inzwischen gespeichert.'); } else clStatus('err',m); }
   finally{ clBusy=false; if(clAgain){ clAgain=false; cloudPush(); } } }
 async function cloudPull(){
@@ -1598,7 +1598,7 @@ async function cloudPull(){
   try{ const rows=await clApi(`/rest/v1/tenant_state?tenant_id=eq.${encodeURIComponent(CL.tenant)}&select=version,data,updated_at`,{method:'GET'}); const row=rows&&rows[0];
     if(!row){ CL.ver=0; clSave(); CL.status='ok'; return cloudPush(); }
     const sv=Number(row.version)||0;
-    if(sv===Number(CL.ver)){ clStatus('ok'); if(CL.dirty) cloudPush(); return; }
+    if(sv===Number(CL.ver)){ clStatus('ok'); if(CL.dirty) cloudPush(); else setTimeout(mediaSync,50); return; }
     const firstOwn=!Number(CL.ver)&&S.customers.some(c=>!isDemoCust(c.id));
     if(sv>Number(CL.ver||0)&&!CL.dirty&&!firstOwn){ cloudApply(row.data,sv); return; }
     CL.serverVer=sv; clStatus('conflict',firstOwn?'Auf diesem Gerät gibt es eigene Kunden, und in der Cloud liegt schon ein Stand.':'In der Cloud liegt ein neuerer Stand, und auf diesem Gerät gibt es ungespeicherte Änderungen.'); }
@@ -1643,7 +1643,8 @@ function cloudBody(){
     ${st==='err'?`<p class="notice warn" style="margin:0">${ic('warn')}<span>${esc(CL.msg||'Unbekannter Fehler')}. Deine Daten sind auf diesem Gerät gespeichert und werden später hochgeladen.</span></p>`:''}
     ${st==='conflict'?`<div class="notice warn">${ic('warn')}<div><b>${esc(CL.msg)}</b><br>Wähle, welcher Stand gilt. Der andere wird vorher als Kopie im Browser gesichert.<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm primary" data-act="cloudTakeServer">Stand aus der Cloud übernehmen</button><button class="btn sm" data-act="cloudTakeLocal">Meinen Stand hochladen</button></div></div></div>`:''}
     <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="cloudSync">Jetzt abgleichen</button><button class="btn sm" data-act="cloudQR">${ic('plus')} Weiteres Gerät verbinden</button><button class="btn sm ghost" data-act="cloudLogout">Abmelden</button></div>
-    <p class="faint" style="font-size:12px;margin:0">Fotos und Videos bleiben vorerst nur auf dem Gerät. Die Cloud bewahrt die letzten 30 Stände auf.</p>`; }
+    ${(()=>{ const n=mediaCloudCount(); return CL.mediaErr?`<p class="notice warn" style="margin:0">${ic('warn')}<span>Fotos/Videos: ${esc(CL.mediaErr)} Sie bleiben bis dahin auf diesem Gerät.</span></p>`:n.all?`<p class="muted" style="font-size:13px;margin:0">Fotos & Videos: ${n.up} von ${n.all} in der Cloud${n.big?` · ${n.big} über 50 MB bleiben nur auf dem Gerät`:''}${clMBusy?' · lädt hoch …':''}</p>`:''; })()}
+    <p class="faint" style="font-size:12px;margin:0">Fotos und Videos bis 50 MB je Datei werden mitgesichert. Die Cloud bewahrt die letzten 30 Stände auf.</p>`; }
 function clCfgErr(url,key){
   if(!/^(https:\/\/[a-z0-9.-]+|http:\/\/(localhost|127\.0\.0\.1))(:\d+)?$/i.test(url)) return 'Adresse bitte so: https://xxxx.supabase.co';
   let role=''; try{ const p=key.split('.')[1]; if(p) role=JSON.parse(atob(p.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-p.length%4)%4))).role||''; }catch(e){}
@@ -1651,6 +1652,23 @@ function clCfgErr(url,key){
   if(key.length<20) return 'Schlüssel prüfen'; return ''; }
 // QR für weitere Geräte: enthält nur Projekt-Adresse und öffentlichen Schlüssel, keine Anmeldung. Anmelden muss man sich auf dem neuen Gerät selbst.
 function cloudLink(){ return location.origin+location.pathname+'#cfg='+b64u(JSON.stringify({u:clBase(),k:CL.key})); }
+// Fotos/Videos: Datei geht in den Cloud-Speicher, der Eintrag (S.media) mit dem normalen Stand. m.cloud=1 heißt: liegt in der Cloud.
+const CLOUD_FILE_MAX=50e6; let clMBusy=false, clMAgain=false;
+const clMPath=id=>'/storage/v1/object/media/'+encodeURIComponent(CL.tenant)+'/'+encodeURIComponent(id);
+async function clFile(method,path,blob,type){ await clRefresh(); const h={apikey:CL.key,Authorization:'Bearer '+CL.session.access_token};
+  if(blob){ h['Content-Type']=type||blob.type||'application/octet-stream'; h['x-upsert']='true'; h['cache-control']='3600'; }
+  let r; try{ r=await fetch(clBase()+path,{method,headers:h,body:blob||undefined}); }catch(e){ const er=new Error('Keine Verbindung zum Server'); er.offline=true; throw er; }
+  if(!r.ok){ let m=''; try{ const j=await r.json(); m=j.message||j.error||''; }catch(e){} const er=new Error(m||('Fehler '+r.status)); er.status=r.status; throw er; } return r; }
+function mediaCloudCount(){ const L=S.media||[]; return {all:L.length, up:L.filter(m=>m.cloud).length, big:L.filter(m=>!m.cloud&&m.size>CLOUD_FILE_MAX).length}; }
+async function mediaSync(){
+  if(!cloudOn()||CL.status==='conflict') return; if(clMBusy){ clMAgain=true; return; } clMBusy=true; let changed=false;
+  try{ for(const m of (S.media||[]).filter(x=>!x.cloud&&x.size<=CLOUD_FILE_MAX)){
+      const r=await mGet(m.id).catch(()=>null); if(!r||!r.blob) continue;
+      await clFile('POST',clMPath(m.id),r.blob,m.type); m.cloud=1; changed=true; }
+    if(CL.mediaErr){ delete CL.mediaErr; clSave(); } }
+  catch(e){ CL.mediaErr=/bucket|not found|row-level|policy|403|404/i.test(e.message+' '+e.status)?'Cloud-Speicher für Fotos ist noch nicht eingerichtet (media.sql ausführen).':e.message; clSave(); }
+  finally{ clMBusy=false; if(changed) save(); const box=document.getElementById('cloudBox'); if(box) box.innerHTML=cloudBody(); if(clMAgain){ clMAgain=false; mediaSync(); } } }
+async function mediaFetch(m){ const r=await clFile('GET','/storage/v1/object/authenticated/media/'+encodeURIComponent(CL.tenant)+'/'+encodeURIComponent(m.id)); const b=await r.blob(); await mPut({id:m.id,blob:b,type:m.type||b.type}); return b; }
 function cloudPanel(){ return panel('Cloud-Speicherung',`<div class="stack" id="cloudBox">${cloudBody()}</div>`); }
 
 function storageTest(){ try{ const k='fitframe-test'; localStorage.setItem(k,'1'); const ok=localStorage.getItem(k)==='1'; localStorage.removeItem(k); return ok; }catch(e){ return false; } }
@@ -2043,12 +2061,14 @@ function mediaHtml(owner,c){
   return `<div class="stack"><div class="row" style="justify-content:space-between"><h3>Fotos & Videos</h3>${ok?`<label class="btn sm">${ic('plus')}Hinzufügen<input type="file" accept="image/*,video/*" multiple hidden data-change="mediaAdd" data-owner="${owner}"></label>`:''}</div>
   ${ok?'':`<p class="muted" style="font-size:13px">Fotos und Videos erst nach Einwilligung des Kunden für Fotos/Videos.${c?` <button class="btn sm" data-act="consent" data-id="${c.id}">${c.consent?'Einwilligung ergänzen':'Einwilligung erfassen'}</button>`:''}</p>`}
   ${L.length?`<div class="mgrid">${L.map(m=>`<figure class="mitem"><div class="mthumb" data-media="${m.id}">${m.kind==='video'?'Video':'Foto'} wird geladen …</div><figcaption><input class="input" value="${esc(m.note||'')}" placeholder="Notiz, z. B. Seite vorher" data-change="mediaNote" data-id="${m.id}" aria-label="Notiz zum ${m.kind==='video'?'Video':'Foto'}">${owner.startsWith('s:')?`<select class="input sm" data-change="mediaView" data-id="${m.id}" aria-label="Ansicht"><option value="" ${!m.view?'selected':''}>– Ansicht –</option>${VIEW_OPTS.map(v=>`<option ${m.view===v?'selected':''}>${v}</option>`).join('')}</select>`:''}${owner.startsWith('s:')?`<select class="input sm" data-change="mediaPhase" data-id="${m.id}" aria-label="Vorher oder nachher"><option value="" ${!m.phase?'selected':''}>– Zeitpunkt –</option><option ${m.phase==='vorher'?'selected':''}>vorher</option><option ${m.phase==='nachher'?'selected':''}>nachher</option></select>`:''}<div class="row" style="justify-content:space-between"><span class="faint" style="font-size:11.5px">${fmtDate(m.date)} · ${m.kind==='video'?'Video':'Foto'} · ${fmtSize(m.size)}</span><span class="row" style="gap:4px">${m.kind==='video'?`<button class="btn sm ghost" data-act="mediaStill" data-id="${m.id}">Standbild</button>`:''}<button class="btn sm ghost danger" data-act="mediaDel" data-id="${m.id}">Löschen</button></span></div></figcaption></figure>`).join('')}</div>`:(ok?'<span class="muted">Noch keine Fotos oder Videos.</span>':'')}
-  ${ok||L.length?'<p class="faint" style="font-size:12px">Nur auf diesem Gerät gespeichert. Nicht in der Text-Sicherung enthalten.</p>':''}</div>`;
+  ${ok||L.length?`<p class="faint" style="font-size:12px">${cloudOn()?'Wird in der Cloud gesichert (bis 50 MB je Datei).':'Nur auf diesem Gerät gespeichert. Nicht in der Text-Sicherung enthalten.'}</p>`:''}</div>`;
 }
 function mediaHydrate(){ document.querySelectorAll('[data-media]').forEach(el=>{ const id=el.dataset.media, m=(S.media||[]).find(x=>x.id===id); if(!m) return;
   const show=url=>{ el.innerHTML=m.kind==='video'?`<video src="${url}" controls playsinline preload="metadata"></video>`:`<img src="${url}" alt="${esc(m.note||m.name||'Foto')}">`; };
   if(mediaURLs[id]) return show(mediaURLs[id]);
-  mGet(id).then(r=>{ if(!r||!r.blob){ el.textContent='Datei fehlt auf diesem Gerät'; return; } mediaURLs[id]=URL.createObjectURL(r.blob); show(mediaURLs[id]); }).catch(()=>{ el.textContent='Speicher nicht verfügbar'; }); }); }
+  mGet(id).then(r=>{ if(r&&r.blob){ mediaURLs[id]=URL.createObjectURL(r.blob); return show(mediaURLs[id]); }
+    if(!(m.cloud&&cloudOn())){ el.textContent='Datei fehlt auf diesem Gerät'; return; }
+    el.textContent='Wird aus der Cloud geladen …'; return mediaFetch(m).then(b=>{ mediaURLs[id]=URL.createObjectURL(b); show(mediaURLs[id]); }).catch(()=>{ el.textContent='Konnte nicht aus der Cloud geladen werden'; }); }).catch(()=>{ el.textContent='Speicher nicht verfügbar'; }); }); }
 function reopenOwner(owner){ const [t,id]=[owner.slice(0,1),owner.slice(2)]; if(t==='c') customerDrawer(id); else if(t==='b') bikeDrawer(id); else render(); }
 function ageOf(d){ if(!d) return null; const b=new Date(d), n=new Date(); if(isNaN(b)) return null; let a=n.getFullYear()-b.getFullYear(); if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate())) a--; return a; }
 function purchasesHtml(c){ const L=(S.sales||[]).filter(x=>x.customerId===c.id).sort((a,b)=>b.date.localeCompare(a.date)); const sum=L.filter(x=>x.status!=='Angebot'&&x.status!=='abgelehnt').reduce((a,x)=>a+(Number(x.total)||0),0);
@@ -2330,7 +2350,7 @@ function custDataOf(cid){ const c=cust(cid); const bs=S.bikes.filter(b=>b.custom
   return {customer:c,bikes:S.bikes.filter(b=>b.customerId===cid),sessions:ss,sales:(S.sales||[]).filter(x=>x.customerId===cid),workshop:(S.workshop||[]).filter(w=>w.customerId===cid),services:(S.services||[]).filter(x=>bs.includes(x.bikeId)),handovers:(S.handovers||[]).filter(h=>h.customerId===cid),suspension:(S.suspension||[]).filter(r=>bs.includes(r.bikeId)),messages:(S.messages||{})[cid]||[],media:(S.media||[]).filter(m=>m.owner==='c:'+cid||bs.some(b=>m.owner==='b:'+b)||sids.some(i=>m.owner==='s:'+i)).map(({id,owner,kind,name,date,note,phase})=>({id,owner,kind,name,date,note,phase}))}; }
 function deleteCustomer(cid){ const d=custDataOf(cid); const bs=d.bikes.map(b=>b.id), sids=d.sessions.map(x=>x.id), mids=new Set(d.media.map(m=>m.id));
   S.customers=S.customers.filter(c=>c.id!==cid); S.bikes=S.bikes.filter(b=>b.customerId!==cid); S.sessions=S.sessions.filter(x=>x.customerId!==cid); S.sales=(S.sales||[]).filter(x=>x.customerId!==cid); S.workshop=(S.workshop||[]).filter(w=>w.customerId!==cid); S.services=(S.services||[]).filter(x=>!bs.includes(x.bikeId)); S.handovers=(S.handovers||[]).filter(h=>h.customerId!==cid); S.suspension=(S.suspension||[]).filter(r=>!bs.includes(r.bikeId));
-  if(S.messages) delete S.messages[cid]; sids.forEach(i=>{ if(S.shared) delete S.shared[i]; }); S.media=(S.media||[]).filter(m=>!mids.has(m.id)); mids.forEach(id=>{ if(mediaURLs[id]){ URL.revokeObjectURL(mediaURLs[id]); delete mediaURLs[id]; } });
+  if(S.messages) delete S.messages[cid]; sids.forEach(i=>{ if(S.shared) delete S.shared[i]; }); if(cloudOn()) (S.media||[]).filter(m=>mids.has(m.id)&&m.cloud).forEach(m=>clFile('DELETE',clMPath(m.id)).catch(()=>{})); S.media=(S.media||[]).filter(m=>!mids.has(m.id)); mids.forEach(id=>{ if(mediaURLs[id]){ URL.revokeObjectURL(mediaURLs[id]); delete mediaURLs[id]; } });
   const nm=String((d.customer||{}).name||'').trim(); S.audit=(S.audit||[]).map(a=>a.ref===cid||sids.includes(a.ref)||(nm&&String(a.what||'').includes(nm))?{...a,what:'[Eintrag zu gelöschtem Kunden]',ref:''}:a); audit(`Kunde gelöscht (DSGVO): ${bs.length} Räder, ${sids.length} Fittings, ${mids.size} Medien entfernt`); return {bikes:bs.length,sessions:sids.length,media:mids.size}; }
 function scrubBackups(cid){ let n=0; try{ backupKeys().filter(k=>/^fitframe-(before|rescue)-/.test(k)).forEach(k=>{ try{ const d=JSON.parse(localStorage.getItem(k)); if(!d||!Array.isArray(d.customers)||!d.customers.some(c=>c.id===cid)) return; const keep=S; S=d; try{ deleteCustomer(cid); } finally { S=keep; } localStorage.setItem(k,JSON.stringify(d)); n++; }catch(e){} }); }catch(e){} return n; }
 function portalHtml(s){ const P=s.portal||{}; const imgs=mediaOf('s:'+s.id).filter(m=>m.kind==='image'); const box=(k,l,on)=>`<label class="row" style="gap:6px;font-size:14px;flex-wrap:nowrap"><input type="checkbox" data-change="portalSet" data-id="${s.id}" data-k="${k}" ${on?'checked':''}><span>${l}</span></label>`;
@@ -5334,7 +5354,7 @@ const ACT = {
     <div class="field"><label for="pu_b">Fahrrad</label><select class="input" id="pu_b" name="bike"><option value="">– kein Rad –</option>${bs.map(b=>`<option value="${b.id}">${esc(b.brand+' '+b.model)}</option>`).join('')}</select></div>
     <div class="field"><label for="pu_s">Status</label><select class="input" id="pu_s" name="status"><option>bezahlt</option><option>offen</option></select></div>
     <div class="wide row"><button class="btn primary" type="submit">Speichern</button><button class="btn ghost" type="button" data-act="openCustomer" data-id="${c.id}">Abbrechen</button></div></form>`); },
-  mediaDel(el){ const id=el.dataset.id; const m=(S.media||[]).find(x=>x.id===id); if(!m) return; mDel(id).catch(()=>{}).then(()=>{ if(mediaURLs[id]){ URL.revokeObjectURL(mediaURLs[id]); delete mediaURLs[id]; } S.media=S.media.filter(x=>x.id!==id); audit(`${m.kind==='video'?'Video':'Foto'} gelöscht`); save(); reopenOwner(m.owner); toast('Gelöscht'); }); },
+  mediaDel(el){ const id=el.dataset.id; const m=(S.media||[]).find(x=>x.id===id); if(!m) return; if(m.cloud&&cloudOn()) clFile('DELETE',clMPath(id)).catch(()=>{}); mDel(id).catch(()=>{}).then(()=>{ if(mediaURLs[id]){ URL.revokeObjectURL(mediaURLs[id]); delete mediaURLs[id]; } S.media=S.media.filter(x=>x.id!==id); audit(`${m.kind==='video'?'Video':'Foto'} gelöscht`); save(); reopenOwner(m.owner); toast('Gelöscht'); }); },
   saveInfo(){ const own=S.customers.filter(c=>!isDemoCust(c.id)).length;
     openDrawer('Wo sind meine Daten?',`<div class="stack">
     <div class="statusbox ${storageOk?'ok':'warn'}"><div><b>${storageOk?'Alles gespeichert':'Speichern funktioniert hier nicht'}</b><span class="muted" style="font-size:14px">${storageOk?`${S.customers.length} Kunden, davon ${own} selbst angelegt${lastSave?', zuletzt gespeichert um '+lastSave.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):''}.`:'Wahrscheinlich privater Modus oder ein eingebetteter Browser. Öffne den Link direkt in Safari.'}</span></div></div>
