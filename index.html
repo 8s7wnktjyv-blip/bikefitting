@@ -1518,7 +1518,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-03.59';
+const APP_VER='2026-11-03.60';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1556,6 +1556,7 @@ function savePill(){ const b=document.getElementById('savePill'); if(!b) return;
 const CLOUD_KEY='fyf-cloud';
 let CL=(()=>{ try{ return JSON.parse(localStorage.getItem(CLOUD_KEY))||{}; }catch(e){ return {}; } })();
 let clTimer=null, clBusy=false, clAgain=false;
+const clBootHash=location.hash||''; // vor dem Router merken: der ersetzt den Hash beim Start
 function clSave(){ try{ localStorage.setItem(CLOUD_KEY,JSON.stringify(CL)); }catch(e){} }
 const clBase=()=>String(CL.url||'').trim().replace(/\/+$/,'');
 const cloudOn=()=>!!(CL.url&&CL.key&&CL.session&&CL.tenant);
@@ -1598,7 +1599,11 @@ function cloudApply(data,ver){
 async function cloudLoadServer(){ try{ const rows=await clApi(`/rest/v1/tenant_state?tenant_id=eq.${encodeURIComponent(CL.tenant)}&select=version,data`,{method:'GET'}); if(rows&&rows[0]) cloudApply(rows[0].data,Number(rows[0].version)); }catch(e){ clStatus('err',e.message); } }
 async function cloudFindTenant(){ const uid=clUid(); if(!uid) throw new Error('Anmeldung unvollständig'); const m=await clApi(`/rest/v1/memberships?user_id=eq.${uid}&select=tenant_id,role`,{method:'GET'}); if(m&&m[0]){ CL.tenant=m[0].tenant_id; CL.role=m[0].role; CL.ver=CL.ver||0; clSave(); return true; } return false; }
 async function cloudInit(){
-  const h=location.hash||''; if(/access_token=/.test(h)){ const q=new URLSearchParams(h.replace(/^#/,'')); if(CL.url&&CL.key){ clSetSession({access_token:q.get('access_token'),refresh_token:q.get('refresh_token'),expires_at:q.get('expires_at'),expires_in:q.get('expires_in')},CL.pendingEmail); } try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
+  const h=clBootHash; if(/access_token=|error_description=/.test(h)){ const q=new URLSearchParams(h.replace(/^#/,''));
+    if(q.get('error_description')) setTimeout(()=>toast('Anmeldung fehlgeschlagen: '+q.get('error_description').replace(/\+/g,' ')+'. Bitte neuen Link anfordern.',true),300);
+    else if(CL.url&&CL.key){ clSetSession({access_token:q.get('access_token'),refresh_token:q.get('refresh_token'),expires_at:q.get('expires_at'),expires_in:q.get('expires_in')},CL.pendingEmail); delete CL.pendingEmail; clSave(); setTimeout(()=>{ try{ go('mehr'); setTimeout(()=>{ const bx=document.getElementById('cloudBox'); if(bx) bx.scrollIntoView({block:'center'}); },200); }catch(e){} toast('Angemeldet'); },400); }
+    else setTimeout(()=>toast('Der Link wurde in einem anderen Browser geöffnet. Bitte lange auf den Link tippen und „In Safari öffnen“ wählen.',true),300);
+    try{ history.replaceState({fyf:1},'',location.pathname+location.search+'#'+(ui.route||'dashboard')); }catch(e){} }
   if(!(CL.url&&CL.key&&CL.session)) { savePill(); return; }
   try{ if(!CL.tenant&&!(await cloudFindTenant())){ clStatus('setup'); return; } await cloudPull(); }catch(e){ clStatus('err',e.message); } }
 function cloudBody(){
@@ -1608,8 +1613,8 @@ function cloudBody(){
     <div class="field wide"><label for="cl_key">Öffentlicher Schlüssel (anon / publishable key)</label><input class="input" id="cl_key" name="key" autocomplete="off" required></div>
     <div class="wide"><button class="btn primary" type="submit">Verbinden</button></div></form><p class="faint" style="font-size:12px;margin:0">Nur den öffentlichen Schlüssel eintragen, nie den geheimen „service_role“-Schlüssel.</p>`;
   if(!CL.session) return `<p class="muted" style="font-size:14px;margin:0">Verbunden mit ${esc(clBase().replace(/^https?:\/\//,''))}. Jetzt anmelden.</p>
-    <form class="form" data-form="cloudMail"><div class="field wide"><label for="cl_mail">E-Mail</label><input class="input" id="cl_mail" name="email" type="email" required value="${esc(CL.pendingEmail||'')}" autocomplete="email"></div><div class="wide"><button class="btn primary" type="submit">Anmelde-Code senden</button></div></form>
-    ${CL.pendingEmail?`<form class="form" data-form="cloudCode"><div class="field"><label for="cl_code">Code aus der E-Mail</label><input class="input num" id="cl_code" name="code" inputmode="numeric" autocomplete="one-time-code" required></div><div class="wide"><button class="btn primary" type="submit">Anmelden</button></div></form><p class="faint" style="font-size:12px;margin:0">Statt Code kannst du auch den Link in der E-Mail auf diesem Gerät öffnen.</p>`:''}
+    <form class="form" data-form="cloudMail"><div class="field wide"><label for="cl_mail">E-Mail</label><input class="input" id="cl_mail" name="email" type="email" required value="${esc(CL.pendingEmail||'')}" autocomplete="email"></div><div class="wide"><button class="btn primary" type="submit">Anmelde-Link senden</button></div></form>
+    ${CL.pendingEmail?`<form class="form" data-form="cloudCode"><div class="field"><label for="cl_code">Code aus der E-Mail</label><input class="input num" id="cl_code" name="code" inputmode="numeric" autocomplete="one-time-code" required></div><div class="wide"><button class="btn primary" type="submit">Anmelden</button></div></form><p class="faint" style="font-size:12px;margin:0">Am einfachsten: In der E-Mail auf den Link tippen. Er muss sich in demselben Browser öffnen (Safari). Steht in der E-Mail ein Code, kannst du ihn hier eintragen.</p>`:''}
     <div><button class="btn sm ghost" data-act="cloudReset">Verbindung entfernen</button></div>`;
   if(!CL.tenant) return `<p class="muted" style="font-size:14px;margin:0">Angemeldet als ${esc(CL.session.email||'')}. Noch kein Laden in der Cloud.</p>
     <form class="form" data-form="cloudTenant"><div class="field wide"><label for="cl_t">Name des Ladens</label><input class="input" id="cl_t" name="name" required value="${esc(shopName()||'')}"></div><div class="wide"><button class="btn primary" type="submit">Laden anlegen und Daten hochladen</button></div></form>
