@@ -723,6 +723,7 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 #tour{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:80;display:flex;justify-content:center;padding:0 12px;pointer-events:none}.tour-card{pointer-events:auto;width:min(520px,100%);background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:14px 16px;display:flex;flex-direction:column;gap:8px}.tourbar{height:4px;background:var(--line);border-radius:2px;overflow:hidden}.tourbar i{display:block;height:100%;background:var(--accent)}@media (min-width:1000px){#tour{bottom:20px;justify-content:flex-end;padding-right:24px}}@media print{#tour{display:none!important}}
 .tl{display:flex;flex-direction:column}.tl-i{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}.tl-i:last-child{border-bottom:0}.tl-i.click{cursor:pointer}.tl-d{font-size:12px;color:var(--faint);min-width:74px;padding-top:2px}.tl-k{font-size:11px;font-weight:600;padding:2px 7px;border-radius:8px;background:var(--surface-2,#eee);color:var(--muted);white-space:nowrap}.tl-k.k-fitting{background:var(--accent-soft);color:var(--accent-strong,var(--accent))}.vcmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mthumb.vc{aspect-ratio:auto;min-height:120px;background:#000}.mthumb.vc video{object-fit:contain}
 .dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}.dgrid>.dw{min-width:0;display:flex;flex-direction:column;gap:16px}.dgrid>.dw.full{grid-column:1/-1}.dgrid>.dw>.grid{margin:0}@media (max-width:900px){.dgrid{grid-template-columns:1fr}}.dw.edit{outline:2px dashed var(--line);outline-offset:4px;border-radius:12px;padding:4px}.dw.off{opacity:.55}.dw-ctl{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface-2,#eee);border-radius:10px;padding:6px 10px;font-size:14px}.back-btn svg{width:22px;height:22px}
+.st6{font-size:12px;white-space:nowrap}.st6-1{background:#dff3e4;color:#1d6b35}.st6-2{background:#e4eef8;color:#2a5f8f}.st6-3{background:#fbe9d6;color:#8a4b12}.st6-4{background:#eceff1;color:#56646b}.st6-5{background:#f3e4f5;color:#7a2e86}.st6-6{background:#fff4c9;color:#7a6200}
 </style>
 </head>
 <body>
@@ -1531,7 +1532,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-08.64';
+const APP_VER='2026-11-08.65';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1739,7 +1740,8 @@ const NAV_AREAS=[
   ['Produktempfehlungen',[['preise','Produkte & Preise','tag','Fitting-Pakete, deine Produkte, Gutscheine'],['rechnungen','Rechnungen','doc','Rechnungen, E-Rechnung, offen und bezahlt'],['lager','Angebote & Lager','box','Angebote aus dem Fitting, Bestand'],['werkstatt','Werkstatt','wrench','Aufträge, Kunden benachrichtigen, Wartung']]],
   ['Berichte',[['berichte','Berichte','doc','Alle Fitting-Berichte öffnen und drucken'],['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht (Textvorlagen)'],['portal','Kundenportal','portal','So sehen Kunden ihre Berichte (Vorschau)']]],
   ['Datenbanken',[['geometrie','Geometrie-Bibliothek','grid','Rahmenmaße nach Hersteller, Größenberatung'],['messmittel','Messmittel','ruler','Geräte, Genauigkeit, Prüfdatum'],['produktdb','Produktdatenbank','tag','Sättel, Einlagen, Cleats mit Quelle'],['wissen','Wissen','book','Fachbegriffe, Messverfahren, Tests']]],
-  ['Einstellungen',[['mehr','Einstellungen & Daten','gear','Laden, Sicherung, Darstellung'],['betrieb','Zahlen & Team','ops','Kennzahlen pro Monat, Team'],['qualitaet','Messdaten & Qualität','quality','Herkunft und Vollständigkeit aller Werte'],['hardware','Hardware Lab','hw','Geplante eigene Messhilfen (Konzept)'],['module','Alle Module','grid','Gesamtplan und Stand der Demo']]]
+  ['Händlernetzwerk',[['netz','Händlerprofil & Anfragen','users','Öffentliches Profil, Anfragen von Kunden, QR-Code'],['boerse','Händlerbörse','box','Restposten unter geprüften Händlern (B2B)'],['academy','Academy','book','Lernpfade fürs Team, Teilnahmebestätigung']]],
+  ['Einstellungen',[['mehr','Einstellungen & Daten','gear','Laden, Sicherung, Darstellung'],['betrieb','Zahlen & Team','ops','Kennzahlen pro Monat, Team'],['qualitaet','Messdaten & Qualität','quality','Herkunft und Vollständigkeit aller Werte'],['hardware','Hardware Lab','hw','Geplante eigene Messhilfen (Konzept)'],['module','Stand aller Funktionen','grid','Was fertig ist, was teilweise, was fehlt']]]
 ];
 /* --- Ladentyp und Module: jeder Laden sieht nur, was er braucht --- */
 const SHOP_TYPES=[['haendler','Fahrradhändler','Verkauf, Größenberatung, Übergabe'],['ebike','E-Bike / Pendler','Übergabe, Werkstatt, Fahrwerk'],['werkstatt','Werkstatt','Aufträge, Fahrwerk, Fahrradakte'],['studio','Fitting-Studio','Komplettes Bikefitting']];
@@ -2204,6 +2206,7 @@ function bikeDrawer(id){
     ${svc.length?`<hr><h3>Wartungsintervalle</h3><table><tbody>${svc.map(x=>`<tr><td>${esc(x.task)}</td><td>${esc(x.interval)}</td><td>${x.next<today()?'<span class="chip c-bad">fällig seit '+fmtDate(x.next)+'</span>':'nächste '+fmtDate(x.next)}</td></tr>`).join('')}</tbody></table>`:''}
     ${(()=>{ const H=(S.handovers||[]).filter(h=>h.bikeId===b.id); return H.length?`<hr><h3>Übergaben (Quick-Fit)</h3><div class="list">${H.slice().reverse().map(h=>`<div class="li" style="padding:6px 0"><span class="mono faint" style="font-size:12px">${fmtDate(h.date)}</span><div class="grow">Sattelhöhe ${h.sh?fmtNum(h.sh)+' mm':'–'}${h.knee?` · Knie ${h.knee}°`:''} · ${esc(h.who||'')}</div><button class="btn sm" data-act="qfSheet" data-id="${h.id}">Blatt</button></div>`).join('')}</div>`:''; })()}
     ${(()=>{ const R=suspOf(b.id); const r=R[0]; return r||['MTB','E-Bike'].includes(b.type)?`<hr><div class="row" style="justify-content:space-between"><h3>Fahrwerk</h3><button class="btn sm" data-act="suspBike" data-id="${b.id}" data-go="1">${r?'Öffnen':'Einstellen'}</button></div>${r?`<p class="muted" style="font-size:13.5px;margin:0">${fmtDate(r.date)} · Gabel ${r.fork&&r.fork.psi?fmtNum(r.fork.psi)+' psi':'–'} · Dämpfer ${r.shock&&r.shock.psi?fmtNum(r.shock.psi)+' psi':'–'}${R.length>1?` · ${R.length} Einträge`:''}</p>`:'<span class="muted" style="font-size:13.5px">Noch nicht eingestellt.</span>'}`:''; })()}
+    ${bikeLifeHtml(b)}
     <hr>${mediaHtml('b:'+b.id,cust(b.customerId))}`;
   openDrawer(`${b.brand} ${b.model}`,body);
 }
@@ -4820,7 +4823,7 @@ function frameFinder(s){
 }
 
 /* ---------- Ladenprofil, Export, Zahlen ---------- */
-const EXTRA_ROUTES=['portal','hardware','module','ki','qualitaet'];
+const EXTRA_ROUTES=['portal','hardware','ki','qualitaet'];
 const showExtra=()=>!!(S.settings&&S.settings.extra);
 const DEMO_IDS={customers:['c1','c2','c3','c4']};
 const isDemoCust=id=>DEMO_IDS.customers.includes(id)&&!S.demoRemoved;
@@ -5914,6 +5917,344 @@ applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
 if((location.hash||'').indexOf('#pass=')===0){ const ph=location.hash.slice(6); go('dashboard'); try{ ui.passData=JSON.parse(unb64u(ph)); setTimeout(()=>openDrawer('Fit-Pass übernehmen',passImportHtml(ui.passData)),50); }catch(e){ toast('Fit-Pass-Link ist beschädigt',true); } }
 else go(VIEWS[start]?start:'dashboard');
+/* ===================== Plattform-Ausbau (v.65) ===================== */
+// Marke an einer Stelle. Der Name der Dachmarke ist noch nicht entschieden (Platzhalter).
+const BRAND={platform:'PLATFORM BRAND',fit:'FYF – Fit your Frame',placeholder:true};
+const cloudReady=()=>!!(CL&&CL.session&&CL.tenant);
+const noCloudHtml=what=>panel('',`<div class="notice">${ic('info')}<span>${what} braucht die Cloud-Speicherung. Einrichten unter <button class="btn sm ghost" data-nav="mehr">Mehr → Cloud-Speicherung</button>.</span></div>`);
+const errMap={FYF_BAD_SLUG:'Adresse (Kurzname) bitte nur mit Buchstaben, Zahlen und Bindestrich, 3–60 Zeichen',FYF_SLUG_TAKEN:'Diese Adresse ist schon vergeben',FYF_NOT_VERIFIED:'Dein Laden ist noch nicht geprüft, oder deine Rolle darf das nicht (Admin oder Fitter)',FYF_OWN_OFFER:'Das ist dein eigenes Angebot',FYF_RATE:'Zu viele Anfragen, bitte später erneut'};
+const netErr=e=>{ const m=String(e&&e.message||e||''); const k=Object.keys(errMap).find(k=>m.includes(k)); return k?errMap[k]:clErrText(m).replace('team.sql','netz.sql'); };
+
+/* ---------- Status 1–6 für alle Funktionen ---------- */
+const ST6={1:['Fertig','s1','vollständig umgesetzt und getestet'],2:['Teilweise','s2','nutzbar, aber nicht vollständig'],3:['Nur Darstellung','s3','zeigt etwas, ohne echte Funktion'],4:['Fehlt','s4','noch nicht vorhanden'],5:['Braucht Schnittstelle','s5','braucht Zugang zu einem fremden System'],6:['Vorbereitet','s6','vorhanden, aber nicht aktiv']};
+const st6=n=>`<span class="chip nodot st6 st6-${n}" title="${esc(ST6[n][2])}">${n} ${ST6[n][0]}</span>`;
+const FEATURES=[
+ ['Kunden','Kundenakte, Einwilligungen, Auskunft und Löschen',1],
+ ['Fahrräder','Fahrradakte mit Lebenslauf: Kauf, Garantie, Kilometer, Teiletausch, Fittings, Werkstatt',1],
+ ['FYF Bikefitting','Geführter Ablauf, Körperanalyse, Vermessung mit Doppelmessung, Bericht, Nachkontrollen',1],
+ ['Bewegung & Video','Winkel aus Video; Live-Analyse ist Beta',2],
+ ['Werkstatt','Aufträge, Kostenvoranschlag, Wartung. Kundenfreigabe per Link fehlt noch (simuliert)',2],
+ ['Termine','Termine an Fittings und im Dashboard; Terminwünsche über Anfragen. Kein eigener Kalender, keine Online-Buchung',2],
+ ['Verkauf & Angebote','Angebote aus dem Fitting, Produktempfehlungen mit Begründung',1],
+ ['Rechnungen','Pflichtangaben, Storno, PDF, E-Rechnung (XRechnung). Server schützt ausgestellte Rechnungen. Nicht mit dem offiziellen Prüfprogramm geprüft',2],
+ ['Zahlungen','Teil-, Anzahlung und Kombizahlung je Rechnung erfassen, offener Betrag',1],
+ ['Kartenzahlung SumUp','Betrag automatisch ans Terminal schicken – braucht SumUp-Zugang und Server-Funktion',5],
+ ['Kasse (TSE)','Bewusst nicht gebaut. Barverkauf mit TSE nur über ein zertifiziertes Kassensystem',4],
+ ['Warenwirtschaft & Lager','Bestand, Lieferanten, Wareneingang, Inventur, Bewegungen, Bestellvorschlag',1],
+ ['Lieferanten-Schnittstellen','veloconnect, Großhändler-Kataloge – braucht Zugänge der Lieferanten',5],
+ ['Produkte','Produktdatenbank mit Quellen; einzelne Produkte öffentlich schalten',1],
+ ['Öffentliche Händlersuche','Händlerprofil, öffentliche Seite, Suche nach Ort und Leistung (finder.html)',2],
+ ['Öffentlicher Marktplatz','Öffentliche Produkte mit Preis und Anfrage, ohne Bestellung und Bezahlung',2],
+ ['Anfragen','Anfrage an den Laden ohne Konto, Spam-Schutz, Posteingang im Laden',1],
+ ['Händlerbörse (B2B)','Nur geprüfte Läden: Angebote, Anfragen, Annehmen/Ablehnen, Kontakt. Ohne Bezahlung',2],
+ ['Partnerstatus','„Partner“ automatisch mit Profil; „FYF Certified Fitter“ nur nach Prüfung durch die Plattform',2],
+ ['Academy','FYF-Lernpfad zur Software, Quiz, Fortschritt, Teilnahmebestätigung. Keine Zertifizierung',2],
+ ['Fitting Equipment','Messmittel-Verwaltung. Eigene Messhilfen nur als Konzept, keine Maße erfunden',3],
+ ['Marketing','QR-Code und Link zum eigenen Profil, Werbepaket (Druckdateien). Gemeinsame Kampagnen fehlen',2],
+ ['Mitarbeiter & Rollen','Einladen per E-Mail, Rollen vom Server, Protokoll',1],
+ ['Filialen','Filialen anlegen, Gerät einer Filiale zuordnen, Vergleich. Bestand je Filiale fehlt',2],
+ ['Unternehmensgruppen','Gruppe → Unternehmen → Marke → Filiale: noch nicht',4],
+ ['Auswertungen','Kennzahlen pro Monat, Filialvergleich, Datenbank-Lesekopie für spätere Auswertungen',2],
+ ['Import & Export','Kunden-Import (CSV), Kunden-, Produkt- und Rechnungsliste als CSV',1],
+ ['DATEV / Buchhaltung','Rechnungsliste als CSV. Offizielles DATEV-Format braucht Prüfung mit dem Steuerberater',5],
+ ['Kundenportal','Nur Vorschau, kein Kunden-Login',3],
+ ['Datenbank-Tabellen','Lesekopie in Tabellen bei jedem Speichern. Schreiben weiter als ein Datensatz je Laden',6]];
+VIEWS.module = () => `
+  ${head('Stand aller Funktionen',`${esc(BRAND.platform)} (Name noch offen) mit ${esc(BRAND.fit)}. Jede Funktion mit ehrlichem Stand.`)}
+  ${panel('Legende',`<div class="grid g3">${Object.keys(ST6).map(k=>`<div class="row" style="flex-wrap:nowrap;align-items:flex-start;gap:8px">${st6(k)}<span class="muted" style="font-size:12.5px">${esc(ST6[k][2])}</span></div>`).join('')}</div>`)}
+  ${panel('',`<div class="stack" style="gap:0">${FEATURES.map(([n,d,s])=>`<div class="row" style="justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line,#e5e0d8);flex-wrap:wrap"><span style="flex:1 1 240px"><b style="font-weight:600">${esc(n)}</b><br><span class="muted" style="font-size:13px">${esc(d)}</span></span>${st6(s)}</div>`).join('')}</div>`)}`;
+
+/* ---------- Fahrrad-Lebenslauf ---------- */
+const LIFE_KINDS=['Kauf','Teiletausch','Inspektion','Garantiefall','Schaden','Notiz'];
+function bikeLifeHtml(b){ const L=b.life||{}; const ev=(b.events||[]).slice().sort((x,y)=>String(y.date).localeCompare(String(x.date)));
+  const wu=L.warrantyUntil, wOk=wu&&wu>=today();
+  return `<hr><div class="stack"><h3>Lebenslauf</h3>
+   <dl class="dl"><dt>Gekauft</dt><dd>${L.buy?fmtDate(L.buy):'–'}${L.seller?' · '+esc(L.seller):''}${L.price?' · '+eur(L.price):''}</dd>
+   <dt>Garantie</dt><dd>${wu?`${wOk?'<span class="chip nodot c-ok">bis '+fmtDate(wu)+'</span>':'<span class="chip nodot">abgelaufen '+fmtDate(wu)+'</span>'}`:'–'}</dd>
+   ${(b.kmLog||[]).length?`<dt>Kilometer-Verlauf</dt><dd>${(b.kmLog||[]).slice(-5).map(k=>`${fmtDate(k.date)}: ${fmtNum(k.km)} km`).join(' · ')}</dd>`:''}</dl>
+   <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="lifeEdit" data-id="${b.id}">Kauf & Garantie</button><button class="btn sm" data-act="lifeEvent" data-id="${b.id}">${ic('plus')} Eintrag</button></div>
+   ${ev.length?`<div class="list">${ev.map(e=>`<div class="li" style="padding:6px 0"><span class="mono faint" style="font-size:12px">${fmtDate(e.date)}</span><div class="grow"><b style="font-weight:600">${esc(e.kind)}</b> ${esc(e.text||'')}${e.km?` <span class="faint">· ${fmtNum(e.km)} km</span>`:''}</div><button class="btn sm ghost" data-act="lifeDel" data-id="${b.id}" data-e="${e.id}" aria-label="Eintrag löschen">${ic('x')}</button></div>`).join('')}</div>`:''}</div>`; }
+function lifeEventDrawer(id){ const b=bike(id); openDrawer('Lebenslauf-Eintrag',`<form class="form" data-form="lifeEvent" data-id="${esc(id)}">
+  <div class="field"><label for="le_d">Datum</label><input class="input" id="le_d" name="date" type="date" value="${today()}" required></div>
+  <div class="field"><label for="le_k">Art</label><select class="input" id="le_k" name="kind">${opts(LIFE_KINDS,'Teiletausch')}</select></div>
+  <div class="field wide"><label for="le_t">Was</label><input class="input" id="le_t" name="text" maxlength="200" placeholder="z. B. Kette und Kassette getauscht" required></div>
+  <div class="field"><label for="le_km">Kilometer</label><input class="input num" id="le_km" name="km" type="number" min="0" value="${esc(b.km||'')}"></div>
+  <div class="wide"><button class="btn primary" type="submit">Speichern</button></div></form>`); }
+function lifeEditDrawer(id){ const b=bike(id), L=b.life||{}; openDrawer('Kauf & Garantie',`<form class="form" data-form="lifeEdit" data-id="${esc(id)}">
+  <div class="field"><label for="lf_b">Kaufdatum</label><input class="input" id="lf_b" name="buy" type="date" value="${esc(L.buy||'')}"></div>
+  <div class="field"><label for="lf_s">Gekauft bei</label><input class="input" id="lf_s" name="seller" value="${esc(L.seller||'')}" maxlength="120"></div>
+  <div class="field"><label for="lf_p">Kaufpreis €</label><input class="input num" id="lf_p" name="price" type="number" min="0" step="0.01" value="${esc(L.price||'')}"></div>
+  <div class="field"><label for="lf_w">Garantie bis</label><input class="input" id="lf_w" name="warrantyUntil" type="date" value="${esc(L.warrantyUntil||'')}"></div>
+  <p class="faint wide" style="font-size:12.5px;margin:0">Gesetzliche Gewährleistung beim Neukauf vom Händler: 2 Jahre. Herstellergarantien (z. B. auf den Rahmen) sind je Hersteller verschieden – bitte aus den Unterlagen übernehmen.</p>
+  <div class="wide"><button class="btn primary" type="submit">Speichern</button></div></form>`); }
+
+/* ---------- Warenwirtschaft ---------- */
+const suppliers=()=>S.suppliers=S.suppliers||[];
+const moves=()=>S.stockMoves=S.stockMoves||[];
+function moveAdd(sku,qty,kind,ref){ moves().unshift({id:uid('mv'),date:nowStamp(),sku,qty:Number(qty)||0,kind,ref:ref||'',who:(CL&&CL.session&&CL.session.email)||role()}); if(moves().length>2000) moves().length=2000; }
+function orderSuggest(){ const g={}; S.inventory.filter(x=>x.stock<x.min).forEach(x=>{ const k=x.supplierId||''; (g[k]=g[k]||[]).push({...x,need:Math.max(x.min*2-x.stock,x.min-x.stock)}); }); return g; }
+function wawiHtml(){ const sup=suppliers(), sg=orderSuggest(), mv=moves().slice(0,12), supName=id=>(sup.find(s=>s.id===id)||{}).name||'ohne Lieferant';
+  return `<div class="grid g2">
+  ${panel('Lieferanten',`<div class="stack">${sup.length?sup.map(s=>`<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b style="font-weight:600">${esc(s.name)}</b><br><span class="muted" style="font-size:13px">${esc([s.custNo?'Kd.-Nr. '+s.custNo:'',s.email,s.phone].filter(Boolean).join(' · '))}</span></span><button class="btn sm ghost" data-act="supEdit" data-id="${s.id}">Bearbeiten</button></div>`).join(''):'<p class="muted" style="margin:0">Noch keine Lieferanten.</p>'}
+    <div><button class="btn sm" data-act="supEdit">${ic('plus')} Lieferant</button></div></div>`)}
+  ${panel('Bestellvorschlag',`<div class="stack">${Object.keys(sg).length?Object.entries(sg).map(([k,L])=>`<div><b style="font-size:14px">${esc(supName(k))}</b>${L.map(x=>`<div class="row" style="justify-content:space-between"><span>${esc(x.name)} <span class="faint mono" style="font-size:11px">${esc(x.sku)}</span></span><span class="num">${x.need} Stk.</span></div>`).join('')}</div>`).join('')+`<div><button class="btn sm" data-act="orderCopy">Bestellliste kopieren</button></div>`:'<p class="muted" style="margin:0">Alles über Mindestbestand.</p>'}<p class="faint" style="font-size:12px;margin:0">Vorschlag: auf das Doppelte des Mindestbestands auffüllen. Bestellt wird beim Lieferanten wie bisher.</p></div>`)}
+  </div>
+  ${panel('Wareneingang & Inventur',`<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn" data-act="goodsIn">${ic('plus')} Wareneingang buchen</button><button class="btn" data-act="stocktake">Inventur</button><button class="btn ghost" data-act="movesCsv">Bewegungen als CSV</button></div>
+   ${mv.length?`<div class="tw" style="margin-top:10px"><table><thead><tr><th>Zeit</th><th>Artikel</th><th>Art</th><th class="r">Menge</th><th>Beleg</th></tr></thead><tbody>${mv.map(m=>`<tr><td class="mono" style="font-size:12px">${esc(m.date)}</td><td>${esc((S.inventory.find(i=>i.sku===m.sku)||{name:m.sku}).name)}</td><td>${esc(m.kind)}</td><td class="r num">${m.qty>0?'+':''}${m.qty}</td><td>${esc(m.ref)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted" style="margin:8px 0 0">Noch keine Bewegungen. Ab jetzt wird jede Bestandsänderung festgehalten.</p>'}`)}`; }
+function supDrawer(id){ const s=id?suppliers().find(x=>x.id===id):{}; openDrawer(id?'Lieferant bearbeiten':'Lieferant anlegen',`<form class="form" data-form="supplier" data-id="${esc(id||'')}">
+  <div class="field wide"><label for="sp_n">Name</label><input class="input" id="sp_n" name="name" value="${esc(s.name||'')}" required maxlength="120"></div>
+  <div class="field"><label for="sp_c">Kundennummer</label><input class="input" id="sp_c" name="custNo" value="${esc(s.custNo||'')}"></div>
+  <div class="field"><label for="sp_p">Ansprechpartner</label><input class="input" id="sp_p" name="contact" value="${esc(s.contact||'')}"></div>
+  <div class="field"><label for="sp_e">E-Mail</label><input class="input" id="sp_e" name="email" type="email" value="${esc(s.email||'')}"></div>
+  <div class="field"><label for="sp_t">Telefon</label><input class="input" id="sp_t" name="phone" value="${esc(s.phone||'')}"></div>
+  <div class="field wide"><label for="sp_x">Notiz (z. B. Mindestbestellwert, Lieferzeit)</label><input class="input" id="sp_x" name="note" value="${esc(s.note||'')}" maxlength="300"></div>
+  <div class="wide"><button class="btn primary" type="submit">Speichern</button></div></form>`); }
+function goodsInDrawer(){ const sup=suppliers(); openDrawer('Wareneingang buchen',`<form class="form" data-form="goodsIn">
+  <div class="field wide"><label for="gi_a">Artikel</label><select class="input" id="gi_a" name="sku" required>${opts(S.inventory.map(x=>[x.sku,x.name+' ('+x.sku+')']))}</select></div>
+  <div class="field"><label for="gi_q">Menge</label><input class="input num" id="gi_q" name="qty" type="number" min="1" value="1" required></div>
+  <div class="field"><label for="gi_e">Einkaufspreis netto € (je Stück)</label><input class="input num" id="gi_e" name="ek" type="number" min="0" step="0.01"></div>
+  <div class="field"><label for="gi_s">Lieferant</label><select class="input" id="gi_s" name="sup"><option value="">–</option>${opts(sup.map(s=>[s.id,s.name]))}</select></div>
+  <div class="field"><label for="gi_r">Lieferschein-Nr.</label><input class="input" id="gi_r" name="ref" maxlength="60"></div>
+  <div class="wide"><button class="btn primary" type="submit">Buchen</button></div></form>`); }
+function stocktakeDrawer(){ openDrawer('Inventur',`<form class="form" data-form="stocktake"><p class="muted wide" style="margin:0;font-size:13.5px">Gezählte Menge eintragen. Leere Felder bleiben unverändert. Jede Abweichung wird als Bewegung „Inventur“ gespeichert.</p>
+  ${S.inventory.map((x,i)=>`<div class="field"><label for="st_${i}">${esc(x.name)} <span class="faint">(System: ${x.stock})</span></label><input class="input num" id="st_${i}" name="${esc(x.sku)}" type="number" min="0" inputmode="numeric"></div>`).join('')}
+  <div class="wide"><button class="btn primary" type="submit">Inventur abschließen</button></div></form>`); }
+
+/* ---------- Zahlungen ---------- */
+const PAY_METHODS=['Bar','Karte (SumUp-Terminal)','Karte (anderes Terminal)','Überweisung','PayPal','Gutschein','Sonstige'];
+const payments=()=>S.payments=S.payments||[];
+const paidOf=inv=>Math.round(payments().filter(p=>p.invId===inv.id).reduce((a,p)=>a+Number(p.amount||0),0)*100)/100;
+function payHtml(inv){ if(inv.type==='storno') return ''; const tot=invCalc(inv).total, paid=paidOf(inv), open=Math.round((tot-paid)*100)/100, P=payments().filter(p=>p.invId===inv.id);
+  return `<hr><div class="stack" id="payBox"><h3>Zahlungen</h3>
+   <div class="row" style="gap:14px;flex-wrap:wrap"><span>Gesamt <b class="num">${eur(tot)}</b></span><span>bezahlt <b class="num">${eur(paid)}</b></span><span>offen <b class="num" style="color:${open>0.004?'var(--warn)':'inherit'}">${eur(Math.max(0,open))}</b></span></div>
+   ${P.length?`<div class="list">${P.map(p=>`<div class="li" style="padding:6px 0"><span class="mono faint" style="font-size:12px">${fmtDate(p.date)}</span><div class="grow">${esc(p.kind)} · ${esc(p.method)}${p.note?' · '+esc(p.note):''}</div><b class="num">${eur(p.amount)}</b>${p.amount>0?`<button class="btn sm ghost" data-act="payUndo" data-id="${p.id}" aria-label="Zahlung zurücknehmen">${ic('x')}</button>`:''}</div>`).join('')}</div>`:''}
+   ${inv.status!=='storniert'&&open>0.004?`<form class="form" data-form="payAdd" data-inv="${esc(inv.id)}">
+     <div class="field"><label for="pa_a">Betrag €</label><input class="input num" id="pa_a" name="amount" type="number" step="0.01" min="0.01" max="${open}" value="${open}" required></div>
+     <div class="field"><label for="pa_m">Zahlungsart</label><select class="input" id="pa_m" name="method">${opts(PAY_METHODS,'Bar')}</select></div>
+     <div class="field"><label for="pa_k">Art</label><select class="input" id="pa_k" name="kind">${opts(['Zahlung','Anzahlung','Teilzahlung'],'Zahlung')}</select></div>
+     <div class="field"><label for="pa_d">Datum</label><input class="input" id="pa_d" name="date" type="date" value="${today()}"></div>
+     <div class="field wide"><label for="pa_n">Notiz</label><input class="input" id="pa_n" name="note" maxlength="120"></div>
+     <div class="wide"><button class="btn primary" type="submit">Zahlung erfassen</button></div></form>
+     <p class="faint" style="font-size:12px;margin:0">Kartenzahlung: Betrag am Terminal eintippen und hier erfassen. Die automatische Übergabe an SumUp ist noch nicht angebunden. Barzahlungen gehören zusätzlich in deine Kasse bzw. dein Kassenbuch.</p>`:''}</div>`; }
+const _invOpenHtml=invOpenHtml; invOpenHtml=inv=>_invOpenHtml(inv)+payHtml(inv);
+
+/* ---------- Filialen ---------- */
+const LOC_KEY='fyf-location';
+const locations=()=>S.locations=S.locations||[];
+const myLoc=()=>{ try{ const v=localStorage.getItem(LOC_KEY); return locations().some(l=>l.id===v)?v:''; }catch(e){ return ''; } };
+function tagLoc(){ const l=myLoc(); if(!l) return; ['customers','sessions','workshop'].forEach(k=>(S[k]||[]).forEach(x=>{ if(x&&!x.loc) x.loc=l; })); }
+const _save=save; save=function(){ try{ tagLoc(); }catch(e){} return _save.apply(this,arguments); };
+function filialHtml(){ const L=locations(), me=myLoc(), m=today().slice(0,7);
+  const cnt=(id,arr,f)=>(S[arr]||[]).filter(x=>(id==='_'?!x.loc:x.loc===id)&&(!f||f(x))).length;
+  const rows=[...L.map(l=>[l.id,l.name]),...(L.length?[['_','ohne Filiale (ältere Einträge)']]:[])];
+  return `<div class="stack">${L.length?`<div class="tw"><table><thead><tr><th>Filiale</th><th class="r">Kunden</th><th class="r">Fittings ${esc(m)}</th><th class="r">Fittings gesamt</th><th class="r">Werkstatt offen</th></tr></thead><tbody>${rows.map(([id,n])=>`<tr><td>${esc(n)}${id===me?' <span class="chip nodot c-ok">dieses Gerät</span>':''}</td><td class="r num">${cnt(id,'customers')}</td><td class="r num">${cnt(id,'sessions',s=>String(s.date).slice(0,7)===m&&s.status==='abgeschlossen')}</td><td class="r num">${cnt(id,'sessions',s=>s.status==='abgeschlossen')}</td><td class="r num">${cnt(id,'workshop',w=>w.status!=='Übergeben')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted" style="margin:0">Nur ein Standort. Lege Filialen an, wenn du mehrere Läden hast.</p>'}
+   ${L.length?`<div class="field"><label for="loc_me">Dieses Gerät arbeitet in</label><select class="input" id="loc_me" data-change="locMe"><option value="">– keine Zuordnung –</option>${opts(L.map(l=>[l.id,l.name]),me)}</select></div>`:''}
+   <form class="form" data-form="locAdd"><div class="field"><label for="loc_n">Neue Filiale</label><input class="input" id="loc_n" name="name" required maxlength="80" placeholder="z. B. Erlangen Innenstadt"></div><div class="field"><label for="loc_a">Adresse</label><input class="input" id="loc_a" name="addr" maxlength="160"></div><div class="wide"><button class="btn" type="submit">${ic('plus')} Filiale anlegen</button></div></form>
+   <p class="faint" style="font-size:12px;margin:0">Neue Kunden, Fittings und Werkstattaufträge bekommen die Filiale des Geräts. Abrechnung: 99 € je Standort und Monat. Bestand je Filiale und Umlagerung kommen später.</p></div>`; }
+
+/* ---------- Import & Export ---------- */
+function csvParse(t){ const rows=[]; let r=[], f='', q=false; t=String(t||'').replace(/^﻿/,''); const sep=(t.split('\n')[0].split(';').length>t.split('\n')[0].split(',').length)?';':',';
+  for(let i=0;i<t.length;i++){ const c=t[i]; if(q){ if(c==='"'){ if(t[i+1]==='"'){ f+='"'; i++; } else q=false; } else f+=c; } else if(c==='"') q=true; else if(c===sep){ r.push(f); f=''; } else if(c==='\n'||c==='\r'){ if(c==='\r'&&t[i+1]==='\n') i++; r.push(f); rows.push(r); r=[]; f=''; } else f+=c; }
+  if(f||r.length){ r.push(f); rows.push(r); } return rows.filter(x=>x.some(v=>String(v).trim())); }
+const csvLine=a=>a.map(v=>{ v=String(v??''); return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }).join(';');
+function importHtml(){ const pv=ui.impPreview;
+  return `<div class="stack"><p class="muted" style="margin:0;font-size:14px">Kunden aus einer Tabelle übernehmen (CSV aus Excel, Numbers oder deinem Kassensystem). Erste Zeile = Spaltennamen. Erkannt werden: Name (oder Vorname + Nachname), E-Mail, Telefon.</p>
+   <label class="btn" style="width:max-content">CSV-Datei wählen<input type="file" accept=".csv,text/csv,text/plain" data-change="impFile" hidden></label>
+   ${pv?`<div class="notice">${ic('info')}<span>${pv.rows.length} Kunden erkannt, davon ${pv.dupes} schon vorhanden (gleiche E-Mail) – die werden übersprungen.</span></div>
+     <div class="tw"><table><thead><tr><th>Name</th><th>E-Mail</th><th>Telefon</th></tr></thead><tbody>${pv.rows.slice(0,8).map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.email)}</td><td>${esc(r.phone)}</td></tr>`).join('')}</tbody></table></div>
+     <div class="row" style="gap:6px"><button class="btn primary" data-act="impGo">${pv.rows.length-pv.dupes} Kunden übernehmen</button><button class="btn ghost" data-act="impCancel">Abbrechen</button></div>
+     <p class="faint" style="font-size:12px;margin:0">Einwilligungen (Fotos, Portal) werden nicht übernommen und bleiben aus.</p>`:''}
+   <hr><div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="expCust">Kunden (CSV)</button><button class="btn sm" data-act="expProd">Produkte (CSV)</button><button class="btn sm" data-act="expInv">Rechnungsliste für Buchhaltung (CSV)</button></div>
+   <p class="faint" style="font-size:12px;margin:0">Die Rechnungsliste ist kein offizielles DATEV-Format. Frag deinen Steuerberater, ob er sie so übernehmen kann; die E-Rechnungen (XML) bekommt er einzeln aus „Rechnungen“.</p></div>`; }
+
+/* ---------- Händlerprofil, Anfragen, Marketing ---------- */
+let NET={at:0,profile:null,inq:[],plat:null,err:'',busy:false};
+const SERVICES=['Bikefitting','Quick-Fit Übergabe','Werkstatt','E-Bike-Service','Fahrwerk-Service','Verkauf Neuräder','Gebrauchträder','Leasing/Dienstrad'];
+function finderLink(slug){ const base=location.origin+location.pathname.replace(/[^/]*$/,''); return base+'finder.html#cfg='+b64u(JSON.stringify({u:clBase(),k:CL.key}))+(slug?'&d='+encodeURIComponent(slug):''); }
+async function netLoad(){ if(!cloudReady()||NET.busy) return; NET.busy=true;
+  try{ const p=await clApi(`/rest/v1/dealer_profiles?tenant_id=eq.${encodeURIComponent(CL.tenant)}&select=*`,{method:'GET'}); NET.profile=(p&&p[0])||null;
+    NET.inq=await clApi(`/rest/v1/inquiries?tenant_id=eq.${encodeURIComponent(CL.tenant)}&select=*&order=created_at.desc&limit=100`,{method:'GET'})||[];
+    const ps=await clApi('/rest/v1/rpc/my_platform_state',{method:'POST',body:'{}'}); NET.plat=(ps&&ps[0])||{verified:false,platform_admin:false};
+    NET.err=''; }catch(e){ NET.err=e.offline?'Keine Verbindung.':netErr(e); }
+  NET.at=Date.now(); NET.busy=false; if(['netz','boerse'].includes(ui.route)) render(); }
+VIEWS.netz = () => { if(!cloudReady()) return head('Händlerprofil & Anfragen','Dein öffentliches Profil, Anfragen von Kunden und Werbung.')+noCloudHtml('Das Händlerprofil');
+  if(!NET.at){ setTimeout(netLoad,20); return head('Händlerprofil & Anfragen','')+panel('','<p class="muted">Wird geladen …</p>'); }
+  if(NET.err) return head('Händlerprofil & Anfragen','')+panel('',`<p class="notice warn">${ic('warn')}<span>${esc(NET.err)}</span></p><button class="btn sm" data-act="netReload">Erneut laden</button>`);
+  const p=NET.profile||{name:shopName(),services:[],published:false}, adm=CL.role==='admin', nNew=NET.inq.filter(q=>q.status==='neu').length, pub=products().filter(x=>x.pub);
+  return `${head('Händlerprofil & Anfragen',`Öffentliche Seite deines Ladens in der Händlersuche von ${esc(BRAND.platform)}.`)}
+  <div class="grid g2">
+  ${panel('Status',`<div class="stack"><div class="row" style="gap:6px;flex-wrap:wrap">${p.published?'<span class="chip nodot c-ok">öffentlich</span>':'<span class="chip nodot">nicht veröffentlicht</span>'}${p.partner?'<span class="chip nodot">Partner</span>':''}${p.certified?'<span class="chip nodot c-ok">FYF Certified Fitter</span>':''}${NET.plat&&NET.plat.verified?'<span class="chip nodot c-ok">geprüft · Händlerbörse frei</span>':'<span class="chip nodot">noch nicht geprüft</span>'}</div>
+    <p class="muted" style="margin:0;font-size:13.5px">„Partner“: jeder Laden mit Profil. „FYF Certified Fitter“ und „geprüft“ vergibt die Plattform erst nach einer echten Prüfung.</p>
+    ${p.slug?`<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="netLinkCopy">Link zur Profilseite kopieren</button><button class="btn sm" data-act="netQR">QR-Code fürs Schaufenster</button></div>`:''}</div>`)}
+  ${panel(`Anfragen${nNew?` · ${nNew} neu`:''}`,`<div class="stack" style="gap:0">${NET.inq.length?NET.inq.slice(0,30).map(q=>`<div style="padding:9px 0;border-bottom:1px solid var(--line,#e5e0d8)"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-weight:600">${esc(q.name)} · ${esc(q.topic)}</b><select class="input" style="width:auto" data-change="inqStatus" data-id="${esc(q.id)}" aria-label="Status">${opts(['neu','in Arbeit','erledigt','Spam'],q.status)}</select></div>
+    <div class="muted" style="font-size:13px">${new Date(q.created_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${/@/.test(q.contact)?`<a href="mailto:${esc(q.contact)}">${esc(q.contact)}</a>`:`<a href="tel:${esc(q.contact.replace(/[^\d+]/g,''))}">${esc(q.contact)}</a>`}${q.product_id?' · Produkt: '+esc((products().find(x=>x.id===q.product_id)||{name:q.product_id}).name):''}</div>
+    <div style="white-space:pre-wrap;font-size:14px;margin-top:4px">${esc(q.message)}</div></div>`).join(''):'<p class="muted" style="margin:0">Noch keine Anfragen. Sie kommen über deine öffentliche Profilseite.</p>'}</div>`)}
+  </div>
+  ${adm?panel('Profil bearbeiten',`<form class="form" data-form="profileSave">
+    <div class="field wide"><label for="pf_n">Name des Ladens</label><input class="input" id="pf_n" name="name" value="${esc(p.name||shopName())}" required maxlength="120"></div>
+    <div class="field"><label for="pf_s">Adresse der Profilseite (Kurzname)</label><input class="input" id="pf_s" name="slug" value="${esc(p.slug||String(p.name||shopName()).toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''))}" required pattern="[a-zA-Z0-9-]{3,61}"></div>
+    <div class="field"><label for="pf_st">Straße</label><input class="input" id="pf_st" name="street" value="${esc(p.street||'')}"></div>
+    <div class="field"><label for="pf_z">PLZ</label><input class="input" id="pf_z" name="zip" value="${esc(p.zip||'')}" inputmode="numeric" maxlength="5"></div>
+    <div class="field"><label for="pf_c">Ort</label><input class="input" id="pf_c" name="city" value="${esc(p.city||'')}" required></div>
+    <div class="field"><label for="pf_p">Telefon</label><input class="input" id="pf_p" name="phone" value="${esc(p.phone||(S.shop&&S.shop.phone)||'')}"></div>
+    <div class="field"><label for="pf_e">E-Mail</label><input class="input" id="pf_e" name="email" type="email" value="${esc(p.email||(S.shop&&S.shop.email)||'')}"></div>
+    <div class="field"><label for="pf_w">Website</label><input class="input" id="pf_w" name="web" value="${esc(p.web||'')}" inputmode="url"></div>
+    <div class="field wide"><label for="pf_h">Öffnungszeiten</label><input class="input" id="pf_h" name="hours" value="${esc(p.hours||'')}" maxlength="500" placeholder="Mo–Fr 9–18, Sa 9–14"></div>
+    <div class="field wide"><label for="pf_a">Über uns</label><textarea class="input" id="pf_a" name="about" rows="4" maxlength="1500">${esc(p.about||'')}</textarea></div>
+    <div class="field wide"><span class="label">Leistungen</span><div class="row" style="gap:10px;flex-wrap:wrap">${SERVICES.map(s=>`<label class="row" style="gap:6px;flex-wrap:nowrap"><input type="checkbox" name="svc" value="${esc(s)}" ${(p.services||[]).includes(s)?'checked':''}>${esc(s)}</label>`).join('')}</div></div>
+    <label class="row wide" style="gap:8px;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" name="published" ${p.published?'checked':''} style="margin-top:4px"><span>Profil öffentlich zeigen<br><span class="muted" style="font-size:13px">Sichtbar sind nur die Felder oben und Produkte, die du unter „Öffentliche Produkte“ freigibst.</span></span></label>
+    <div class="wide"><button class="btn primary" type="submit">Speichern</button></div></form>`):''}
+  ${panel(`Öffentliche Produkte (${pub.length})`,`<div class="stack"><p class="muted" style="margin:0;font-size:13.5px">Freigegebene Produkte erscheinen mit Preis (inkl. MwSt.) auf deiner Profilseite. Kunden können dazu eine Anfrage schicken – keine Bestellung, keine Bezahlung.</p>
+    <div class="stack" style="gap:0;max-height:420px;overflow:auto">${products().map(x=>`<label class="row" style="gap:8px;flex-wrap:nowrap;padding:6px 0;border-bottom:1px solid var(--line,#e5e0d8)"><input type="checkbox" data-change="prodPub" data-id="${esc(x.id)}" ${x.pub?'checked':''} ${adm?'':'disabled'}><span class="grow">${esc(x.name)} <span class="faint">· ${esc(x.cat||'')}</span></span><span class="num">${eur(x.price)}</span></label>`).join('')}</div></div>`)}
+  ${NET.plat&&NET.plat.platform_admin?platformHtml():''}`; };
+
+/* ---------- Plattform-Verwaltung (nur Plattform-Admins) ---------- */
+let PLAT={at:0,list:[],err:''};
+async function platLoad(){ try{ PLAT.list=await clApi('/rest/v1/rpc/platform_tenants',{method:'POST',body:'{}'})||[]; PLAT.err=''; }catch(e){ PLAT.err=netErr(e); } PLAT.at=Date.now(); render(); }
+function platformHtml(){ if(!PLAT.at){ setTimeout(platLoad,20); return panel('Plattform-Verwaltung','<p class="muted">Wird geladen …</p>'); }
+  return panel('Plattform-Verwaltung',`<div class="stack" style="gap:0">${PLAT.err?`<p class="notice warn">${esc(PLAT.err)}</p>`:''}${PLAT.list.map(t=>`<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line,#e5e0d8)"><span><b style="font-weight:600">${esc(t.name)}</b><br><span class="muted" style="font-size:12.5px">${t.members} Mitglieder · ${t.published?'Profil öffentlich':'kein öffentliches Profil'} · seit ${fmtDate(String(t.created_at).slice(0,10))}</span></span>
+   <span class="row" style="gap:10px"><label class="row" style="gap:6px"><input type="checkbox" data-change="platSet" data-id="${esc(t.id)}" data-f="verified" ${t.verified?'checked':''}>geprüft</label><label class="row" style="gap:6px"><input type="checkbox" data-change="platSet" data-id="${esc(t.id)}" data-f="certified" ${t.certified?'checked':''} ${t.slug?'':'disabled'}>Certified Fitter</label></span></div>`).join('')}
+   <p class="faint" style="font-size:12px;margin:8px 0 0">„Geprüft“ erst nach Kontrolle von Gewerbe/Impressum. „Certified Fitter“ erst nach bestandener Prüfung.</p></div>`); }
+
+/* ---------- Händlerbörse ---------- */
+let TR={at:0,offers:[],reqs:[],names:{},err:'',busy:false};
+const TR_CATS=['Kompletträder','Rahmen','Antrieb','Bremsen','Laufräder & Reifen','Cockpit & Sattel','Bekleidung','Zubehör','Werkzeug','Sonstiges'];
+async function trLoad(){ if(TR.busy) return; TR.busy=true;
+  try{ const ps=await clApi('/rest/v1/rpc/my_platform_state',{method:'POST',body:'{}'}); NET.plat=(ps&&ps[0])||{};
+    if(NET.plat.verified){ TR.offers=await clApi('/rest/v1/trade_offers?select=*&order=created_at.desc&limit=300',{method:'GET'})||[]; TR.reqs=await clApi('/rest/v1/trade_requests?select=*&order=created_at.desc&limit=300',{method:'GET'})||[];
+      const n=await clApi('/rest/v1/rpc/trade_names',{method:'POST',body:'{}'})||[]; TR.names=Object.fromEntries(n.map(x=>[x.tenant_id,x])); }
+    TR.err=''; }catch(e){ TR.err=e.offline?'Keine Verbindung.':netErr(e); }
+  TR.at=Date.now(); TR.busy=false; if(ui.route==='boerse') render(); }
+VIEWS.boerse = () => { const H=head('Händlerbörse','Restposten, Vorführräder und Überbestände unter geprüften Händlern. Nicht öffentlich.');
+  if(!cloudReady()) return H+noCloudHtml('Die Händlerbörse');
+  if(!TR.at){ setTimeout(trLoad,20); return H+panel('','<p class="muted">Wird geladen …</p>'); }
+  if(TR.err) return H+panel('',`<p class="notice warn">${ic('warn')}<span>${esc(TR.err)}</span></p><button class="btn sm" data-act="trReload">Erneut laden</button>`);
+  if(!NET.plat||!NET.plat.verified) return H+panel('',`<div class="notice">${ic('info')}<span>Die Börse ist nur für geprüfte Läden. Lege zuerst dein Händlerprofil an. Die Plattform prüft deinen Laden (Gewerbe, Impressum) und schaltet die Börse dann frei.</span></div><div style="margin-top:8px"><button class="btn sm" data-nav="netz">Zum Händlerprofil</button></div>`);
+  const q=(ui.trq||'').toLowerCase(), cat=ui.trCat||'alle', mine=o=>o.tenant_id===CL.tenant, nm=id=>(TR.names[id]||{}).name||'Laden', city=id=>(TR.names[id]||{}).city||'';
+  const others=TR.offers.filter(o=>!mine(o)&&o.status==='aktiv'&&(cat==='alle'||o.category===cat)&&(!q||(o.title+' '+(o.note||'')).toLowerCase().includes(q)));
+  const own=TR.offers.filter(mine), ownIds=new Set(own.map(o=>o.id)), inReq=TR.reqs.filter(r=>ownIds.has(r.offer_id)), outReq=TR.reqs.filter(r=>r.from_tenant===CL.tenant), oT=id=>(TR.offers.find(o=>o.id===id)||{title:'(beendet)'}).title;
+  const canPost=['admin','fitter'].includes(CL.role);
+  return `${H}
+  ${panelFlush('Angebote anderer Händler',`<div class="panel-h"><div class="row"><input class="input search" type="search" id="trq" data-input="trq" placeholder="Suchen" value="${esc(ui.trq||'')}"><select class="input" style="width:auto" data-change="trCat" aria-label="Kategorie">${opts([['alle','Alle Kategorien'],...TR_CATS.map(c=>[c,c])],cat)}</select></div><button class="btn sm" data-act="trReload">Aktualisieren</button></div>
+   <div class="stack" style="gap:0;padding:0 16px 8px">${others.length?others.map(o=>`<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line,#e5e0d8)"><span style="flex:1 1 220px"><b style="font-weight:600">${esc(o.title)}</b><br><span class="muted" style="font-size:13px">${esc(o.category)} · ${esc(o.condition)} · ${o.qty} Stk.${o.price_net!=null?' · '+eur(o.price_net)+' netto/Stk.':''} · ${esc(nm(o.tenant_id))}${city(o.tenant_id)?', '+esc(city(o.tenant_id)):''}</span>${o.note?`<br><span style="font-size:13px">${esc(o.note)}</span>`:''}</span><button class="btn sm" data-act="trAsk" data-id="${o.id}">Anfragen</button></div>`).join(''):'<p class="muted">Keine passenden Angebote.</p>'}</div>`)}
+  <div class="grid g2">
+  ${panel(`Meine Angebote (${own.length})`,`<div class="stack">${own.map(o=>`<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b style="font-weight:600">${esc(o.title)}</b><br><span class="muted" style="font-size:13px">${o.qty} Stk. · ${o.price_net!=null?eur(o.price_net)+' netto':'Preis auf Anfrage'}</span></span>${canPost?`<select class="input" style="width:auto" data-change="trOfferStatus" data-id="${o.id}" aria-label="Status">${opts(['aktiv','reserviert','verkauft','beendet'],o.status)}</select>`:`<span class="chip nodot">${esc(o.status)}</span>`}</div>`).join('')||'<p class="muted" style="margin:0">Noch keine.</p>'}
+    ${canPost?`<div><button class="btn sm" data-act="trNew">${ic('plus')} Angebot einstellen</button></div>`:'<p class="faint" style="font-size:12px;margin:0">Angebote einstellen dürfen Admin und Fitter.</p>'}</div>`)}
+  ${panel('Anfragen',`<div class="stack">${inReq.length?`<b style="font-size:14px">An mich</b>${inReq.map(r=>`<div><div>${esc(nm(r.from_tenant))}: ${r.qty} × ${esc(oT(r.offer_id))}${r.price_net!=null?' · Vorschlag '+eur(r.price_net)+' netto':''}</div>${r.message?`<div class="muted" style="font-size:13px">${esc(r.message)}</div>`:''}<div class="row" style="gap:6px;margin-top:4px;flex-wrap:wrap"><span class="chip nodot">${esc(r.status)}</span>${r.status==='offen'?`<button class="btn sm" data-act="trAnswer" data-id="${r.id}" data-s="angenommen">Annehmen</button><button class="btn sm ghost" data-act="trAnswer" data-id="${r.id}" data-s="abgelehnt">Ablehnen</button>`:''}<button class="btn sm ghost" data-act="trContact" data-id="${r.id}">Kontakt</button></div></div>`).join('')}`:''}
+    ${outReq.length?`<b style="font-size:14px">Von mir</b>${outReq.map(r=>`<div><div>${r.qty} × ${esc(oT(r.offer_id))}</div><div class="row" style="gap:6px;margin-top:4px;flex-wrap:wrap"><span class="chip nodot">${esc(r.status)}</span>${r.status==='offen'?`<button class="btn sm ghost" data-act="trAnswer" data-id="${r.id}" data-s="zurückgezogen">Zurückziehen</button>`:''}<button class="btn sm ghost" data-act="trContact" data-id="${r.id}">Kontakt</button></div></div>`).join('')}`:''}
+    ${!inReq.length&&!outReq.length?'<p class="muted" style="margin:0">Noch keine Anfragen.</p>':''}
+    <p class="faint" style="font-size:12px;margin:0">Kauf, Rechnung und Versand macht ihr direkt miteinander. Die Börse vermittelt nur den Kontakt.</p></div>`)}
+  </div>`; };
+function trOfferDrawer(){ openDrawer('Angebot einstellen',`<form class="form" data-form="trOffer">
+  <div class="field wide"><label for="to_t">Was</label><input class="input" id="to_t" name="title" required minlength="3" maxlength="120" placeholder="z. B. Shimano 105 Kassette 11-fach 11-32"></div>
+  <div class="field"><label for="to_c">Kategorie</label><select class="input" id="to_c" name="category">${opts(TR_CATS,'Sonstiges')}</select></div>
+  <div class="field"><label for="to_z">Zustand</label><select class="input" id="to_z" name="condition">${opts(['neu','neu ohne OVP','Vorführware','gebraucht'],'neu')}</select></div>
+  <div class="field"><label for="to_q">Menge</label><input class="input num" id="to_q" name="qty" type="number" min="1" value="1" required></div>
+  <div class="field"><label for="to_p">Preis netto je Stück € (leer = auf Anfrage)</label><input class="input num" id="to_p" name="price_net" type="number" min="0" step="0.01"></div>
+  <div class="field wide"><label for="to_n">Beschreibung</label><textarea class="input" id="to_n" name="note" rows="3" maxlength="1000"></textarea></div>
+  <div class="wide"><button class="btn primary" type="submit">Einstellen</button></div></form>`); }
+function trAskDrawer(id){ const o=TR.offers.find(x=>x.id===id); if(!o) return; openDrawer('Anfrage an Händler',`<form class="form" data-form="trAsk" data-id="${esc(id)}"><p class="wide" style="margin:0"><b>${esc(o.title)}</b> · ${o.qty} Stk.${o.price_net!=null?' · '+eur(o.price_net)+' netto':''}</p>
+  <div class="field"><label for="ta_q">Menge</label><input class="input num" id="ta_q" name="qty" type="number" min="1" max="${o.qty}" value="1" required></div>
+  <div class="field"><label for="ta_p">Dein Preisvorschlag netto € (optional)</label><input class="input num" id="ta_p" name="price" type="number" min="0" step="0.01"></div>
+  <div class="field wide"><label for="ta_m">Nachricht</label><textarea class="input" id="ta_m" name="message" rows="3" maxlength="1000"></textarea></div>
+  <div class="wide"><button class="btn primary" type="submit">Anfrage senden</button></div></form>`); }
+
+/* ---------- Academy ---------- */
+const ACADEMY=[
+ {id:'fyf1',course:'FYF Bikefitting mit der Software',title:'Der Ablauf in fünf Schritten',text:'Ein Fitting in FYF läuft immer gleich: Ziel (Beschwerden, Ziele, Fahrprofil), Körper (Maße, Beweglichkeit, Sitzknochen, Füße), Messen (Ausgangsposition am Rad), Anpassen (jede Änderung mit Grund) und Ergebnis (Vergleich vorher/nachher, Bericht). Unter „Fitting“ führt dich die App Schritt für Schritt.',quiz:[['Was kommt im FYF-Ablauf vor dem Messen am Rad?',['Ziel und Körper','Bericht','Rechnung'],0]]},
+ {id:'fyf2',course:'FYF Bikefitting mit der Software',title:'Messen mit Doppelmessung',text:'Wichtige Werte misst du zweimal. Weichen die beiden Messungen zu stark voneinander ab, zeigt FYF das an und du misst noch einmal. Zu jedem Wert speichert FYF die Methode und das Messmittel, damit später nachvollziehbar ist, woher er kommt.',quiz:[['Was speichert FYF zu jedem Messwert zusätzlich?',['Methode und Messmittel','Nur die Uhrzeit','Nichts'],0]]},
+ {id:'fyf3',course:'FYF Bikefitting mit der Software',title:'Sattelhöhe: Kniewinkel statt Faustformel',text:'FYF leitet die Sattelhöhe nicht allein aus der Schrittlänge ab. Grundlage sind der gemessene Kniewinkel am Rad und ein Beinmodell. Die Schrittlänge dient nur als Startwert und Plausibilitätsprüfung.',quiz:[['Worauf stützt FYF die Sattelhöhe?',['Kniewinkel und Beinmodell','Nur Schrittlänge × Faktor','Körpergröße'],0]]},
+ {id:'fyf4',course:'FYF Bikefitting mit der Software',title:'Änderungen dokumentieren und nachkontrollieren',text:'Jede Anpassung wird mit vorher, nachher und Grund festgehalten. Nach dem Fitting plant FYF Nachkontrollen. Unter „Nachkontrollen“ siehst du, wer wann wieder dran ist.',quiz:[['Was gehört zu jeder Anpassung?',['Vorher, nachher und Grund','Nur der neue Wert','Ein Foto'],0]]},
+ {id:'shop1',course:'Laden & Verwaltung',title:'Rechnungen und E-Rechnung',text:'Rechnungen bekommen eine fortlaufende Nummer und werden nie geändert, nur storniert. Die E-Rechnung (XRechnung) lädst du unter „Rechnungen“ herunter. Zahlungen, auch Teil- und Anzahlungen, erfasst du direkt an der Rechnung.',quiz:[['Wie korrigierst du eine falsche Rechnung?',['Stornieren und neu ausstellen','Einfach ändern','Löschen'],0]]},
+ {id:'shop2',course:'Laden & Verwaltung',title:'Team und Rollen',text:'Der Admin lädt Mitarbeiter per E-Mail ein und vergibt die Rolle: Admin (alles), Fitter (keine Kunden löschen, keine Produktliste ändern) oder Mitarbeiter (messen und dokumentieren). Mit Cloud prüft der Server die wichtigsten Rechte.',quiz:[['Wer vergibt die Rollen?',['Der Admin','Jeder selbst','Der Kunde'],0]]}];
+const acadKey=()=>(CL&&CL.session&&CL.session.email)||'dieses Gerät';
+const acad=()=>{ S.academy=S.academy||{}; return S.academy[acadKey()]=S.academy[acadKey()]||{done:{},name:''}; };
+VIEWS.academy = () => { const A=acad(), courses=[...new Set(ACADEMY.map(l=>l.course))], open=ui.acadOpen, done=Object.keys(A.done).length;
+  return `${head('Academy',`Lernpfade für dich und dein Team. ${done} von ${ACADEMY.length} Lektionen abgeschlossen (${esc(acadKey())}).`)}
+  ${courses.map(c=>{ const L=ACADEMY.filter(l=>l.course===c), d=L.filter(l=>A.done[l.id]).length; return panel(`${esc(c)} · ${d}/${L.length}`,`<div class="stack" style="gap:0">${L.map(l=>`<div style="padding:9px 0;border-bottom:1px solid var(--line,#e5e0d8)"><button class="row" style="all:unset;cursor:pointer;display:flex;gap:8px;align-items:center;width:100%" data-act="acadOpen" data-id="${l.id}">${A.done[l.id]?'<span class="chip nodot c-ok">✓</span>':'<span class="chip nodot">○</span>'}<b style="font-weight:600">${esc(l.title)}</b></button>
+    ${open===l.id?`<div class="stack" style="margin-top:8px"><p style="margin:0;max-width:70ch">${esc(l.text)}</p>${l.quiz.map((qq,qi)=>`<div><b style="font-size:14px">Frage: ${esc(qq[0])}</b><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${qq[1].map((a,ai)=>`<button class="btn sm" data-act="acadAnswer" data-id="${l.id}" data-q="${qi}" data-a="${ai}">${esc(a)}</button>`).join('')}</div></div>`).join('')}</div>`:''}</div>`).join('')}
+    ${d===L.length?`<div style="margin-top:10px"><button class="btn sm" data-act="acadCert" data-c="${esc(c)}">Teilnahmebestätigung</button></div>`:''}</div>`); }).join('')}
+  <p class="faint" style="font-size:12px">Die Teilnahmebestätigung bestätigt das Durcharbeiten der Lektionen. Sie ist keine Zertifizierung. „FYF Certified Fitter“ gibt es nur nach einer praktischen Prüfung.</p>`; };
+
+/* ---------- Aktionen ---------- */
+Object.assign(ACT,{
+  lifeEvent(el){ lifeEventDrawer(el.dataset.id); }, lifeEdit(el){ lifeEditDrawer(el.dataset.id); },
+  lifeDel(el){ const b=bike(el.dataset.id); b.events=(b.events||[]).filter(e=>e.id!==el.dataset.e); audit(`Lebenslauf-Eintrag gelöscht: ${b.model}`); save(); bikeDrawer(b.id); },
+  supEdit(el){ supDrawer(el.dataset.id||''); }, goodsIn(){ if(!S.inventory.length){ toast('Erst einen Artikel anlegen',true); return; } goodsInDrawer(); }, stocktake(){ stocktakeDrawer(); },
+  movesCsv(){ download('Lagerbewegungen.csv','﻿'+[csvLine(['Zeit','Artikelnummer','Artikel','Art','Menge','Beleg','Wer']),...moves().map(m=>csvLine([m.date,m.sku,(S.inventory.find(i=>i.sku===m.sku)||{}).name||'',m.kind,m.qty,m.ref,m.who]))].join('\n'),'text/csv'); },
+  orderCopy(){ const sg=orderSuggest(), sn=id=>(suppliers().find(s=>s.id===id)||{}).name||'ohne Lieferant'; const t=Object.entries(sg).map(([k,L])=>sn(k)+'\n'+L.map(x=>`${x.need} × ${x.name} (${x.sku})`).join('\n')).join('\n\n');
+    try{ navigator.clipboard.writeText(t).then(()=>toast('Bestellliste kopiert'),()=>openDrawer('Bestellliste',`<pre style="white-space:pre-wrap">${esc(t)}</pre>`)); }catch(e){ openDrawer('Bestellliste',`<pre style="white-space:pre-wrap">${esc(t)}</pre>`); } },
+  payUndo(el){ const p=payments().find(x=>x.id===el.dataset.id); if(!p) return; const inv=invoices().find(i=>i.id===p.invId);
+    payments().unshift({id:uid('pay'),invId:p.invId,date:today(),amount:-Number(p.amount),method:p.method,kind:'Rücknahme',note:'zu '+fmtDate(p.date)}); if(inv&&inv.status==='bezahlt'){ inv.status='offen'; delete inv.paidAt; }
+    audit(`Zahlung zurückgenommen: ${inv?inv.no:''} ${eur(p.amount)}`); save(); render(); if(inv) openDrawer('Rechnung '+inv.no,invOpenHtml(inv)); },
+  impGo(){ const pv=ui.impPreview; if(!pv) return; const have=new Set(S.customers.map(c=>String(c.email||'').toLowerCase()).filter(Boolean)); let n=0;
+    pv.rows.forEach(r=>{ if(r.email&&have.has(r.email.toLowerCase())) return; S.customers.push({id:uid('c'),name:r.name,email:r.email,phone:r.phone,since:today(),discipline:'',consent:false,imported:today()}); if(r.email) have.add(r.email.toLowerCase()); n++; });
+    ui.impPreview=null; audit(`${n} Kunden importiert`); save(); render(); toast(`${n} Kunden übernommen`); },
+  impCancel(){ ui.impPreview=null; render(); },
+  expCust(){ download('Kunden.csv','﻿'+[csvLine(['Name','E-Mail','Telefon','Kunde seit','Disziplin']),...S.customers.map(c=>csvLine([c.name,c.email,c.phone,c.since,c.discipline]))].join('\n'),'text/csv'); },
+  expProd(){ download('Produkte.csv','﻿'+[csvLine(['ID','Kategorie','Name','Preis','Öffentlich']),...products().map(p=>csvLine([p.id,p.cat,p.name,String(p.price).replace('.',','),p.pub?'ja':'nein']))].join('\n'),'text/csv'); },
+  expInv(){ download('Rechnungsliste.csv','﻿'+[csvLine(['Datum','Nummer','Art','Kunde','Netto','USt','Brutto','Status','bezahlt'])].concat(invoices().map(i=>{ const c=invCalc(i), s=i.type==='storno'?-1:1, f=v=>(s*v).toFixed(2).replace('.',','); return csvLine([fmtDate(i.date),i.no,i.type==='storno'?'Storno':'Rechnung',(i.buyer&&i.buyer.name)||'',f(c.basis),f(c.tax),f(c.total),i.status,paidOf(i).toFixed(2).replace('.',',')]); })).join('\n'),'text/csv'); },
+  netReload(){ NET.at=0; render(); }, trReload(){ TR.at=0; render(); },
+  netLinkCopy(){ const l=finderLink(NET.profile&&NET.profile.slug); try{ navigator.clipboard.writeText(l).then(()=>toast('Link kopiert'),()=>openDrawer('Link',`<p style="word-break:break-all">${esc(l)}</p>`)); }catch(e){ openDrawer('Link',`<p style="word-break:break-all">${esc(l)}</p>`); } },
+  netQR(){ const l=finderLink(NET.profile&&NET.profile.slug); let q=''; try{ q=qrSvg(l); }catch(e){ q='<p class="muted">QR-Code konnte nicht erzeugt werden (offline?).</p>'; }
+    openDrawer('QR-Code zu deinem Profil',`<div class="stack"><div style="max-width:280px;margin:0 auto">${q}</div><p class="muted" style="font-size:13.5px">Für Schaufenster, Theke oder Visitenkarte. Kunden sehen dein Profil und können direkt eine Anfrage schicken. Vor dem Drucken einmal mit dem Handy scannen.</p><button class="btn" data-act="netQRsave">Als Bild speichern (SVG)</button></div>`); },
+  netQRsave(){ try{ download('Profil-QR.svg',qrSvg(finderLink(NET.profile&&NET.profile.slug)),'image/svg+xml'); }catch(e){ toast('Nicht möglich',true); } },
+  trNew(){ trOfferDrawer(); }, trAsk(el){ trAskDrawer(el.dataset.id); },
+  async trAnswer(el){ try{ await clApi('/rest/v1/rpc/trade_request_answer',{method:'POST',body:JSON.stringify({p_id:el.dataset.id,p_status:el.dataset.s})}); toast('Gespeichert'); }catch(e){ toast(netErr(e),true); } TR.at=0; render(); },
+  async trContact(el){ try{ const r=await clApi('/rest/v1/rpc/trade_contact',{method:'POST',body:JSON.stringify({p_request:el.dataset.id})}); const c=r&&r[0]; if(!c){ toast('Kein Kontakt verfügbar',true); return; }
+    openDrawer('Kontakt',`<dl class="dl"><dt>Laden</dt><dd>${esc(c.name)}</dd><dt>Ort</dt><dd>${esc(c.city||'–')}</dd><dt>Telefon</dt><dd>${c.phone?`<a href="tel:${esc(c.phone.replace(/[^\d+]/g,''))}">${esc(c.phone)}</a>`:'–'}</dd><dt>E-Mail</dt><dd>${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:'–'}</dd></dl>`); }catch(e){ toast(netErr(e),true); } },
+  acadOpen(el){ ui.acadOpen=ui.acadOpen===el.dataset.id?null:el.dataset.id; render(); },
+  acadAnswer(el){ const l=ACADEMY.find(x=>x.id===el.dataset.id), q=l.quiz[+el.dataset.q]; if(+el.dataset.a===q[2]){ acad().done[l.id]=today(); save(); toast('Richtig – Lektion abgeschlossen'); ui.acadOpen=null; render(); } else toast('Leider falsch. Lies den Text noch einmal.',true); },
+  acadCert(el){ const c=el.dataset.c, A=acad(), L=ACADEMY.filter(l=>l.course===c); const who=A.name||acadKey(); const last=L.map(l=>A.done[l.id]).sort().pop();
+    const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
+    w.document.write(`<!doctype html><meta charset="utf-8"><title>Teilnahmebestätigung</title><body style="font-family:system-ui,sans-serif;max-width:640px;margin:60px auto;padding:0 20px;color:#1d2a30"><p style="letter-spacing:.1em;text-transform:uppercase;font-size:12px;color:#777">${esc(BRAND.platform)} Academy</p><h1 style="margin:.2em 0">Teilnahmebestätigung</h1><p style="font-size:18px">${esc(who)}</p><p>hat alle ${L.length} Lektionen des Lernpfads <b>${esc(c)}</b> durchgearbeitet und die Kontrollfragen beantwortet.</p><p>Abgeschlossen am ${fmtDate(last)}${shopName()?' · '+esc(shopName()):''}</p><p style="font-size:12px;color:#777;margin-top:40px">Dies ist eine Teilnahmebestätigung, keine Zertifizierung.</p><script>setTimeout(()=>print(),300)<\/script></body>`); w.document.close(); }
+});
+const _stockAct=ACT.stock; ACT.stock=function(el){ const x=S.inventory.find(i=>i.sku===el.dataset.sku), before=x?x.stock:null; _stockAct.call(this,el); if(x&&x.stock!==before){ moveAdd(x.sku,x.stock-before,'Korrektur','Plus/Minus'); save(); } };
+const _saveKm=ACT.saveKm; ACT.saveKm=function(el){ const b=bike(el.dataset.id), before=b&&b.km; _saveKm.call(this,el); if(b&&b.km!==before){ (b.kmLog=b.kmLog||[]).push({date:today(),km:b.km}); save(); } };
+
+Object.assign(FORMS,{
+  lifeEvent(f,d){ const b=bike(f.dataset.id); const km=d.get('km')===''?null:Number(d.get('km')); (b.events=b.events||[]).push({id:uid('ev'),date:d.get('date')||today(),kind:String(d.get('kind')),text:String(d.get('text')||'').trim().slice(0,200),km});
+    if(km!=null&&km>=0&&km>(Number(b.km)||0)){ b.km=km; (b.kmLog=b.kmLog||[]).push({date:d.get('date')||today(),km}); } audit(`Lebenslauf: ${d.get('kind')} – ${b.model}`); save(); bikeDrawer(b.id); toast('Gespeichert'); },
+  lifeEdit(f,d){ const b=bike(f.dataset.id); b.life={buy:d.get('buy')||'',seller:String(d.get('seller')||'').trim(),price:d.get('price')?Number(d.get('price')):null,warrantyUntil:d.get('warrantyUntil')||''}; audit(`Kauf & Garantie: ${b.model}`); save(); bikeDrawer(b.id); toast('Gespeichert'); },
+  supplier(f,d){ const g=k=>String(d.get(k)||'').trim(); const rec={name:g('name'),custNo:g('custNo'),contact:g('contact'),email:g('email'),phone:g('phone'),note:g('note')};
+    const s=f.dataset.id&&suppliers().find(x=>x.id===f.dataset.id); if(s) Object.assign(s,rec); else suppliers().push({id:uid('sup'),...rec}); audit(`Lieferant gespeichert: ${rec.name}`); save(); closeDrawer(); render(); toast('Gespeichert'); },
+  goodsIn(f,d){ const x=S.inventory.find(i=>i.sku===d.get('sku')); const q=Math.round(Number(d.get('qty'))); if(!x||!(q>0)){ toast('Menge prüfen',true); return; }
+    x.stock+=q; if(d.get('ek')!=='') x.ek=Number(d.get('ek')); if(d.get('sup')) x.supplierId=d.get('sup'); moveAdd(x.sku,q,'Eingang',String(d.get('ref')||'').trim()); audit(`Wareneingang ${x.name}: +${q}`); save(); closeDrawer(); render(); toast(`+${q} ${x.name}`); },
+  stocktake(f,d){ let n=0; S.inventory.forEach(x=>{ const v=d.get(x.sku); if(v===null||v==='') return; const c=Math.max(0,Math.round(Number(v))); if(c!==x.stock){ moveAdd(x.sku,c-x.stock,'Inventur',today()); x.stock=c; n++; } });
+    audit(`Inventur: ${n} Abweichungen`); save(); closeDrawer(); render(); toast(n?`${n} Bestände korrigiert`:'Keine Abweichungen'); },
+  payAdd(f,d){ const inv=invoices().find(i=>i.id===f.dataset.inv); if(!inv) return; const a=Math.round(Number(String(d.get('amount')).replace(',','.'))*100)/100, tot=invCalc(inv).total, open=Math.round((tot-paidOf(inv))*100)/100;
+    if(!(a>0)||a>open+0.004){ toast('Betrag prüfen (höchstens '+eur(open)+')',true); return; }
+    payments().unshift({id:uid('pay'),invId:inv.id,date:d.get('date')||today(),amount:a,method:String(d.get('method')),kind:String(d.get('kind')),note:String(d.get('note')||'').trim()});
+    if(Math.abs(open-a)<0.005&&inv.status==='offen'){ inv.status='bezahlt'; inv.paidAt=d.get('date')||today(); }
+    audit(`Zahlung ${inv.no}: ${eur(a)} ${d.get('method')}`); save(); render(); openDrawer('Rechnung '+inv.no,invOpenHtml(inv)); toast('Zahlung erfasst'); },
+  locAdd(f,d){ const n=String(d.get('name')||'').trim(); if(!n) return; const id=uid('loc'); locations().push({id,name:n,addr:String(d.get('addr')||'').trim()}); if(!myLoc()&&locations().length===1){ try{ localStorage.setItem(LOC_KEY,id); }catch(e){} } audit(`Filiale angelegt: ${n}`); save(); render(); toast('Filiale angelegt'); },
+  async profileSave(f,d){ const g=k=>String(d.get(k)||'').trim(); const p={slug:g('slug').toLowerCase(),name:g('name'),street:g('street'),zip:g('zip'),city:g('city'),phone:g('phone'),email:g('email'),web:g('web'),hours:g('hours'),about:g('about'),services:d.getAll('svc'),published:d.get('published')==='on'};
+    try{ await clApi('/rest/v1/rpc/save_profile',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p})}); audit('Händlerprofil gespeichert'); toast(p.published?'Gespeichert und öffentlich':'Gespeichert (nicht öffentlich)'); NET.at=0; render(); }catch(e){ toast(netErr(e),true); } },
+  async trOffer(f,d){ const g=k=>String(d.get(k)||'').trim(); try{ await clApi('/rest/v1/rpc/trade_offer_save',{method:'POST',body:JSON.stringify({p:{title:g('title'),category:g('category'),condition:g('condition'),qty:Number(g('qty')),price_net:g('price_net')||null,note:g('note')}})}); closeDrawer(); toast('Angebot eingestellt'); TR.at=0; render(); }catch(e){ toast(netErr(e),true); } },
+  async trAsk(f,d){ try{ await clApi('/rest/v1/rpc/trade_request_send',{method:'POST',body:JSON.stringify({p_offer:f.dataset.id,p_qty:Number(d.get('qty')),p_price:d.get('price')?Number(d.get('price')):null,p_message:String(d.get('message')||'').trim()})}); closeDrawer(); toast('Anfrage gesendet'); TR.at=0; render(); }catch(e){ toast(netErr(e),true); } }
+});
+Object.assign(CHG,{
+  locMe(el){ try{ if(el.value) localStorage.setItem(LOC_KEY,el.value); else localStorage.removeItem(LOC_KEY); }catch(e){} render(); toast('Gespeichert'); },
+  impFile(el){ const file=el.files&&el.files[0]; if(!file) return; const r=new FileReader(); r.onload=()=>{ const rows=csvParse(r.result); if(rows.length<2){ toast('Keine Daten gefunden',true); return; }
+    const h=rows[0].map(x=>String(x).trim().toLowerCase()); const ix=(...k)=>h.findIndex(x=>k.some(y=>x===y||x.includes(y)));
+    const iN=ix('name','kunde'), iV=ix('vorname','first'), iL=ix('nachname','last','familienname'), iE=ix('e-mail','email','mail'), iT=ix('telefon','phone','tel','handy','mobil');
+    const out=rows.slice(1).map(r=>{ const name=(iV>=0||iL>=0)?[r[iV]||'',r[iL]||''].join(' ').trim():(r[iN]||'').trim(); return {name:name.slice(0,120),email:String(r[iE]||'').trim().slice(0,120),phone:String(r[iT]||'').trim().slice(0,40)}; }).filter(x=>x.name.length>1);
+    if(!out.length){ toast('Keine Spalte „Name“ gefunden',true); return; }
+    const have=new Set(S.customers.map(c=>String(c.email||'').toLowerCase()).filter(Boolean)); ui.impPreview={rows:out,dupes:out.filter(x=>x.email&&have.has(x.email.toLowerCase())).length}; render(); }; r.readAsText(file); },
+  async inqStatus(el){ try{ await clApi('/rest/v1/rpc/set_inquiry_status',{method:'POST',body:JSON.stringify({p_id:el.dataset.id,p_status:el.value})}); const q=NET.inq.find(x=>x.id===el.dataset.id); if(q) q.status=el.value; toast('Gespeichert'); }catch(e){ toast(netErr(e),true); } },
+  prodPub(el){ const p=products().find(x=>x.id===el.dataset.id); if(!p) return; p.pub=el.checked; audit(`Produkt ${el.checked?'öffentlich':'nicht öffentlich'}: ${p.name}`); save(); },
+  trCat(el){ ui.trCat=el.value; render(); },
+  async trOfferStatus(el){ const o=TR.offers.find(x=>x.id===el.dataset.id); if(!o) return; try{ await clApi('/rest/v1/rpc/trade_offer_save',{method:'POST',body:JSON.stringify({p:{...o,status:el.value}})}); o.status=el.value; toast('Gespeichert'); }catch(e){ toast(netErr(e),true); } },
+  async platSet(el){ try{ await clApi('/rest/v1/rpc/platform_set',{method:'POST',body:JSON.stringify({p_tenant:el.dataset.id,p_field:el.dataset.f,p_on:el.checked})}); toast('Gespeichert'); }catch(e){ toast(netErr(e),true); el.checked=!el.checked; } }
+});
+DENY.Fitter.push('lifeDel','profileSave'); DENY.Mitarbeiter.push('lifeDel','payUndo','impGo','supEdit','stocktake');
+DENY_FORM.Fitter.push('profileSave'); DENY_FORM.Mitarbeiter.push('payAdd','profileSave','supplier','stocktake','locAdd');
+
+/* Bereiche in vorhandene Seiten einhängen */
+const _lager=VIEWS.lager; VIEWS.lager=()=>_lager()+wawiHtml();
+const _mehr=VIEWS.mehr; VIEWS.mehr=()=>_mehr()+panel('Filialen',filialHtml())+panel('Import & Export',importHtml());
+/* =================== Ende Plattform-Ausbau =================== */
+
 window.__fitframe={storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>

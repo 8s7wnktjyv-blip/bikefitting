@@ -28,6 +28,7 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
   - Jeder Auswahl-Test hat „nicht eindeutig“; das fließt nicht in die Auswertung ein.
   - Messwert, Beobachtung und Einschätzung des Fitters werden getrennt gespeichert und angezeigt. Hinweise von FYF sind Faustregeln, keine Diagnose.
 - Fotos und Videos je Kunde und je Rad. Nur mit eigener Einwilligung für Fotos/Videos. Gespeichert auf dem Gerät (IndexedDB, Fotos bis 15 MB, Videos bis 80 MB); mit Cloud zusätzlich im privaten Supabase-Speicher „media“ (bis 50 MB je Datei, `docs/supabase/media.sql`).
+- Plattform (v.65, Details in `docs/PLATTFORM.md`): Fahrrad-Lebenslauf, Lieferanten/Wareneingang/Inventur, Zahlungen je Rechnung, Filialen, CSV-Import/Export, Academy; mit Cloud: Händlerprofil, öffentliche Händlersuche `finder.html` mit Anfragen, Händlerbörse für geprüfte Läden (`docs/supabase/netz.sql`).
 - Team (mit Cloud): Mitarbeiter per E-Mail einladen, Rollen Admin/Fitter/Mitarbeiter vom Server, Rechnungs- und Löschschutz auf dem Server, Protokoll (`docs/supabase/team.sql`).
 
 ## Geführter Ablauf und Vorlagen (ab v.45)

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fahrradhändler finden</title>
+<meta name="description" content="Fahrradhändler, Werkstätten und Bikefitting in deiner Nähe. Anfrage direkt an den Laden.">
+<style>
+:root{--bg:#f7f3ee;--card:#fffdf9;--ink:#1d2a30;--muted:#5f6b70;--line:#e5ddd2;--acc:#d9612c;--ok:#1d6b35}
+@media (prefers-color-scheme:dark){:root{--bg:#14191b;--card:#1c2326;--ink:#e8eef0;--muted:#9aa7ac;--line:#2c3539;--acc:#f07a45;--ok:#6fcf8f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:28px;margin:8px 0 4px;letter-spacing:-.3px}h2{font-size:20px;margin:0 0 6px}
+.muted{color:var(--muted)}.small{font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,select,textarea{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+button,.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:var(--acc);color:#fff;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.chip{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--line)}
+.chip.ok{background:#dff3e4;color:#1d6b35}
+label{display:block;font-size:14px;margin:10px 0 4px}
+.hp{position:absolute;left:-5000px;width:1px;height:1px;overflow:hidden}
+.prod{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.note{background:#fff6e8;color:#5b3d10;border-radius:10px;padding:10px 12px;font-size:14px}
+footer{margin-top:30px;font-size:13px}footer a{color:var(--muted)}
+a{color:var(--acc)}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">Lädt …</p></main>
+<script>
+"use strict";
+// Öffentliche Händlersuche. Liest nur veröffentlichte Profile und freigegebene Produkte (Supabase, öffentlicher Schlüssel).
+// Konfiguration: fest unten in DEFAULT oder über den Link #cfg=... aus der App.
+const DEFAULT={u:'',k:''};
+const LEGAL={impressum:'impressum.html',datenschutz:'datenschutz.html'};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur=v=>Number(v||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
+const unb64u=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-s.length%4)%4))));
+const hp=new URLSearchParams((location.hash||'').slice(1));
+let CFG=DEFAULT; try{ if(hp.get('cfg')){ const c=JSON.parse(unb64u(hp.get('cfg'))); if(/^https:\/\/[a-z0-9.-]+$|^http:\/\/localhost(:\d+)?$/.test(c.u)&&c.k&&!/^sb_secret_/.test(c.k)) CFG=c; } }catch(e){}
+const api=async(path,opt={})=>{ const r=await fetch(CFG.u+path,{...opt,headers:{apikey:CFG.k,'Content-Type':'application/json',...(opt.headers||{})}}); const t=await r.text(); let j=null; try{ j=t?JSON.parse(t):null; }catch(e){} if(!r.ok) throw new Error((j&&(j.message||j.msg))||('Fehler '+r.status)); return j; };
+const app=document.getElementById('app');
+const foot=`<footer class="muted"><a href="${LEGAL.impressum}">Impressum</a> · <a href="${LEGAL.datenschutz}">Datenschutz</a> · Angaben der Händler ohne Gewähr. Preise inkl. MwSt.; Kauf und Bezahlung direkt beim Händler.</footer>`;
+let ALL=[], Q={q:'',svc:''};
+function setHash(d){ const h=new URLSearchParams((location.hash||'').slice(1)); if(d) h.set('d',d); else h.delete('d'); history.replaceState(null,'','#'+h.toString()); }
+async function start(){
+  if(!CFG.u||!CFG.k){ app.innerHTML=`<h1>Fahrradhändler finden</h1><div class="card"><p>Diese Seite ist noch nicht eingerichtet.</p></div>${foot}`; return; }
+  const d=new URLSearchParams((location.hash||'').slice(1)).get('d');
+  try{ ALL=await api('/rest/v1/dealer_profiles?published=eq.true&select=slug,name,street,zip,city,phone,email,web,about,services,hours,partner,certified&order=name')||[]; }
+  catch(e){ app.innerHTML=`<h1>Fahrradhändler finden</h1><div class="card note">Gerade nicht erreichbar. Bitte später noch einmal.</div>${foot}`; return; }
+  if(d) return dealer(d); list(); }
+function list(){ setHash(''); document.title='Fahrradhändler finden';
+  const svcs=[...new Set(ALL.flatMap(x=>x.services||[]))].sort(); const q=Q.q.toLowerCase().trim();
+  const L=ALL.filter(x=>(!Q.svc||(x.services||[]).includes(Q.svc))&&(!q||[x.name,x.city,x.zip].join(' ').toLowerCase().includes(q)||String(x.zip||'').startsWith(q)));
+  app.innerHTML=`<h1>Fahrradhändler finden</h1><p class="muted">Läden, Werkstätten und Bikefitting. Anfrage direkt an den Laden – ohne Konto.</p>
+   <div class="card"><div class="row"><div style="flex:2 1 220px"><label for="q">Ort oder PLZ</label><input id="q" value="${esc(Q.q)}" placeholder="z. B. Erlangen oder 910" autocomplete="postal-code"></div>
+   <div style="flex:1 1 180px"><label for="s">Leistung</label><select id="s"><option value="">Alle</option>${svcs.map(s=>`<option ${s===Q.svc?'selected':''}>${esc(s)}</option>`).join('')}</select></div></div></div>
+   <p class="muted small">${L.length} ${L.length===1?'Laden':'Läden'}</p>
+   ${L.map(x=>`<div class="card"><h2><a href="#" data-d="${esc(x.slug)}">${esc(x.name)}</a></h2><div class="muted">${esc([x.zip,x.city].filter(Boolean).join(' '))}</div>
+     <div class="row" style="margin-top:6px">${(x.services||[]).map(s=>`<span class="chip">${esc(s)}</span>`).join('')}${x.certified?'<span class="chip ok">FYF Certified Fitter</span>':''}</div></div>`).join('')||'<div class="card muted">Kein passender Laden gefunden.</div>'}${foot}`;
+  const qi=document.getElementById('q'); qi.oninput=()=>{ Q.q=qi.value; list(); const n=document.getElementById('q'); n.focus(); n.setSelectionRange(n.value.length,n.value.length); };
+  document.getElementById('s').onchange=e=>{ Q.svc=e.target.value; list(); };
+  app.querySelectorAll('[data-d]').forEach(a=>a.onclick=e=>{ e.preventDefault(); dealer(a.dataset.d); }); }
+async function dealer(slug){ const x=ALL.find(d=>d.slug===slug); if(!x){ list(); return; } setHash(slug); document.title=x.name+' – '+(x.city||''); scrollTo(0,0);
+  let P=[]; try{ P=await api(`/rest/v1/public_products?slug=eq.${encodeURIComponent(slug)}&select=id,cat,name,price,note&order=cat,name`)||[]; }catch(e){}
+  const pre=new URLSearchParams((location.hash||'').slice(1)).get('p')||'';
+  app.innerHTML=`<p><a href="#" id="back">← Alle Läden</a></p><h1>${esc(x.name)}</h1>
+   <div class="row">${x.partner?'<span class="chip">Partner</span>':''}${x.certified?'<span class="chip ok">FYF Certified Fitter</span>':''}${(x.services||[]).map(s=>`<span class="chip">${esc(s)}</span>`).join('')}</div>
+   <div class="card">${x.about?`<p style="white-space:pre-wrap;margin-top:0">${esc(x.about)}</p>`:''}
+     <p style="margin:0">${esc([x.street,[x.zip,x.city].filter(Boolean).join(' ')].filter(Boolean).join(', '))}</p>
+     ${x.hours?`<p class="muted" style="margin:6px 0 0">${esc(x.hours)}</p>`:''}
+     <div class="row" style="margin-top:10px">${x.phone?`<a class="btn ghost" href="tel:${esc(String(x.phone).replace(/[^\d+]/g,''))}">Anrufen</a>`:''}${x.email?`<a class="btn ghost" href="mailto:${esc(x.email)}">E-Mail</a>`:''}${x.web?`<a class="btn ghost" href="${esc(/^https?:/.test(x.web)?x.web:'https://'+x.web)}" rel="noopener nofollow" target="_blank">Website</a>`:''}</div></div>
+   ${P.length?`<div class="card"><h2>Produkte</h2>${P.map(p=>`<div class="prod"><span>${esc(p.name)}<br><span class="muted small">${esc(p.cat||'')}${p.note?' · '+esc(p.note):''}</span></span><span style="text-align:right;white-space:nowrap"><b>${eur(p.price)}</b><br><a href="#" class="small" data-p="${esc(p.id)}">Anfragen</a></span></div>`).join('')}<p class="muted small" style="margin-bottom:0">Preise inkl. MwSt. Verfügbarkeit bitte anfragen.</p></div>`:''}
+   <div class="card" id="form"><h2>Anfrage an den Laden</h2>
+     <form id="inq"><label for="t">Worum geht es?</label><select id="t" name="topic">${['Bikefitting','Terminwunsch','Werkstatt','Produkt','Allgemein'].map(t=>`<option ${pre&&t==='Produkt'?'selected':''}>${t}</option>`).join('')}</select>
+     <select id="pp" name="product" style="margin-top:8px;${P.length?'':'display:none'}"><option value="">– kein bestimmtes Produkt –</option>${P.map(p=>`<option value="${esc(p.id)}" ${p.id===pre?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
+     <label for="n">Name</label><input id="n" name="name" required minlength="2" maxlength="100" autocomplete="name">
+     <label for="c">E-Mail oder Telefon</label><input id="c" name="contact" required minlength="5" maxlength="120" autocomplete="email">
+     <label for="m">Nachricht</label><textarea id="m" name="message" rows="4" required minlength="5" maxlength="2000"></textarea>
+     <div class="hp" aria-hidden="true"><label for="w">Website</label><input id="w" name="website" tabindex="-1" autocomplete="off"></div>
+     <label style="display:flex;gap:8px;align-items:flex-start;font-size:14px"><input type="checkbox" required style="width:auto;margin-top:4px"><span>Meine Angaben werden an ${esc(x.name)} übermittelt, damit der Laden mir antworten kann. Mehr in der <a href="${LEGAL.datenschutz}">Datenschutzerklärung</a>.</span></label>
+     <p><button type="submit">Anfrage senden</button></p><p id="msg" class="small"></p></form></div>${foot}`;
+  document.getElementById('back').onclick=e=>{ e.preventDefault(); list(); };
+  app.querySelectorAll('[data-p]').forEach(a=>a.onclick=e=>{ e.preventDefault(); document.getElementById('t').value='Produkt'; document.getElementById('pp').value=a.dataset.p; document.getElementById('form').scrollIntoView({behavior:'smooth'}); });
+  document.getElementById('inq').onsubmit=async e=>{ e.preventDefault(); const f=e.target, b=f.querySelector('button'), m=document.getElementById('msg'); b.disabled=true; m.textContent='Wird gesendet …';
+    try{ await api('/rest/v1/rpc/submit_inquiry',{method:'POST',body:JSON.stringify({p_slug:slug,p_topic:f.topic.value,p_name:f.name.value,p_contact:f.contact.value,p_message:f.message.value,p_product:f.product.value||null,p_hp:f.website.value})});
+      f.innerHTML='<p><b>Danke!</b> Deine Anfrage ist beim Laden angekommen. Er meldet sich bei dir.</p>'; }
+    catch(err){ const t=String(err.message); m.textContent=/FYF_RATE/.test(t)?'Zu viele Anfragen. Bitte später noch einmal oder direkt anrufen.':/FYF_BAD_DATA|FYF_TOO_LONG/.test(t)?'Bitte Name, Kontakt und Nachricht prüfen.':'Senden hat nicht geklappt. Bitte später noch einmal oder direkt anrufen.'; b.disabled=false; } }; }
+start();
+</script>
+</body>
+</html>
