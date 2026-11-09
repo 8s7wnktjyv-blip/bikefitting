@@ -1532,7 +1532,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-08.65';
+const APP_VER='2026-11-09.66';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1768,7 +1768,8 @@ function counts(){
     kunden:S.customers.length,
     sitzung:S.sessions.filter(s=>s.date===today()&&s.status!=='abgesagt'&&s.status!=='abgeschlossen').length,
     followup:S.sessions.flatMap(s=>s.followUps).filter(f=>f.status==='offen').length,
-    werkstatt:S.workshop.filter(w=>w.status!=='Übergeben').length
+    werkstatt:S.workshop.filter(w=>w.status!=='Übergeben').length,
+    netz:(()=>{ try{ return (cloudReady()&&NET.newCount)||0; }catch(e){ return 0; } })()
   };
 }
 function renderNav(){
@@ -5145,7 +5146,7 @@ VIEWS.werkstatt = () => {
     ${panel('WearPredict – Verschleißhinweise',`<div class="stack">${S.bikes.map(b=>{const pct=Math.min(100,Math.round((b.km%3000)/3000*100));return `<div><div class="row" style="justify-content:space-between"><span>${esc(b.model)} · Kette</span><span class="num faint" style="font-size:12px">${fmtNum(b.km%3000)} / 3.000 km</span></div><div class="bar"><i style="width:${pct}%;background:${pct>85?'var(--bad)':pct>65?'var(--warn)':'var(--accent)'}"></i></div></div>`;}).join('')}<p class="faint" style="font-size:12px">Simuliert aus Kilometerstand und festem Intervall. Echte Vorhersage braucht Verschleißmessungen und Nutzungsdaten.</p></div>`,st('s'))}
   </div>`;
 };
-function woDrawer(id){
+function woDrawer(id){ try{ drawerCtx={type:'wo',id}; }catch(e){}
   const w=S.workshop.find(x=>x.id===id); drawerCtx={type:'wo',id};
   const tot=w.positions.reduce((a,p)=>a+p.qty*p.price,0); const idx=WO_FLOW.indexOf(w.status); const next=WO_FLOW[idx+1];
   const body=`<div class="row">${woChip(w.status)}<span class="chip nodot">Mechaniker: ${esc(w.mechanic)}</span><span class="chip nodot">fällig ${fmtDate(w.due)}</span></div>
@@ -5155,7 +5156,7 @@ function woDrawer(id){
   <div class="field"><label for="p_k">Art</label><select class="input" id="p_k" name="kind">${opts(['Arbeit','Teil'])}</select></div><div class="field"><label for="p_q">Menge / Std.</label><input class="input num" id="p_q" name="qty" type="number" step="0.25" value="1" min="0"></div><div class="field"><label for="p_p">Einzelpreis €</label><input class="input num" id="p_p" name="price" type="number" step="0.01" min="0" required></div><div class="wide"><button class="btn" type="submit">${ic('plus')}Position hinzufügen</button></div></form></div>
   <div class="stack"><h3>Status</h3><div class="row">${WO_FLOW.map((f,i)=>`<span class="chip nodot ${i<idx?'c-ok':i===idx?'c-acc':''}">${i+1}. ${f}</span>`).join('')}</div>
   <div class="row">${next?`<button class="btn primary" data-act="woNext" data-id="${w.id}">Weiter: ${next}</button>`:''}${w.status==='Kostenvoranschlag'||w.status==='Angenommen'?`<button class="btn" data-act="woSendKV" data-id="${w.id}" ${w.positions.length?'':'disabled'}>Kostenvoranschlag an Kunden senden</button>`:''}${idx>0?`<button class="btn ghost" data-act="woBack" data-id="${w.id}">Zurück</button>`:''}</div>
-  ${w.approval?`<div class="notice acc">${ic('quality')}Freigegeben von ${esc(w.approval.by)} am ${esc(w.approval.time)} (simuliert).</div>`:''}</div>
+  ${w.approval?`<div class="notice acc">${ic('quality')}Freigegeben von ${esc(w.approval.by)} am ${esc(w.approval.time)}${w.approval.via?' ('+esc(w.approval.via)+')':' (Beispieldaten)'}.</div>`:''}${kvaBox(w)}</div>
   <div class="stack"><h3>Kunde benachrichtigen</h3>${msgButtons(woMsg(w,w.status==='Abholbereit'?'fertig':(w.status==='Kostenvoranschlag'||w.status==='Freigabe ausstehend'||w.status==='Angenommen')?'kv':'info'),cust(w.customerId))}<div><button class="btn sm" data-act="woCsv" data-id="${w.id}">Export für die Kasse (CSV)</button></div></div>
   <div class="stack"><h3>Verlauf</h3><div class="list">${w.log.slice().reverse().map(l=>`<div class="li" style="padding:7px 0"><span class="mono faint" style="font-size:12px;white-space:nowrap">${esc(l.time)}</span><div class="grow">${esc(l.text)}</div></div>`).join('')}</div></div>`;
   openDrawer(`${w.id} · ${w.title}`,body);
@@ -6075,7 +6076,7 @@ async function netLoad(){ if(!cloudReady()||NET.busy) return; NET.busy=true;
   try{ const p=await clApi(`/rest/v1/dealer_profiles?tenant_id=eq.${encodeURIComponent(CL.tenant)}&select=*`,{method:'GET'}); NET.profile=(p&&p[0])||null;
     NET.inq=await clApi(`/rest/v1/inquiries?tenant_id=eq.${encodeURIComponent(CL.tenant)}&select=*&order=created_at.desc&limit=100`,{method:'GET'})||[];
     const ps=await clApi('/rest/v1/rpc/my_platform_state',{method:'POST',body:'{}'}); NET.plat=(ps&&ps[0])||{verified:false,platform_admin:false};
-    NET.err=''; }catch(e){ NET.err=e.offline?'Keine Verbindung.':netErr(e); }
+    NET.newList=NET.inq.filter(q=>q.status==='neu'); NET.newCount=NET.newList.length; NET.err=''; }catch(e){ NET.err=e.offline?'Keine Verbindung.':netErr(e); }
   NET.at=Date.now(); NET.busy=false; if(['netz','boerse'].includes(ui.route)) render(); }
 VIEWS.netz = () => { if(!cloudReady()) return head('Händlerprofil & Anfragen','Dein öffentliches Profil, Anfragen von Kunden und Werbung.')+noCloudHtml('Das Händlerprofil');
   if(!NET.at){ setTimeout(netLoad,20); return head('Händlerprofil & Anfragen','')+panel('','<p class="muted">Wird geladen …</p>'); }
@@ -6241,7 +6242,7 @@ Object.assign(CHG,{
     const out=rows.slice(1).map(r=>{ const name=(iV>=0||iL>=0)?[r[iV]||'',r[iL]||''].join(' ').trim():(r[iN]||'').trim(); return {name:name.slice(0,120),email:String(r[iE]||'').trim().slice(0,120),phone:String(r[iT]||'').trim().slice(0,40)}; }).filter(x=>x.name.length>1);
     if(!out.length){ toast('Keine Spalte „Name“ gefunden',true); return; }
     const have=new Set(S.customers.map(c=>String(c.email||'').toLowerCase()).filter(Boolean)); ui.impPreview={rows:out,dupes:out.filter(x=>x.email&&have.has(x.email.toLowerCase())).length}; render(); }; r.readAsText(file); },
-  async inqStatus(el){ try{ await clApi('/rest/v1/rpc/set_inquiry_status',{method:'POST',body:JSON.stringify({p_id:el.dataset.id,p_status:el.value})}); const q=NET.inq.find(x=>x.id===el.dataset.id); if(q) q.status=el.value; toast('Gespeichert'); }catch(e){ toast(netErr(e),true); } },
+  async inqStatus(el){ try{ await clApi('/rest/v1/rpc/set_inquiry_status',{method:'POST',body:JSON.stringify({p_id:el.dataset.id,p_status:el.value})}); const q=NET.inq.find(x=>x.id===el.dataset.id); if(q) q.status=el.value; NET.newList=NET.inq.filter(x=>x.status==='neu'); NET.newCount=NET.newList.length; renderNav(); toast('Gespeichert'); }catch(e){ toast(netErr(e),true); } },
   prodPub(el){ const p=products().find(x=>x.id===el.dataset.id); if(!p) return; p.pub=el.checked; audit(`Produkt ${el.checked?'öffentlich':'nicht öffentlich'}: ${p.name}`); save(); },
   trCat(el){ ui.trCat=el.value; render(); },
   async trOfferStatus(el){ const o=TR.offers.find(x=>x.id===el.dataset.id); if(!o) return; try{ await clApi('/rest/v1/rpc/trade_offer_save',{method:'POST',body:JSON.stringify({p:{...o,status:el.value}})}); o.status=el.value; toast('Gespeichert'); }catch(e){ toast(netErr(e),true); } },
@@ -6253,6 +6254,53 @@ DENY_FORM.Fitter.push('profileSave'); DENY_FORM.Mitarbeiter.push('payAdd','profi
 /* Bereiche in vorhandene Seiten einhängen */
 const _lager=VIEWS.lager; VIEWS.lager=()=>_lager()+wawiHtml();
 const _mehr=VIEWS.mehr; VIEWS.mehr=()=>_mehr()+panel('Filialen',filialHtml())+panel('Import & Export',importHtml());
+/* ---------- Hinweis auf neue Anfragen + Freigaben per Link (v.66) ---------- */
+let inqAt=0, kvaAt=0;
+async function inqPoll(force){ if(!cloudReady()||(!force&&Date.now()-inqAt<60000)) return; inqAt=Date.now();
+  try{ const r=await clApi(`/rest/v1/inquiries?tenant_id=eq.${encodeURIComponent(CL.tenant)}&status=eq.neu&select=id,name,topic,created_at&order=created_at.desc&limit=50`,{method:'GET'})||[];
+    const before=NET.newCount||0; NET.newList=r; NET.newCount=r.length; if(NET.newCount!==before){ if(NET.newCount>before&&before>=0&&inqAt) toast(NET.newCount===1?'Neue Anfrage':`${NET.newCount} neue Anfragen`); render(); } }catch(e){} }
+function kvaPayload(w){ const c=cust(w.customerId)||{}, b=bike(w.bikeId)||{}, sh=S.shop||{};
+  return {shop:{name:shopName()||'Werkstatt',phone:sh.phone||'',email:sh.email||'',addr:sh.addr||''},wo:{id:w.id,title:w.title},greet:firstName(c),bike:[b.brand,b.model].filter(Boolean).join(' '),
+    items:w.positions.map(p=>({t:p.t,kind:p.kind,qty:Number(p.qty)||0,price:Number(p.price)||0})),total:Math.round(w.positions.reduce((a,p)=>a+p.qty*p.price,0)*100)/100,date:today(),due:w.due||''}; }
+const kvaLink=tk=>location.origin+location.pathname.replace(/[^/]*$/,'')+'freigabe.html#cfg='+b64u(JSON.stringify({u:clBase(),k:CL.key}))+'&t='+tk;
+function kvaText(w){ const c=cust(w.customerId)||{}, b=bike(w.bikeId)||{}; return `Hallo ${firstName(c)},\nder Kostenvoranschlag für dein ${[b.brand,b.model].filter(Boolean).join(' ')||'Rad'} (${w.title}) ist fertig: ${eur(w.positions.reduce((a,p)=>a+p.qty*p.price,0))}.\nHier ansehen und freigeben:\n${kvaLink(w.kva.token)}\n\nViele Grüße\n${shopName()||''}`; }
+function kvaBox(w){ if(w.status!=='Freigabe ausstehend') return '';
+  return `<div class="stack" style="gap:8px">${w.kva&&w.kva.token?`<p class="muted" style="margin:0;font-size:13.5px">Link zur Freigabe bereitgestellt am ${esc(w.kva.sent)}. Noch keine Antwort.</p><div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="kvaShare" data-id="${w.id}">Link erneut teilen</button><button class="btn sm ghost" data-act="kvaCheck">Antwort prüfen</button></div>`:''}
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="woManual" data-id="${w.id}" data-v="ok">Kunde hat zugestimmt (persönlich/Telefon)</button><button class="btn sm ghost" data-act="woManual" data-id="${w.id}" data-v="no">Kunde hat abgelehnt</button></div></div>`; }
+async function kvaSync(force){ if(!cloudReady()||(!force&&Date.now()-kvaAt<60000)) return; kvaAt=Date.now(); if(!S.workshop.some(w=>w.kva&&w.kva.token&&!w.kva.done)) return;
+  try{ const r=await clApi(`/rest/v1/kva_links?tenant_id=eq.${encodeURIComponent(CL.tenant)}&decision=not.is.null&select=token,wo_id,decision,decided_at,decided_name,note&order=decided_at.desc&limit=100`,{method:'GET'})||[]; let n=0;
+    r.forEach(k=>{ const w=S.workshop.find(x=>x.kva&&x.kva.token===k.token&&!x.kva.done); if(!w) return; const t=new Date(k.decided_at), ts=`${iso(t)} ${pad(t.getHours())}:${pad(t.getMinutes())}`;
+      w.kva.done=k.decision;
+      if(k.decision==='freigegeben'){ w.approval={time:ts,by:k.decided_name,via:'Link'}; if(w.status==='Freigabe ausstehend') w.status='In Arbeit'; w.log.push({time:ts,text:`Kostenvoranschlag per Link freigegeben von ${k.decided_name}${k.note?' – „'+k.note+'“':''}`}); }
+      else { if(w.status==='Freigabe ausstehend') w.status='Kostenvoranschlag'; w.log.push({time:ts,text:`Kostenvoranschlag per Link abgelehnt von ${k.decided_name}${k.note?' – „'+k.note+'“':''}`}); }
+      audit(`${w.id}: Kostenvoranschlag ${k.decision} (Link)`); n++; toast(`${w.id}: ${k.decided_name} hat ${k.decision==='freigegeben'?'freigegeben':'abgelehnt'}`); });
+    if(n){ save(); render(); } }catch(e){} }
+const _render=render; render=function(){ const r=_render.apply(this,arguments); try{ setTimeout(()=>{ inqPoll(); kvaSync(); },0); }catch(e){} return r; };
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'){ inqPoll(true); kvaSync(true); } });
+const _dash=VIEWS.dashboard; VIEWS.dashboard=()=>{ const n=(cloudReady()&&NET.newCount)||0, wait=S.workshop.filter(w=>w.status==='Freigabe ausstehend'&&w.kva&&w.kva.token&&!w.kva.done).length;
+  const box=n?`<div class="notice acc" style="margin-bottom:12px">${ic('info')}<div><b>${n===1?'1 neue Anfrage':n+' neue Anfragen'}</b> über deine Profilseite${(NET.newList||[]).slice(0,3).map(q=>`<br><span style="font-size:13.5px">${esc(q.name)} · ${esc(q.topic)}</span>`).join('')}<div style="margin-top:8px"><button class="btn sm primary" data-nav="netz">Anfragen öffnen</button></div></div></div>`:'';
+  const box2=wait?`<div class="notice" style="margin-bottom:12px">${ic('wrench')}<span>${wait===1?'1 Kostenvoranschlag wartet':wait+' Kostenvoranschläge warten'} auf die Freigabe per Link.</span></div>`:'';
+  return box+box2+_dash(); };
+Object.assign(ACT,{
+  async woSendKV(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); if(!w||!w.positions.length){ toast('Erst Positionen eintragen',true); return; }
+    if(!cloudReady()){ w.status='Freigabe ausstehend'; w.log.push({time:nowStamp(),text:'Kostenvoranschlag per Nachricht geschickt. Freigabe bitte hier bestätigen, sobald der Kunde zustimmt.'}); audit(`${w.id}: Kostenvoranschlag gesendet`); save(); woDrawer(w.id); render();
+      toast('Nachricht unten schicken. Mit Cloud geht die Freigabe auch per Link.'); return; }
+    try{ const tk=await clApi('/rest/v1/rpc/kva_publish',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_wo:w.id,p_payload:kvaPayload(w)})}); w.kva={token:String(tk).replace(/"/g,''),sent:nowStamp()}; }
+    catch(e){ toast(e.offline?'Keine Verbindung. Bitte später noch einmal.':clErrText(e.message).replace('team.sql','freigabe.sql'),true); return; }
+    w.status='Freigabe ausstehend'; w.approval=null; w.log.push({time:nowStamp(),text:'Kostenvoranschlag als Link zur Freigabe bereitgestellt'}); audit(`${w.id}: Kostenvoranschlag per Link`); save(); render(); ACT.kvaShare({dataset:{id:w.id}}); },
+  kvaShare(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); if(!w||!w.kva) return; const link=kvaLink(w.kva.token);
+    openDrawer('Link an den Kunden schicken',`<div class="stack"><p class="muted" style="margin:0;font-size:14px">Der Kunde sieht Positionen und Summe und tippt „Freigeben“ oder „Ablehnen“. Die Antwort erscheint hier automatisch. Der Link gilt 30 Tage.</p>
+      ${msgButtons(kvaText(w),cust(w.customerId))}<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="kvaCopy" data-id="${w.id}">Link kopieren</button><a class="btn sm ghost" href="${esc(link)}" target="_blank" rel="noopener">Vorschau öffnen</a><button class="btn sm ghost" data-act="openWO" data-id="${w.id}">Zum Auftrag</button></div></div>`); },
+  kvaCopy(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); const l=kvaLink(w.kva.token); try{ navigator.clipboard.writeText(l).then(()=>toast('Link kopiert'),()=>toast('Kopieren nicht möglich',true)); }catch(e){ toast('Kopieren nicht möglich',true); } },
+  async kvaCheck(){ await kvaSync(true); const d=document.querySelector('.drawer'); if(d&&drawerCtx&&drawerCtx.type==='wo') woDrawer(drawerCtx.id); toast('Geprüft'); },
+  woManual(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); if(!w) return; const c=cust(w.customerId)||{};
+    if(el.dataset.v==='ok'){ w.approval={time:nowStamp(),by:c.name||'Kunde',via:'persönlich/Telefon'}; w.status='In Arbeit'; w.log.push({time:nowStamp(),text:'Kunde hat den Kostenvoranschlag persönlich/telefonisch freigegeben'}); }
+    else { w.status='Kostenvoranschlag'; w.log.push({time:nowStamp(),text:'Kunde hat den Kostenvoranschlag abgelehnt'}); }
+    if(w.kva) w.kva.done=w.kva.done||'manuell'; audit(`${w.id}: Freigabe ${el.dataset.v==='ok'?'erteilt':'abgelehnt'} (manuell)`); save(); woDrawer(w.id); render(); }
+});
+DENY.Mitarbeiter.push('woManual');
+FEATURES.forEach(f=>{ if(f[0]==='Werkstatt'){ f[1]='Aufträge, Kostenvoranschlag, Kundenfreigabe per Link (mit Cloud) oder persönlich, Wartung. Werkstatt-Kalender fehlt'; f[2]=2; } if(f[0]==='Anfragen') f[1]='Anfrage an den Laden ohne Konto, Spam-Schutz, Posteingang, Hinweis im Dashboard und am Menü'; });
+
 /* =================== Ende Plattform-Ausbau =================== */
 
 window.__fitframe={storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};

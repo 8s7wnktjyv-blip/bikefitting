@@ -23,6 +23,8 @@ Umsetzung des Master-Auftrags „Ausbau zur Fahrradhandelsplattform“. Stand je
 | Händlerbörse | Händlernetzwerk → Händlerbörse | `trade_offers`, `trade_requests` | netz.sql |
 | Plattform-Verwaltung | Händlerprofil (nur Plattform-Admins) | `platform_admins`, `tenants.verified`, `dealer_profiles.certified` | netz.sql |
 | Academy | Händlernetzwerk → Academy | `S.academy[E-Mail]` | – |
+| Hinweis auf neue Anfragen | Dashboard + Zahl am Menüpunkt (Abfrage alle 60 s und beim Zurückkehren in die App) | `inquiries` | netz.sql |
+| Kostenvoranschlag per Link | Werkstatt → Auftrag → „Kostenvoranschlag an Kunden senden“; Kundenseite `freigabe.html` | `kva_links` (Schlüssel 32 Zeichen, 30 Tage gültig, einmal beantwortbar); `wo.kva` | freigabe.sql |
 | Datenbank-Lesekopie | – | `fyf_customers`, `fyf_bikes`, `fyf_sessions`, `fyf_invoices`, `fyf_products` per Trigger | netz.sql |
 
 ## Sicherheit
@@ -37,7 +39,7 @@ Umsetzung des Master-Auftrags „Ausbau zur Fahrradhandelsplattform“. Stand je
 - SumUp-Automatik (Betrag ans Terminal) – braucht SumUp-Zugang, Doku-Prüfung und eine Server-Funktion.
 - veloconnect, Großhändler, offizielles DATEV-Format – brauchen Zugänge/Prüfung.
 - Unternehmensgruppen (Gruppe → Unternehmen → Marke), Bestand je Filiale, Umlagerung.
-- Werkstatt-Kalender, Kundenfreigabe per Link, Online-Terminbuchung, Kundenportal mit Login.
+- Werkstatt-Kalender, Online-Terminbuchung, E-Mail an den Laden bei neuer Anfrage, Kundenportal mit Login.
 - Schreiben in einzelne Tabellen (heute: ein Datensatz je Laden + Lesekopie).
 - Aufteilung von index.html in Module.
 - Gemeinsame Marketing-Kampagnen, Herstellernetzwerk, eigene Fitting-Werkzeuge (keine erfundenen Partner oder Maße).
