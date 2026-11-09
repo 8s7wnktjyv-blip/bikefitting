@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Mein Fahrrad</title>
+<style>
+:root{--bg:#f7f3ee;--card:#fffdf9;--ink:#1d2a30;--muted:#5f6b70;--line:#e5ddd2;--acc:#d9612c;--ok:#1d6b35}
+@media (prefers-color-scheme:dark){:root{--bg:#14191b;--card:#1c2326;--ink:#e8eef0;--muted:#9aa7ac;--line:#2c3539;--acc:#f07a45;--ok:#6fcf8f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:680px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:26px;margin:4px 0}h2{font-size:19px;margin:0 0 8px}.muted{color:var(--muted)}.small{font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+table{width:100%;border-collapse:collapse}td{padding:7px 0;border-bottom:1px solid var(--line);vertical-align:top}td.r{text-align:right;white-space:nowrap;padding-left:10px}
+.chip{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--line)}
+a{color:var(--acc)}.btn{display:inline-block;font-weight:600;border-radius:10px;padding:10px 16px;background:var(--acc);color:#fff;text-decoration:none;margin:4px 6px 0 0}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">Lädt …</p></main>
+<script>
+"use strict";
+// Kundenportal per persönlichem Link. Zeigt nur, was der Laden für diesen Kunden bereitgestellt hat.
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fd=s=>{ if(!s) return ''; const [y,m,d]=String(s).slice(0,10).split('-'); return `${d}.${m}.${y}`; };
+const unb64u=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-s.length%4)%4))));
+const hp=new URLSearchParams((location.hash||'').slice(1)); const T=hp.get('t')||'';
+let CFG=null; try{ const c=JSON.parse(unb64u(hp.get('cfg')||'')); if(/^https:\/\/[a-z0-9.-]+$|^http:\/\/localhost(:\d+)?$/.test(c.u)&&c.k&&!/^sb_secret_/.test(c.k)) CFG=c; }catch(e){}
+const app=document.getElementById('app'); const msg=(h,t)=>{ app.innerHTML=`<h1>${h}</h1><div class="card">${t}</div>`; };
+(async()=>{ if(!CFG||!/^[a-f0-9]{32}$/.test(T)) return msg('Link unvollständig','Bitte den Link aus der Nachricht deines Fahrradladens vollständig öffnen.');
+  let p; try{ const r=await fetch(CFG.u+'/rest/v1/rpc/portal_get',{method:'POST',headers:{apikey:CFG.k,'Content-Type':'application/json'},body:JSON.stringify({p_token:T})}); if(!r.ok) throw 0; p=await r.json(); }catch(e){ return msg('Gerade nicht erreichbar','Bitte später noch einmal öffnen.'); }
+  if(!p) return msg('Nicht mehr verfügbar','Dieser Link ist abgelaufen oder wurde vom Laden ersetzt. Frag dort nach einem neuen.');
+  const sh=p.shop||{}; document.title=(sh.name||'Mein Fahrrad');
+  const contact=`${sh.phone?`<a class="btn ghost" href="tel:${esc(String(sh.phone).replace(/[^\d+]/g,''))}">Anrufen</a>`:''}${sh.email?`<a class="btn ghost" href="mailto:${esc(sh.email)}">E-Mail</a>`:''}${p.bookUrl?`<a class="btn" href="${esc(p.bookUrl)}">Termin anfragen</a>`:''}`;
+  app.innerHTML=`<p class="muted small">${esc(sh.name||'')}${sh.addr?' · '+esc(sh.addr):''}</p><h1>Hallo ${esc(p.greet||'')}</h1><p class="muted">Hier findest du deine Fahrräder, Einstellungen und Ergebnisse. Stand ${fd(p.date)}.</p>
+   ${(p.bikes||[]).map(b=>`<div class="card"><h2>${esc(b.name)}</h2>${b.frameNo?`<p class="muted small" style="margin:0 0 6px">Rahmennummer ${esc(b.frameNo)}</p>`:''}
+     ${(b.setup||[]).length?`<table>${b.setup.map(x=>`<tr><td>${esc(x.l)}</td><td class="r"><b>${esc(x.v)}</b></td></tr>`).join('')}</table><p class="muted small" style="margin-bottom:0">Einstellungen nach dem letzten Fitting. Gut aufschreiben, falls du Sattel oder Lenker abbauen musst.</p>`:'<p class="muted" style="margin:0">Noch keine Einstellungen gespeichert.</p>'}
+     ${b.next?`<p style="margin:8px 0 0"><span class="chip">Nächste Wartung</span> ${esc(b.next)}</p>`:''}</div>`).join('')}
+   ${(p.fits||[]).map(fi=>`<div class="card"><h2>Fitting vom ${fd(fi.date)}</h2>${fi.summary?`<p style="margin-top:0">${esc(fi.summary)}</p>`:''}
+     ${(fi.changes||[]).length?`<table>${fi.changes.map(c=>`<tr><td>${esc(c.l)}<br><span class="muted small">${esc(c.why||'')}</span></td><td class="r">${esc(c.from)} → <b>${esc(c.to)}</b></td></tr>`).join('')}</table>`:''}
+     ${(fi.recs||[]).length?`<p style="margin:10px 0 4px"><b>Empfehlungen</b></p>${fi.recs.map(r=>`<p style="margin:0 0 6px">${esc(r.name)}<br><span class="muted small">${esc(r.why||'')}</span></p>`).join('')}`:''}
+     ${fi.next?`<p style="margin:8px 0 0"><span class="chip">Nachkontrolle</span> ${fd(fi.next)}</p>`:''}</div>`).join('')}
+   <div class="card"><h2>Kontakt</h2>${contact||'<p class="muted">Kontaktdaten beim Laden erfragen.</p>'}</div>
+   <p class="muted small">Dieser Link ist persönlich. Bitte nicht weitergeben. Der Laden kann ihn jederzeit sperren.</p>`; })();
+</script>
+</body>
+</html>

@@ -31,6 +31,14 @@ Umsetzung des Master-Auftrags „Ausbau zur Fahrradhandelsplattform“. Stand je
 - `FIG` in index.html: Fahrrad maßstabsgetreu (Rad 340 mm, Kettenstrebe 410, Stack/Reach 565/385, Lenkwinkel 73°, Sitzwinkel 73,5°, Kurbel 172,5) und Fahrer nach Körperanteilen (Drillis & Contini). Kniewinkel unten ca. 141°, oben ca. 68° bei Standardmaßen. `FIG_GUIDES` ersetzt die alten Strich-Skizzen; Fahrradgrafik im Fitting nutzt die echten Messwerte (Sattelhöhe, Versatz, Abstand, Überhöhung). Tretbewegung per SVG-Animation (aus bei „Bewegung reduzieren“).
 - Beinlänge: `s.legM` = je Seite bis 3 Werte + Gegenprobe im Stehen (Brettchen). `legEval`: unter 10 mm oder innerhalb der Streuung (mind. 5 mm) = „nicht sicher“, kein Ausgleich; ohne Gegenprobe „prüfen“; widersprüchlich = kein Ausgleich; bestätigt = Fachperson, Ausgleich höchstens die Hälfte nach Rücksprache. Mittelwerte bleiben in `check.legLenL/R`.
 
+## v.70
+- Alle Anleitungs-Zeichnungen im neuen Stil (`FIG2`): Körpertests (Finger-Boden, Hüftbeugung, Unterarmstütz, Sprunggelenk an der Wand, Hüftrotation, Einbeinstand, einbeinige Kniebeuge, Beinachse, Schultern, Schulterbeweglichkeit, Beschwerden), Füße (Breite, Winkel, Gewölbe, Vorfuß), Cleat längs/Drehung, Sattelneigung, Lenkerbreite, Sitzknochen.
+- Kalender (`termine`): Wochenansicht, Termine (`S.appts`), Kapazität je Mitarbeiter (`S.capacity`), Werkstatt-Auslastung aus Arbeitsstunden fälliger Aufträge, Überschneidungs- und Überlast-Hinweis, Bestätigung per Nachricht. Heutige Termine im Dashboard.
+- Terminwunsch: finder.html schickt Wunschtermin (`inquiries.preferred`, `docs/supabase/ausbau.sql`); im Laden „Als Termin eintragen“ (Anfrage → in Arbeit). Ohne ausbau.sql landet der Wunsch im Nachrichtentext.
+- Bestand je Filiale (`item.byLoc`), Umlagerung, Wareneingang/Plus-Minus auf die Filiale des Geräts.
+- Unternehmensstruktur (Gruppe → Unternehmen → Marke → Filiale) innerhalb eines Kontos (`S.org`, `location.company/brand`).
+- Kundenportal per Link (`portal.html`, `portal_links`, 180 Tage, sperrbar, nur mit Einwilligung): Fahrräder mit Einstellungen, letzte 3 Fittings mit Änderungen und Empfehlungen, Nachkontrolle, Kontakt, Termin anfragen.
+
 ## Sicherheit
 - Öffentlich lesbar: nur veröffentlichte Profile und als öffentlich markierte Produkte. Alles andere nur für Mitglieder des Ladens (RLS).
 - Anfragen: ohne Konto über `submit_inquiry` (verstecktes Feld, Längen, 20/h je Laden, 3/Tag je Absender). Lesen nur der Laden.
@@ -42,8 +50,7 @@ Umsetzung des Master-Auftrags „Ausbau zur Fahrradhandelsplattform“. Stand je
 - Eigene Kasse mit TSE (Recht/Zertifizierung). Zahlungen werden erfasst; Kartenzahlung läuft am Terminal.
 - SumUp-Automatik (Betrag ans Terminal) – braucht SumUp-Zugang, Doku-Prüfung und eine Server-Funktion.
 - veloconnect, Großhändler, offizielles DATEV-Format – brauchen Zugänge/Prüfung.
-- Unternehmensgruppen (Gruppe → Unternehmen → Marke), Bestand je Filiale, Umlagerung.
-- Werkstatt-Kalender, Online-Terminbuchung, E-Mail an den Laden bei neuer Anfrage, Kundenportal mit Login.
+- E-Mail an den Laden bei neuer Anfrage (braucht E-Mail-Dienst). Echte Online-Buchung freier Zeiten (heute: Wunschtermin, Laden bestätigt). Mehrere Konten unter einer Gruppe.
 - Schreiben in einzelne Tabellen (heute: ein Datensatz je Laden + Lesekopie).
 - Aufteilung von index.html in Module.
 - Gemeinsame Marketing-Kampagnen, Herstellernetzwerk, eigene Fitting-Werkzeuge (keine erfundenen Partner oder Maße).

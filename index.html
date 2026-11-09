@@ -1139,7 +1139,100 @@ const FIG_GUIDES={
   pelvis:()=>FIG.standBack({label:'Beckenstand im Stehen von hinten',tilt:22,draw:({A,f,H,crest,add})=>A.dash(add(crest(-1),[-0.1*H,0]),add(crest(1),[0.1*H,0]))+A.text([0,1.01*H],'Gleich hoch?','middle')})
 };
 
-{ const IL0=IL; IL=k=>{ if(FIG_GUIDES[k]){ try{ return `<div class="illus fig${['legBlock','pelvis'].includes(k)?' tall':''}">${FIG_GUIDES[k]()}</div>`; }catch(e){ console.error(e); } } return IL0(k); }; }
+/* ---------- FIG2: Körper in verschiedenen Haltungen, Füße, Schuhe, Sattel, Lenker – gleiche Proportionen wie FIG ---------- */
+const FIG2=(()=>{ const H=1780, d2r=Math.PI/180; let uid=0;
+  const add=(a,b)=>[a[0]+b[0],a[1]+b[1]], mul=(a,k)=>[a[0]*k,a[1]*k], dir=deg=>[Math.cos(deg*d2r),Math.sin(deg*d2r)], len=a=>Math.hypot(a[0],a[1]);
+  const C={body:'var(--il-body)',far:'var(--il-body)',soft:'var(--il-soft)',frame:'var(--il-frame)',tire:'var(--il-tire)',acc:'var(--accent)',bg:'var(--il-bg)'};
+  const L={th:0.245*H,sh:0.246*H,ua:0.186*H,fa:0.146*H,hand:0.06*H,tr:0.29*H,neck:0.055*H,head:0.058*H,foot:0.152*H,ankH:0.039*H};
+  // Vorwärtskinematik Seitenansicht. Winkel absolut in Grad (0 = nach vorn/rechts, 90 = nach oben)
+  function side(o){ const j={}; j.hip=o.hip; j.shd=add(j.hip,mul(dir(o.trunk),L.tr)); j.headC=add(j.shd,mul(dir(o.head??o.trunk+10),L.neck+L.head));
+    const leg=(t,s,ft)=>{ const knee=add(j.hip,mul(dir(t),L.th)), ank=add(knee,mul(dir(s),L.sh)); const fd=ft??0; return {knee,ank,heel:add(ank,mul(dir(fd+200),0.04*H)),toe:add(ank,mul(dir(fd-12),0.13*H))}; };
+    const arm=(u,fa)=>{ const elb=add(j.shd,mul(dir(u),L.ua)), wr=add(elb,mul(dir(fa),L.fa)); return {elb,wr,hand:add(wr,mul(dir(fa),L.hand))}; };
+    j.L1=leg(o.thigh,o.shank,o.foot); if(o.thigh2!=null) j.L2=leg(o.thigh2,o.shank2,o.foot2); j.A1=arm(o.uarm,o.farm); if(o.uarm2!=null) j.A2=arm(o.uarm2,o.farm2); return j; }
+  function frame(minX,minY,maxX,maxY){ const W=maxX-minX, Hh=maxY-minY; const f={X:x=>x-minX,Y:y=>maxY-y,W,Hh}; return f; }
+  const P=(p,f)=>`${f.X(p[0]).toFixed(1)},${f.Y(p[1]).toFixed(1)}`;
+  const ln=(a,b,f,w,c,ex='')=>`<line x1="${f.X(a[0]).toFixed(1)}" y1="${f.Y(a[1]).toFixed(1)}" x2="${f.X(b[0]).toFixed(1)}" y2="${f.Y(b[1]).toFixed(1)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round" ${ex}/>`;
+  const ci=(c,r,f,ex)=>`<circle cx="${f.X(c[0]).toFixed(1)}" cy="${f.Y(c[1]).toFixed(1)}" r="${r}" ${ex}/>`;
+  function drawSide(j,f,o={}){ const out=[], col=k=>(o.hl||[]).includes(k)?C.acc:C.body;
+    const legD=(l,k,op)=>`<g ${op?'opacity=".4"':''}>${ln(j.hip,l.knee,f,0.066*H,col(k))}${ln(l.knee,l.ank,f,0.047*H,col(k))}<path d="M${P(l.heel,f)} L${P(l.ank,f)} L${P(l.toe,f)}" fill="none" stroke="${o.barefoot?col(k):C.tire}" stroke-width="${0.034*H}" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+    const armD=(a,k,op)=>`<g ${op?'opacity=".4"':''}>${ln(j.shd,a.elb,f,0.042*H,col(k))}${ln(a.elb,a.wr,f,0.034*H,col(k))}${ln(a.wr,a.hand,f,0.026*H,col(k))}</g>`;
+    if(j.L2) out.push(legD(j.L2,'leg2',1)); if(j.A2) out.push(armD(j.A2,'arm2',1));
+    const t=[j.shd[0]-j.hip[0],j.shd[1]-j.hip[1]], mid=add(mul(add(j.hip,j.shd),.5),mul([-t[1],t[0]],0.06));
+    out.push(`<path d="M${P(j.hip,f)} Q${P(mid,f)} ${P(j.shd,f)}" fill="none" stroke="${col('trunk')}" stroke-width="${0.105*H}" stroke-linecap="round"/>`,ci(j.hip,0.056*H,f,`fill="${col('trunk')}"`));
+    out.push(legD(j.L1,'leg1'),ln(j.shd,j.headC,f,0.04*H,C.body),ci(j.headC,L.head,f,`fill="${C.body}"`),armD(j.A1,'arm1'));
+    return out.join(''); }
+  // Vorder-/Rückansicht stehend mit Parametern
+  function front(o,f){ const out=[], c=o.col||{}; const col=k=>c[k]?C.acc:C.body; const sw=0.105*H, hw=0.085*H, y0=o.y0||0;
+    const legs=o.legs||[{hip:[-0.05*H,0.53*H],knee:[-0.048*H,0.285*H],ank:[-0.042*H,0.045*H]},{hip:[0.05*H,0.53*H],knee:[0.048*H,0.285*H],ank:[0.042*H,0.045*H]}];
+    legs.forEach((l,i)=>{ const k=i?'legR':'legL'; out.push(ln(add(l.hip,[0,y0]),add(l.knee,[0,y0]),f,0.07*H,col(k)),ln(add(l.knee,[0,y0]),add(l.ank,[0,y0]),f,0.05*H,col(k)),ln(add(l.ank,[0,y0-0.025*H]),add(l.ank,[(i?1:-1)*0.012*H,y0-0.035*H]),f,0.045*H,o.barefoot?col(k):C.tire)); });
+    const sy=(o.shY||0.8*H)+y0, tl=o.tiltSh||0;
+    out.push(`<path d="M${P([-sw,sy-tl/2],f)} L${P([sw,sy+tl/2],f)} L${P([0.075*H,0.64*H+y0],f)} L${P([hw+0.007*H,0.52*H+y0],f)} L${P([-hw-0.007*H,0.52*H+y0],f)} L${P([-0.075*H,0.64*H+y0],f)}Z" fill="${col('trunk')}" stroke="${col('trunk')}" stroke-width="${0.035*H}" stroke-linejoin="round"/>`);
+    out.push(ln([0,0.83*H+y0],[0,0.88*H+y0],f,0.045*H,C.body),ci([0,0.925*H+y0],L.head,f,`fill="${C.body}"`));
+    (o.arms||[[[-0.16*H,0.64*H],[-0.17*H,0.49*H]],[[0.16*H,0.64*H],[0.17*H,0.49*H]]]).forEach((a,i)=>{ const S=[(i?1:-1)*sw,sy+(i?tl/2:-tl/2)]; out.push(ln(S,add(a[0],[0,y0]),f,0.04*H,col(i?'armR':'armL')),ln(add(a[0],[0,y0]),add(a[1],[0,y0]),f,0.034*H,col(i?'armR':'armL')),ci(add(a[1],[0,y0]),0.022*H,f,`fill="${col(i?'armR':'armL')}"`)); });
+    return out.join(''); }
+  function ann(f){ const id='fb'+(++uid), W=f.W, fs=W/22, sw=W/260;
+    const defs=`<defs><marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10z" fill="${C.acc}"/></marker></defs>`;
+    const text=(p,t,anchor='middle',small)=>`<text x="${f.X(p[0]).toFixed(1)}" y="${f.Y(p[1]).toFixed(1)}" text-anchor="${anchor}" font-size="${small?fs*.82:fs}" font-weight="${small?500:650}" fill="${small?'var(--muted)':'var(--fg)'}" style="paint-order:stroke;stroke:${C.bg};stroke-width:${fs*.35}px;stroke-linejoin:round">${t}</text>`;
+    return {defs,text,fs,sw,
+      dim:(a,b)=>ln(a,b,f,sw*2.4,C.acc,`marker-start="url(#${id})" marker-end="url(#${id})"`), arrow:(a,b)=>ln(a,b,f,sw*2.4,C.acc,`marker-end="url(#${id})"`),
+      dash:(a,b,c)=>ln(a,b,f,sw*1.4,c||'var(--muted)',`stroke-dasharray="${sw*5} ${sw*4}"`), dot:(p,r)=>ci(p,r||W/80,f,`fill="${C.acc}" stroke="${C.bg}" stroke-width="${sw*1.5}"`),
+      arc:(c,r,a1,a2)=>{ const p1=add(c,mul(dir(a1),r)), p2=add(c,mul(dir(a2),r)); return `<path d="M${P(p1,f)} A${r},${r} 0 ${Math.abs(a2-a1)>180?1:0} ${a2>a1?0:1} ${P(p2,f)}" fill="none" stroke="${C.acc}" stroke-width="${sw*3}" stroke-linecap="round"/>`; },
+      floor:(y,x1,x2)=>ln([x1,y],[x2,y],f,W/110,C.soft),
+      svg:(body,label)=>`<svg viewBox="0 0 ${W.toFixed(0)} ${f.Hh.toFixed(0)}" role="img" aria-label="${label}">${defs}${body}</svg>`}; }
+  // Fußumriss (Draufsicht), Länge l, Breite b, Mitte Ferse bei (0,0), Zehen nach +y; rechter Fuß (Großzehe links bei Draufsicht von oben = Innenseite links)
+  function footPath(f,o){ const l=o.l||270, b=o.b||100, x0=o.x||0, y0=o.y||0, rot=o.rot||0, mir=o.mirror?-1:1;
+    const pts=[[0,0],[0.3,0.04],[0.46,0.3],[0.5,0.62],[0.44,0.8],[0.3,0.92],[0.1,0.98],[-0.12,1],[-0.34,0.94],[-0.48,0.8],[-0.5,0.62],[-0.4,0.42],[-0.36,0.2],[-0.24,0.04]].map(([x,y])=>{ const p=[x*b*mir,y*l]; const r=[p[0]*Math.cos(rot*d2r)-p[1]*Math.sin(rot*d2r),p[0]*Math.sin(rot*d2r)+p[1]*Math.cos(rot*d2r)]; return [r[0]+x0,r[1]+y0]; });
+    let d=`M${P(pts[0],f)}`; for(let i=0;i<pts.length;i++){ const p=pts[i], n=pts[(i+1)%pts.length]; const m=mul(add(p,n),.5); d+=` Q${P(p,f)} ${P(m,f)}`; } return d+'Z'; }
+  const S={};
+  S.hamstring=()=>{ const f=frame(-300,-60,1100,1180), A=ann(f); const j=side({hip:[0,0.53*H],trunk:-22,head:-40,thigh:-84,shank:-88,foot:0,uarm:-96,farm:-92,thigh2:-86,shank2:-89,foot2:0,uarm2:-98,farm2:-93});
+    const h=j.A1.hand; return A.svg(A.floor(0,-300,1100)+drawSide(j,f,{hl:['trunk']})+A.dim([h[0]+60,h[1]-10],[h[0]+60,8])+A.text([h[0]+110,h[1]/2],'Finger bis Boden','start')+A.text([400,1110],'Knie gestreckt, langsam nach vorn beugen','middle',1),'Finger-Boden-Abstand'); };
+  S.hipFlex=()=>{ const f=frame(-80,-120,1900,900), A=ann(f); const hip=[0.47*H,0.07*H]; const j=side({hip,trunk:180,head:180,thigh:110,shank:-150,foot:-60,uarm:150,farm:40,thigh2:0,shank2:-2,foot2:85});
+    const knee=j.L1.knee; return A.svg(`<rect x="${f.X(-60)}" y="${f.Y(0.02*H)}" width="${1.08*H}" height="${0.05*H}" rx="10" fill="${C.soft}"/>`+drawSide(j,f,{hl:['leg1'],barefoot:1})+A.arc(hip,230,0,110)+A.text(add(knee,[160,40]),'Knie zur Brust','start')+A.text([1250,0.07*H+330],'Anderes Bein bleibt flach liegen','middle',1),'Hüftbeugung im Liegen'); };
+  S.trunk=()=>{ const f=frame(-150,-60,1650,700), A=ann(f); const j=side({hip:[720,360],trunk:178,head:182,thigh:-20,shank:-20,foot:-70,uarm:-90,farm:180,thigh2:-20,shank2:-20,foot2:-70,uarm2:-90,farm2:180});
+    return A.svg(A.floor(0,-150,1650)+drawSide(j,f,{hl:['trunk']})+A.dash(add(j.shd,[0,140]),add(j.L1.ank,[0,140]),C.acc)+A.text([750,640],'Körper bleibt eine Linie – Zeit stoppen','middle',1),'Unterarmstütz'); };
+  S.ankle=()=>{ const wall=700, f=frame(-750,-80,wall+120,1900), A=ann(f); const ank=[wall-140,0.039*H], knee=[wall-8,ank[1]+Math.sqrt(L.sh*L.sh-132*132)]; const hip=add(knee,mul(dir(150),L.th));
+    const ang=(a,b)=>Math.atan2(b[1]-a[1],b[0]-a[0])/d2r; const j=side({hip,trunk:86,head:90,thigh:ang(hip,knee),shank:ang(knee,ank),foot:0,uarm:-95,farm:-80,thigh2:-118,shank2:-150,foot2:-20,uarm2:-85,farm2:-70});
+    return A.svg(A.floor(0,-750,wall+120)+`<rect x="${f.X(wall)}" y="0" width="${f.X(wall+120)-f.X(wall)}" height="${f.Y(0)}" fill="${C.soft}"/>`+drawSide(j,f,{hl:['leg1'],barefoot:1})+A.dim([j.L1.toe[0]+15,-40],[wall-5,-40])+A.dot(knee)+A.text([-60,1830],'Knie berührt die Wand, Ferse bleibt unten','middle',1)+A.text([wall-250,-40],'Zehen–Wand','end',1),'Sprunggelenk an der Wand'); };
+  S.hipRot=()=>{ const f=frame(-500,-60,500,1400), A=ann(f); const y0=-0.23*H, a=35*d2r; const kn=[0.055*H,0.5*H];
+    const legs=[{hip:[-0.05*H,0.53*H],knee:[-0.055*H,0.5*H],ank:[-0.06*H,0.254*H]},{hip:[0.05*H,0.53*H],knee:kn,ank:[kn[0]+0.246*H*Math.sin(a),kn[1]-0.246*H*Math.cos(a)]}];
+    const bench=`<rect x="${f.X(-0.2*H)}" y="${f.Y(0.53*H+y0-0.02*H)}" width="${0.4*H}" height="${0.05*H}" rx="10" fill="${C.soft}"/>`;
+    return A.svg(A.floor(0,-500,500)+bench+front({legs,y0,col:{legR:1}},f)+A.dash(add(kn,[0,y0]),[kn[0],0])+A.arc(add(kn,[0,y0]),260,-90,-55)+A.text([0,1340],'Sitzend: Unterschenkel nach außen drehen','middle',1),'Hüftrotation im Sitzen'); };
+  S.singleLeg=()=>{ const f=frame(-450,-60,450,1900), A=ann(f); const legs=[{hip:[-0.05*H,0.53*H],knee:[-0.048*H,0.285*H],ank:[-0.042*H,0.045*H]},{hip:[0.05*H,0.53*H],knee:[0.09*H,0.42*H],ank:[0.08*H,0.22*H]}];
+    return A.svg(A.floor(0,-450,450)+front({legs,arms:[[[-0.2*H,0.66*H],[-0.26*H,0.56*H]],[[0.2*H,0.66*H],[0.26*H,0.56*H]]],col:{legL:1}},f)+A.text([0,1.02*H],'30 Sekunden auf einem Bein','middle')+A.text([0,1.06*H+20],'Augen auf, dann zu','middle',1),'Einbeinstand'); };
+  S.kneeTrack=()=>{ const f=frame(-450,-60,450,1800), A=ann(f); const y0=-0.08*H; const legs=[{hip:[-0.05*H,0.53*H],knee:[-0.07*H,0.33*H],ank:[-0.045*H,0.125*H]},{hip:[0.05*H,0.53*H],knee:[0.1*H,0.52*H],ank:[0.12*H,0.36*H]}];
+    return A.svg(A.floor(0,-450,450)+front({legs,y0,arms:[[[-0.2*H,0.63*H],[-0.24*H,0.52*H]],[[0.2*H,0.63*H],[0.24*H,0.52*H]]],col:{legL:1}},f)+A.dash([-0.045*H,0],[-0.045*H,0.45*H],C.acc)+A.dot([-0.07*H,0.33*H+y0])+A.text([0.1*H,0.98*H],'Knie bleibt über dem Fuß?','middle')+A.text([0.1*H,0.93*H],'Einbeinige Kniebeuge, langsam','middle',1),'Kniebewegung'); };
+  S.legAxis=()=>{ const f=frame(-900,-150,900,1050), A=ann(f); let b=''; [[-600,0,'gerade'],[0,1,'X-Beine'],[600,2,'O-Beine']].forEach(([x,t,lab])=>{ const kn=t===1?[-0.022*H,0.022*H]:t===2?[-0.07*H,0.07*H]:[-0.048*H,0.048*H]; const an=t===1?[-0.07*H,0.07*H]:[-0.042*H,0.042*H];
+      [0,1].forEach(i=>{ const s=i?1:-1; const hp=[x+s*0.05*H,0.53*H], k=[x+kn[i],0.285*H], a=[x+an[i],0.045*H]; b+=ln(hp,k,f,0.07*H,C.body)+ln(k,a,f,0.05*H,C.body)+ln(add(a,[0,-0.025*H]),add(a,[s*0.012*H,-0.035*H]),f,0.045*H,C.body); });
+      b+=`<path d="M${P([x-0.1*H,0.53*H],f)} L${P([x+0.1*H,0.53*H],f)} L${P([x+0.09*H,0.6*H],f)} L${P([x-0.09*H,0.6*H],f)}Z" fill="${C.body}"/>`+A.text([x,-110],lab,'middle'); });
+    return A.svg(A.floor(0,-900,900)+b,'Beinachse von vorn'); };
+  S.shoulder=()=>{ const f=frame(-450,-60,450,1900), A=ann(f); return A.svg(A.floor(0,-450,450)+front({tiltSh:30},f)+A.dash([-0.2*H,0.8*H-15],[0.2*H,0.8*H+15],C.acc)+A.dash([-0.2*H,0.8*H],[0.2*H,0.8*H])+A.text([0,1.03*H],'Von vorn: Schultern gleich hoch?','middle',1),'Schulterstand'); };
+  S.shoulderMob=()=>{ const f=frame(-450,-60,450,1900), A=ann(f); const arms=[[[-0.2*H,0.66*H],[-0.04*H,0.68*H]],[[0.1*H,0.98*H],[0.01*H,0.76*H]]];
+    return A.svg(A.floor(0,-450,450)+front({arms,col:{armL:1,armR:1}},f)+A.dim([0.01*H,0.75*H],[-0.03*H,0.69*H])+A.text([0.2*H,0.72*H],'Abstand der Finger','start',1)+A.text([0,1.03*H],'Von hinten: Hände hinter dem Rücken','middle',1),'Schulterbeweglichkeit'); };
+  S.pain=()=>{ const f=frame(-450,-60,1100,1900), A=ann(f); const bub=`<path d="M${P([300,1500],f)} h${700} a40,40 0 0 1 40,40 v220 a40,40 0 0 1 -40,40 h-560 l-90,80 v-80 h-50 a40,40 0 0 1 -40,-40 v-220 a40,40 0 0 1 40,-40Z" fill="none" stroke="${C.acc}" stroke-width="${A.sw*3}"/>`;
+    return A.svg(A.floor(0,-450,1100)+front({},f)+bub+A.text([650,1660],'Wo tut es weh?','middle')+A.text([650,1580],'Wann? Wie stark (0–10)?','middle',1),'Nach Beschwerden fragen'); };
+  // Füße und Schuhe
+  S.footWidth=()=>{ const f=frame(-160,-60,160,330), A=ann(f); return A.svg(`<path d="${footPath(f,{})}" fill="${C.body}" opacity=".9"/>`+A.dim([-52,0.64*270],[52,0.64*270])+A.text([0,0.64*270+30],'Breiteste Stelle','middle')+A.text([0,-35],'Stehend, voll belastet, von oben','middle',1),'Fußbreite'); };
+  S.footAngle=()=>{ const f=frame(-380,-60,380,360), A=ann(f); return A.svg(`<path d="${footPath(f,{x:-120,rot:12,mirror:1})}" fill="${C.body}"/><path d="${footPath(f,{x:120,rot:-12})}" fill="${C.body}"/>`+A.dash([120,0],[120,300])+A.dash([-120,0],[-120,300])+A.arc([120,0],230,90,102)+A.text([200,320],'Fußwinkel','start')+A.text([0,-35],'Im Gehen: Zehen nach außen?','middle',1),'Fußwinkel'); };
+  S.arch=()=>{ const f=frame(-40,-90,340,150), A=ann(f); const sole=`<path d="M${P([0,20],f)} Q${P([0,0],f)} ${P([30,0],f)} L${P([70,0],f)} Q${P([130,44],f)} ${P([190,0],f)} L${P([275,0],f)} Q${P([305,2],f)} ${P([300,18],f)} Q${P([260,30],f)} ${P([200,60],f)} Q${P([150,80],f)} ${P([110,105],f)} L${P([55,105],f)} Q${P([10,90],f)} ${P([0,20],f)}Z" fill="${C.body}"/>`;
+    return A.svg(A.floor(0,-40,340)+sole+A.dim([130,2],[130,21])+A.text([130,-50],'Gewölbehöhe innen: flach · normal · hoch?','middle',1),'Fußgewölbe'); };
+  S.forefoot=()=>{ const f=frame(-220,-60,220,280), A=ann(f); const heel=`<path d="M${P([-55,0],f)} Q${P([-60,90],f)} ${P([-48,150],f)} L${P([48,150],f)} Q${P([60,90],f)} ${P([55,0],f)} Q${P([0,-25],f)} ${P([-55,0],f)}Z" fill="${C.body}"/>`;
+    return A.svg(heel+`<path d="M${P([-110,190],f)} L${P([110,230],f)}" stroke="${C.acc}" stroke-width="${A.sw*5}" stroke-linecap="round"/>`+A.dash([-150,190],[150,190])+A.arc([-110,190],120,0,10)+A.text([0,260],'Linie der Zehenballen','middle')+A.text([0,-35],'Bauchlage, Fuß von hinten','middle',1),'Vorfußstellung'); };
+  S.cleatFore=()=>{ const f=frame(-30,-80,360,190), A=ann(f); const shoe=`<path d="M${P([0,20],f)} Q${P([0,90],f)} ${P([60,110],f)} L${P([180,115],f)} Q${P([300,100],f)} ${P([330,40],f)} L${P([330,22],f)} L${P([0,10],f)}Z" fill="${C.body}"/><rect x="${f.X(0)}" y="${f.Y(22)}" width="${330}" height="14" rx="6" fill="${C.tire}"/>`;
+    return A.svg(shoe+`<path d="M${P([190,8],f)} L${P([250,8],f)} L${P([235,-12],f)} L${P([200,-12],f)}Z" fill="${C.acc}"/>`+A.dash([220,-40],[220,150])+A.dot([220,70])+A.text([220,160],'Großzehen-Grundgelenk','middle',1)+A.text([220,-62],'Pedalachse unter dem Gelenk oder knapp dahinter','middle',1),'Cleat längs'); };
+  S.cleatRotR=()=>{ const f=frame(-180,-60,180,360), A=ann(f); return A.svg(`<path d="${footPath(f,{l:300,b:110})}" fill="none" stroke="${C.body}" stroke-width="${A.sw*4}"/>`+`<g transform="rotate(8 ${f.X(0)} ${f.Y(200)})"><path d="M${P([-45,170],f)} L${P([45,170],f)} L${P([30,240],f)} L${P([-30,240],f)}Z" fill="${C.acc}"/></g>`+A.dash([0,-20],[0,330])+A.arc([0,200],120,90,82)+A.text([0,-38],'Sohle von unten: Cleat-Drehung','middle',1),'Cleat-Drehung'); };
+  S.cleatRotL=S.cleatRotR;
+  S.saddleTilt=()=>{ const f=frame(-180,-90,190,120), A=ann(f); const sad=`<path d="M${P([-150,10],f)} Q${P([-160,40],f)} ${P([-120,38],f)} L${P([50,20],f)} Q${P([140,14],f)} ${P([155,0],f)} L${P([120,-8],f)} Q${P([-20,-10],f)} ${P([-150,10],f)}Z" fill="${C.tire}"/>`;
+    return A.svg(sad+`<rect x="${f.X(-90)}" y="${f.Y(52)}" width="180" height="22" rx="6" fill="${C.acc}" opacity=".85" transform="rotate(5 ${f.X(0)} ${f.Y(40)})"/>`+A.dash([-170,40],[180,40])+A.arc([-90,40],150,0,-5)+A.text([0,95],'Wasserwaage längs auflegen','middle',1)+A.text([0,-70],'Neigung zur Waagerechten in Grad','middle',1),'Sattelneigung'); };
+  S.barWidth=()=>{ const f=frame(-420,-80,420,560), A=ann(f); const bar=`<path d="M${P([-210,200],f)} L${P([210,200],f)} M${P([-210,200],f)} Q${P([-250,200],f)} ${P([-250,140],f)} Q${P([-250,80],f)} ${P([-220,60],f)} M${P([210,200],f)} Q${P([250,200],f)} ${P([250,140],f)} Q${P([250,80],f)} ${P([220,60],f)}" fill="none" stroke="${C.frame}" stroke-width="26" stroke-linecap="round"/>`;
+    const tor=`<path d="M${P([-0.105*H,470],f)} L${P([0.105*H,470],f)} L${P([0.085*H,320],f)} L${P([-0.085*H,320],f)}Z" fill="${C.body}" opacity=".35"/>`;
+    return A.svg(tor+bar+A.dash([-0.105*H,470],[-0.105*H,240])+A.dash([0.105*H,470],[0.105*H,240])+A.dim([-0.105*H,520],[0.105*H,520])+A.text([0,540],'Schulterbreite','middle',1)+A.dim([-250,20],[250,20])+A.text([0,-50],'Lenkerbreite außen–außen bzw. Mitte–Mitte','middle',1),'Lenkerbreite'); };
+  S.sitBone=()=>{ const f=frame(-260,-70,260,280), A=ann(f); const board=`<rect x="${f.X(-240)}" y="${f.Y(250)}" width="480" height="250" rx="12" fill="${C.soft}"/>`+[0,1,2,3,4,5,6,7,8].map(i=>ln([-240,20+i*27],[240,20+i*27],f,3,'var(--il-bg)')).join('');
+    const imp=x=>`<ellipse cx="${f.X(x)}" cy="${f.Y(120)}" rx="34" ry="46" fill="${C.body}" opacity=".55"/>`+A.dot([x,120]);
+    return A.svg(board+imp(-63)+imp(63)+A.dim([-63,190],[63,190])+A.text([0,215],'Mitte zu Mitte','middle')+A.text([0,-40],'Abdrücke auf Wellpappe, aufrecht sitzen','middle',1),'Sitzknochenabstand'); };
+  return S; })();
+Object.assign(FIG_GUIDES,FIG2);
+
+{ const IL0=IL; IL=k=>{ if(FIG_GUIDES[k]){ try{ return `<div class="illus fig${['legBlock','pelvis','singleLeg','kneeTrack','shoulder','shoulderMob','pain','hipRot','ankle'].includes(k)?' tall':''}">${FIG_GUIDES[k]()}</div>`; }catch(e){ console.error(e); } } return IL0(k); }; }
 /* ---------- Beinlänge: mehrfach messen, Messunsicherheit, Gegenprobe im Stehen ----------
    Grundsatz: Mit Maßband und Abtasten sind Unterschiede unter ca. 1 cm nicht sicher vom Messfehler zu trennen.
    Eine Empfehlung (Ausgleich, Fachperson) gibt es nur, wenn genug Messungen vorliegen, der Unterschied größer als
@@ -1718,7 +1811,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-09.69';
+const APP_VER='2026-11-09.70';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1947,7 +2040,7 @@ const NAV_AREAS=[
   ['Bike-Vermessung',[['vermessung','Bike-Vermessung','ruler','Aktuelle Sitzposition je Fahrrad'],['quickfit','Quick-Fit Übergabe','handover','Neues Rad in 10 Minuten einstellen und übergeben']]],
   ['Fahrwerk',[['fahrwerk','Fahrwerk','susp','Gabel und Dämpfer: Sag, Druck, Klicks je Rad']]],
   ['Bewegungsanalyse',[['motion','Bewegung & Video','motion','Winkel aus Video messen, Live-Analyse (Beta)']]],
-  ['Produktempfehlungen',[['preise','Produkte & Preise','tag','Fitting-Pakete, deine Produkte, Gutscheine'],['rechnungen','Rechnungen','doc','Rechnungen, E-Rechnung, offen und bezahlt'],['lager','Angebote & Lager','box','Angebote aus dem Fitting, Bestand'],['werkstatt','Werkstatt','wrench','Aufträge, Kunden benachrichtigen, Wartung']]],
+  ['Produktempfehlungen',[['preise','Produkte & Preise','tag','Fitting-Pakete, deine Produkte, Gutscheine'],['rechnungen','Rechnungen','doc','Rechnungen, E-Rechnung, offen und bezahlt'],['lager','Angebote & Lager','box','Angebote aus dem Fitting, Bestand'],['werkstatt','Werkstatt','wrench','Aufträge, Kunden benachrichtigen, Wartung'],['termine','Kalender','history','Termine, Kapazität und Werkstatt-Auslastung']]],
   ['Berichte',[['berichte','Berichte','doc','Alle Fitting-Berichte öffnen und drucken'],['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht (Textvorlagen)'],['portal','Kundenportal','portal','So sehen Kunden ihre Berichte (Vorschau)']]],
   ['Datenbanken',[['geometrie','Geometrie-Bibliothek','grid','Rahmenmaße nach Hersteller, Größenberatung'],['messmittel','Messmittel','ruler','Geräte, Genauigkeit, Prüfdatum'],['produktdb','Produktdatenbank','tag','Sättel, Einlagen, Cleats mit Quelle'],['wissen','Wissen','book','Fachbegriffe, Messverfahren, Tests']]],
   ['Händlernetzwerk',[['netz','Händlerprofil & Anfragen','users','Öffentliches Profil, Anfragen von Kunden, QR-Code'],['boerse','Händlerbörse','box','Restposten unter geprüften Händlern (B2B)'],['academy','Academy','book','Lernpfade fürs Team, Teilnahmebestätigung']]],
@@ -2366,7 +2459,7 @@ function customerDrawer(id,tab){
   let body='';
   if(T==='uebersicht') body=`${consentRow}
     <dl class="dl"><dt>Disziplin</dt><dd>${esc(c.discipline)}</dd>${prof}<dt>Letztes Fitting</dt><dd>${lastS?`${fmtDate(lastS.date)} · ${esc(lastS.type)}`:'<span class="faint">–</span>'}</dd><dt>Nächste Nachkontrolle</dt><dd>${openFu[0]?fmtDate(openFu[0].due)+(openFu[0].due<today()?' <span class="chip c-bad nodot">überfällig</span>':''):'<span class="faint">–</span>'}</dd></dl>
-    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm primary" data-act="newSession" data-cust="${c.id}">${ic('plus')}Neues Fitting</button><button class="btn sm" data-act="editCustomer" data-id="${c.id}">Stammdaten bearbeiten</button><button class="btn sm" data-act="newBike" data-id="${c.id}">${ic('plus')}Fahrrad</button><button class="btn sm" data-act="purchaseNew" data-id="${c.id}">${ic('plus')}Kauf</button>${ss.length>1?`<button class="btn sm" data-act="compareCustomer" data-id="${c.id}">Sitzungen vergleichen</button>`:''}</div>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm primary" data-act="newSession" data-cust="${c.id}">${ic('plus')}Neues Fitting</button><button class="btn sm" data-act="editCustomer" data-id="${c.id}">Stammdaten bearbeiten</button><button class="btn sm" data-act="portalShare" data-id="${c.id}">${ic('portal')}Kundenportal-Link</button><button class="btn sm" data-act="newBike" data-id="${c.id}">${ic('plus')}Fahrrad</button><button class="btn sm" data-act="purchaseNew" data-id="${c.id}">${ic('plus')}Kauf</button>${ss.length>1?`<button class="btn sm" data-act="compareCustomer" data-id="${c.id}">Sitzungen vergleichen</button>`:''}</div>
     <hr><div class="stack"><h3>Fahrräder</h3>${bikeList}</div>
     <hr><div class="stack"><h3>Letzte Fittings</h3>${ss.slice(0,3).map(sessRow).join('')||'<span class="muted">Noch keine Sitzung.</span>'}${ss.length>3?`<button class="btn sm ghost" data-act="custTab" data-id="${c.id}" data-k="historie" style="align-self:flex-start">Alle ${ss.length} anzeigen</button>`:''}</div>`;
   else if(T==='person') body=`${consentRow}
@@ -6159,7 +6252,7 @@ const FEATURES=[
  ['Kunden','Kundenakte, Einwilligungen, Auskunft und Löschen',1],
  ['Fahrräder','Fahrradakte mit Lebenslauf: Kauf, Garantie, Kilometer, Teiletausch, Fittings, Werkstatt',1],
  ['FYF Bikefitting','Geführter Ablauf, Körperanalyse, Vermessung mit Doppelmessung, Bericht, Nachkontrollen. Beinlänge: 3 Messungen je Seite, Streuung, Gegenprobe im Stehen',1],
- ['Zeichnungen','Fahrrad nach echter Geometrie, Fahrer nach Körperproportionen, Tretbewegung animiert. Ältere Skizzen (Füße, Tests) teils noch einfach',2],
+ ['Zeichnungen','Fahrrad nach echter Geometrie, Fahrer und alle Körpertests nach Körperproportionen, Füße, Schuhe, Sattel und Lenker neu gezeichnet, Tretbewegung animiert',1],
  ['Bewegung & Video','Winkel aus Video; Live-Analyse ist Beta',2],
  ['Werkstatt','Aufträge, Kostenvoranschlag, Wartung. Kundenfreigabe per Link fehlt noch (simuliert)',2],
  ['Termine','Termine an Fittings und im Dashboard; Terminwünsche über Anfragen. Kein eigener Kalender, keine Online-Buchung',2],
@@ -6316,7 +6409,7 @@ VIEWS.netz = () => { if(!cloudReady()) return head('Händlerprofil & Anfragen','
     ${p.slug?`<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="netLinkCopy">Link zur Profilseite kopieren</button><button class="btn sm" data-act="netQR">QR-Code fürs Schaufenster</button></div>`:''}</div>`)}
   ${panel(`Anfragen${nNew?` · ${nNew} neu`:''}`,`<div class="stack" style="gap:0">${NET.inq.length?NET.inq.slice(0,30).map(q=>`<div style="padding:9px 0;border-bottom:1px solid var(--line,#e5e0d8)"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-weight:600">${esc(q.name)} · ${esc(q.topic)}</b><select class="input" style="width:auto" data-change="inqStatus" data-id="${esc(q.id)}" aria-label="Status">${opts(['neu','in Arbeit','erledigt','Spam'],q.status)}</select></div>
     <div class="muted" style="font-size:13px">${new Date(q.created_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${/@/.test(q.contact)?`<a href="mailto:${esc(q.contact)}">${esc(q.contact)}</a>`:`<a href="tel:${esc(q.contact.replace(/[^\d+]/g,''))}">${esc(q.contact)}</a>`}${q.product_id?' · Produkt: '+esc((products().find(x=>x.id===q.product_id)||{name:q.product_id}).name):''}</div>
-    <div style="white-space:pre-wrap;font-size:14px;margin-top:4px">${esc(q.message)}</div></div>`).join(''):'<p class="muted" style="margin:0">Noch keine Anfragen. Sie kommen über deine öffentliche Profilseite.</p>'}</div>`)}
+    <div style="white-space:pre-wrap;font-size:14px;margin-top:4px">${esc(q.message)}</div>${q.preferred?`<div style="font-size:13.5px;margin-top:4px"><b>Wunschtermin:</b> ${esc(q.preferred)}</div>`:''}<div style="margin-top:6px"><button class="btn sm" data-act="inqToAppt" data-id="${esc(q.id)}">Als Termin eintragen</button></div></div>`).join(''):'<p class="muted" style="margin:0">Noch keine Anfragen. Sie kommen über deine öffentliche Profilseite.</p>'}</div>`)}
   </div>
   ${adm?panel('Profil bearbeiten',`<form class="form" data-form="profileSave">
     <div class="field wide"><label for="pf_n">Name des Ladens</label><input class="input" id="pf_n" name="name" value="${esc(p.name||shopName())}" required maxlength="120"></div>
@@ -6528,6 +6621,136 @@ Object.assign(ACT,{
 });
 DENY.Mitarbeiter.push('woManual');
 FEATURES.forEach(f=>{ if(f[0]==='Werkstatt'){ f[1]='Aufträge, Kostenvoranschlag, Kundenfreigabe per Link (mit Cloud) oder persönlich, Wartung. Werkstatt-Kalender fehlt'; f[2]=2; } if(f[0]==='Anfragen') f[1]='Anfrage an den Laden ohne Konto, Spam-Schutz, Posteingang, Hinweis im Dashboard und am Menü'; });
+
+/* ---------- Kalender mit Kapazität, Terminwünsche, Bestand je Filiale, Unternehmensstruktur, Kundenportal (v.70) ---------- */
+const appts=()=>S.appts=S.appts||[];
+const capCfg=()=>S.capacity=S.capacity||{staff:[{name:'Werkstatt',hours:8}],days:[1,2,3,4,5,6],open:'09:00',close:'18:00'};
+const APPT_KINDS=['Fitting','Werkstatt-Abgabe','Werkstatt-Abholung','Beratung','Quick-Fit','Nachkontrolle'];
+const hm=t=>{ const [h,m]=String(t||'0:0').split(':').map(Number); return h*60+(m||0); };
+const woHours=w=>w.positions.filter(p=>/Arbeit/i.test(p.kind||'')).reduce((a,p)=>a+(Number(p.qty)||0),0);
+function dayLoad(d){ const cap=capCfg(); const wd=new Date(d+'T12:00').getDay()||7; const open=cap.days.includes(wd);
+  const capH=open?cap.staff.reduce((a,s)=>a+(Number(s.hours)||0),0):0;
+  const wos=S.workshop.filter(w=>w.status!=='Übergeben'&&w.due===d), woH=wos.reduce((a,w)=>a+woHours(w),0);
+  const ap=appts().filter(a=>a.date===d).sort((a,b)=>hm(a.start)-hm(b.start)), apH=ap.reduce((a,x)=>a+(Number(x.dur)||0)/60,0);
+  return {d,open,capH,woH,apH,used:woH+apH,wos,ap}; }
+function weekDays(start){ const out=[]; const s=new Date(start+'T12:00'); for(let i=0;i<7;i++){ const x=new Date(s); x.setDate(s.getDate()+i); out.push(iso(x)); } return out; }
+function monday(d){ const x=new Date(d+'T12:00'); const wd=x.getDay()||7; x.setDate(x.getDate()-wd+1); return iso(x); }
+VIEWS.termine = () => { const start=ui.calStart||monday(today()); const days=weekDays(start), cap=capCfg();
+  const nav=`<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="calNav" data-v="-7">‹ Woche</button><button class="btn sm" data-act="calNav" data-v="0">Heute</button><button class="btn sm" data-act="calNav" data-v="7">Woche ›</button><button class="btn sm primary" data-act="apptNew">${ic('plus')} Termin</button></div>`;
+  const dayCard=d=>{ const L=dayLoad(d), pct=L.capH?Math.round(L.used/L.capH*100):0, col=!L.open?'var(--muted)':pct>100?'var(--bad,#b3402a)':pct>80?'var(--warn,#c98a12)':'var(--ok,#2d7a46)';
+    const wd=new Date(d+'T12:00').toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'});
+    return `<div class="card-lite" style="border:1px solid var(--line);border-radius:12px;padding:10px;${d===today()?'outline:2px solid var(--accent);':''}">
+      <div class="row" style="justify-content:space-between;gap:6px"><b>${wd}</b><span class="mono" style="font-size:12px;color:${col}">${L.open?`${fmtNum(Math.round(L.used*10)/10)} / ${fmtNum(L.capH)} Std.`:'geschlossen'}</span></div>
+      ${L.open?`<div style="margin:6px 0;height:8px;border-radius:4px;background:var(--line);overflow:hidden"><div style="height:100%;width:${Math.min(100,pct)}%;background:${col}"></div></div>`:''}
+      ${L.ap.map(a=>`<div class="li click" style="padding:4px 0" data-act="apptOpen" data-id="${a.id}"><span class="mono" style="font-size:12px">${esc(a.start)}</span><div class="grow" style="font-size:14px">${esc(a.kind)} · ${esc(a.customerId?cust(a.customerId).name:(a.name||''))}${a.staff?` <span class="faint">· ${esc(a.staff)}</span>`:''}</div></div>`).join('')}
+      ${L.wos.map(w=>`<div class="li click" style="padding:4px 0" data-act="openWO" data-id="${w.id}"><span class="mono faint" style="font-size:12px">fällig</span><div class="grow" style="font-size:14px">${esc(w.id)} ${esc(w.title)} <span class="faint">· ${fmtNum(woHours(w))} Std.</span></div></div>`).join('')}
+      ${!L.ap.length&&!L.wos.length&&L.open?'<div class="faint" style="font-size:13px">frei</div>':''}</div>`; };
+  return `${head('Kalender',`Termine und Werkstatt-Auslastung. Kapazität: ${cap.staff.map(s=>esc(s.name)+' '+fmtNum(s.hours)+' Std.').join(', ')} pro Öffnungstag.`)}
+  ${panel('',nav+`<div class="grid g2" style="margin-top:10px">${days.map(dayCard).join('')}</div><p class="faint" style="font-size:12px;margin:8px 0 0">Auslastung = Arbeitsstunden der Werkstattaufträge, die an dem Tag fällig sind, plus Termine. Rot = mehr als die Kapazität.</p>`)}
+  ${panel('Kapazität und Öffnungszeiten',`<form class="form" data-form="capSave">${cap.staff.map((s,i)=>`<div class="field"><label for="cs${i}">Mitarbeiter/Platz ${i+1}</label><input class="input" id="cs${i}" name="sn${i}" value="${esc(s.name)}"></div><div class="field"><label for="ch${i}">Stunden pro Tag</label><input class="input num" id="ch${i}" name="sh${i}" type="number" min="0" max="12" step="0.5" value="${s.hours}"></div>`).join('')}
+    <div class="field"><label for="csn">Weitere Person (optional)</label><input class="input" id="csn" name="snNew" placeholder="Name"></div><div class="field"><label for="chn">Stunden</label><input class="input num" id="chn" name="shNew" type="number" min="0" max="12" step="0.5"></div>
+    <div class="field wide"><span class="label">Geöffnet</span><div class="row" style="gap:10px;flex-wrap:wrap">${['Mo','Di','Mi','Do','Fr','Sa','So'].map((n,i)=>`<label class="row" style="gap:4px"><input type="checkbox" name="day" value="${i+1}" ${cap.days.includes(i+1)?'checked':''}>${n}</label>`).join('')}</div></div>
+    <div class="field"><label for="cop">Öffnet</label><input class="input" id="cop" name="open" type="time" value="${esc(cap.open)}"></div><div class="field"><label for="ccl">Schließt</label><input class="input" id="ccl" name="close" type="time" value="${esc(cap.close)}"></div>
+    <div class="wide"><button class="btn" type="submit">Speichern</button></div></form><p class="faint" style="font-size:12px;margin:0">Stunden auf 0 setzen entfernt die Person aus der Planung.</p>`)}`; };
+function apptDrawer(id,pre={}){ const a=id?appts().find(x=>x.id===id):{date:pre.date||today(),start:pre.start||'10:00',dur:pre.dur||60,kind:pre.kind||'Fitting',customerId:pre.customerId||'',name:pre.name||'',contact:pre.contact||'',note:pre.note||'',inq:pre.inq||'',staff:''};
+  openDrawer(id?'Termin':'Termin anlegen',`<form class="form" data-form="apptSave" data-id="${esc(id||'')}" data-inq="${esc(a.inq||'')}">
+   <div class="field"><label for="ap_k">Art</label><select class="input" id="ap_k" name="kind">${opts(APPT_KINDS,a.kind)}</select></div>
+   <div class="field"><label for="ap_d">Datum</label><input class="input" id="ap_d" name="date" type="date" value="${esc(a.date)}" required></div>
+   <div class="field"><label for="ap_s">Beginn</label><input class="input" id="ap_s" name="start" type="time" value="${esc(a.start)}" required></div>
+   <div class="field"><label for="ap_u">Dauer (Min.)</label><input class="input num" id="ap_u" name="dur" type="number" min="5" step="5" value="${a.dur}"></div>
+   <div class="field wide"><label for="ap_c">Kunde</label><select class="input" id="ap_c" name="customerId"><option value="">– neuer Kontakt (unten) –</option>${opts(S.customers.map(c=>[c.id,c.name]),a.customerId)}</select></div>
+   <div class="field"><label for="ap_n">Name (falls kein Kunde)</label><input class="input" id="ap_n" name="name" value="${esc(a.name||'')}"></div>
+   <div class="field"><label for="ap_t">Telefon / E-Mail</label><input class="input" id="ap_t" name="contact" value="${esc(a.contact||'')}"></div>
+   <div class="field"><label for="ap_m">Mitarbeiter</label><select class="input" id="ap_m" name="staff"><option value="">–</option>${opts(capCfg().staff.map(s=>s.name),a.staff)}</select></div>
+   <div class="field wide"><label for="ap_x">Notiz</label><input class="input" id="ap_x" name="note" value="${esc(a.note||'')}" maxlength="300"></div>
+   <div class="wide row" style="gap:6px;flex-wrap:wrap"><button class="btn primary" type="submit">Speichern</button>${id?`<button class="btn ghost" type="button" data-act="apptDel" data-id="${esc(id)}">Löschen</button>`:''}</div></form>
+   ${id?`<hr><div class="stack"><b style="font-size:14px">Bestätigung an den Kunden</b>${msgButtons(apptText(a),a.customerId?cust(a.customerId):{name:a.name,phone:/@/.test(a.contact||'')?'':a.contact,email:/@/.test(a.contact||'')?a.contact:''})}</div>`:''}`); }
+function apptText(a){ const n=a.customerId?firstName(cust(a.customerId)):(String(a.name||'').split(' ')[0]); const d=new Date(a.date+'T12:00').toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit'});
+  return `Hallo ${n},\nwir bestätigen deinen Termin (${a.kind}) am ${d} um ${a.start} Uhr.\n${(S.shop&&S.shop.addr)?'Adresse: '+S.shop.addr+'\n':''}Bis dann!\n${shopName()||''}`; }
+/* Bestand je Filiale */
+function stockLocHtml(){ const L=locations(); if(!L.length) return '';
+  const row=x=>{ const by=x.byLoc||{}; const sum=L.reduce((a,l)=>a+(Number(by[l.id])||0),0); return `<tr><td>${esc(x.name)}</td>${L.map(l=>`<td class="r num">${Number(by[l.id])||0}</td>`).join('')}<td class="r num">${Math.max(0,x.stock-sum)}</td><td class="r num"><b>${x.stock}</b></td></tr>`; };
+  return panel('Bestand je Filiale',`<div class="tw"><table><thead><tr><th>Artikel</th>${L.map(l=>`<th class="r">${esc(l.name)}</th>`).join('')}<th class="r">ohne Zuordnung</th><th class="r">Gesamt</th></tr></thead><tbody>${S.inventory.map(row).join('')}</tbody></table></div>
+    <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" data-act="stockMove">Umlagern / zuordnen</button></div><p class="faint" style="font-size:12px;margin:6px 0 0">Wareneingang und Plus/Minus buchen auf die Filiale des Geräts. „Ohne Zuordnung“ = Bestand von vor der Filial-Einteilung.</p>`); }
+function locAdjust(x,q){ const l=myLoc(); if(!l) return; x.byLoc=x.byLoc||{}; x.byLoc[l]=Math.max(0,(Number(x.byLoc[l])||0)+q); }
+function stockMoveDrawer(){ const L=locations(); openDrawer('Umlagern',`<form class="form" data-form="stockMove">
+  <div class="field wide"><label for="sm_a">Artikel</label><select class="input" id="sm_a" name="sku">${opts(S.inventory.map(x=>[x.sku,x.name]))}</select></div>
+  <div class="field"><label for="sm_f">Von</label><select class="input" id="sm_f" name="from"><option value="">ohne Zuordnung</option>${opts(L.map(l=>[l.id,l.name]))}</select></div>
+  <div class="field"><label for="sm_t">Nach</label><select class="input" id="sm_t" name="to">${opts(L.map(l=>[l.id,l.name]))}</select></div>
+  <div class="field"><label for="sm_q">Menge</label><input class="input num" id="sm_q" name="qty" type="number" min="1" value="1" required></div>
+  <div class="wide"><button class="btn primary" type="submit">Umlagern</button></div></form>`); }
+/* Unternehmensstruktur innerhalb des Kontos */
+function orgHtml(){ const L=locations(); if(!L.length) return ''; const org=S.org=S.org||{group:''};
+  const tree={}; L.forEach(l=>{ const c=l.company||shopName()||'Unternehmen', b=l.brand||'–'; ((tree[c]=tree[c]||{})[b]=(tree[c][b]||[])).push(l); });
+  return `<div class="stack"><p class="muted" style="margin:0;font-size:13.5px">Gruppe → Unternehmen → Marke → Filiale. Unternehmen und Marke trägst du je Filiale ein.</p>
+   <form class="form" data-form="orgSave"><div class="field wide"><label for="og_g">Name der Gruppe (optional)</label><input class="input" id="og_g" name="group" value="${esc(org.group||'')}"></div>
+   ${L.map((l,i)=>`<div class="field"><label for="ol_c${i}">${esc(l.name)}: Unternehmen</label><input class="input" id="ol_c${i}" name="c_${esc(l.id)}" value="${esc(l.company||'')}"></div><div class="field"><label for="ol_b${i}">Marke</label><input class="input" id="ol_b${i}" name="b_${esc(l.id)}" value="${esc(l.brand||'')}"></div>`).join('')}
+   <div class="wide"><button class="btn sm" type="submit">Speichern</button></div></form>
+   <div style="font-size:14px">${org.group?`<b>${esc(org.group)}</b>`:''}${Object.entries(tree).map(([c,bs])=>`<div style="margin-left:${org.group?12:0}px"><b>${esc(c)}</b>${Object.entries(bs).map(([b,ls])=>`<div style="margin-left:12px">${esc(b)}: ${ls.map(l=>esc(l.name)).join(', ')}</div>`).join('')}</div>`).join('')}</div>
+   <p class="faint" style="font-size:12px;margin:0">Alle Filialen liegen in einem Konto. Getrennte Konten mehrerer Firmen unter einer Gruppe gibt es noch nicht.</p></div>`; }
+/* Kundenportal per Link */
+function portalPayload(c){ const sh=S.shop||{}; const lab=k=>(MK[k]&&MK[k].label)||k, unit=k=>(MK[k]&&MK[k].unit)||'';
+  const bikes=bikesOf(c.id).map(b=>{ const s=latestSess(S.sessions.filter(x=>x.bikeId===b.id)); const m={...((s&&s.before)||{}),...((s&&s.after)||{})};
+    const keys=['saddleHeight','saddleSetback','saddleTilt','reach','drop','spacer','stemLength','crankLength','cleatFore'].filter(k=>m[k]&&m[k].value!=null&&m[k].value!=='');
+    const sv=S.services.filter(x=>x.bikeId===b.id).sort((a,b)=>String(a.next).localeCompare(String(b.next)))[0];
+    return {name:[b.brand,b.model].filter(Boolean).join(' '),frameNo:b.frameNo||'',setup:keys.map(k=>({l:lab(k),v:`${fmtNum(Number(m[k].value))} ${unit(k)}`.trim()})),next:sv?`${sv.task} · ${fmtDate(sv.next)}`:''}; });
+  const fits=sessOf(c.id).filter(s=>s.status==='abgeschlossen').sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,3).map(s=>({date:s.date,summary:s.goal?('Ziel: '+String(s.goal).slice(0,200)):'',
+    changes:(s.changes||[]).filter(x=>MK[x.key]).slice(0,12).map(x=>({l:lab(x.key),from:x.from!=null?`${fmtNum(x.from)} ${unit(x.key)}`:'–',to:`${fmtNum(x.to)} ${unit(x.key)}`,why:String(x.reason||'').slice(0,140)})),
+    recs:(s.recs||[]).filter(r=>r.status!=='abgelehnt').slice(0,6).map(r=>{ const p=products().find(x=>x.id===r.prodId)||{}; return {name:p.name||r.name||'',why:String(r.reason||'').slice(0,160)}; }),
+    next:((s.followUps||[]).find(f=>f.status==='offen')||{}).due||''}));
+  const slug=(typeof NET!=='undefined'&&NET.profile&&NET.profile.published)?NET.profile.slug:'';
+  return {greet:firstName(c),date:today(),shop:{name:shopName()||'',phone:sh.phone||'',email:sh.email||'',addr:sh.addr||''},bikes,fits,bookUrl:slug?finderLink(slug):''}; }
+const portalLink=tk=>location.origin+location.pathname.replace(/[^/]*$/,'')+'portal.html#cfg='+b64u(JSON.stringify({u:clBase(),k:CL.key}))+'&t='+tk;
+/* Terminwunsch in Anfragen */
+const _inqHtmlFix=1;
+Object.assign(ACT,{
+  calNav(el){ const v=Number(el.dataset.v); if(!v){ ui.calStart=monday(today()); } else { const x=new Date((ui.calStart||monday(today()))+'T12:00'); x.setDate(x.getDate()+v); ui.calStart=iso(x); } render(); },
+  apptNew(){ apptDrawer(null); }, apptOpen(el){ apptDrawer(el.dataset.id); },
+  apptDel(el){ if(el.dataset.ok!=='1'){ el.dataset.ok='1'; el.textContent='Wirklich löschen?'; return; } S.appts=appts().filter(a=>a.id!==el.dataset.id); audit('Termin gelöscht'); save(); closeDrawer(); render(); },
+  inqToAppt(el){ const q=(NET.inq||[]).find(x=>x.id===el.dataset.id); if(!q) return; const kind=/fitting/i.test(q.topic)?'Fitting':/werkstatt/i.test(q.topic)?'Werkstatt-Abgabe':'Beratung';
+    const c=S.customers.find(x=>x.email&&x.email.toLowerCase()===String(q.contact).toLowerCase()); apptDrawer(null,{kind,name:q.name,contact:q.contact,customerId:c?c.id:'',note:`Anfrage: ${q.preferred?'Wunsch '+q.preferred+' · ':''}${q.message}`.slice(0,300),inq:q.id}); },
+  stockMove(){ stockMoveDrawer(); },
+  async portalShare(el){ const c=cust(el.dataset.id); if(!c||!c.id) return;
+    if(!cloudReady()){ toast('Das Kundenportal braucht die Cloud-Speicherung',true); return; }
+    if(!c.consent){ toast('Erst die Einwilligung des Kunden erfassen',true); return; }
+    let tk; try{ tk=String(await clApi('/rest/v1/rpc/portal_publish',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_customer:c.id,p_payload:portalPayload(c)})})).replace(/"/g,''); }catch(e){ toast(e.offline?'Keine Verbindung':clErrText(e.message).replace('team.sql','ausbau.sql'),true); return; }
+    c.portal={sent:nowStamp()}; audit(`Kundenportal-Link für ${c.name}`); save(); const link=portalLink(tk); ui.portalLink=link;
+    openDrawer('Kundenportal-Link',`<div class="stack"><p class="muted" style="margin:0;font-size:14px">${esc(firstName(c))} sieht damit Fahrräder, Einstellungen, die letzten Fittings und Empfehlungen – ohne Konto. Stand von jetzt. Ein neuer Link ersetzt den alten. 180 Tage gültig.</p>
+      ${msgButtons(`Hallo ${firstName(c)},\nhier findest du deine Fahrräder, Einstellungen und Fitting-Ergebnisse:\n${link}\n\nDer Link ist persönlich, bitte nicht weitergeben.\n${shopName()||''}`,c)}
+      <div class="row" style="gap:6px;flex-wrap:wrap"><a class="btn sm ghost" href="${esc(link)}" target="_blank" rel="noopener">Vorschau</a><button class="btn sm ghost" data-act="portalRevoke" data-id="${esc(c.id)}">Link sperren</button></div></div>`); },
+  async portalRevoke(el){ try{ await clApi('/rest/v1/rpc/portal_revoke',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_customer:el.dataset.id})}); const c=cust(el.dataset.id); if(c) delete c.portal; audit('Kundenportal-Link gesperrt'); save(); toast('Link gesperrt'); closeDrawer(); }catch(e){ toast(clErrText(e.message),true); } }
+});
+Object.assign(FORMS,{
+  apptSave(f,d){ const g=k=>String(d.get(k)||'').trim(); const rec={kind:g('kind'),date:g('date'),start:g('start'),dur:Math.max(5,Number(g('dur'))||60),customerId:g('customerId'),name:g('name'),contact:g('contact'),staff:g('staff'),note:g('note'),loc:myLoc()||''};
+    if(!rec.customerId&&!rec.name){ toast('Kunde wählen oder Namen eintragen',true); return; }
+    const L=dayLoad(rec.date); if(L.open&&L.capH&&L.used+rec.dur/60>L.capH) toast('Achtung: Der Tag ist damit über der Kapazität',true);
+    const clash=appts().find(a=>a.id!==f.dataset.id&&a.date===rec.date&&a.staff&&a.staff===rec.staff&&hm(a.start)<hm(rec.start)+rec.dur&&hm(rec.start)<hm(a.start)+(Number(a.dur)||0)); if(clash) toast(`Überschneidung mit ${clash.kind} um ${clash.start}`,true);
+    let id=f.dataset.id; if(id) Object.assign(appts().find(a=>a.id===id),rec); else { id=uid('ap'); appts().push({id,...rec,source:f.dataset.inq?'Anfrage':'manuell'}); }
+    if(f.dataset.inq){ clApi('/rest/v1/rpc/set_inquiry_status',{method:'POST',body:JSON.stringify({p_id:f.dataset.inq,p_status:'in Arbeit'})}).then(()=>{ const q=(NET.inq||[]).find(x=>x.id===f.dataset.inq); if(q) q.status='in Arbeit'; NET.newList=(NET.inq||[]).filter(x=>x.status==='neu'); NET.newCount=NET.newList.length; }).catch(()=>{}); }
+    audit(`Termin ${rec.kind} ${fmtDate(rec.date)} ${rec.start}`); save(); render(); apptDrawer(id); toast('Termin gespeichert – unten die Bestätigung schicken'); },
+  capSave(f,d){ const cap=capCfg(); const staff=[]; cap.staff.forEach((s,i)=>{ const n=String(d.get('sn'+i)||'').trim(), h=Number(d.get('sh'+i)); if(n&&h>0) staff.push({name:n,hours:h}); });
+    const nn=String(d.get('snNew')||'').trim(), nh=Number(d.get('shNew')); if(nn&&nh>0) staff.push({name:nn,hours:nh});
+    cap.staff=staff.length?staff:[{name:'Werkstatt',hours:8}]; cap.days=d.getAll('day').map(Number); cap.open=String(d.get('open')||'09:00'); cap.close=String(d.get('close')||'18:00'); audit('Kapazität geändert'); save(); render(); toast('Gespeichert'); },
+  stockMove(f,d){ const x=S.inventory.find(i=>i.sku===d.get('sku')); const q=Math.round(Number(d.get('qty'))); const from=String(d.get('from')||''), to=String(d.get('to')||''); if(!x||!(q>0)||from===to){ toast('Angaben prüfen',true); return; }
+    x.byLoc=x.byLoc||{}; const L=locations(); const assigned=L.reduce((a,l)=>a+(Number(x.byLoc[l.id])||0),0); const avail=from?(Number(x.byLoc[from])||0):Math.max(0,x.stock-assigned);
+    if(q>avail){ toast(`Nur ${avail} verfügbar`,true); return; } if(from) x.byLoc[from]=avail-q; x.byLoc[to]=(Number(x.byLoc[to])||0)+q;
+    const ln=id=>(L.find(l=>l.id===id)||{name:'ohne Zuordnung'}).name; moveAdd(x.sku,0,'Umlagerung',`${q} Stk. ${ln(from)} → ${ln(to)}`); audit(`Umlagerung ${x.name}: ${q} ${ln(from)} → ${ln(to)}`); save(); closeDrawer(); render(); toast('Umgelagert'); },
+  orgSave(f,d){ S.org=S.org||{}; S.org.group=String(d.get('group')||'').trim(); locations().forEach(l=>{ l.company=String(d.get('c_'+l.id)||'').trim(); l.brand=String(d.get('b_'+l.id)||'').trim(); }); audit('Unternehmensstruktur gespeichert'); save(); render(); toast('Gespeichert'); }
+});
+// Wareneingang und Plus/Minus buchen auf die Filiale des Geräts
+{ const gi=FORMS.goodsIn; FORMS.goodsIn=function(f,d){ const x=S.inventory.find(i=>i.sku===d.get('sku')), before=x?x.stock:0; gi.call(this,f,d); if(x&&x.stock>before){ locAdjust(x,x.stock-before); save(); } }; }
+{ const st=ACT.stock; ACT.stock=function(el){ const x=S.inventory.find(i=>i.sku===el.dataset.sku), before=x?x.stock:0; st.call(this,el); if(x&&x.stock!==before){ locAdjust(x,x.stock-before); save(); } }; }
+{ const lg=VIEWS.lager; VIEWS.lager=()=>lg()+stockLocHtml(); }
+{ const mh=VIEWS.mehr; VIEWS.mehr=()=>mh()+(locations().length?panel('Unternehmensstruktur',orgHtml()):''); }
+DENY.Mitarbeiter.push('apptDel','stockMove'); DENY_FORM.Mitarbeiter.push('capSave','stockMove','orgSave');
+FEATURES.forEach(f=>{ if(f[0]==='Termine'){ f[1]='Kalender mit Wochenansicht, Kapazität je Mitarbeiter, Werkstatt-Auslastung, Terminwünsche aus der Profilseite übernehmen, Bestätigung per Nachricht'; f[2]=1; }
+  if(f[0]==='Filialen'){ f[1]='Filialen, Gerät einer Filiale zuordnen, Vergleich, Bestand je Filiale, Umlagerung'; f[2]=1; }
+  if(f[0]==='Unternehmensgruppen'){ f[1]='Gruppe → Unternehmen → Marke → Filiale innerhalb eines Kontos. Mehrere getrennte Konten unter einer Gruppe: noch nicht'; f[2]=2; }
+  if(f[0]==='Kundenportal'){ f[1]='Persönlicher Link: Fahrräder, Einstellungen, Fittings, Empfehlungen, Termin anfragen. Ohne Kunden-Konto, sperrbar'; f[2]=1; }
+  if(f[0]==='Werkstatt'){ f[1]='Aufträge, Kostenvoranschlag, Freigabe per Link oder persönlich, Wartung, Kalender mit Auslastung'; f[2]=1; } });
+{ const db=VIEWS.dashboard; VIEWS.dashboard=()=>{ const t=appts().filter(a=>a.date===today()).sort((a,b)=>hm(a.start)-hm(b.start));
+  const box=t.length?`<div class="notice" style="margin-bottom:12px;display:block"><b>Heute ${t.length===1?'1 Termin':t.length+' Termine'}</b>${t.map(a=>`<div class="li click" style="padding:4px 0" data-act="apptOpen" data-id="${a.id}"><span class="mono" style="font-size:12px">${esc(a.start)}</span><div class="grow" style="font-size:14px">${esc(a.kind)} · ${esc(a.customerId?cust(a.customerId).name:a.name)}</div></div>`).join('')}<div style="margin-top:6px"><button class="btn sm" data-nav="termine">Kalender</button></div></div>`:'';
+  return box+db(); }; }
 
 /* =================== Ende Plattform-Ausbau =================== */
 
