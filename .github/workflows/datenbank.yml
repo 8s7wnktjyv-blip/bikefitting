@@ -27,8 +27,12 @@ jobs:
       PGURL: ${{ secrets.SUPABASE_DB_URL }}
       PGSSLMODE: require
       PGOPTIONS: "-c client_min_messages=warning"
-      ADMIN_MAIL: ${{ inputs.plattform_admin_email }}
     steps:
+      - name: E-Mail im Protokoll verbergen
+        env:
+          M: ${{ inputs.plattform_admin_email }}
+        run: '[ -z "$M" ] || echo "::add-mask::$M"'
+
       - uses: actions/checkout@v4
 
       - name: Secret vorhanden?
@@ -51,6 +55,8 @@ jobs:
 
       - name: Plattform-Admin eintragen (nur wenn E-Mail angegeben)
         if: ${{ inputs.plattform_admin_email != '' }}
+        env:
+          ADMIN_MAIL: ${{ inputs.plattform_admin_email }}
         run: |
           printf '%s\n' "insert into platform_admins(user_id) select id from auth.users where lower(email) = lower(:'mail') on conflict do nothing;" \
             "select case when exists (select 1 from platform_admins p join auth.users u on u.id = p.user_id where lower(u.email) = lower(:'mail')) then 'Plattform-Admin: eingetragen' else 'Plattform-Admin: E-Mail nicht gefunden – erst in FYF damit anmelden' end;" \
