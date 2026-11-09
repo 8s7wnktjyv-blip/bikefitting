@@ -299,7 +299,7 @@ ol.how{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6
 .illus{background-color:var(--il-bg);background-image:linear-gradient(var(--il-grid) 1px,transparent 1px),linear-gradient(90deg,var(--il-grid) 1px,transparent 1px);background-size:16px 16px;border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0 6px;max-width:400px}
 .illus svg{width:100%;height:auto;display:block;overflow:visible}
 .illus line,.illus path{stroke-linecap:round;stroke-linejoin:round}
-.illus circle,.illus ellipse{fill:none}
+.illus:not(.fig) circle,.illus:not(.fig) ellipse{fill:none}
 .il-b{stroke:var(--il-frame);fill:none} .il-f{stroke:var(--il-soft);fill:none;stroke-width:2} rect.il-f{fill:var(--surface);stroke:var(--il-soft)} .il-tire{stroke:var(--il-tire);fill:none;stroke-width:5} .il-shadow{fill:var(--il-soft);opacity:.55;stroke:none}
 .il-p{stroke:var(--il-body);fill:none} .il-h{stroke:var(--accent);fill:none} .il-d{stroke:var(--faint);stroke-dasharray:4 4;stroke-width:1.5}
 .il-head{fill:var(--accent);stroke:none}
@@ -1811,7 +1811,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-09.71';
+const APP_VER='2026-11-10.72';
 let loadIssue = null;
 function load(){
   let raw=null;
