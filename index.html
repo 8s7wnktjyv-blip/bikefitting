@@ -1811,7 +1811,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-09.70';
+const APP_VER='2026-11-09.71';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1904,6 +1904,7 @@ async function cloudInit(){
     if(er) setTimeout(()=>toast(er,true),300);
     else if(CL.session&&clBase()===url) setTimeout(()=>toast('Dieses Gerät ist schon verbunden'),300);
     else { CL={url,key}; clSave(); setTimeout(()=>{ try{ go('mehr'); setTimeout(()=>{ const bx=document.getElementById('cloudBox'); if(bx) bx.scrollIntoView({block:'center'}); },200); }catch(e){} toast('Verbunden. Jetzt mit deiner E-Mail anmelden.'); },400); } }
+  dbCheck();
   if(!(CL.url&&CL.key&&CL.session)) { savePill(); return; }
   try{ if(!CL.tenant&&!(await cloudFindTenant())){ clStatus('setup'); return; } if(!(await cloudRoleCheck())) return; await cloudPull(); }catch(e){ clStatus('err',e.message); } }
 // Rolle bei jedem Start vom Server holen. Wurde man entfernt, wird die Verbindung zum Laden gelöst (lokale Daten bleiben).
@@ -1911,6 +1912,16 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   try{ m=await clApi(`/rest/v1/memberships?user_id=eq.${uid}&tenant_id=eq.${encodeURIComponent(CL.tenant)}&select=role`,{method:'GET'}); }catch(e){ return true; }
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
+// Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
+const DB_SCHEMA=7; let dbSchema=null;
+async function dbCheck(){ if(!(CL.url&&CL.key)) return;
+  try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
+  catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
+  const a=document.getElementById('dbVer'); if(a) a.outerHTML=dbVerHtml(); const b=document.getElementById('dbWarn'); if(b) b.innerHTML=dbWarnHtml(); }
+function dbVerHtml(){ const t=!(CL.url&&CL.key)?'keine Cloud':dbSchema===null?'nicht geprüft':dbSchema>=DB_SCHEMA?`aktuell (Stand ${dbSchema})`:`Update fehlt (Stand ${dbSchema||'alt'}, nötig ${DB_SCHEMA})`;
+  return `<span class="mono" id="dbVer"${dbSchema!==null&&dbSchema<DB_SCHEMA?' style="color:var(--bad)"':''}>${esc(t)}</span>`; }
+function dbWarnHtml(){ if(dbSchema===null||dbSchema>=DB_SCHEMA) return '';
+  return `<div class="notice warn" style="margin:0 0 10px">${ic('warn')}<div><b>Datenbank braucht ein Update.</b> Neue Funktionen (z. B. Kundenportal-Link, Terminwunsch) gehen erst danach. ${(!cloudRole()||role()==='admin')?'In GitHub: Repo bikefitting → <b>Actions</b> → <b>Datenbank aktualisieren</b> → <b>Run workflow</b>. Danach FYF neu öffnen.':'Bitte dem Admin Bescheid geben.'}</div></div>`; }
 function cloudBody(){
   const st=CL.status, t=CL.lastSync?new Date(CL.lastSync).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'noch nie';
   if(!CL.url||!CL.key) return `<p class="muted" style="font-size:14px;margin:0">Aus. Deine Daten liegen nur auf diesem Gerät. Mit der Cloud-Speicherung sind sie gesichert und auf iPad, Handy und PC gleich.</p>
@@ -1981,7 +1992,7 @@ async function cloudPairGo(input,cfg){ let code=String(input||'').trim(); const 
     if(!t){ toast('Code falsch oder abgelaufen. Auf dem anderen Gerät einen neuen holen.',true); render(); return; }
     CL.tenant=String(t).replace(/"/g,''); CL.ver=0; delete CL.removed; clSave(); await cloudFindTenant(); toast('Gerät verbunden'); await cloudPull(); render(); }
   catch(e){ toast(e.offline?'Keine Verbindung':pairErr(e.message),true); render(); } }
-function cloudPanel(){ return panel('Cloud-Speicherung',`<div class="stack" id="cloudBox">${cloudBody()}</div>`)+(CL.session&&CL.tenant?panel('Team',`<div class="stack" id="teamBox">${teamBody()}</div>`):''); }
+function cloudPanel(){ if(dbSchema===null&&CL.url&&CL.key&&!dbCheck.t){ dbCheck.t=setTimeout(()=>{ dbCheck(); },300); } return panel('Cloud-Speicherung',`<div id="dbWarn">${dbWarnHtml()}</div><div class="stack" id="cloudBox">${cloudBody()}</div>`)+(CL.session&&CL.tenant?panel('Team',`<div class="stack" id="teamBox">${teamBody()}</div>`):''); }
 // Team: Mitglieder und Einladungen liegen nur auf dem Server. TEAM ist ein Zwischenspeicher im Arbeitsspeicher.
 let TEAM={at:0,members:[],invites:[],err:'',busy:false};
 const TEAM_ROLES=[['admin','Admin'],['fitter','Fitter'],['mitarbeiter','Mitarbeiter']];
@@ -2363,7 +2374,8 @@ VIEWS.mehr = () => `
   ${panel('Ladentyp & Module',shopTypeHtml(false))}
   ${panel('Rolle und Datenspeicherung',`<div class="stack"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span style="max-width:52ch">${cloudRole()?'Deine Rolle':'Rolle (Demo)'}<br><span class="muted" style="font-size:13.5px">Admin: alles. Fitter: keine Preise, kein Löschen von Kunden. Mitarbeiter: messen und dokumentieren, nichts löschen oder abschließen. ${cloudRole()?'Vergeben vom Admin unter „Team“. Rechnungen, Kunden- und Messmittel-Löschen prüft zusätzlich der Server.':'Mit Cloud-Speicherung vergibt der Admin die Rollen, und der Server prüft wichtige Rechte.'}</span></span>${cloudRole()?`<span class="chip nodot c-ok">${esc(role())}</span>`:`<div class="seg">${ROLES.map(r=>`<button data-act="roleSet" data-v="${r}" aria-pressed="${role()===r}">${r}</button>`).join('')}</div>`}</div>
   <hr><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span style="max-width:52ch">Speicherort<br><span class="muted" style="font-size:13.5px">${esc(STORE.kind)}. Fotos und Videos: auf diesem Gerät (IndexedDB)${CL.tenant?', zusätzlich in der Cloud (siehe Cloud-Speicherung)':''}.</span></span></div>
-  <hr><div class="row" style="justify-content:space-between"><span>Version</span><span class="mono" id="appVer">v.${APP_VER.split('.').pop()} · ${APP_VER}</span></div></div>`)}
+  <hr><div class="row" style="justify-content:space-between"><span>Version</span><span class="mono" id="appVer">v.${APP_VER.split('.').pop()} · ${APP_VER}</span></div>
+  <hr><div class="row" style="justify-content:space-between"><span>Datenbank</span>${dbVerHtml()}</div></div>`)}
   ${panel('Einstellungen',`<div class="stack"><div class="row" style="justify-content:space-between"><span>Darstellung</span><div class="seg"><button data-act="setTheme" data-v="light" aria-pressed="${theme==='light'}">Hell</button><button data-act="setTheme" data-v="dark" aria-pressed="${theme==='dark'}">Dunkel</button></div></div>
   <hr><div class="row" style="justify-content:space-between"><span style="max-width:52ch">Profi-Bereiche: Werkstatt, Kundenportal, Team & Zahlen, Schreibhilfe, Messdaten, Hardware Lab<br><span class="muted" style="font-size:13.5px">Teils nur Vorschau. Ausgeblendet bleibt FYF aufs Fitting und den Verkauf konzentriert.</span></span><div class="seg"><button data-act="setExtra" data-v="1" aria-pressed="${showExtra()}">Zeigen</button><button data-act="setExtra" data-v="0" aria-pressed="${!showExtra()}">Ausblenden</button></div></div>
   ${S.demoRemoved?'':`<hr><div class="row" style="justify-content:space-between"><span style="max-width:52ch">Beispielkunden entfernen<br><span class="muted" style="font-size:13.5px">Löscht nur die 4 erfundenen Kunden mit ihren Rädern und Fittings. Deine eigenen Einträge bleiben.</span></span><button class="btn" data-act="removeDemo">Entfernen</button></div>`}

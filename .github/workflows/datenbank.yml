@@ -1,0 +1,63 @@
+# Spielt docs/supabase/alles.sql in die Supabase-Datenbank ein.
+# Start nur von Hand: GitHub → Actions → „Datenbank aktualisieren“ → Run workflow.
+# Braucht einmalig das Secret SUPABASE_DB_URL (Settings → Secrets and variables → Actions).
+# Die Datei ergänzt nur und löscht keine Daten. Alles läuft in einem Block: bei einem Fehler wird nichts übernommen.
+name: Datenbank aktualisieren
+
+on:
+  workflow_dispatch:
+    inputs:
+      plattform_admin_email:
+        description: "Optional: E-Mail, die Plattform-Admin werden soll (muss in FYF schon angemeldet gewesen sein). Sonst leer lassen."
+        required: false
+        default: ""
+
+concurrency:
+  group: datenbank
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  einspielen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PGURL: ${{ secrets.SUPABASE_DB_URL }}
+      PGSSLMODE: require
+      PGOPTIONS: "-c client_min_messages=warning"
+      ADMIN_MAIL: ${{ inputs.plattform_admin_email }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Secret vorhanden?
+        run: |
+          if [ -z "$PGURL" ]; then
+            echo "::error::Secret SUPABASE_DB_URL fehlt. Anleitung: docs/DATENBANK-UPDATE.md"
+            exit 1
+          fi
+
+      - name: alles.sql passt zu den Einzeldateien?
+        run: |
+          sh tools/build-alles.sh
+          git diff --exit-code docs/supabase/alles.sql || { echo "::error::alles.sql ist veraltet – tools/build-alles.sh ausführen und committen"; exit 1; }
+
+      - name: psql bereitstellen
+        run: command -v psql || (sudo apt-get update -q && sudo apt-get install -y -q postgresql-client)
+
+      - name: Datenbank aktualisieren
+        run: psql "$PGURL" -v ON_ERROR_STOP=1 --single-transaction -q -f docs/supabase/alles.sql
+
+      - name: Plattform-Admin eintragen (nur wenn E-Mail angegeben)
+        if: ${{ inputs.plattform_admin_email != '' }}
+        run: |
+          printf '%s\n' "insert into platform_admins(user_id) select id from auth.users where lower(email) = lower(:'mail') on conflict do nothing;" \
+            "select case when exists (select 1 from platform_admins p join auth.users u on u.id = p.user_id where lower(u.email) = lower(:'mail')) then 'Plattform-Admin: eingetragen' else 'Plattform-Admin: E-Mail nicht gefunden – erst in FYF damit anmelden' end;" \
+            | psql "$PGURL" -v ON_ERROR_STOP=1 -v mail="$ADMIN_MAIL" -tA
+
+      - name: Ergebnis
+        run: |
+          V=$(psql "$PGURL" -tAc "select fyf_schema()")
+          echo "Datenbank-Stand: $V"
+          echo "### Datenbank aktuell (Stand $V)" >> "$GITHUB_STEP_SUMMARY"

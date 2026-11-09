@@ -58,7 +58,7 @@ Eingebaut unter **Mehr → Cloud-Speicherung**. Aus, solange keine Supabase-Verb
 
 ### Einrichten (Inhaber, am iPhone möglich)
 1. supabase.com → kostenloses Konto → „New project“, Region **Frankfurt (eu-central-1)**, Datenbank-Passwort sicher aufbewahren (nicht in FYF eintragen).
-2. SQL Editor → Inhalt von `docs/supabase/start.sql` einfügen → Run.
+2. Datenbank einspielen: siehe `docs/DATENBANK-UPDATE.md` (GitHub → Actions → „Datenbank aktualisieren“). Von Hand geht weiterhin: SQL Editor → Inhalt von `docs/supabase/alles.sql` einfügen → Run.
 3. Authentication → URL Configuration: „Site URL“ und „Redirect URLs“ auf die Adresse der App setzen.
 4. Authentication → Email Templates → „Magic Link“: zusätzlich `{{ .Token }}` in den Text einfügen, damit der 6-stellige Code mitkommt (wichtig für die App auf dem Home-Bildschirm).
 5. Project Settings → API: „Project URL“ und den **öffentlichen** Schlüssel (anon / publishable) in FYF unter Mehr → Cloud-Speicherung eintragen.
