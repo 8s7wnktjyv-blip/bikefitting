@@ -1532,7 +1532,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-09.67';
+const APP_VER='2026-11-09.68';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1600,7 +1600,7 @@ async function cloudPull(){
     if(!row){ CL.ver=0; clSave(); CL.status='ok'; return cloudPush(); }
     const sv=Number(row.version)||0;
     if(sv===Number(CL.ver)){ clStatus('ok'); if(CL.dirty) cloudPush(); else setTimeout(mediaSync,50); return; }
-    const firstOwn=!Number(CL.ver)&&S.customers.some(c=>!isDemoCust(c.id));
+    const firstOwn=!Number(CL.ver)&&S.customers.some(c=>!isDemoCust(c.id)&&!PERMANENT_IDS.includes(c.id));
     if(sv>Number(CL.ver||0)&&!CL.dirty&&!firstOwn){ cloudApply(row.data,sv); return; }
     CL.serverVer=sv; clStatus('conflict',firstOwn?'Auf diesem Gerät gibt es eigene Kunden, und in der Cloud liegt schon ein Stand.':'In der Cloud liegt ein neuerer Stand, und auf diesem Gerät gibt es ungespeicherte Änderungen.'); }
   catch(e){ clStatus('err',e.message); } }
@@ -1618,7 +1618,8 @@ async function cloudInit(){
     else if(CL.url&&CL.key){ clSetSession({access_token:q.get('access_token'),refresh_token:q.get('refresh_token'),expires_at:q.get('expires_at'),expires_in:q.get('expires_in')},CL.pendingEmail); delete CL.pendingEmail; clSave(); setTimeout(()=>{ try{ go('mehr'); setTimeout(()=>{ const bx=document.getElementById('cloudBox'); if(bx) bx.scrollIntoView({block:'center'}); },200); }catch(e){} toast('Angemeldet'); },400); }
     else setTimeout(()=>toast('Der Link wurde in einem anderen Browser geöffnet. Bitte lange auf den Link tippen und „In Safari öffnen“ wählen.',true),300);
     try{ history.replaceState({fyf:1},'',location.pathname+location.search+'#'+(ui.route||'dashboard')); }catch(e){} }
-  if(/^#cfg=/.test(h)){ let c=null; try{ c=JSON.parse(unb64u(h.slice(5))); }catch(e){}
+  if(/^#cfg=/.test(h)){ let c=null; const hq=new URLSearchParams(h.slice(1)); const pairCode=hq.get('pair'); try{ c=JSON.parse(unb64u(hq.get('cfg')||'')); }catch(e){}
+    if(c&&pairCode&&!clCfgErr(String(c.u||'').trim().replace(/\/+$/,''),String(c.k||'').trim())){ try{ history.replaceState({fyf:1},'',location.pathname+location.search+'#mehr'); }catch(e){} setTimeout(()=>{ try{ go('mehr'); }catch(e){} cloudPairGo(pairCode,{u:c.u,k:c.k}); },400); return; }
     const url=c&&String(c.u||'').trim().replace(/\/+$/,''), key=c&&String(c.k||'').trim(), er=c?clCfgErr(url,key):'QR-Code nicht lesbar';
     try{ history.replaceState({fyf:1},'',location.pathname+location.search+'#mehr'); }catch(e){}
     if(er) setTimeout(()=>toast(er,true),300);
@@ -1634,20 +1635,28 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
 function cloudBody(){
   const st=CL.status, t=CL.lastSync?new Date(CL.lastSync).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'noch nie';
   if(!CL.url||!CL.key) return `<p class="muted" style="font-size:14px;margin:0">Aus. Deine Daten liegen nur auf diesem Gerät. Mit der Cloud-Speicherung sind sie gesichert und auf iPad, Handy und PC gleich.</p>
+    <div class="notice" style="margin:0">${ic('info')}<div><b>Schon ein Gerät angemeldet?</b> Dann dort unter Mehr → Cloud-Speicherung auf „Weiteres Gerät verbinden“ tippen und den Code hier eingeben – ohne E-Mail.
+    <form class="form" data-form="cloudPair" style="margin-top:8px"><div class="field wide"><label for="cl_pair">Kopplungscode oder Link</label><input class="input" id="cl_pair" name="pair" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="z. B. K7QP-M3XA" required></div><div class="wide"><button class="btn primary" type="submit">Gerät koppeln</button></div></form></div></div><p class="faint" style="font-size:12.5px;margin:0">Erstes Gerät? Dann hier die Verbindung eintragen:</p>
     <form class="form" data-form="cloudCfg"><div class="field wide"><label for="cl_url">Projekt-Adresse (Supabase)</label><input class="input" id="cl_url" name="url" placeholder="https://xxxx.supabase.co" inputmode="url" autocomplete="off" required></div>
     <div class="field wide"><label for="cl_key">Öffentlicher Schlüssel (anon / publishable key)</label><input class="input" id="cl_key" name="key" autocomplete="off" required></div>
     <div class="wide"><button class="btn primary" type="submit">Verbinden</button></div></form><p class="faint" style="font-size:12px;margin:0">Nur den öffentlichen Schlüssel eintragen, nie den geheimen „service_role“-Schlüssel.</p>`;
   if(!CL.session) return `<p class="muted" style="font-size:14px;margin:0">Verbunden mit ${esc(clBase().replace(/^https?:\/\//,''))}. Jetzt anmelden.</p>
+    <div class="notice" style="margin:0">${ic('info')}<div><b>Schon ein Gerät angemeldet?</b> Dann dort unter Mehr → Cloud-Speicherung auf „Weiteres Gerät verbinden“ tippen und den Code hier eingeben – ohne E-Mail.
+    <form class="form" data-form="cloudPair" style="margin-top:8px"><div class="field wide"><label for="cl_pair">Kopplungscode oder Link</label><input class="input" id="cl_pair" name="pair" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="z. B. K7QP-M3XA" required></div><div class="wide"><button class="btn primary" type="submit">Gerät koppeln</button></div></form></div></div><p class="faint" style="font-size:12.5px;margin:0">Oder mit E-Mail anmelden:</p>
     <form class="form" data-form="cloudMail"><div class="field wide"><label for="cl_mail">E-Mail</label><input class="input" id="cl_mail" name="email" type="email" required value="${esc(CL.pendingEmail||'')}" autocomplete="email"></div><div class="wide"><button class="btn primary" type="submit">Anmelde-Link senden</button></div></form>
     ${CL.pendingEmail?`<form class="form" data-form="cloudCode"><div class="field wide"><label for="cl_code">Link oder Code aus der E-Mail</label><input class="input" id="cl_code" name="code" autocomplete="one-time-code" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Link hier einfügen" required></div><div class="wide"><button class="btn primary" type="submit">Anmelden</button></div></form><p class="faint" style="font-size:12px;margin:0">${standalone()?'<b>App auf dem Home-Bildschirm:</b> In der E-Mail <b>nicht</b> auf den Link tippen. Lange auf den Link drücken → „Link kopieren“ → hier einfügen → Anmelden.':'In Safari: in der E-Mail auf den Link tippen. Er muss sich in demselben Browser öffnen.'} Steht in der E-Mail ein 6-stelliger Code, kannst du auch ihn eintragen.</p>`:''}
     <div><button class="btn sm ghost" data-act="cloudReset">Verbindung entfernen</button></div>`;
   if(!CL.tenant&&CL.removed) return `<div class="notice warn">${ic('warn')}<div><b>Du wurdest aus dem Laden entfernt.</b><br>Die Daten des Ladens (Kunden, Fittings, Fotos) liegen noch auf diesem Gerät. Bitte von diesem Gerät löschen.</div></div>
     <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm danger" data-act="cloudWipeLocal">Daten des Ladens von diesem Gerät löschen</button><button class="btn sm ghost" data-act="cloudLogout">Abmelden</button></div>`;
-  if(!CL.tenant) return `<p class="muted" style="font-size:14px;margin:0">Angemeldet als ${esc(CL.session.email||'')}. Noch kein Laden in der Cloud.</p>
+  if(!CL.tenant&&!CL.session.email) return `<p class="muted" style="font-size:14px;margin:0">Dieses Gerät ist noch mit keinem Laden gekoppelt.</p>
+    <div class="notice" style="margin:0">${ic('info')}<div><b>Schon ein Gerät angemeldet?</b> Dann dort unter Mehr → Cloud-Speicherung auf „Weiteres Gerät verbinden“ tippen und den Code hier eingeben – ohne E-Mail.
+    <form class="form" data-form="cloudPair" style="margin-top:8px"><div class="field wide"><label for="cl_pair">Kopplungscode oder Link</label><input class="input" id="cl_pair" name="pair" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="z. B. K7QP-M3XA" required></div><div class="wide"><button class="btn primary" type="submit">Gerät koppeln</button></div></form></div></div>
+    <div><button class="btn sm ghost" data-act="cloudLogout">Abbrechen</button></div>`;
+  if(!CL.tenant) return `<p class="muted" style="font-size:14px;margin:0">Angemeldet als ${esc(CL.session.email||'dieses Gerät (gekoppelt)')}. Noch kein Laden in der Cloud.</p>
     <form class="form" data-form="cloudTenant"><div class="field wide"><label for="cl_t">Name des Ladens</label><input class="input" id="cl_t" name="name" required value="${esc(shopName()||'')}"></div><div class="wide"><button class="btn primary" type="submit">Laden anlegen und Daten hochladen</button></div></form>
     <div><button class="btn sm ghost" data-act="cloudLogout">Abmelden</button></div>`;
   const chip=st==='denied'?'<span class="chip nodot c-bad">abgelehnt</span>':st==='ok'?'<span class="chip nodot c-ok">gesichert</span>':st==='busy'?'<span class="chip nodot">speichert …</span>':st==='conflict'?'<span class="chip nodot c-warn">Konflikt</span>':st==='err'?'<span class="chip nodot c-bad">Fehler</span>':'<span class="chip nodot">bereit</span>';
-  return `<div class="row" style="gap:8px;flex-wrap:wrap">${chip}<span class="muted" style="font-size:13.5px">${esc(CL.session.email||'')} · Stand ${Number(CL.ver)||0} · zuletzt ${esc(t)}</span></div>
+  return `<div class="row" style="gap:8px;flex-wrap:wrap">${chip}<span class="muted" style="font-size:13.5px">${esc(CL.session.email||'dieses Gerät (gekoppelt)')} · Stand ${Number(CL.ver)||0} · zuletzt ${esc(t)}</span></div>
     ${st==='err'?`<p class="notice warn" style="margin:0">${ic('warn')}<span>${esc(CL.msg||'Unbekannter Fehler')}. Deine Daten sind auf diesem Gerät gespeichert und werden später hochgeladen.</span></p>`:''}
     ${st==='denied'?`<div class="notice warn">${ic('warn')}<div><b>Nicht gespeichert: ${esc(CL.msg)}.</b><br>Der Server hat die Änderung abgelehnt. Übernimm den Stand aus der Cloud; deine Änderung wird vorher als Kopie im Browser gesichert.<div class="row" style="gap:6px;margin-top:8px"><button class="btn sm primary" data-act="cloudTakeServer">Stand aus der Cloud übernehmen</button></div></div></div>`:''}
     ${st==='conflict'?`<div class="notice warn">${ic('warn')}<div><b>${esc(CL.msg)}</b><br>Wähle, welcher Stand gilt. Der andere wird vorher als Kopie im Browser gesichert.<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm primary" data-act="cloudTakeServer">Stand aus der Cloud übernehmen</button><button class="btn sm" data-act="cloudTakeLocal">Meinen Stand hochladen</button></div></div></div>`:''}
@@ -1679,6 +1688,20 @@ async function mediaSync(){
   catch(e){ CL.mediaErr=/bucket|not found|row-level|policy|403|404/i.test(e.message+' '+e.status)?'Cloud-Speicher für Fotos ist noch nicht eingerichtet (media.sql ausführen).':e.message; clSave(); }
   finally{ clMBusy=false; if(changed) save(); const box=document.getElementById('cloudBox'); if(box) box.innerHTML=cloudBody(); if(clMAgain){ clMAgain=false; mediaSync(); } } }
 async function mediaFetch(m){ const r=await clFile('GET','/storage/v1/object/authenticated/media/'+encodeURIComponent(CL.tenant)+'/'+encodeURIComponent(m.id)); const b=await r.blob(); await mPut({id:m.id,blob:b,type:m.type||b.type}); return b; }
+// Gerät koppeln: anonyme Anmeldung (ohne E-Mail) + Kopplungscode vom angemeldeten Gerät (pair.sql)
+function deviceLabel(){ const u=navigator.userAgent||''; const d=/iPad|Macintosh.*Mobile/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1)?'iPad':/iPhone/.test(u)?'iPhone':/Android/.test(u)?'Android':/Mac/.test(u)?'Mac':/Windows/.test(u)?'Windows-PC':'Browser'; return d+(standalone()?' (App)':''); }
+function pairErr(m){ m=String(m||''); if(/anonymous/i.test(m)&&/disabled|not enabled|not allowed/i.test(m)) return 'Gerätekopplung ist in Supabase noch nicht eingeschaltet (Authentication → Sign In / Providers → „Allow anonymous sign-ins“).';
+  if(/FYF_RATE/.test(m)) return 'Zu viele falsche Versuche. Bitte 10 Minuten warten und einen neuen Code holen.'; if(/pair_(redeem|create)/.test(m)||/Could not find the function/.test(m)) return 'Gerätekopplung ist in der Cloud noch nicht eingerichtet (pair.sql ausführen).'; return clErrText(m); }
+async function cloudPairGo(input,cfg){ let code=String(input||'').trim(); const hm=code.match(/#(cfg=[^\s]+)/);
+  if(hm){ const q=new URLSearchParams(hm[1]); try{ const c=JSON.parse(unb64u(q.get('cfg')||'')); cfg={u:c.u,k:c.k}; }catch(e){} code=q.get('pair')||''; }
+  if(cfg){ const url=String(cfg.u||'').trim().replace(/\/+$/,''), key=String(cfg.k||'').trim(), er=clCfgErr(url,key); if(er){ toast(er,true); return; } if(clBase()!==url||CL.key!==key){ CL={url,key}; clSave(); } }
+  if(!CL.url||!CL.key){ toast('Bitte den ganzen Link vom anderen Gerät einfügen – er enthält die Verbindung.',true); return; }
+  code=code.toUpperCase().replace(/[^A-Z0-9]/g,''); if(code.length!==8){ toast('Der Code hat 8 Zeichen, z. B. K7QP-M3XA',true); render(); return; }
+  try{ if(!CL.session){ const j=await clRaw('/auth/v1/signup',{method:'POST',body:JSON.stringify({data:{},gotrue_meta_security:{}})},false); if(!j||!j.access_token) throw new Error('Anmeldung ohne E-Mail nicht möglich'); clSetSession(j,''); }
+    const t=await clApi('/rest/v1/rpc/pair_redeem',{method:'POST',body:JSON.stringify({p_code:code,p_label:deviceLabel()})});
+    if(!t){ toast('Code falsch oder abgelaufen. Auf dem anderen Gerät einen neuen holen.',true); render(); return; }
+    CL.tenant=String(t).replace(/"/g,''); CL.ver=0; delete CL.removed; clSave(); await cloudFindTenant(); toast('Gerät verbunden'); await cloudPull(); render(); }
+  catch(e){ toast(e.offline?'Keine Verbindung':pairErr(e.message),true); render(); } }
 function cloudPanel(){ return panel('Cloud-Speicherung',`<div class="stack" id="cloudBox">${cloudBody()}</div>`)+(CL.session&&CL.tenant?panel('Team',`<div class="stack" id="teamBox">${teamBody()}</div>`):''); }
 // Team: Mitglieder und Einladungen liegen nur auf dem Server. TEAM ist ein Zwischenspeicher im Arbeitsspeicher.
 let TEAM={at:0,members:[],invites:[],err:'',busy:false};
@@ -5288,12 +5311,24 @@ const ACT = {
     inv.status='storniert'; invoices().unshift(st); audit(`Rechnung ${inv.no} storniert (${st.no})`); save(); render(); openDrawer('Stornorechnung '+st.no,invOpenHtml(st)); toast('Stornorechnung '+st.no+' erstellt'); },
 
   goShop(){ go('mehr'); setTimeout(()=>{ const e=document.getElementById('shopBox'); if(e) e.scrollIntoView({block:'start'}); },150); },
-  cloudQR(){ const link=cloudLink();
+  async cloudQR(){ let code=''; try{ code=String(await clApi('/rest/v1/rpc/pair_create',{method:'POST',body:'{}'})||'').replace(/"/g,''); }catch(e){ if(!e.offline&&!/pair_create|Could not find the function/.test(e.message)){ toast(pairErr(e.message),true); return; } }
+    if(code){ const link=cloudLink()+'&pair='+code; ui.pairLink=link; const show=code.slice(0,4)+'-'+code.slice(4);
+      openDrawer('Weiteres Gerät verbinden',`<div class="stack"><p style="margin:0">Auf dem neuen Gerät FYF öffnen → <b>Mehr → Cloud-Speicherung</b> → diesen Code eingeben:</p>
+        <div class="mono" style="font-size:34px;font-weight:700;letter-spacing:.12em;text-align:center;padding:10px;border:1px dashed var(--line,#ccc);border-radius:12px">${show}</div>
+        <p class="faint" style="font-size:12.5px;margin:0;text-align:center">10 Minuten gültig · nur einmal nutzbar · neues Gerät bekommt deine Rolle (${esc(role())})</p>
+        <p style="margin:0">Oder mit der Kamera scannen (öffnet sich in Safari):</p>
+        <div id="clQR" style="background:#fff;padding:12px;border-radius:12px;max-width:240px;margin:0 auto;width:100%"><span class="faint" style="font-size:12px">QR-Code lädt …</span></div>
+        <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="pairLinkCopy">Link kopieren (z. B. für den PC)</button></div>
+        <p class="faint" style="font-size:12px;margin:0">Erstes Gerät noch nicht verbunden (z. B. PC)? Neuer Code: Fenster schließen und wieder öffnen. Den Link kannst du dir per Mail oder Messenger an den PC schicken.</p></div>`);
+      (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ const b=document.getElementById('clQR'); if(b) b.innerHTML=qrSvg(link); }).catch(()=>{ const b=document.getElementById('clQR'); if(b) b.innerHTML='<span class="faint" style="font-size:12px">QR-Code braucht Internet. Nimm den Code.</span>'; });
+      return; }
+    const link=cloudLink();
     openDrawer('Weiteres Gerät verbinden',`<div class="stack"><ol style="margin:0;padding-left:20px;line-height:1.6"><li>Auf dem iPad oder Handy die Kamera öffnen und diesen Code scannen. Am PC: Link unten kopieren und im Browser öffnen.</li><li>Die App öffnet sich mit der Cloud schon eingetragen.</li><li>Dort deine E-Mail eingeben, Anmelde-Link öffnen – fertig. Danach sind alle Kunden da.</li></ol>
       <div id="clQR" style="background:#fff;padding:12px;border-radius:12px;max-width:260px;margin:0 auto;width:100%"><span class="faint" style="font-size:12px">QR-Code lädt …</span></div>
       <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="cloudLinkCopy">Link kopieren</button></div>
       <p class="faint" style="font-size:12px;margin:0">Der Code enthält nur die Projekt-Adresse und den öffentlichen Schlüssel – keine Anmeldung. Ohne Login per E-Mail sieht niemand deine Daten.</p></div>`);
     (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ const b=document.getElementById('clQR'); if(b) b.innerHTML=qrSvg(link); }).catch(()=>{ const b=document.getElementById('clQR'); if(b) b.innerHTML='<span class="faint" style="font-size:12px">QR-Code braucht Internet. Nimm den Link.</span>'; }); },
+  pairLinkCopy(){ const link=ui.pairLink||cloudLink(); (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(link):Promise.reject()).then(()=>toast('Link kopiert')).catch(()=>{ prompt('Link kopieren:',link); }); },
   cloudLinkCopy(){ const link=cloudLink(); (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(link):Promise.reject()).then(()=>toast('Link kopiert')).catch(()=>{ prompt('Link kopieren:',link); }); },
   cloudReset(){ CL={}; clSave(); render(); toast('Cloud-Verbindung entfernt. Daten auf dem Gerät bleiben.'); },
   cloudLogout(){ TEAM={at:0,members:[],invites:[],err:'',busy:false}; CL={url:CL.url,key:CL.key,...(CL.removed?{removed:true}:{})}; clSave(); render(); toast('Abgemeldet. Daten auf dem Gerät bleiben.'); },
@@ -5696,6 +5731,7 @@ const FORMS = {
   async cloudMail(f,data){ const email=String(data.get('email')||'').trim(); if(!/^\S+@\S+\.\S+$/.test(email)){ toast('E-Mail prüfen',true); return; }
     try{ await clRaw('/auth/v1/otp?redirect_to='+encodeURIComponent(location.origin+location.pathname),{method:'POST',body:JSON.stringify({email,create_user:true})},false); CL.pendingEmail=email; clSave(); render(); toast('E-Mail gesendet'); }
     catch(e){ toast('Senden fehlgeschlagen: '+e.message,true); } },
+  async cloudPair(f,data){ await cloudPairGo(String(data.get('pair')||'')); },
   async cloudCode(f,data){ const raw=String(data.get('code')||'').trim(); let body=null;
     const m=raw.match(/[?&#]token=([A-Za-z0-9_-]{10,})/); if(m){ const tm=raw.match(/[?&#]type=([a-z_]+)/); body={type:(tm&&tm[1])||'magiclink',token_hash:m[1]}; }
     else { const token=raw.replace(/\s/g,''); if(!/^\d{6,10}$/.test(token)){ toast('Bitte den ganzen Link aus der E-Mail einfügen (oder den Code)',true); return; } body={type:'email',email:CL.pendingEmail,token}; }
@@ -6200,9 +6236,10 @@ Object.assign(ACT,{
   expInv(){ download('Rechnungsliste.csv','﻿'+[csvLine(['Datum','Nummer','Art','Kunde','Netto','USt','Brutto','Status','bezahlt'])].concat(invoices().map(i=>{ const c=invCalc(i), s=i.type==='storno'?-1:1, f=v=>(s*v).toFixed(2).replace('.',','); return csvLine([fmtDate(i.date),i.no,i.type==='storno'?'Storno':'Rechnung',(i.buyer&&i.buyer.name)||'',f(c.basis),f(c.tax),f(c.total),i.status,paidOf(i).toFixed(2).replace('.',',')]); })).join('\n'),'text/csv'); },
   netReload(){ NET.at=0; render(); }, trReload(){ TR.at=0; render(); },
   netLinkCopy(){ const l=finderLink(NET.profile&&NET.profile.slug); try{ navigator.clipboard.writeText(l).then(()=>toast('Link kopiert'),()=>openDrawer('Link',`<p style="word-break:break-all">${esc(l)}</p>`)); }catch(e){ openDrawer('Link',`<p style="word-break:break-all">${esc(l)}</p>`); } },
-  netQR(){ const l=finderLink(NET.profile&&NET.profile.slug); let q=''; try{ q=qrSvg(l); }catch(e){ q='<p class="muted">QR-Code konnte nicht erzeugt werden (offline?).</p>'; }
-    openDrawer('QR-Code zu deinem Profil',`<div class="stack"><div style="max-width:280px;margin:0 auto">${q}</div><p class="muted" style="font-size:13.5px">Für Schaufenster, Theke oder Visitenkarte. Kunden sehen dein Profil und können direkt eine Anfrage schicken. Vor dem Drucken einmal mit dem Handy scannen.</p><button class="btn" data-act="netQRsave">Als Bild speichern (SVG)</button></div>`); },
-  netQRsave(){ try{ download('Profil-QR.svg',qrSvg(finderLink(NET.profile&&NET.profile.slug)),'image/svg+xml'); }catch(e){ toast('Nicht möglich',true); } },
+  netQR(){ const l=finderLink(NET.profile&&NET.profile.slug);
+    (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ const b=document.getElementById('netQRbox'); if(b) b.innerHTML=qrSvg(l); }).catch(()=>{ const b=document.getElementById('netQRbox'); if(b) b.innerHTML='<p class="muted">QR-Code braucht Internet.</p>'; });
+    openDrawer('QR-Code zu deinem Profil',`<div class="stack"><div id="netQRbox" style="max-width:280px;margin:0 auto;background:#fff;padding:12px;border-radius:12px"><span class="faint" style="font-size:12px">QR-Code lädt …</span></div><p class="muted" style="font-size:13.5px">Für Schaufenster, Theke oder Visitenkarte. Kunden sehen dein Profil und können direkt eine Anfrage schicken. Vor dem Drucken einmal mit dem Handy scannen.</p><button class="btn" data-act="netQRsave">Als Bild speichern (SVG)</button></div>`); },
+  netQRsave(){ (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>download('Profil-QR.svg',qrSvg(finderLink(NET.profile&&NET.profile.slug)),'image/svg+xml')).catch(()=>toast('QR-Code braucht Internet',true)); },
   trNew(){ trOfferDrawer(); }, trAsk(el){ trAskDrawer(el.dataset.id); },
   async trAnswer(el){ try{ await clApi('/rest/v1/rpc/trade_request_answer',{method:'POST',body:JSON.stringify({p_id:el.dataset.id,p_status:el.dataset.s})}); toast('Gespeichert'); }catch(e){ toast(netErr(e),true); } TR.at=0; render(); },
   async trContact(el){ try{ const r=await clApi('/rest/v1/rpc/trade_contact',{method:'POST',body:JSON.stringify({p_request:el.dataset.id})}); const c=r&&r[0]; if(!c){ toast('Kein Kontakt verfügbar',true); return; }
