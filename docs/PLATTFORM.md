@@ -27,6 +27,10 @@ Umsetzung des Master-Auftrags „Ausbau zur Fahrradhandelsplattform“. Stand je
 | Kostenvoranschlag per Link | Werkstatt → Auftrag → „Kostenvoranschlag an Kunden senden“; Kundenseite `freigabe.html` | `kva_links` (Schlüssel 32 Zeichen, 30 Tage gültig, einmal beantwortbar); `wo.kva` | freigabe.sql |
 | Datenbank-Lesekopie | – | `fyf_customers`, `fyf_bikes`, `fyf_sessions`, `fyf_invoices`, `fyf_products` per Trigger | netz.sql |
 
+## Zeichnungen und Beinlänge (v.69)
+- `FIG` in index.html: Fahrrad maßstabsgetreu (Rad 340 mm, Kettenstrebe 410, Stack/Reach 565/385, Lenkwinkel 73°, Sitzwinkel 73,5°, Kurbel 172,5) und Fahrer nach Körperanteilen (Drillis & Contini). Kniewinkel unten ca. 141°, oben ca. 68° bei Standardmaßen. `FIG_GUIDES` ersetzt die alten Strich-Skizzen; Fahrradgrafik im Fitting nutzt die echten Messwerte (Sattelhöhe, Versatz, Abstand, Überhöhung). Tretbewegung per SVG-Animation (aus bei „Bewegung reduzieren“).
+- Beinlänge: `s.legM` = je Seite bis 3 Werte + Gegenprobe im Stehen (Brettchen). `legEval`: unter 10 mm oder innerhalb der Streuung (mind. 5 mm) = „nicht sicher“, kein Ausgleich; ohne Gegenprobe „prüfen“; widersprüchlich = kein Ausgleich; bestätigt = Fachperson, Ausgleich höchstens die Hälfte nach Rücksprache. Mittelwerte bleiben in `check.legLenL/R`.
+
 ## Sicherheit
 - Öffentlich lesbar: nur veröffentlichte Profile und als öffentlich markierte Produkte. Alles andere nur für Mitglieder des Ladens (RLS).
 - Anfragen: ohne Konto über `submit_inquiry` (verstecktes Feld, Längen, 20/h je Laden, 3/Tag je Absender). Lesen nur der Laden.

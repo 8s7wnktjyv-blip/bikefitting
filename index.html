@@ -724,6 +724,8 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 .tl{display:flex;flex-direction:column}.tl-i{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}.tl-i:last-child{border-bottom:0}.tl-i.click{cursor:pointer}.tl-d{font-size:12px;color:var(--faint);min-width:74px;padding-top:2px}.tl-k{font-size:11px;font-weight:600;padding:2px 7px;border-radius:8px;background:var(--surface-2,#eee);color:var(--muted);white-space:nowrap}.tl-k.k-fitting{background:var(--accent-soft);color:var(--accent-strong,var(--accent))}.vcmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mthumb.vc{aspect-ratio:auto;min-height:120px;background:#000}.mthumb.vc video{object-fit:contain}
 .dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}.dgrid>.dw{min-width:0;display:flex;flex-direction:column;gap:16px}.dgrid>.dw.full{grid-column:1/-1}.dgrid>.dw>.grid{margin:0}@media (max-width:900px){.dgrid{grid-template-columns:1fr}}.dw.edit{outline:2px dashed var(--line);outline-offset:4px;border-radius:12px;padding:4px}.dw.off{opacity:.55}.dw-ctl{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface-2,#eee);border-radius:10px;padding:6px 10px;font-size:14px}.back-btn svg{width:22px;height:22px}
 .st6{font-size:12px;white-space:nowrap}.st6-1{background:#dff3e4;color:#1d6b35}.st6-2{background:#e4eef8;color:#2a5f8f}.st6-3{background:#fbe9d6;color:#8a4b12}.st6-4{background:#eceff1;color:#56646b}.st6-5{background:#f3e4f5;color:#7a2e86}.st6-6{background:#fff4c9;color:#7a6200}
+.illus.fig{background-image:none;padding:8px} .illus.fig svg{max-height:300px;margin:0 auto} .wiz .illus.fig svg{max-height:240px} .illus.fig.tall svg{max-height:380px}
+.bviz .bv-hs circle{stroke-width:8} .bviz .bv-hs.on circle,.bviz .bv-hs:hover circle{fill-opacity:.35;stroke-width:10}
 </style>
 </head>
 <body>
@@ -899,7 +901,7 @@ const HOW = {
 };
 
 /* ---------- Skizzen zu Messpunkten und Tests (eigene Zeichnungen, schematisch) ---------- */
-const IL = (()=>{
+let IL = (()=>{
   const ln=(x1,y1,x2,y2,c='b',w)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="il-${c}"${w?` style="stroke-width:${w}"`:''}/>`;
   const ci=(x,y,r,c='b',fill)=>`<circle cx="${x}" cy="${y}" r="${r}" class="il-${c}${fill?' il-fill':''}"/>`;
   const tx=(x,y,t,anchor='middle',c='t')=>`<text x="${x}" y="${y}" text-anchor="${anchor}" class="il-${c}">${t}</text>`;
@@ -978,6 +980,193 @@ const IL = (()=>{
   };
   return k=>D[k]?`<div class="illus">${D[k]()}</div>`:'';
 })();
+/* ---------- FIG: maßstabsgetreue Zeichnungen (Fahrrad nach echter Geometrie, Mensch nach Körperproportionen) ----------
+   Alle Maße in mm, Tretlager = (0,0), y nach oben. Proportionen: Segmentlängen als Anteil der Körpergröße
+   nach Drillis & Contini (Oberschenkel 0,245 H, Unterschenkel 0,246 H, Oberarm 0,186 H, Unterarm 0,146 H). */
+const FIG=(()=>{
+  const d2r=Math.PI/180, H0=1780; let uid=0;
+  const add=(a,b)=>[a[0]+b[0],a[1]+b[1]], sub=(a,b)=>[a[0]-b[0],a[1]-b[1]], mul=(a,k)=>[a[0]*k,a[1]*k], len=a=>Math.hypot(a[0],a[1]);
+  const rot=(v,deg)=>{ const c=Math.cos(deg*d2r), s=Math.sin(deg*d2r); return [v[0]*c-v[1]*s,v[0]*s+v[1]*c]; };
+  const dir=deg=>[Math.cos(deg*d2r),Math.sin(deg*d2r)];
+  function ik(a,b,l1,l2,bendCCW){ const d=Math.min(len(sub(b,a)),l1+l2-0.5), t=Math.atan2(b[1]-a[1],b[0]-a[0]); const al=Math.acos(Math.max(-1,Math.min(1,(l1*l1+d*d-l2*l2)/(2*l1*d)))); const g=bendCCW?t+al:t-al; return [a[0]+l1*Math.cos(g),a[1]+l1*Math.sin(g)]; }
+  function bikeGeo(o={}){
+    const g=Object.assign({R:340,drop:70,cs:410,wb:990,stack:565,reach:385,ha:73,hl:155,sa:73.5,stl:530,crank:172.5,sh:735,stem:100,stemAng:-6,spacer:25,flat:false},o);
+    g.rear=[-Math.sqrt(g.cs*g.cs-g.drop*g.drop),g.drop]; g.front=[g.rear[0]+g.wb,g.drop];
+    g.htTop=[g.reach,g.stack]; g.htBot=add(g.htTop,mul(dir(-g.ha),g.hl));
+    g.sdir=dir(180-g.sa); g.stTop=mul(g.sdir,g.stl); g.sad=mul(g.sdir,g.sh);
+    g.steerTop=add(g.htTop,mul(dir(180-g.ha),g.spacer));
+    if(g.sadAt) g.sad=g.sadAt;
+    g.clamp=g.clampAt||add(g.steerTop,mul(dir(90-g.ha+g.stemAng),g.stem));
+    g.hood=g.flat?add(g.clamp,[-20,10]):add(g.clamp,[118,28]); g.ground=g.drop-g.R; return g; }
+  function riderPose(g,H,crankDeg,o={}){
+    const th=0.245*H, sh=0.246*H, ua=0.186*H, fa=0.146*H+0.045*H, tr=0.29*H;
+    const hip=add(g.sad,[-20,0.03*H]);
+    const ped=mul(dir(crankDeg),g.crank); const pitch=12+10*Math.sin((crankDeg+90)*d2r);
+    const ank=add(ped,rot([-0.05*H,0.06*H],-pitch)), toe=add(ped,rot([0.065*H,-0.012*H],-pitch)), heel=add(ank,rot([-0.022*H,-0.04*H],-pitch));
+    const knee=ik(hip,ank,th,sh,true);
+    let best=null; for(let a=8;a<=88;a+=1){ const s=add(hip,mul(dir(a),tr)); const e=Math.abs(len(sub(g.hood,s))-(o.armK||0.93)*(ua+fa)); if(!best||e<best.e) best={a,s,e}; }
+    const shd=best.s, elb=ik(shd,g.hood,ua,fa,false);
+    const hb=Math.min(best.a+48,105), headC=add(shd,mul(dir(hb),0.105*H));
+    return {hip,knee,ank,toe,heel,ped,shd,elb,hand:g.hood,headC,torsoA:best.a,H}; }
+  const P=(p,f)=>`${f.X(p[0]).toFixed(1)},${f.Y(p[1]).toFixed(1)}`;
+  const line=(a,b,f,w,col,ex='')=>`<line x1="${f.X(a[0]).toFixed(1)}" y1="${f.Y(a[1]).toFixed(1)}" x2="${f.X(b[0]).toFixed(1)}" y2="${f.Y(b[1]).toFixed(1)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" ${ex}/>`;
+  const circ=(c,r,f,ex)=>`<circle cx="${f.X(c[0]).toFixed(1)}" cy="${f.Y(c[1]).toFixed(1)}" r="${r}" ${ex}/>`;
+  const C={frame:'var(--il-frame)',tire:'var(--il-tire)',body:'var(--il-body)',soft:'var(--il-soft)',acc:'var(--accent)',bg:'var(--il-bg)',info:'var(--info,#2f7fd0)'};
+  function drawWheel(c,g,f){ const sp=[]; for(let i=0;i<20;i++){ const a=i*18; sp.push(line(add(c,mul(dir(a),22)),add(c,mul(dir(a+(i%2?8:-8)),g.R-50)),f,2.2,C.soft)); }
+    return `<g>${sp.join('')}${circ(c,g.R-38,f,`fill="none" stroke="${C.frame}" stroke-width="16" opacity=".55"`)}${circ(c,g.R-16,f,`fill="none" stroke="${C.tire}" stroke-width="30"`)}${circ(c,24,f,`fill="${C.frame}"`)}</g>`; }
+  function pathLeg(p,f){ return `M${P(p.hip,f)} L${P(p.knee,f)} L${P(p.ank,f)}`; }
+  function pathShoe(p,f){ return `M${P(p.heel,f)} L${P(p.ank,f)} L${P(p.toe,f)}`; }
+  function drawBike(g,f,hl={}){ const out=[]; const fr=(a,b,w,k)=>line(a,b,f,w,hl[k]?C.acc:C.frame);
+    out.push(`<ellipse cx="${f.X((g.rear[0]+g.front[0])/2)}" cy="${f.Y(g.ground)}" rx="${(g.front[0]-g.rear[0])/2+g.R}" ry="22" fill="${C.soft}" opacity=".5"/>`);
+    out.push(drawWheel(g.rear,g,f),drawWheel(g.front,g,f));
+    out.push(circ([0,0],100,f,`fill="none" stroke="${C.frame}" stroke-width="12" stroke-dasharray="7 5"`),circ(g.rear,44,f,`fill="none" stroke="${C.frame}" stroke-width="10" stroke-dasharray="5 4"`));
+    out.push(line([0,100],add(g.rear,[0,44]),f,5,C.frame,'opacity=".7"'),line([0,-100],add(g.rear,[0,-44]),f,5,C.frame,'opacity=".7"'));
+    const ss=mul(g.sdir,g.stl-45);
+    out.push(fr([0,0],g.rear,22),fr(ss,g.rear,18),fr([0,0],g.stTop,32),fr(add(g.stTop,mul(g.sdir,-15)),add(g.htTop,mul(dir(-g.ha),35)),32),fr([0,0],add(g.htBot,mul(dir(180-g.ha),40)),46),fr(g.htTop,g.htBot,52));
+    const fc=add(g.htBot,[45,-150]); out.push(`<path d="M${P(g.htBot,f)} Q${P(fc,f)} ${P(g.front,f)}" fill="none" stroke="${C.frame}" stroke-width="30" stroke-linecap="round"/>`);
+    out.push(line(g.stTop,mul(g.sdir,g.sh-42),f,27,hl.saddle?C.acc:C.frame));
+    const s=g.sad; out.push(`<path d="M${P(add(s,[-140,6]),f)} Q${P(add(s,[-150,30]),f)} ${P(add(s,[-110,28]),f)} L${P(add(s,[60,12]),f)} Q${P(add(s,[140,8]),f)} ${P(add(s,[150,-4]),f)} L${P(add(s,[110,-16]),f)} Q${P(add(s,[-30,-20]),f)} ${P(add(s,[-140,6]),f)}Z" fill="${hl.saddle?C.acc:C.tire}"/>`, line(add(s,[-60,-22]),add(s,[70,-28]),f,8,C.frame));
+    out.push(line(g.htTop,g.steerTop,f,34,hl.spacer?C.acc:C.frame),line(g.steerTop,g.clamp,f,32,hl.stem?C.acc:C.frame));
+    if(g.flat) out.push(line(add(g.clamp,[-10,0]),add(g.clamp,[-40,8]),f,30,hl.bar?C.acc:C.frame),circ(g.clamp,22,f,`fill="${C.frame}"`));
+    else { const c=g.clamp; out.push(`<path d="M${P(c,f)} C${P(add(c,[70,6]),f)} ${P(add(c,[120,-10]),f)} ${P(add(c,[118,-70]),f)} S${P(add(c,[80,-130]),f)} ${P(add(c,[30,-128]),f)}" fill="none" stroke="${hl.bar?C.acc:C.frame}" stroke-width="26" stroke-linecap="round"/>`,
+      `<path d="M${P(add(c,[66,6]),f)} Q${P(add(c,[100,30]),f)} ${P(add(c,[128,34]),f)} L${P(add(c,[138,24]),f)} Q${P(add(c,[128,2]),f)} ${P(add(c,[110,-8]),f)} Z" fill="${hl.hood?C.acc:C.tire}" stroke="${hl.hood?C.acc:C.tire}" stroke-width="12" stroke-linejoin="round"/>`,
+      line(add(c,[116,-4]),add(c,[100,-84]),f,11,C.tire)); }
+    return out.join(''); }
+  function drawRider(p,f,o={}){ const H=p.H, col=o.ghost?C.soft:C.body; const sw={th:0.078*H,sh:0.058*H,ua:0.052*H,fa:0.042*H,tr:0.15*H};
+    const far=o.far, out=[];
+    if(far){ out.push(`<g opacity=".4"><path d="${pathLeg(far,f)}" fill="none" stroke="${col}" stroke-width="${0.05*H}" stroke-linecap="round" stroke-linejoin="round"/><path d="${pathShoe(far,f)}" fill="none" stroke="${C.tire}" stroke-width="${0.04*H}" stroke-linecap="round" stroke-linejoin="round"/>${line([0,0],far.ped,f,22,C.frame)}${line(add(far.ped,[-45,0]),add(far.ped,[45,0]),f,18,C.tire)}</g>`); }
+    return out.join(''); }
+  function drawRiderNear(p,f,o={}){ const H=p.H, col=o.hlLeg?C.acc:C.body, colT=o.hlTorso?C.acc:C.body; const out=[];
+    out.push(line([0,0],p.ped,f,24,o.hlCrank?C.acc:C.frame),line(add(p.ped,[-48,0]),add(p.ped,[48,0]),f,20,C.tire),circ([0,0],26,f,`fill="${C.frame}"`));
+    const tdir=sub(p.shd,p.hip), nrm=mul([-tdir[1],tdir[0]],0.07), mid=add(mul(add(p.hip,p.shd),.5),nrm);
+    out.push(`<path d="M${P(p.hip,f)} Q${P(mid,f)} ${P(p.shd,f)}" fill="none" stroke="${colT}" stroke-width="${0.105*H}" stroke-linecap="round"/>`);
+    out.push(circ(add(p.hip,[-0.012*H,0.005*H]),0.058*H,f,`fill="${colT}"`));
+    out.push(`<path d="M${P(p.hip,f)} L${P(p.knee,f)}" stroke="${col}" stroke-width="${0.066*H}" stroke-linecap="round" fill="none"/>`,`<path d="M${P(p.knee,f)} L${P(p.ank,f)}" stroke="${col}" stroke-width="${0.047*H}" stroke-linecap="round" fill="none"/>`);
+    out.push(`<path d="${pathShoe(p,f)}" fill="none" stroke="${C.tire}" stroke-width="${0.04*H}" stroke-linecap="round" stroke-linejoin="round"/>`);
+    out.push(line(p.shd,p.elb,f,0.042*H,C.body),line(p.elb,p.hand,f,0.034*H,C.body),circ(p.hand,0.022*H,f,`fill="${C.body}"`));
+    out.push(line(p.shd,add(p.headC,mul(dir(p.torsoA-150),0.035*H)),f,0.04*H,C.body),circ(p.headC,0.058*H,f,`fill="${C.body}"`));
+    if(o.helmet!==false) out.push(`<path d="M${P(add(p.headC,mul(dir(p.torsoA+70),0.066*H)),f)} A${0.068*H},${0.068*H} 0 0 1 ${P(add(p.headC,mul(dir(p.torsoA-70),0.066*H)),f)}Z" fill="${C.frame}"/>`);
+    return out.join(''); }
+  function legAnim(g,H,f,frames=24,dur=2.6,opacity=.3){ const ks=[]; for(let i=0;i<=frames;i++) ks.push(riderPose(g,H,-(i*360/frames)));
+    const vals=fn=>ks.map(fn).join(';'); const a=(attr,v)=>`<animate attributeName="${attr}" dur="${dur}s" repeatCount="indefinite" values="${v}"/>`;
+    return `<g opacity="${opacity}" class="fig-anim"><path fill="none" stroke="${C.body}" stroke-width="${0.05*H}" stroke-linecap="round" stroke-linejoin="round">${a('d',vals(p=>pathLeg(p,f)))}</path><path fill="none" stroke="${C.tire}" stroke-width="${0.044*H}" stroke-linecap="round" stroke-linejoin="round">${a('d',vals(p=>pathShoe(p,f)))}</path><path stroke="${C.frame}" stroke-width="22" stroke-linecap="round">${a('d',vals(p=>`M${P([0,0],f)} L${P(p.ped,f)}`))}</path></g>`; }
+  const reduce=()=>{ try{ return matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } };
+  // Bemaßung
+  function ann(f,W){ const id='fa'+(++uid), fs=W/24, sw=W/260;
+    const defs=`<defs><marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10z" fill="${C.acc}"/></marker></defs>`;
+    const text=(p,t,anchor='middle',small)=>`<text x="${f.X(p[0]).toFixed(1)}" y="${f.Y(p[1]).toFixed(1)}" text-anchor="${anchor}" font-size="${small?fs*.82:fs}" font-weight="${small?500:650}" fill="${small?'var(--muted)':'var(--fg)'}" style="paint-order:stroke;stroke:${C.bg};stroke-width:${fs*.35}px;stroke-linejoin:round">${t}</text>`;
+    return {defs,fs,sw,text,
+      dim:(a,b,t,tp,anchor)=>line(a,b,f,sw*2.4,C.acc,`marker-start="url(#${id})" marker-end="url(#${id})"`)+(t?text(tp||mul(add(a,b),.5),t,anchor):''),
+      arrow:(a,b)=>line(a,b,f,sw*2.4,C.acc,`marker-end="url(#${id})"`),
+      dash:(a,b,col)=>line(a,b,f,sw*1.4,col||'var(--muted)',`stroke-dasharray="${sw*5} ${sw*4}"`),
+      dot:(p,r)=>circ(p,r||W/90,f,`fill="${C.acc}" stroke="${C.bg}" stroke-width="${sw*1.5}"`),
+      arcAt:(c,r,a1,a2)=>{ const p1=add(c,mul(dir(a1),r)), p2=add(c,mul(dir(a2),r)); const large=Math.abs(a2-a1)>180?1:0; const sweep=a2>a1?0:1; return `<path d="M${P(p1,f)} A${r},${r} 0 ${large} ${sweep} ${P(p2,f)}" fill="none" stroke="${C.acc}" stroke-width="${sw*3}" stroke-linecap="round"/>`; }}; }
+  const ang=(a,b)=>Math.atan2(b[1]-a[1],b[0]-a[0])/d2r;
+  // Szene Fahrrad (+ Fahrer)
+  function scene(o={}){ const g=bikeGeo(o.bike||{}), H=o.H||H0; const crank=o.crank??-20;
+    const pose=o.rider?riderPose(g,H,crank):null, far=o.rider?riderPose(g,H,crank+180):null;
+    let xs=[g.rear[0]-g.R-(o.padL??40),g.front[0]+g.R+(o.padR??40)], ys=[g.ground-40,(pose?pose.headC[1]+0.09*H:g.sad[1]+120)];
+    if(o.ext){ xs.push(...o.ext.map(p=>p[0])); ys.push(...o.ext.map(p=>p[1])); }
+    const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys)-(o.padB||0), maxY=Math.max(...ys)+(o.padT||40); const W=maxX-minX, Hh=maxY-minY;
+    const f={X:x=>x-minX,Y:y=>maxY-y}; const A=ann(f,W);
+    let body=''; if(pose){ body+=drawRider(pose,f,{far}); }
+    body+=drawBike(g,f,o.hl||{});
+    if(o.anim&&pose&&!reduce()) body+=legAnim(g,H,f,24,2.6,.22);
+    if(pose) body+=drawRiderNear(pose,f,o.hlR||{});
+    else body+=line([0,0],mul(dir(crank),g.crank),f,24,(o.hl||{}).crank?C.acc:C.frame)+line(add(mul(dir(crank),g.crank),[-48,0]),add(mul(dir(crank),g.crank),[48,0]),f,20,C.tire)+circ([0,0],26,f,`fill="${C.frame}"`);
+    const extra=o.draw?o.draw({g,p:pose,A,f,W,add,sub,mul,dir,ang,line:(a,b,w,c)=>line(a,b,f,w,c)}):'';
+    return `<svg viewBox="0 0 ${W.toFixed(0)} ${Hh.toFixed(0)}" role="img" aria-label="${o.label||'Zeichnung'}">${A.defs}${body}${extra}</svg>`; }
+  // Mensch stehend von hinten
+  function standBack(o={}){ const H=o.H||H0, blk=o.block||0, W=0.62*H, Hh=1.08*H+blk; const minX=-W/2, maxY=H*1.04+blk; const f={X:x=>x-minX,Y:y=>maxY-y}; const A=ann(f,W*1.25);
+    const lift=x=>x>0?blk:0, tilt=o.tilt||0; // tilt mm Höhenunterschied der Beckenkämme
+    const pel=x=>0.53*H+lift(x)+(x>0?tilt/2:-tilt/2);
+    const ps=sd=>{ const s=sd>0?1:-1; return {hip:[s*0.05*H,pel(s)],knee:[s*0.048*H,0.285*H+lift(s)],ank:[s*0.042*H,0.045*H+lift(s)]}; };
+    const out=[`<line x1="0" y1="${f.Y(0)}" x2="${W}" y2="${f.Y(0)}" stroke="${C.soft}" stroke-width="${W/90}"/>`];
+    if(blk) out.push(`<rect x="${f.X(0.01*H)}" y="${f.Y(blk)}" width="${0.1*H}" height="${blk}" fill="${C.acc}" opacity=".85" rx="${W/200}"/>`);
+    [-1,1].forEach(s=>{ const p=ps(s); out.push(line(p.hip,p.knee,f,0.07*H,C.body),line(p.knee,p.ank,f,0.05*H,C.body),line(add(p.ank,[0,-0.02*H]),add(p.ank,[s*0.012*H,-0.035*H]),f,0.05*H,C.tire)); });
+    const sh=[0.105*H,0.80*H+blk/2+tilt/4], shL=[-0.105*H,0.80*H+blk/2-tilt/4];
+    out.push(`<path d="M${P(shL,f)} L${P(sh,f)} L${P([0.075*H,0.64*H+blk/2],f)} L${P([0.092*H,pel(1)-0.01*H],f)} L${P([-0.092*H,pel(-1)-0.01*H],f)} L${P([-0.075*H,0.64*H+blk/2],f)}Z" fill="${C.body}" stroke="${C.body}" stroke-width="${0.035*H}" stroke-linejoin="round"/>`);
+    out.push(line([0,0.83*H+blk/2],[0,0.88*H+blk/2],f,0.045*H,C.body),circ([0,0.925*H+blk/2],0.056*H,f,`fill="${C.body}"`));
+    const crest=s=>[s*0.085*H,pel(s)+0.065*H];
+    [-1,1].forEach(s=>{ const S=s>0?sh:shL, el=[s*0.175*H,0.68*H+blk/2], hd=add(crest(s),[s*0.015*H,0]); out.push(line(S,el,f,0.04*H,C.body),line(el,hd,f,0.034*H,C.body),circ(hd,0.022*H,f,`fill="${C.body}"`)); });
+    out.push(A.dot(crest(-1),W/70),A.dot(crest(1),W/70));
+    const draw=o.draw?o.draw({A,f,H,crest,W,add}):''; return `<svg viewBox="0 0 ${W.toFixed(0)} ${Hh.toFixed(0)}" role="img" aria-label="${o.label||'Person von hinten'}">${A.defs}${out.join('')}${draw}</svg>`; }
+  // Mensch liegend, Seitenansicht (Kopf links)
+  function lying(o={}){ const H=o.H||H0, W=H*1.12, top=0.26*H; const minX=-0.05*H, maxY=top; const f={X:x=>x-minX,Y:y=>maxY-y}; const A=ann(f,W);
+    const y=0.07*H, head=[0.07*H,y+0.01*H], shd=[0.19*H,y], hip=[0.47*H,y-0.005*H], knee=[0.715*H,y-0.012*H], ank=[0.955*H,y-0.03*H];
+    const out=[`<rect x="${f.X(-0.03*H)}" y="${f.Y(0.02*H)}" width="${1.08*H}" height="${0.05*H}" rx="${W/120}" fill="${C.soft}"/>`,`<line x1="${f.X(0.05*H)}" y1="${f.Y(-0.03*H)}" x2="${f.X(0.05*H)}" y2="${f.Y(-0.09*H)}" stroke="${C.soft}" stroke-width="${W/90}"/><line x1="${f.X(0.98*H)}" y1="${f.Y(-0.03*H)}" x2="${f.X(0.98*H)}" y2="${f.Y(-0.09*H)}" stroke="${C.soft}" stroke-width="${W/90}"/>`];
+    out.push(line(shd,hip,f,0.1*H,C.body),circ(hip,0.055*H,f,`fill="${C.body}"`),line(hip,knee,f,0.068*H,C.body),line(knee,ank,f,0.048*H,C.body));
+    out.push(`<path d="M${P(add(ank,[-0.005*H,-0.02*H]),f)} L${P(add(ank,[0.03*H,0.005*H]),f)} L${P(add(ank,[0.035*H,0.1*H]),f)}" fill="none" stroke="${C.body}" stroke-width="${0.045*H}" stroke-linecap="round" stroke-linejoin="round"/>`);
+    out.push(line([0.12*H,y+0.005*H],shd,f,0.05*H,C.body),circ(head,0.058*H,f,`fill="${C.body}"`),line(add(shd,[0,0.02*H]),[0.43*H,y+0.045*H],f,0.045*H,C.body));
+    const asis=[0.49*H,y+0.045*H], mall=[0.955*H,y-0.03*H];
+    const draw=o.draw?o.draw({A,f,H,asis,mall,hip,knee,ank,W,add}):''; return `<svg viewBox="0 0 ${W.toFixed(0)} ${(top+0.11*H).toFixed(0)}" role="img" aria-label="${o.label||'Person liegend'}">${A.defs}${out.join('')}${draw}</svg>`; }
+  // Fahrradgrafik mit echten Messwerten (Sattelhöhe, Versatz, Abstand, Überhöhung) und antippbaren Bauteilen
+  function viz(o){ const fromM=m=>{ const sh=m.sh||735, sb=m.sb??60, rc=m.rc||(o.flat?560:520), dr=m.dr??(o.flat?-20:60); const sx=-(sb+150), sad=[sx,Math.sqrt(Math.max(1,sh*sh-sx*sx))]; const nose=add(sad,[150,0]); const clamp=[nose[0]+Math.sqrt(Math.max(1,rc*rc-dr*dr)),sad[1]-dr]; return {sad,clamp}; };
+    const cur=fromM(o.cur), old=o.old?fromM(o.old):null; const g=bikeGeo({flat:o.flat,sadAt:cur.sad,clampAt:cur.clamp});
+    const xs=[g.rear[0]-g.R-40,g.front[0]+g.R+60,g.clamp[0]+200], ys=[g.ground-40,g.sad[1]+120,g.clamp[1]+120]; if(old){ xs.push(old.clamp[0]+200); ys.push(old.sad[1]+120,old.clamp[1]+120); }
+    const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys); const W=maxX-minX, Hh=maxY-minY; const f={X:x=>x-minX,Y:y=>maxY-y};
+    const hl={}; if(['saddle','post'].includes(o.sel)) hl.saddle=1; if(o.sel==='bar') hl.bar=1; if(o.sel==='stem') hl.stem=1; if(o.sel==='crank') hl.crank=1;
+    let body=drawBike(g,f,hl); const ped=mul(dir(-35),g.crank); body+=line([0,0],ped,f,24,hl.crank?C.acc:C.frame)+line(add(ped,[-48,0]),add(ped,[48,0]),f,20,o.sel==='pedal'||o.sel==='cleat'?C.acc:C.tire)+circ([0,0],26,f,`fill="${C.frame}"`);
+    if(old&&(Math.hypot(old.sad[0]-cur.sad[0],old.sad[1]-cur.sad[1])+Math.hypot(old.clamp[0]-cur.clamp[0],old.clamp[1]-cur.clamp[1])>3)){ const dsh=`stroke-dasharray="18 14" opacity=".7"`;
+      body+=line(add(old.sad,[-140,10]),add(old.sad,[150,0]),f,30,'var(--muted)',dsh)+line(g.stTop,add(old.sad,[0,-42]),f,14,'var(--muted)',dsh)+line(g.steerTop,old.clamp,f,16,'var(--muted)',dsh)+circ(old.clamp,26,f,`fill="none" stroke="var(--muted)" stroke-width="10" ${dsh}`); }
+    const hs={saddle:add(g.sad,[0,40]),post:mul(add(g.stTop,g.sad),.5),bar:add(g.clamp,g.flat?[-30,0]:[90,-30]),stem:mul(add(g.steerTop,g.clamp),.5),head:mul(add(g.htTop,g.htBot),.5),bb:[0,0],crank:mul(ped,.5),pedal:add(ped,[-30,0]),cleat:add(ped,[40,0])};
+    const r=W/40; body+=Object.entries(hs).filter(([k])=>!o.parts||o.parts[k]).map(([k,p])=>`<g class="bv-hs ${k===o.sel?'on':''}" data-act="vizPick" data-p="${k}" tabindex="0" role="button" aria-label="${esc((o.parts&&o.parts[k])||k)}"><circle cx="${f.X(p[0]).toFixed(0)}" cy="${f.Y(p[1]).toFixed(0)}" r="${r.toFixed(0)}"/></g>`).join('');
+    return `<svg viewBox="0 0 ${W.toFixed(0)} ${Hh.toFixed(0)}" class="bviz" role="img" aria-label="Fahrradgrafik nach deinen Messwerten">${body}</svg>`; }
+  return {scene,standBack,lying,bikeGeo,riderPose,ang,viz};
+})();
+// Anleitungs-Zeichnungen: ersetzen die alten Strich-Skizzen, wo eine maßstabsgetreue Variante existiert
+const FIG_GUIDES={
+  saddleHeight:()=>FIG.scene({padL:420,label:'Sattelhöhe: Tretlagermitte bis Sattel-Oberkante entlang des Sitzrohrs',hl:{saddle:1},crank:-16,draw:({g,A,add,mul})=>A.dim([0,0],g.sad,'',null)+A.text(add(mul(g.sad,.5),[-60,0]),'Sattelhöhe','end')+A.text(add(mul(g.sad,.5),[-60,-70]),'Mitte Tretlager → Sattel oben','end',1)}),
+  saddleSetback:()=>FIG.scene({label:'Sattelversatz: Lot durch das Tretlager bis zur Sattelspitze',hl:{saddle:1},draw:({g,A})=>A.dash([0,-60],[0,g.sad[1]+140])+A.dim([0,g.sad[1]+60],[g.sad[0]+150,g.sad[1]+60],'')+A.text([g.sad[0]-40,g.sad[1]+110],'Versatz','end')+A.text([0,-100],'Lot durch Tretlager','middle',1)}),
+  reach:()=>FIG.scene({label:'Sattelspitze bis Lenkermitte',hl:{saddle:1,bar:1},draw:({g,A,add})=>A.dim(add(g.sad,[150,30]),add(g.clamp,[0,30]),'Sattel → Lenkermitte',add(g.sad,[480,110]))}),
+  drop:()=>FIG.scene({padR:420,label:'Überhöhung: Sattel oben minus Lenker oben',hl:{saddle:1,bar:1},draw:({g,A,add})=>A.dash(add(g.sad,[-150,0]),[g.clamp[0]+200,g.sad[1]])+A.dim([g.clamp[0]+160,g.sad[1]],[g.clamp[0]+160,g.clamp[1]],'')+A.text([g.clamp[0]+190,(g.sad[1]+g.clamp[1])/2-20],'Überhöhung','start')}),
+  stemLength:()=>FIG.scene({label:'Vorbau',hl:{stem:1},draw:({g,A,add})=>A.text(add(g.clamp,[0,140]),'Vorbau: Länge und Winkel stehen am Vorbau','middle')}),
+  spacer:()=>FIG.scene({label:'Spacer unter dem Vorbau',hl:{spacer:1},draw:({g,A,add})=>A.text(add(g.steerTop,[-60,120]),'Spacer','end')}),
+  bbHeight:()=>FIG.scene({label:'Tretlager über Boden',draw:({g,A})=>A.dim([0,g.ground],[0,0],'')+A.text([60,g.ground/2],'Tretlager über Boden','start',1)}),
+  saddleFloor:()=>FIG.scene({label:'Sattel über Boden',hl:{saddle:1},draw:({g,A})=>A.dim([g.sad[0],g.ground],[g.sad[0],g.sad[1]],'')+A.text([g.sad[0]-50,(g.sad[1]+g.ground)/2],'Sattel über Boden','end',1)}),
+  barFloor:()=>FIG.scene({label:'Lenker über Boden',hl:{bar:1},draw:({g,A})=>A.dim([g.clamp[0]+60,g.ground],[g.clamp[0]+60,g.clamp[1]],'')+A.text([g.clamp[0]+110,(g.clamp[1]+g.ground)/2],'Lenker über Boden','start',1)}),
+  hoodFloor:()=>FIG.scene({label:'Schalthebel über Boden',hl:{hood:1},draw:({g,A})=>A.dim([g.hood[0]+40,g.ground],[g.hood[0]+40,g.hood[1]],'')+A.text([g.hood[0]+90,(g.hood[1]+g.ground)/2],'Schalthebel über Boden','start',1)}),
+  barX:()=>FIG.scene({label:'Lenkermitte vor Tretlager',hl:{bar:1},draw:({g,A})=>A.dash([0,g.ground],[0,g.clamp[1]+160])+A.dim([0,g.clamp[1]+110],[g.clamp[0],g.clamp[1]+110],'Lenkermitte vor Tretlager',[g.clamp[0]/2,g.clamp[1]+170])}),
+  hoodX:()=>FIG.scene({label:'Schalthebel vor Tretlager',hl:{hood:1},draw:({g,A})=>A.dash([0,g.ground],[0,g.hood[1]+160])+A.dim([0,g.hood[1]+110],[g.hood[0],g.hood[1]+110],'Schalthebel vor Tretlager',[g.hood[0]/2,g.hood[1]+170])}),
+  saddleToHood:()=>FIG.scene({label:'Sattelspitze bis Schalthebel',hl:{saddle:1,hood:1},draw:({g,A,add})=>A.dim(add(g.sad,[150,30]),add(g.hood,[0,40]),'Sattelspitze → Schalthebel',add(g.sad,[520,140]))}),
+  crankLength:()=>FIG.scene({label:'Kurbellänge',hl:{crank:1},crank:-60,draw:({g,A,dir,mul})=>A.text([g.crank*0.6+80,-g.crank*0.6-140],'Kurbellänge steht innen am Kurbelarm','start',1)}),
+  kneeBDC:()=>FIG.scene({padR:200,label:'Kniewinkel: Kurbel ganz unten',rider:1,crank:-90,anim:1,hlR:{hlLeg:1},draw:({p,A,ang})=>{ const a1=ang(p.knee,p.hip), a2=ang(p.knee,p.ank); return A.arcAt(p.knee,170,a2,a1)+A.text([p.knee[0]+260,p.knee[1]+40],'Kniewinkel','start')+A.text([p.knee[0]+260,p.knee[1]-40],'Kurbel ganz unten','start',1); }}),
+  hipAngle:()=>FIG.scene({padL:380,label:'Hüftwinkel: Kurbel ganz oben',rider:1,crank:90,hlR:{hlTorso:1},draw:({p,A,ang})=>{ const a1=ang(p.hip,p.shd), a2=ang(p.hip,p.knee); return A.arcAt(p.hip,190,a2,a1)+A.text([p.hip[0]-230,p.hip[1]+170],'Hüftwinkel','end')+A.text([p.hip[0]-230,p.hip[1]+95],'Kurbel ganz oben','end',1); }}),
+  torsoAngle:()=>FIG.scene({label:'Oberkörperwinkel zur Waagerechten',rider:1,crank:-20,hlR:{hlTorso:1},draw:({p,A,ang,add})=>A.dash(p.hip,add(p.hip,[700,0]))+A.arcAt(p.hip,330,0,p.torsoA)+A.text(add(p.hip,[380,120]),'Oberkörperwinkel','start')}),
+  // Körpercheck
+  legLen:()=>FIG.lying({label:'Beinlänge im Liegen: vorderer Beckenknochen bis Außenknöchel',draw:({A,asis,mall,H,add})=>A.dim(add(asis,[0,0.035*H]),add(mall,[0,0.095*H]),'')+A.dot(asis,H/70)+A.dot(mall,H/70)+A.text([0.32*H,asis[1]+0.1*H],'vorderer Beckenknochen','middle')+A.text(add(mall,[-0.02*H,0.15*H]),'Außenknöchel','end')+A.text([0.5*H,-0.075*H],'Jede Seite 3× messen – FYF bildet den Mittelwert','middle',1)}),
+  legBlock:()=>FIG.standBack({label:'Gegenprobe im Stehen: Brettchen unter die tiefere Seite',block:28,draw:({A,f,H,crest,add})=>A.dash(add(crest(-1),[-0.1*H,0]),add(crest(1),[0.1*H,0]),'var(--accent)')+A.text([0,1.01*H+28],'Beckenkämme waagerecht?','middle')+A.text([0.12*H,0.06*H+28],'Brettchen','start',1)}),
+  pelvis:()=>FIG.standBack({label:'Beckenstand im Stehen von hinten',tilt:22,draw:({A,f,H,crest,add})=>A.dash(add(crest(-1),[-0.1*H,0]),add(crest(1),[0.1*H,0]))+A.text([0,1.01*H],'Gleich hoch?','middle')})
+};
+
+{ const IL0=IL; IL=k=>{ if(FIG_GUIDES[k]){ try{ return `<div class="illus fig${['legBlock','pelvis'].includes(k)?' tall':''}">${FIG_GUIDES[k]()}</div>`; }catch(e){ console.error(e); } } return IL0(k); }; }
+/* ---------- Beinlänge: mehrfach messen, Messunsicherheit, Gegenprobe im Stehen ----------
+   Grundsatz: Mit Maßband und Abtasten sind Unterschiede unter ca. 1 cm nicht sicher vom Messfehler zu trennen.
+   Eine Empfehlung (Ausgleich, Fachperson) gibt es nur, wenn genug Messungen vorliegen, der Unterschied größer als
+   die Streuung ist und die Gegenprobe im Stehen in dieselbe Richtung zeigt. */
+const LEG_MIN_MM=10, LEG_TAPE_U=5;
+function legEval(s){ const m=s.legM||null; const ch=s.check||{};
+  const vals=sd=>m&&Array.isArray(m[sd])?m[sd].filter(x=>isFinite(x)&&x>0):(ch['legLen'+sd]!=null&&ch['legLen'+sd]!==''?[Number(ch['legLen'+sd])]:[]);
+  const L=vals('L'), R=vals('R'); if(!L.length||!R.length) return null;
+  const mean=a=>a.reduce((x,y)=>x+y,0)/a.length, spr=a=>a.length>1?(Math.max(...a)-Math.min(...a))*10:null;
+  const mL=mean(L), mR=mean(R), d=Math.round(Math.abs(mL-mR)*10), short=mL<mR?'links':'rechts';
+  const sL=spr(L), sR=spr(R), u=Math.round(Math.max(LEG_TAPE_U,sL||0,sR||0));
+  const blk=m&&m.block&&m.block.side&&m.block.side!=='nicht gemacht'?m.block:null;
+  const blkSide=blk?(blk.side==='gerade'?'gerade':blk.side.replace(' tiefer','')):null, blkMm=blk?Number(blk.mm)||0:null;
+  const e={L,R,mL,mR,d,short,sL,sR,u,n:Math.min(L.length,R.length),blkSide,blkMm,status:'',title:'',text:'',shim:null};
+  if(e.n<2){ e.status='unsicher'; e.title=`Beinlänge: ${d} mm Unterschied – nur eine Messung`; e.text='Eine einzelne Maßband-Messung ist zu ungenau für eine Entscheidung. Jede Seite 3-mal messen, dann bewertet FYF den Unterschied.'; return e; }
+  if(d<=u||d<LEG_MIN_MM){ e.status='nicht sicher'; e.title=`Beinlänge: ${d} mm – nicht sicher messbar`; e.text=`${(e.sL||0)>8||(e.sR||0)>8?'Die Messungen einer Seite streuen stark – Messpunkte neu ertasten und noch einmal messen. ':''}Der Unterschied liegt im Bereich der Messungenauigkeit (Streuung bis ${u} mm; mit Maßband sind unter ca. 10 mm nicht sicher zu trennen). Kein Ausgleich. Bei einseitigen Beschwerden: Becken beim Fahren von hinten beobachten.`; return e; }
+  if(!blk){ e.status='prüfen'; e.title=`Beinlänge: ${d} mm Unterschied (${short} kürzer) – Gegenprobe fehlt`; e.text='Bevor du etwas ausgleichst: Gegenprobe im Stehen mit Brettchen machen. Erst wenn beide Methoden in dieselbe Richtung zeigen, ist der Unterschied belastbar.'; return e; }
+  if(blkSide!==short){ e.status='widersprüchlich'; e.title=`Beinlänge: widersprüchliche Messungen`; e.text=`Im Liegen ist ${short} kürzer (${d} mm), im Stehen ${blkSide==='gerade'?'steht das Becken gerade':blkSide+' tiefer'}. Kein Ausgleich. Messpunkte neu markieren und von vorn messen, am besten von einer zweiten Person.`; return e; }
+  e.status='bestätigt'; e.title=`Beinlänge: ${d} mm Unterschied, ${short} kürzer – bestätigt`;
+  e.text=`Liegend und stehend (${blkMm} mm Brettchen) zeigen in dieselbe Richtung. Ursache von Fachleuten abklären lassen (anatomisch oder durch das Becken). Ein Ausgleich am Rad nur nach Rücksprache und höchstens etwa die Hälfte (${Math.round(d/2)} mm) in kleinen Schritten.`;
+  e.shim={need:'Fachperson',side:short,mm:Math.round(d/2)}; return e; }
+function legEvalHtml(s){ const e=legEval(s); if(!e) return '';
+  const col={'bestätigt':'c-warn','prüfen':'c-info','widersprüchlich':'c-warn','nicht sicher':'c-ok','unsicher':'c-info'}[e.status]||'';
+  return `<div class="notice" style="margin:0;display:block"><div class="row" style="gap:6px;flex-wrap:wrap"><span class="chip nodot ${col}">${esc(e.status)}</span><b>${esc(e.title)}</b></div>
+    <div class="sub" style="margin-top:4px;white-space:normal">Links ${e.L.map(x=>fmtNum(x)).join(' / ')} cm (Ø ${fmtNum(Math.round(e.mL*10)/10)}${e.sL!=null?`, Streuung ${fmtNum(e.sL)} mm`:''}) · Rechts ${e.R.map(x=>fmtNum(x)).join(' / ')} cm (Ø ${fmtNum(Math.round(e.mR*10)/10)}${e.sR!=null?`, Streuung ${fmtNum(e.sR)} mm`:''})${e.blkSide?` · Stehend: ${e.blkSide==='gerade'?'gerade':esc(e.blkSide)+' tiefer, '+fmtNum(e.blkMm)+' mm'}`:''}</div>
+    <div style="margin-top:6px;font-size:14px">${esc(e.text)}</div></div>`; }
+
 
 /* ---------- Plausibilitätsbereiche ---------- */
 // Grobe Richtwerte zur Kontrolle auf Messfehler. Segmentanteile an der Körpergröße nach üblichen
@@ -1155,7 +1344,7 @@ function wireScan(){
 /* ---------- Körpercheck ---------- */
 const CHECKS = [
   {k:'pain',label:'Aktuelle Schmerzen',type:'sel',opts:['nein','ja'],side:false,tool:'Gespräch',why:'Bei akuten Schmerzen ist ein Fitting nicht der richtige erste Schritt.',steps:['Frag: Hast du gerade Schmerzen beim Radfahren oder im Alltag? Wo genau?','Die Antwort im Wortlaut bei „Beschwerden“ im Schritt Ziel notieren.']},
-  {k:'legLen',label:'Beinlänge',type:'num',unit:'cm',step:0.1,side:true,tool:'Maßband, Liege',why:'Unterschiedlich lange Beine lassen das Becken auf dem Sattel kippen.',steps:['Person liegt auf dem Rücken, Beine gestreckt.','Kurz das Becken anheben und wieder ablegen lassen, damit es gerade liegt.','Den vorstehenden Beckenknochen vorne an der Hüfte ertasten.','Vom Beckenknochen bis zur Mitte des Innenknöchels messen.','Jede Seite zweimal messen, den Mittelwert eintragen.']},
+  {k:'legLen',label:'Beinlänge',type:'num',unit:'cm',step:0.1,side:true,tool:'Maßband, Liege',why:'Unterschiedlich lange Beine lassen das Becken auf dem Sattel kippen.',steps:['Person liegt auf dem Rücken auf einer festen Liege, ohne Schuhe.','Becken ausrichten: kurz anheben (Brücke), ablegen, Beine gerade und hüftbreit ausstrecken. Kopf gerade.','Messpunkte mit Klebepunkten markieren: unterer Rand des vorderen Beckenknochens und Mitte des Außenknöchels – beide Seiten gleich.','Maßband gerade und ohne Zug anlegen, immer dieselbe Person misst.','Jede Seite 3-mal messen und jeden Wert einzeln eintragen. FYF bildet den Mittelwert und prüft die Streuung.','Danach die Gegenprobe im Stehen mit Brettchen (unten).']},
   {k:'pelvis',label:'Beckenstand im Stehen',type:'sel',opts:['gerade','links höher','rechts höher','nicht eindeutig'],side:false,tool:'Hände, Spiegel',why:'Zeigt, ob das Becken schon im Stehen schief steht.',steps:['Person steht barfuß, Füße hüftbreit.','Von hinten beide Hände flach auf die Beckenkämme legen.','Auf Augenhöhe gehen und vergleichen, ob beide Hände gleich hoch sind.']},
   {k:'shoulder',label:'Schulterstand',type:'sel',opts:['gerade','links tiefer','rechts tiefer','nicht eindeutig'],side:false,tool:'Augenmaß, Spiegel',why:'Schiefe Schultern können sich am Lenker zeigen.',steps:['Person steht entspannt, Arme hängen.','Von vorn die Höhe beider Schultern vergleichen.']},
   {k:'kneeTrack',label:'Kniespur bei einbeiniger Kniebeuge',type:'sel',opts:['gerade','fällt nach innen','fällt nach außen','nicht eindeutig'],side:true,tool:'Augenmaß',why:'Zeigt, wie das Knie beim Treten wandert.',steps:['Person steht auf einem Bein, Hände an der Hüfte.','Langsam etwa 45° in die Knie gehen und wieder hoch, 5-mal.','Von vorn beobachten: Bleibt das Knie über dem Fuß oder wandert es nach innen oder außen?','Dann die andere Seite.']},
@@ -1179,10 +1368,7 @@ function checkFindings(s){
   const out=[]; const v=(k,sd)=>chkVal(s,k,sd); const add=(lvl,cat,title,text)=>out.push({lvl,cat,title,text});
   if(v('pain')==='ja') add('bad','arzt','Schmerzen angegeben','Bei akuten Schmerzen erst ärztlich oder physiotherapeutisch abklären lassen. Das Fitting kann danach folgen.');
   const L=Number(v('legLen','L')), R=Number(v('legLen','R'));
-  if(L&&R){ const d=Math.round(Math.abs(L-R)*10); const short=L<R?'links':'rechts';
-    if(d>=10) add('warn','arzt',`Beinlänge: ${d} mm Unterschied`,`Deutlicher Unterschied, ${short} kürzer. Ursache von Fachleuten abklären lassen. Ausgleich am Rad nur nach Rücksprache.`);
-    else if(d>=5) add('warn','ausgleich',`Beinlänge: ${d} mm Unterschied`,`${short[0].toUpperCase()+short.slice(1)} kürzer. Ausgleich prüfen: Unterlegplatte (Shim) unter dem Cleat ${short}. Faustregel: etwa die Hälfte des Unterschieds, dann fahren und nachfragen.`);
-    else add('ok','fitting',`Beinlänge: ${d} mm Unterschied`,'Kein Ausgleich nötig.'); }
+  { const e=legEval(s); if(e){ if(e.status==='bestätigt') add('warn','arzt',e.title,e.text); else if(e.status==='nicht sicher') add('ok','fitting',e.title,e.text); else add('info','fitting',e.title,e.text); } }
   if(v('pelvis')&&v('pelvis')!=='gerade') add('info','fitting',`Becken im Stehen: ${v('pelvis')}`,L&&R?'Mit der Beinlänge zusammen betrachten.':'Beinlänge messen, um die Ursache einzugrenzen.');
   if(v('shoulder')&&v('shoulder')!=='gerade') add('info','fitting',`Schultern: ${v('shoulder')}`,'Beim Fitting auf schiefe Haltung am Lenker achten.');
   ['L','R'].forEach(sd=>{ const n=sd==='L'?'links':'rechts';
@@ -1532,7 +1718,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-09.68';
+const APP_VER='2026-11-09.69';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2308,16 +2494,8 @@ function bikeVizHtml(b,before,after,ctx){
   const sad=(P,cls)=>`<path d="M${P[0]-22},${P[1]} L${P[0]+18},${P[1]-2}" class="${cls}" stroke-width="6" stroke-linecap="round"/>`;
   const ghost=hasA&&(Math.abs(g0.S[0]-S[0])+Math.abs(g0.S[1]-S[1])+Math.abs(g0.B[0]-B[0])+Math.abs(g0.B[1]-B[1])>0.5);
   const hs=[['saddle',S[0],S[1]-6],['post',(S[0]+BB[0])/2,(S[1]+BB[1])/2],['bar',B[0]+10,B[1]+6],['stem',(B[0]+ht[0])/2,(B[1]+ht[1])/2-2],['head',ht[0]+2,ht[1]+22],['bb',BB[0],BB[1]],['crank',BB[0]+12,BB[1]+22],['pedal',BB[0]+22,BB[1]+42],['cleat',BB[0]+38,BB[1]+42]];
-  const svg=`<svg viewBox="0 0 330 230" class="bviz" role="img" aria-label="Schematische Fahrradgrafik">
-    <circle cx="${rw[0]}" cy="${rw[1]}" r="52" class="bv-w"/><circle cx="${fw[0]}" cy="${fw[1]}" r="52" class="bv-w"/>
-    <path d="M${rw[0]},${rw[1]} L${BB[0]},${BB[1]} L${ht[0]},${ht[1]+28} L${fw[0]},${fw[1]} M${rw[0]},${rw[1]} L${S[0]+6},${S[1]+34} L${BB[0]},${BB[1]} M${S[0]+6},${S[1]+34} L${ht[0]},${ht[1]+8}" class="bv-f" fill="none"/>
-    <line x1="${ht[0]}" y1="${ht[1]}" x2="${ht[0]+4}" y2="${ht[1]+30}" class="bv-f" stroke-width="6"/>
-    ${ghost?`<line x1="${BB[0]}" y1="${BB[1]}" x2="${g0.S[0]}" y2="${g0.S[1]}" class="bv-old"/>${sad(g0.S,'bv-old')}<line x1="${ht[0]}" y1="${ht[1]}" x2="${g0.B[0]}" y2="${g0.B[1]}" class="bv-old"/>${bar(g0.B,'bv-old')}`:''}
-    <line x1="${BB[0]}" y1="${BB[1]}" x2="${S[0]}" y2="${S[1]}" class="bv-p"/>${sad(S,'bv-p')}
-    <line x1="${ht[0]}" y1="${ht[1]}" x2="${B[0]}" y2="${B[1]}" class="bv-p" stroke-width="5"/>${bar(B,'bv-p')}
-    <line x1="${BB[0]}" y1="${BB[1]}" x2="${BB[0]+20}" y2="${BB[1]+38}" class="bv-p" stroke-width="4"/><circle cx="${BB[0]}" cy="${BB[1]}" r="7" class="bv-bb"/><rect x="${BB[0]+12}" y="${BB[1]+38}" width="22" height="6" rx="2" class="bv-p"/><rect x="${BB[0]+30}" y="${BB[1]+36}" width="12" height="4" rx="1" class="bv-c"/>
-    ${hs.map(([p,x,y])=>`<g class="bv-hs ${p===sel?'on':''}" data-act="vizPick" data-p="${p}" tabindex="0" role="button" aria-label="${VIZ_PARTS[p][0]}"><circle cx="${x}" cy="${y}" r="13"/></g>`).join('')}
-  </svg>`;
+  const mv=e=>{ const v=x=>e&&e[x]?Number(e[x].value):null; return {sh:v('saddleHeight'),sb:v('saddleSetback'),rc:v('reach'),dr:v('drop')}; };
+  let svg; try{ svg=FIG.viz({flat,cur:mv({...(before||{}),...(after||{})}),old:hasA?mv(before||{}):null,sel,parts:Object.fromEntries(Object.entries(VIZ_PARTS).map(([k,[l]])=>[k,l]))}); }catch(e){ console.error(e); svg='<div class="empty">Grafik nicht verfügbar</div>'; }
   const rows=vizKeys(sel).map(k=>{ const b0=before&&before[k], a1=after&&after[k]; if(!b0&&!a1) return `<tr><td>${MK[k].label}</td><td class="r faint">nicht erfasst</td><td class="r faint">–</td><td class="r"></td><td class="src"></td></tr>`; const d=b0&&a1?Number(a1.value)-Number(b0.value):null; const r=a1||b0;
     return `<tr><td>${MK[k].label}</td><td class="r num">${b0?fmtNum(b0.value)+' '+MK[k].unit:'–'}</td><td class="r num">${a1?fmtNum(a1.value)+' '+MK[k].unit:'–'}</td><td class="r num">${d?(d>0?'+':'')+fmtNum(Math.round(d*10)/10):''}</td><td class="src">${esc(r.method||r.source||'')}</td></tr>`; }).join('');
   const meas=ctx&&ctx.sid?vizKeys(sel).filter(k=>MEASURE_NOW.includes(k))[0]:null;
@@ -2877,7 +3055,7 @@ const CK_KEYW={pain:'Schmerzen',legLen:'Beinlänge',pelvis:'Becken',shoulder:'Sc
 const CK_KB={
   pain:{mean:'Mit akuten Schmerzen lässt sich die richtige Position nicht sicher finden. Der Körper weicht dem Schmerz aus.',todo:['Fitting verschieben oder nur grob einstellen.','Erst ärztlich oder physiotherapeutisch abklären lassen.']},
   legLen:{mean:'Ein kürzeres Bein lässt das Becken auf dem Sattel zur kurzen Seite kippen. Folge: einseitige Belastung von Knie, Hüfte und unterem Rücken, oft Sitzbeschwerden auf einer Seite.',
-    todo:['Erst nachmessen: im Liegen vom vorderen Hüftknochen zum Innenknöchel, 2–3 Mal, Mittelwert nehmen.','5–9 mm Unterschied: Unterlegplatte (Shim) unter den Cleat der kürzeren Seite, etwa die Hälfte des Unterschieds (z. B. 3 mm bei 6 mm). Dann fahren und fragen.','Ab 10 mm: erst Fachperson (Orthopädie, Physiotherapie). Ein Teil ist oft „funktional“ (verkipptes Becken) und lässt sich behandeln statt ausgleichen.','Nie den vollen Unterschied auf einmal ausgleichen.']},
+    todo:['Jede Seite 3-mal im Liegen messen (vorderer Beckenknochen bis Außenknöchel, Punkte markieren).','Gegenprobe im Stehen mit Brettchen unter der tieferen Seite.','Unter ca. 10 mm oder widersprüchlich: kein Ausgleich – das ist mit Maßband nicht sicher messbar.','Ab 10 mm und beide Methoden gleich: Fachperson (Orthopädie, Physiotherapie). Sicher bestimmen lässt sich ein echter Unterschied nur per Röntgen.','Ausgleich am Rad nur nach Rücksprache, höchstens die Hälfte, in kleinen Schritten. Danach fahren und nachfragen.']},
   pelvis:{mean:'Ein schiefes Becken im Stehen passt oft zu einem Beinlängenunterschied oder einseitig verspannten Muskeln. Auf dem Rad rutscht man dann zu einer Seite.',todo:['Zusammen mit der Beinlänge betrachten.','Beim Fahren von hinten schauen: Sitzt die Person mittig auf dem Sattel?','Bei deutlicher Schiefstellung: Fachperson.']},
   shoulder:{mean:'Hängt eine Schulter, greift man den Lenker oft ungleich. Folge: Nacken und Hand auf einer Seite belastet.',todo:['Beim Fahren auf gleichmäßigen Griff achten.','Schalthebel beidseitig gleich hoch montieren (Lineal über beide Griffe).']},
   kneeTrack:{mean:'Fällt das Knie bei der Kniebeuge nach innen, macht es das auch beim Treten. Das belastet Knie innen und Kniescheibe. Ursache ist meist der Fuß (flaches Gewölbe, schräger Vorfuß), manchmal schwache Hüftmuskeln.',todo:['Zuerst den Fuß versorgen: Einlage mit Gewölbestütze, ggf. Keil (siehe Fußgewölbe und Vorfuß).','Danach die Kniebeuge wiederholen: Läuft das Knie jetzt gerader?','Beim Fahren von vorn schauen: Knie sollte gerade über dem Fuß auf und ab laufen.','Bleibt es: Cleat etwas nach außen setzen (Fuß näher zur Kurbel) oder Pedalachsen-Verlängerung prüfen.']},
@@ -2929,10 +3107,7 @@ function footAdvice(s){
     f.check=['Nach dem Einbau die einbeinige Kniebeuge wiederholen: Läuft das Knie jetzt gerade über den 2. Zeh?','Beim Fahren von vorn filmen: Knie soll gerade auf und ab laufen, nicht pendeln.','Nach 20–30 Minuten fragen: Druckstellen, Taubheit, Brennen?'];
     out.feet[sd]=f; });
   const L=Number(v('legLen','L')), R=Number(v('legLen','R'));
-  if(L&&R){ const d=Math.round(Math.abs(L-R)*10); const short=L<R?'links':'rechts';
-    if(d>=10) out.shim={need:'Fachperson',side:short,mm:null,why:`${d} mm Unterschied, ${short} kürzer. Erst abklären lassen (anatomisch oder durch das Becken?). Danach ggf. Unterlegplatte unter den Cleat ${short}, höchstens die Hälfte (${Math.round(d/2)} mm), in Schritten.`};
-    else if(d>=5) out.shim={need:'ja',side:short,mm:Math.round(d/2),why:`${d} mm Unterschied, ${short} kürzer. Unterlegplatte (Shim) unter den Cleat ${short}: etwa ${Math.round(d/2)} mm.`};
-    else out.shim={need:'nein',why:`${d} mm Unterschied – kein Ausgleich nötig.`}; }
+  { const e=legEval(s); if(e){ if(e.status==='bestätigt') out.shim={need:'Fachperson',side:e.short,mm:null,why:e.text}; else if(e.status==='nicht sicher') out.shim={need:'nein',why:e.text}; else out.shim={need:'erst prüfen',why:e.text}; } }
   return out;
 }
 function footHtml(s){
@@ -2982,6 +3157,13 @@ function ckWizard(s,c,items,i){
       if(it.type==='num'){ const rg=rangeFor(CHECK_RANGE[it.k],c); return `<div class="field wside"><label for="${id}">${lab?`<b>${lab}</b> · `:''}Wert${it.unit?` in ${it.unit}`:''}</label><input class="input num" id="${id}" name="${it.k}${sd||''}" type="number" step="${it.step||0.5}" inputmode="decimal" value="${esc(val)}" ${rangeAttr(rg,id)}>${rangeHint(rg,id,val)}</div>`; }
       return `<div class="wside">${lab?`<span class="label">${lab}</span>`:''}<input type="hidden" id="${id}" name="${it.k}${sd||''}" value="${esc(val)}"><div class="bigchips" data-group="${id}">${it.opts.map(o=>`<button type="button" class="chipbtn" data-act="chip" data-t="${id}" data-m="set" data-v="${esc(o)}" aria-pressed="${val===o}">${esc(o)}</button>`).join('')}</div></div>`; };
     fields=it.side?one('L')+one('R'):one('');
+    if(it.k==='legLen'){ const m=s.legM||{}; const V=sd=>Array.isArray(m[sd])?m[sd]:(chkVal(s,'legLen',sd)!=null&&chkVal(s,'legLen',sd)!==''?[chkVal(s,'legLen',sd)]:[]); const rg=rangeFor(CHECK_RANGE.legLen,c); const bk=m.block||{};
+      fields=`<div class="sbgrid">${[0,1,2].map(j=>['L','R'].map(sd=>{ const id='ll'+sd+j; return `<div class="field"><label for="${id}"><b>${sd==='L'?'Links':'Rechts'}</b> ${j+1}. Messung (cm)</label><input class="input num" id="${id}" name="${id}" type="number" step="0.1" inputmode="decimal" value="${V(sd)[j]??''}" ${rangeAttr(rg,id)}></div>`; }).join('')).join('')}</div>${rangeHint(rg,'llL0',V('L')[0])}
+      <p class="faint" style="font-size:12.5px;margin:0">Weichen die Messungen einer Seite um mehr als 5 mm ab, Messpunkte neu ertasten und noch einmal messen.</p>
+      <details class="more" ${bk.side&&bk.side!=='nicht gemacht'?'open':''}><summary>Gegenprobe im Stehen (Brettchen)</summary>${IL('legBlock')}<ol class="how"><li>Person steht barfuß, Füße hüftbreit, Knie gestreckt, Gewicht gleich verteilt.</li><li>Von hinten auf Augenhöhe beide Beckenkämme mit Zeigefingern ertasten, ggf. kleine Wasserwaage darüberlegen.</li><li>Steht eine Seite tiefer: dünne Brettchen (z. B. 3 mm) unter diesen Fuß legen, bis beide gleich hoch sind.</li><li>Seite und Gesamtdicke eintragen.</li></ol>
+        <div class="field"><label for="llBs">Ergebnis</label><select class="input" id="llBs" name="llBside">${opts(['nicht gemacht','gerade','links tiefer','rechts tiefer'],bk.side||'nicht gemacht')}</select></div>
+        <div class="field"><label for="llBm">Brettchen gesamt in mm</label><input class="input num" id="llBm" name="llBmm" type="number" step="1" min="0" max="40" inputmode="numeric" value="${bk.mm??''}"></div></details>
+      ${legEvalHtml(s)}`; }
     if(it.k==='sitBone'){ const sb=s.sitBone||{}; const V=sb.vals||(chkVal(s,'sitBone','')!=null&&chkVal(s,'sitBone','')!==''?[chkVal(s,'sitBone','')]:[]); const rg=rangeFor(CHECK_RANGE.sitBone,c);
       fields=`<div class="sbgrid">${[0,1,2].map(j=>`<div class="field"><label for="sb${j}">Messung ${j+1}${j?' (optional)':''} in mm</label><input class="input num" id="sb${j}" name="sb${j}" type="number" step="1" inputmode="numeric" value="${V[j]??''}" ${rangeAttr(rg,'sb'+j)}>${rangeHint(rg,'sb'+j,V[j])}</div>`).join('')}</div>
       <div class="field"><label for="sbM">Methode</label><select class="input" id="sbM" name="sbMethod">${opts(['Wellpappe','Gelkissen','Memory-Schaum','Messgerät','andere'],sb.method||'Wellpappe')}</select></div>
@@ -3764,7 +3946,7 @@ SESSTAB.anpassung = s => { if(s.plan&&ui.adjIdx!=null) return guidedHtml(s); con
     </form></div></section>
   </div></details>
   ${changeLogHtml(s)}
-  <details class="more" ${ui.vizOpen?'open':''}><summary data-act="vizToggle">Fahrradgrafik (schematisch)</summary><div style="margin-top:8px">${ui.vizOpen?bikeVizHtml(bike(s.bikeId),s.before,s.after,{sid:s.id}):''}</div></details>
+  <details class="more" ${ui.vizOpen?'open':''}><summary data-act="vizToggle">Fahrradgrafik (nach deinen Messwerten)</summary><div style="margin-top:8px">${ui.vizOpen?bikeVizHtml(bike(s.bikeId),s.before,s.after,{sid:s.id}):''}</div></details>
   <div class="camcard"><span class="ico">${ic('camera')}</span><div style="flex:1;min-width:0"><b>Fahr-Analyse mit Kamera</b><span class="muted" style="font-size:13.5px">Optional · neue Position beim Fahren filmen und Winkel messen</span></div></div>
   <details class="more" ${vid.src?'open':''}><summary>Fahr-Analyse öffnen</summary><div style="margin-top:10px">${vidPanel(s,'after')}</div></details>
   </div>`; };
@@ -5776,7 +5958,12 @@ const FORMS = {
   checkOne(f,data){ const s=sess(f.dataset.id); const c=cust(s.customerId); const items=CK_ITEMS(); const i=Number(f.dataset.i); const it=items[i];
     if(it.k==='grund'){ c.est=c.est||[]; ['height','inseam','torso','arm','shoulder'].forEach(k=>{ const v=data.get(k); const nv=v===''||v===null?null:Number(v); if(nv!==c.body[k]) c.est=c.est.filter(x=>x!==k); c.body[k]=nv; }); audit(`Grundmaße gespeichert: ${c.name}`); }
     else { s.check=s.check||{};
-      if(it.k==='sitBone'){ const V=[0,1,2].map(j=>String(data.get('sb'+j)??'').trim()).filter(x=>x!=='').map(Number).filter(x=>isFinite(x)&&x>0);
+      if(it.k==='legLen'){ const rd=sd=>[0,1,2].map(j=>String(data.get('ll'+sd+j)??'').replace(',','.').trim()).filter(x=>x!=='').map(Number).filter(x=>isFinite(x)&&x>0);
+        const L=rd('L'), R=rd('R'), bs=String(data.get('llBside')||'nicht gemacht'), bm=data.get('llBmm');
+        s.legM={L,R,method:'Maßband liegend, vorderer Beckenknochen bis Außenknöchel',block:{side:bs,mm:bm===''||bm===null?null:Math.max(0,Math.min(40,Number(bm)))},date:today()};
+        const mn=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length*10)/10:null; ['L','R'].forEach(sd=>{ const v=mn(sd==='L'?L:R); if(v==null) delete s.check['legLen'+sd]; else s.check['legLen'+sd]=v; });
+        if(bs==='links tiefer'||bs==='rechts tiefer') s.check.pelvis=bs==='links tiefer'?'rechts höher':'links höher'; else if(bs==='gerade') s.check.pelvis='gerade'; }
+      else if(it.k==='sitBone'){ const V=[0,1,2].map(j=>String(data.get('sb'+j)??'').trim()).filter(x=>x!=='').map(Number).filter(x=>isFinite(x)&&x>0);
         if(V.length){ s.sitBone={vals:V,method:data.get('sbMethod')||'',pos:data.get('sbPos')||'',date:today()}; s.check.sitBone=Math.round(V.reduce((a,x)=>a+x,0)/V.length); } else { delete s.sitBone; delete s.check.sitBone; } }
       else (it.side?['L','R']:['']).forEach(sd=>{ const v=data.get(it.k+sd); if(v===null||v==='') delete s.check[it.k+sd]; else s.check[it.k+sd]=it.type==='num'?Number(v):v; });
       { const obs=String(data.get('obs')||'').trim().slice(0,600), int=String(data.get('int')||'').trim().slice(0,600); s.ckNote=s.ckNote||{}; if(obs||int) s.ckNote[it.k]={obs,int}; else delete s.ckNote[it.k]; }
@@ -5971,7 +6158,8 @@ const st6=n=>`<span class="chip nodot st6 st6-${n}" title="${esc(ST6[n][2])}">${
 const FEATURES=[
  ['Kunden','Kundenakte, Einwilligungen, Auskunft und Löschen',1],
  ['Fahrräder','Fahrradakte mit Lebenslauf: Kauf, Garantie, Kilometer, Teiletausch, Fittings, Werkstatt',1],
- ['FYF Bikefitting','Geführter Ablauf, Körperanalyse, Vermessung mit Doppelmessung, Bericht, Nachkontrollen',1],
+ ['FYF Bikefitting','Geführter Ablauf, Körperanalyse, Vermessung mit Doppelmessung, Bericht, Nachkontrollen. Beinlänge: 3 Messungen je Seite, Streuung, Gegenprobe im Stehen',1],
+ ['Zeichnungen','Fahrrad nach echter Geometrie, Fahrer nach Körperproportionen, Tretbewegung animiert. Ältere Skizzen (Füße, Tests) teils noch einfach',2],
  ['Bewegung & Video','Winkel aus Video; Live-Analyse ist Beta',2],
  ['Werkstatt','Aufträge, Kostenvoranschlag, Wartung. Kundenfreigabe per Link fehlt noch (simuliert)',2],
  ['Termine','Termine an Fittings und im Dashboard; Terminwünsche über Anfragen. Kein eigener Kalender, keine Online-Buchung',2],
