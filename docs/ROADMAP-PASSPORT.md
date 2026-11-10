@@ -1,6 +1,6 @@
 # FYF – Bestandsaufnahme, Marktcheck und Roadmap (Passport, Network, Market)
 
-Stand: 10.11.2026 · App-Version v.79 · Datenbank Stand 10.
+Stand: 10.11.2026 · App-Version v.80 · Datenbank Stand 11.
 Dieses Dokument ist **nur Analyse und Plan**. Umgesetzt ist ausschließlich, was unter „Bestand“ als vorhanden markiert ist.
 
 Legende: ✅ vorhanden · 🟡 vorhanden, verbesserungswürdig · 🟠 teilweise · ❌ fehlt
@@ -196,7 +196,7 @@ Bewertung jeweils 1–5. Spalten: **K** Kunde, **H** Händler, **I** Innovation,
 
 | Schritt | Inhalt | Datenbank | Dauer [Schätzung] |
 |---|---|---|---|
-| **v.80 Passport-Kern** | Vertrauensstufen, Sperre gegen Überschreiben, Werkstatt-Einträge automatisch bestätigt, Fahrradschein-Druck (Teil I + II), Etikett-Bild fürs Etikettiergerät, Diebstahl-Paket, Felder Codierung, Akku-Nr., Batteriepass-Link | Stand 11 | 1 Sitzung |
+| **v.80 Passport-Kern** ✅ umgesetzt 10.11.2026 (Beleg-Stufe folgt mit v.81) | Vertrauensstufen, Sperre gegen Überschreiben, Werkstatt-Einträge automatisch bestätigt, Fahrradschein-Druck (Teil I + II), Etikett-Bild fürs Etikettiergerät, Diebstahl-Paket, Felder Codierung, Akku-Nr., Batteriepass-Link | Stand 11 | 1 Sitzung |
 | **v.81 Besitzer** | Besitzer-Konto per E-Mail-Code, Selbstauskunft, Pass übernehmen mit Übergabe-Code, Belege als Foto/PDF | Stand 12 | 1–2 Sitzungen |
 | **v.82 Aufkleber-Bestellung** | Bestellseite 4,90 € / 2er-Set 7,90 € ohne Online-Zahlung (Rechnung + Überweisung oder PayPal-Link), Bestellliste für dich | Stand 13 | 1 Sitzung, **erst nach Gewerbe/Impressum** |
 | **v.83 Fitting im Pass** | Zustimmung, Fitting-Werte in den Pass, Übernahme aufs neue Rad | – | 1 Sitzung |
@@ -231,3 +231,20 @@ Bewertung jeweils 1–5. Spalten: **K** Kunde, **H** Händler, **I** Innovation,
    - AVV (Auftragsverarbeitungsvertrag) mit den Läden.
 4. **Domain und Marke:** Für kurze QR-Links.
 5. **Etikettiergerät:** Welches Modell und welche Bandbreite?
+
+---
+
+## 9. Umgesetzt in v.80 (Passport-Kern)
+- Einträge im Online-Pass sind **unveränderlich**. Die Datenbank sperrt Ändern und Löschen, auch für Admins; Korrektur nur als neuer, sichtbarer Eintrag.
+- **Vertrauensstufe pro Eintrag**: „Werkstatt-bestätigt“ (geprüfter Betrieb, unabhängig vom Abo) oder „Werkstatt (Betrieb noch nicht geprüft)“. „Selbstauskunft“ und „Beleg vorhanden“ sind vorbereitet und folgen mit v.81.
+- Übergebene Aufträge, Teiletausch, Inspektion, Schaden, Garantiefall und Gebrauchtrad-Check werden **automatisch** einzeln eingetragen, ohne Doppelte. Interne Notizen und Kaufdaten bleiben privat.
+- **Fahrradschein Teil I + II**: Teil II trägt den geheimen Übergabe-Code; gespeichert wird nur dessen Hash. Ein neuer Druck macht den alten Code ungültig.
+- **Besitzerwechsel**:
+  - Mit Teil II in jeder FYF-Werkstatt möglich; die Geschichte bleibt.
+  - Käufer sehen nur „2. Besitzer seit …“, nie Namen.
+  - Der alte Laden kann danach nicht mehr schreiben.
+  - **Gestohlen gemeldete Räder können nicht übergeben werden.**
+- **Pass zurückziehen statt löschen**: Der Pass ist dann nicht mehr öffentlich, die Geschichte bleibt gespeichert. Löscht ein Betrieb sein Konto, bleiben seine Einträge in fremden Pässen erhalten.
+- **Etikett** als Bild für 24-mm-Band (740 × 256 px ≈ 52 × 18 mm bei 360 dpi), teilbar in die App des Etikettiergeräts.
+- **Identität & Diebstahlschutz**: Farbe, Merkmale, Codierung, Akku-Nr., Batteriepass-Link, Kauf. Öffentlich sind nur Farbe, gekürzte Akku-Nr. und Batteriepass-Link.
+- **Diebstahl-Paket**: Angaben für die Anzeige drucken oder als PDF sichern, Pass als gestohlen markieren. Hinweis, dass FYF mit keinem Polizei-Register verbunden ist.

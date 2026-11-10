@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-10.79';
+const APP_VER='2026-11-10.80';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2051,7 +2051,7 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
 // Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
-const DB_SCHEMA=10; let dbSchema=null;
+const DB_SCHEMA=11; let dbSchema=null;
 async function dbCheck(){ if(!(CL.url&&CL.key)) return;
   try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
   catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
@@ -7295,11 +7295,11 @@ Object.assign(ACT,{
       <div class="field wide"><label for="qp_v">Wer sieht den Pass?</label><select class="input" id="qp_v" name="vis">${opts([['shops','Nur Werkstätten (geprüfte FYF-Läden)'],['public','Jeder, der den Code scannt (gut beim Verkauf)']],q.vis||'shops')}</select></div>
       <label class="wide row" style="flex-wrap:nowrap;gap:8px;align-items:flex-start"><input type="checkbox" name="stolen" ${q.stolen?'checked':''} style="margin-top:4px"><span>Als <b>gestohlen</b> melden (jeder Scan zeigt eine Warnung)</span></label>
       <label class="wide row" style="flex-wrap:nowrap;gap:8px;align-items:flex-start"><input type="checkbox" name="consent" required ${q.consent?'checked':''} style="margin-top:4px"><span>Der Besitzer ist einverstanden, dass die Fahrzeugdaten und die Werkstatt-Einträge online gespeichert und – je nach Auswahl – angezeigt werden.</span></label>
-      <div class="wide row" style="gap:6px;flex-wrap:wrap"><button class="btn primary" type="submit">${q.code?'Speichern':'QR-Fahrradpass erstellen'}</button>${q.code?`<button class="btn ghost danger" type="button" data-act="qrPassDel" data-id="${b.id}">Pass löschen</button>`:''}</div></form>
+      <div class="wide row" style="gap:6px;flex-wrap:wrap"><button class="btn primary" type="submit">${q.code?'Speichern':'QR-Fahrradpass erstellen'}</button>${q.code?`<button class="btn ghost danger" type="button" data-act="qrPassDel" data-id="${b.id}">Pass zurückziehen</button>`:''}</div></form>
       ${q.code?`<hr>${passStickerBox(b)}`:''}`); if(q.code) qrInto('qpQR',passUrl(q.code)); },
-  async qrPassDel(el){ const b=bike(el.dataset.id); if(!b||!b.qr) return; if(!confirmDel('QR-Fahrradpass online löschen? Der Aufkleber zeigt dann nichts mehr.')) return;
+  async qrPassDel(el){ const b=bike(el.dataset.id); if(!b||!b.qr) return; if(!confirmDel('Fahrradpass zurückziehen? Er ist dann nicht mehr öffentlich, es kommen keine Einträge mehr dazu. Die bisherige Geschichte bleibt gespeichert.')) return;
     try{ await clApi('/rest/v1/rpc/pass_delete',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_bike:b.id})}); }catch(e){ toast(e.offline?'Keine Verbindung':netErr(e),true); return; }
-    delete b.qr; audit(`QR-Fahrradpass gelöscht: ${bikeName(b)}`); save(); closeDrawer(); render(); toast('Fahrradpass gelöscht'); },
+    delete b.qr; audit(`QR-Fahrradpass zurückgezogen: ${bikeName(b)}`); save(); closeDrawer(); render(); toast('Fahrradpass zurückgezogen'); },
   passSticker(el){ const b=bike(el.dataset.id); if(!b||!b.qr||!b.qr.code) return; const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
     (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ const s=qrSvg(passUrl(b.qr.code)); const one=`<div class="st"><div class="q">${s}</div><div><b>FYF Fahrradpass</b><div class="c">${esc(b.qr.code)}</div><div class="m">Scannen: Service-Geschichte</div></div></div>`;
       w.document.write(`<!doctype html><html lang="de"><meta charset="utf-8"><title>Aufkleber ${esc(b.qr.code)}</title><style>body{font-family:system-ui,sans-serif;margin:16px}.g{display:grid;grid-template-columns:repeat(auto-fill,60mm);gap:6mm}.st{width:60mm;height:25mm;border:1px dashed #999;border-radius:3mm;display:flex;gap:2.5mm;align-items:center;padding:2mm;box-sizing:border-box}.q{width:21mm;height:21mm;flex:none}.q svg{width:100%;height:100%}.c{font:700 15px ui-monospace,monospace;letter-spacing:.08em}.m{font-size:9px;color:#555}b{font-size:10px}button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:#1d2a30;color:#fff;margin-bottom:12px}@media print{button,p{display:none}.st{border-color:#ddd}}</style><button onclick="print()">Drucken</button><p style="font-size:13px;color:#555">Auf Etikettenpapier oder normales Papier drucken, ausschneiden und mit klarer Folie überkleben. Am besten unter das Oberrohr oder an das Sitzrohr.</p><div class="g">${one.repeat(8)}</div></html>`); w.document.close(); }).catch(()=>{ w.close(); toast('QR-Code braucht Internet',true); }); },
@@ -7311,7 +7311,7 @@ Object.assign(FORMS,{
   async qrPass(f,d){ const b=bike(f.dataset.id); if(!b) return; if(!cloudReady()){ toast('Der QR-Fahrradpass braucht die Cloud-Speicherung (Mehr → Rolle und Datenspeicherung)',true); return; } if(!needDb(10)) return;
     if(d.get('consent')!=='on'){ toast('Bitte die Zustimmung des Besitzers bestätigen',true); return; }
     const was=b.qr?{...b.qr}:null; b.qr={...(b.qr||{}),vis:String(d.get('vis')||'shops'),stolen:d.get('stolen')==='on',consent:(b.qr&&b.qr.consent)||today()};
-    const c=await passPush(b); if(!c){ if(was) b.qr=was; else delete b.qr; save(); return; }
+    const c=await passPush(b); if(!c){ if(was) b.qr={...was,moved:b.qr.moved}; else delete b.qr; save(); if(b.qr&&b.qr.moved) ACT.qrPass({dataset:{id:b.id}}); return; }
     audit(`QR-Fahrradpass ${was&&was.code?'aktualisiert':'erstellt'}: ${bikeName(b)} (${c})${b.qr.stolen?' – als gestohlen gemeldet':''}`); save(); render(); ACT.qrPass({dataset:{id:b.id}}); toast(was&&was.code?'Fahrradpass aktualisiert':'QR-Fahrradpass erstellt'); }
 });
 // Bike-Detail: Hinweise für Check und QR-Pass, fremde Einträge abholen
@@ -7332,7 +7332,7 @@ async function passOpen(code){ code=String(code||'').toUpperCase().replace(/[^A-
   let P; try{ P=await clApi('/rest/v1/rpc/pass_get',{method:'POST',body:JSON.stringify({p_code:code})}); }catch(e){ toast(e.offline?'Keine Verbindung':netErr(e),true); return; }
   if(!P){ toast('Kein Fahrradpass mit diesem Code',true); return; }
   const ver=NET.plat&&NET.plat.verified, bk=P.bike||{}, sh=P.shop||{};
-  const list=[...(P.svc||[]).map(s=>({date:s.date,t:s.title+(s.parts&&s.parts.length?' · Teile: '+s.parts.join(', '):''),by:sh.name,km:s.km})),...(P.ev||[]).map(e=>({date:e.date,t:(e.kind?e.kind+': ':'')+e.text,by:sh.name,km:e.km})),...(P.entries||[]).map(e=>({date:e.date,t:e.kind+': '+e.text,by:e.shop,km:e.km}))].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  const list=[...(P.svc||[]).map(s=>({date:s.date,t:s.title+(s.parts&&s.parts.length?' · Teile: '+s.parts.join(', '):''),by:sh.name,km:s.km})),...(P.ev||[]).map(e=>({date:e.date,t:(e.kind?e.kind+': ':'')+e.text,by:sh.name,km:e.km})),...(P.entries||[]).map(e=>({date:e.date,t:e.kind+': '+e.text,by:e.shop+(e.trust?' · '+((typeof TRUST!=='undefined'&&TRUST[e.trust])||['Werkstatt'])[0]:''),km:e.km}))].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
   openDrawer('Fahrradpass '+code,`<div class="stack">${P.stolen?'<div class="notice" style="border-color:var(--bad,#a23b2a)"><b style="color:var(--bad,#a23b2a)">Als gestohlen gemeldet.</b> Bitte nicht annehmen und den ausstellenden Laden informieren.</div>':''}
     <div><b style="font-size:18px">${esc(bk.name||'Fahrrad')}</b><div class="muted" style="font-size:13.5px">${esc([bk.type,bk.size,bk.year].filter(Boolean).join(' · '))}${bk.frame?' · Rahmennr. '+esc(bk.frame):''}${bk.km!=null?' · '+fmtNum(bk.km)+' km':''}</div><div class="faint" style="font-size:12.5px">Pass geführt von ${esc(sh.name||'–')}${sh.phone?' · '+esc(sh.phone):''}</div></div>
     ${P.limited?`<div class="notice">${ic('info')}<span>Der Besitzer zeigt den Pass nur Werkstätten. Voll sichtbar für geprüfte FYF-Läden${ver?'':' – dein Laden ist noch nicht geprüft (Händlerprofil → Prüfung)'}.</span></div>`:`<div class="stack" style="gap:0">${list.length?list.slice(0,40).map(x=>`<div style="padding:7px 0;border-bottom:1px solid var(--line)"><b>${fmtDate(x.date)}</b>${x.km!=null?` · ${fmtNum(x.km)} km`:''} · ${esc(x.t)}<div class="faint" style="font-size:12px">${esc(x.by||'')}</div></div>`).join(''):'<span class="muted">Noch keine Einträge.</span>'}</div>
@@ -7364,6 +7364,152 @@ CHG.featSet=el=>{ S.shop=S.shop||{}; const on=new Set(featOn()); if(el.checked) 
 { const o=FORMS.profileSave; if(o) FORMS.profileSave=async function(f,d){ const r=await o.call(this,f,d); featPublish(true); return r; }; }
 
 FEATURES.push(['Live-Status für Kunden','Link wie eine Paketverfolgung, aktualisiert sich bei jedem Statuswechsel (Datenbank Stand 10)',2],['Gebrauchtrad-Check','Checkliste, Gesamtzustand, Zertifikat zum Drucken, Abrechnung als Auftrag',1],['QR-Fahrradpass','Aufkleber am Rahmen, Sichtbarkeit wählt der Besitzer, Diebstahl-Warnung, andere geprüfte FYF-Läden tragen nach (Datenbank Stand 10)',2],['Partnerseite','Händlersuche zeigt Bikefitting, QR-Pass, Live-Status, Gebrauchtrad-Check; Fahrradpass-Code prüfen',2]);
+
+/* ===================== v.80 FYF Passport – Kern: unveränderliche Einträge mit Vertrauensstufe, Fahrradschein mit Übergabe-Code, Etikett, Diebstahl-Paket ===================== */
+Object.assign(errMap,{FYF_PASS_MOVED:'Dieser Pass wurde an einen neuen Besitzer bzw. eine andere Werkstatt übergeben.',FYF_WITHDRAWN:'Der Pass wurde vom Laden zurückgezogen.',FYF_BAD_TRANSFER:'Übergabe-Code stimmt nicht (12 Zeichen von der Karte „Teil II“).',FYF_BIKE_HAS_PASS:'Dieses Rad hat schon einen anderen Fahrradpass.',FYF_STOLEN:'Dieses Rad ist als gestohlen gemeldet. Eine Übergabe ist erst möglich, wenn der ausstellende Laden die Meldung aufhebt – bitte die Polizei informieren.',FYF_LOCKED:'Bestätigte Einträge können nicht geändert werden – bitte eine Korrektur eintragen.'});
+const TRUST={verified:['Werkstatt-bestätigt','geprüfter Betrieb'],shop:['Werkstatt','Betrieb noch nicht geprüft'],self:['Selbstauskunft','vom Besitzer eingetragen']};
+const PASS_PUB_KINDS=['Teiletausch','Inspektion','Garantiefall','Schaden','Gebrauchtrad-Check','Umbau','Reparatur','Service'];
+const maskMid=s=>{ s=String(s||''); return s.length>6?s.slice(0,3)+'•••'+s.slice(-3):s; };
+// Öffentlicher Teil: nur Fahrzeugdaten. Die Geschichte steht als einzelne, unveränderliche Einträge im Pass.
+passPayload=function(b){ const D=bikePassData(b), I=b.ident||{}; return {v:2,shop:D.shop,date:D.date,
+  bike:{name:D.bike.name,type:D.bike.type,size:D.bike.size,year:D.bike.year,km:D.bike.km,frame:maskMid(D.bike.frameNo),color:I.color||'',bat:maskMid(I.batSn),batPass:/^https:\/\//.test(I.batPass||'')?I.batPass:''},
+  svc:[],ev:[],checks:(D.checks||[]).slice(0,10)}; };
+function passItems(b){ const out=[];
+  S.workshop.filter(w=>w.bikeId===b.id&&w.status==='Übergeben').forEach(w=>{ const work=w.positions.filter(p=>!/Teil/i.test(p.kind||'')).map(p=>p.t), parts=w.positions.filter(p=>/Teil/i.test(p.kind||'')).map(p=>`${p.qty>1?p.qty+'× ':''}${p.t}`);
+    out.push({ref:'wo:'+w.id,kind:w.lease?'Inspektion':'Werkstatt',text:(w.title+(work.length?' – '+work.join(', '):'')+(parts.length?' · Neue Teile: '+parts.join(', '):'')).slice(0,500),km:w.intake&&w.intake.km!=null?Number(w.intake.km):null,date:w.doneAt||w.readyAt||w.due||today()}); });
+  (b.events||[]).filter(e=>!e.via&&PASS_PUB_KINDS.includes(e.kind)&&String(e.text||'').trim().length>=3).forEach(e=>out.push({ref:'ev:'+(e.id||(e.date+e.kind+String(e.text).slice(0,20))),kind:e.kind,text:String(e.text).slice(0,500),km:e.km??null,date:e.date||today()}));
+  return out.sort((a,x)=>String(a.date).localeCompare(String(x.date))); }
+async function passSync(b){ if(!b.qr||!b.qr.code||b.qr.moved||!needDb(11,true)) return 0; const sent=new Set(b.qr.sent||[]); let n=0;
+  for(const it of passItems(b)){ if(sent.has(it.ref)) continue;
+    try{ await clApi('/rest/v1/rpc/pass_entry',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_code:b.qr.code,p_kind:it.kind,p_text:it.text,p_km:it.km,p_date:String(it.date).slice(0,10),p_ref:it.ref,p_corrects:null})}); sent.add(it.ref); n++; }
+    catch(e){ break; } }
+  b.qr.sent=[...sent]; if(n){ save(); } return n; }
+{ passPush=async function(b,silent){ if(b&&b.qr&&b.qr.moved){ if(!silent) toast(errMap.FYF_PASS_MOVED,true); return null; }
+    if(!cloudReady()||!b||!b.qr) return null;
+    try{ const c=String(await clApi('/rest/v1/rpc/pass_publish',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_bike:b.id,p_payload:passPayload(b),p_visibility:b.qr.vis||'shops',p_stolen:!!b.qr.stolen})})).replace(/"/g,''); b.qr.code=c; b.qr.at=nowStamp(); save(); await passSync(b); return c; }
+    catch(e){ if(/FYF_PASS_MOVED/.test(String(e&&e.message||'')+String(e&&e.code||''))||netErr(e)===errMap.FYF_PASS_MOVED){ b.qr.moved=true; save(); } if(!silent) toast(e.offline?'Keine Verbindung':netErr(e),true); return null; } }; }
+
+// ---------- Fahrradschein (Teil I + II) und Etikett ----------
+function passCardHtml(b,code,transfer,qr){ const I=b.ident||{}, sh=S.shop||{};
+  return `<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fahrradschein ${esc(code)}</title>
+<style>body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1d2a30;margin:16px}.card{width:85.6mm;height:54mm;border:1px solid #bbb;border-radius:3.2mm;padding:3.5mm;box-sizing:border-box;position:relative;overflow:hidden;page-break-inside:avoid;margin:0 0 6mm}
+.t{font-size:7pt;letter-spacing:.12em;font-weight:800;text-transform:uppercase;color:#d9612c}.n{font-size:12pt;font-weight:700;margin:1mm 0}.r{font-size:7.5pt;line-height:1.35}.r b{font-family:ui-monospace,monospace}.q{position:absolute;right:3mm;top:3mm;width:24mm;height:24mm}.q svg{width:100%;height:100%}
+.c{font:700 15pt ui-monospace,monospace;letter-spacing:.1em}.tr{font:700 13pt ui-monospace,monospace;letter-spacing:.06em;border:1.5px dashed #1d2a30;border-radius:2mm;padding:1.5mm 2mm;display:inline-block;margin:1.5mm 0}.m{font-size:6.5pt;color:#555;line-height:1.3}
+.bar button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:#1d2a30;color:#fff;margin-bottom:10px}.hint{font-size:13px;color:#555;max-width:620px}@media print{.bar,.hint{display:none}.card{border-color:#ddd}}</style>
+<div class="bar"><button onclick="print()">Drucken</button></div><p class="hint">Beide Karten ausschneiden. <b>Teil I</b> bleibt beim Rad bzw. im Geldbeutel. <b>Teil II</b> mit dem Übergabe-Code wie einen Fahrzeugbrief sicher aufbewahren und nur beim Verkauf an den Käufer geben. Wer Teil II hat, kann den Pass auf sich übertragen lassen. Mit jedem neuen Druck wird der alte Code ungültig.</p>
+<div class="card"><div class="t">FYF Fahrradschein · Teil I</div><div class="n">${esc(bikeName(b))}</div><div class="q">${qr}</div>
+<div class="r">Rahmennr. <b>${esc(b.frameNo||'–')}</b><br>${esc([b.type,b.size,b.year,I.color].filter(Boolean).join(' · '))}${I.batSn?'<br>Akku <b>'+esc(I.batSn)+'</b>':''}</div>
+<div style="position:absolute;left:3.5mm;bottom:3mm"><div class="m">Fahrradpass-Code</div><div class="c">${esc(code)}</div></div><div class="m" style="position:absolute;right:3.5mm;bottom:3mm;text-align:right;max-width:38mm">Ausgestellt ${fmtDate(today())}<br>${esc(sh.name||shopName()||'')}</div></div>
+<div class="card"><div class="t">FYF Fahrradschein · Teil II – Übergabe</div><div class="n" style="font-size:10pt">${esc(bikeName(b))} · ${esc(code)}</div>
+<div class="m">Geheimer Übergabe-Code (nur beim Verkauf weitergeben):</div><div class="tr">${esc(transfer.replace(/(.{4})(?=.)/g,'$1-'))}</div>
+<div class="m">Beim Kauf: Käufer bringt diese Karte in eine FYF-Werkstatt. Die Werkstatt überträgt den Pass, die ganze Geschichte bleibt erhalten, Namen früherer Besitzer werden nie gezeigt. Danach gilt dieser Code nicht mehr.</div></div></html>`; }
+async function passCardOpen(b,transfer){ const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
+  let qr=''; try{ if(!window.qrcode) await loadScript(QR_JS()); qr=qrSvg(passUrl(b.qr.code)); }catch(e){}
+  w.document.write(passCardHtml(b,b.qr.code,transfer,qr)); w.document.close(); }
+function labelCanvas(code,url){ // 24-mm-Band: druckbare Höhe ca. 18 mm, 360 dpi → 256 px hoch, 52 mm lang
+  const H=256, W=740, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const g=cv.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H);
+  const q=window.qrcode(0,'M'); q.addData(url); q.make(); const n=q.getModuleCount(), s=Math.floor((H-16)/n), o=Math.floor((H-s*n)/2); g.fillStyle='#000';
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(q.isDark(r,c)) g.fillRect(o+c*s,o+r*s,s,s);
+  const x=o*2+s*n+14; g.fillStyle='#000'; g.font='800 30px system-ui,-apple-system,sans-serif'; g.fillText('FYF FAHRRADPASS',x,62);
+  g.font='700 66px ui-monospace,Menlo,monospace'; g.fillText(code,x,150); g.font='500 27px system-ui,-apple-system,sans-serif'; g.fillText('Scannen: Service-Geschichte',x,205); return cv; }
+Object.assign(ACT,{
+  async passCard(el){ const b=bike(el.dataset.id); if(!b||!b.qr||!b.qr.code) return; if(!cloudReady()||!needDb(11)) return;
+    if(b.qr.cardAt&&!confirmDel(`Es gibt schon einen Fahrradschein vom ${b.qr.cardAt}. Ein neuer Druck macht dessen Übergabe-Code ungültig. Weiter?`)) return;
+    let t; try{ t=String(await clApi('/rest/v1/rpc/pass_transfer_new',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_bike:b.id})})).replace(/"/g,''); }catch(e){ toast(e.offline?'Keine Verbindung':netErr(e),true); return; }
+    b.qr.cardAt=nowStamp(); audit(`Fahrradschein mit neuem Übergabe-Code: ${bikeName(b)} (${b.qr.code})`); save(); passCardOpen(b,t); },
+  async passLabel(el){ const b=bike(el.dataset.id); if(!b||!b.qr||!b.qr.code) return;
+    try{ if(!window.qrcode) await loadScript(QR_JS()); }catch(e){ toast('QR-Code braucht Internet',true); return; }
+    const cv=labelCanvas(b.qr.code,passUrl(b.qr.code)); const name=`FYF-Etikett-${b.qr.code}.png`;
+    cv.toBlob(async bl=>{ try{ const f=new File([bl],name,{type:'image/png'}); if(navigator.canShare&&navigator.canShare({files:[f]})){ await navigator.share({files:[f],title:name}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
+      const u=URL.createObjectURL(bl); openDrawer('Etikett fürs Etikettiergerät',`<div class="stack"><img src="${u}" alt="Etikett ${esc(b.qr.code)}" style="width:100%;max-width:520px;border:1px solid var(--line);border-radius:8px;background:#fff"><p class="muted" style="margin:0;font-size:13.5px">Für 24-mm-Band (z. B. Brother P-touch mit laminiertem TZe-Band). Bild sichern und in der App des Etikettiergeräts als Bild einfügen. Ohne Gerät: auf Papier drucken und mit klarem Klebeband überkleben.</p><a class="btn primary" href="${u}" download="${name}">Bild sichern</a></div>`); },'image/png'); }
+});
+
+// ---------- Identität & Diebstahlschutz ----------
+Object.assign(ACT,{
+  bikeIdent(el){ const b=bike(el.dataset.id); if(!b) return; const I=b.ident||{}, L=b.life||{};
+    openDrawer('Identität & Diebstahlschutz',`<form class="form" data-form="bikeIdent" data-id="${b.id}"><p class="wide muted" style="margin:0;font-size:13.5px">Diese Angaben braucht die Polizei bei einer Anzeige. Im öffentlichen Pass erscheinen nur Farbe, die gekürzte Akku-Nummer und der Batteriepass-Link.</p>
+      <div class="field"><label for="bi_fn">Rahmennummer</label><input class="input mono" id="bi_fn" name="frameNo" value="${esc(b.frameNo||'')}" maxlength="40"></div>
+      <div class="field"><label for="bi_c">Farbe</label><input class="input" id="bi_c" name="color" value="${esc(I.color||'')}" maxlength="40" placeholder="z. B. mattschwarz/orange"></div>
+      <div class="field wide"><label for="bi_m">Besondere Merkmale</label><input class="input" id="bi_m" name="marks" value="${esc(I.marks||'')}" maxlength="200" placeholder="z. B. Kratzer Oberrohr links, Sticker am Sitzrohr"></div>
+      <div class="field"><label for="bi_e">Codierung (EIN-Code)</label><input class="input mono" id="bi_e" name="ein" value="${esc(I.ein||'')}" maxlength="40"></div>
+      <div class="field"><label for="bi_s">Schloss / Versicherung</label><input class="input" id="bi_s" name="ins" value="${esc(I.ins||'')}" maxlength="80"></div>
+      <div class="field"><label for="bi_b">Akku-Seriennummer</label><input class="input mono" id="bi_b" name="batSn" value="${esc(I.batSn||'')}" maxlength="40"></div>
+      <div class="field"><label for="bi_bp">Batteriepass (Link des Herstellers)</label><input class="input" id="bi_bp" name="batPass" type="url" value="${esc(I.batPass||'')}" maxlength="300" placeholder="https://…"></div>
+      <div class="field"><label for="bi_bd">Gekauft am</label><input class="input" id="bi_bd" name="buy" type="date" value="${esc(L.buy||'')}"></div>
+      <div class="field"><label for="bi_bp2">Kaufpreis (€)</label><input class="input" id="bi_bp2" name="price" type="number" min="0" step="1" value="${esc(I.price??'')}"></div>
+      <div class="field"><label for="bi_bf">Gekauft bei</label><input class="input" id="bi_bf" name="from" value="${esc(I.from||'')}" maxlength="80"></div>
+      <p class="wide faint" style="margin:0;font-size:12.5px">Batteriepass: Ab 18.02.2027 brauchen neu verkaufte E-Bike-Akkus einen digitalen Pass des Herstellers (EU-Batterieverordnung, Art. 77). Den QR auf dem Akku scannen und den Link hier einfügen.</p>
+      <div class="wide"><button class="btn primary" type="submit">Speichern</button></div></form>`); },
+  async theftKit(el){ const b=bike(el.dataset.id); if(!b) return; const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
+    if(b.qr&&b.qr.code&&!b.qr.stolen&&!b.qr.moved&&confirmDel('Rad im FYF-Fahrradpass als gestohlen melden? Jeder Scan zeigt dann eine Warnung.')){ b.qr.stolen=true; audit(`Als gestohlen gemeldet: ${bikeName(b)}`); save(); passPush(b,true); }
+    let photo=''; try{ const im=(b.photos||[])[0]; if(im&&/^data:image\//.test(im.src||im)) photo=im.src||im; }catch(e){}
+    const c=cust(b.customerId)||{}, I=b.ident||{}, L=b.life||{}; const row=(a,v)=>v?`<tr><td>${a}</td><td><b>${esc(v)}</b></td></tr>`:'';
+    w.document.write(`<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diebstahl – ${esc(bikeName(b))}</title><style>body{font-family:system-ui,-apple-system,sans-serif;color:#1d2a30;max-width:720px;margin:0 auto;padding:24px 18px 50px}h1{font-size:24px;margin:0 0 4px}table{border-collapse:collapse;width:100%;font-size:15px}td{padding:7px 8px 7px 0;border-bottom:1px solid #e5ddd2;vertical-align:top}td:first-child{color:#5f6b70;width:42%}ol{padding-left:20px;line-height:1.6}button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:#1d2a30;color:#fff}@media print{button{display:none}}</style>
+<button onclick="print()">Drucken / als PDF sichern</button><h1>Fahrraddiebstahl – Angaben für die Anzeige</h1><p style="color:#5f6b70;margin:0 0 14px">Erstellt ${fmtDate(today())} · ${esc(shopName()||'')}</p>
+<table>${row('Eigentümer/in',c.name)}${row('Rahmennummer',b.frameNo)}${row('Hersteller / Modell',[b.brand,b.model].filter(Boolean).join(' ')||bikeName(b))}${row('Art / Größe / Baujahr',[b.type,b.size,b.year].filter(Boolean).join(' · '))}${row('Farbe',I.color)}${row('Besondere Merkmale',I.marks)}${row('Codierung',I.ein)}${row('Akku-Seriennummer',I.batSn)}${row('Gekauft am / bei',[L.buy&&fmtDate(L.buy),I.from].filter(Boolean).join(' · '))}${row('Kaufpreis',I.price?fmtNum(I.price)+' €':'')}${row('Kilometerstand (zuletzt)',b.km!=null?fmtNum(b.km)+' km':'')}${row('FYF-Fahrradpass',b.qr&&b.qr.code?b.qr.code+(b.qr.stolen?' – als gestohlen markiert':''):'')}</table>
+${photo?`<p><img src="${photo}" alt="Foto des Rads" style="max-width:100%;border-radius:8px;margin-top:12px"></p>`:''}
+<h2 style="font-size:18px;margin-top:22px">Nächste Schritte</h2><ol><li><b>Anzeige erstatten</b> – bei der Polizei vor Ort oder über die Online-Wache deines Bundeslands. Diese Seite mitnehmen bzw. die Angaben übernehmen.</li><li><b>Versicherung</b> informieren (Hausrat oder Fahrradversicherung) – meist mit Aktenzeichen der Polizei und Kaufbeleg.</li><li>${b.qr&&b.qr.code?'Der FYF-Fahrradpass zeigt beim Scannen eine Diebstahl-Warnung. Taucht das Rad wieder auf: in FYF die Markierung entfernen.':'Mit einem FYF-Fahrradpass würde jeder Scan eine Diebstahl-Warnung zeigen.'}</li></ol>
+<p style="color:#5f6b70;font-size:13px">FYF ist mit keinem Polizei-Register verbunden. Die Anzeige musst du selbst erstatten.</p></html>`); w.document.close(); }
+});
+Object.assign(FORMS,{
+  bikeIdent(f,d){ const b=bike(f.dataset.id); if(!b) return; const g=k=>String(d.get(k)||'').trim();
+    if(g('batPass')&&!/^https:\/\//.test(g('batPass'))){ toast('Batteriepass-Link muss mit https:// beginnen',true); return; }
+    b.frameNo=g('frameNo').slice(0,40); b.ident={...(b.ident||{}),color:g('color').slice(0,40),marks:g('marks').slice(0,200),ein:g('ein').slice(0,40),ins:g('ins').slice(0,80),batSn:g('batSn').slice(0,40),batPass:g('batPass').slice(0,300),price:g('price')===''?null:Number(g('price')),from:g('from').slice(0,80)};
+    b.life={...(b.life||{}),buy:g('buy')||(b.life&&b.life.buy)||''}; audit(`Identität gespeichert: ${bikeName(b)}`); save(); if(b.qr&&b.qr.code) passPush(b,true); render(); bikeDrawer(b.id); toast('Gespeichert'); }
+});
+
+// ---------- Besitzerwechsel mit Teil II ----------
+async function passHandover(b,code,transfer){ if(!cloudReady()||!needDb(11)) return false;
+  let r; try{ r=await clApi('/rest/v1/rpc/pass_handover',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_code:code,p_transfer:transfer,p_bike:b.id})}); }catch(e){ toast(e.offline?'Keine Verbindung':netErr(e),true); return false; }
+  if(!r||r.error){ toast(errMap[r&&r.error]||'Übergabe nicht möglich',true); return false; }
+  const P=r.payload||{}; if(!b.frameNo&&P.bike&&P.bike.frame&&!/•/.test(P.bike.frame)) b.frameNo=P.bike.frame;
+  b.qr={code:r.code,vis:(b.qr&&b.qr.vis)||'shops',stolen:!!r.was_stolen,consent:today(),owner:r.owner_no,at:nowStamp(),sent:[],cardAt:nowStamp()};
+  (b.events=b.events||[]).push({id:uid('ev'),date:today(),kind:'Notiz',text:`FYF-Fahrradpass ${r.code} übernommen (Besitzer ${r.owner_no})`});
+  audit(`Fahrradpass ${r.code} übernommen: ${bikeName(b)} – Besitzer ${r.owner_no}`); save(); await passPush(b,true); render();
+  toast('Pass übernommen – jetzt den neuen Fahrradschein drucken'); passCardOpen(b,r.transfer); return true; }
+Object.assign(FORMS,{
+  async passHandoverOwn(f,d){ const b=bike(f.dataset.id); if(!b||!b.qr) return; const cid=String(d.get('cust')||''); const old=b.customerId;
+    if(cid&&cid!==b.customerId){ b.customerId=cid; }
+    const ok=await passHandover(b,b.qr.code,String(d.get('transfer')||'')); if(!ok){ b.customerId=old; save(); return; } bikeDrawer(b.id); },
+  async passHandoverForeign(f,d){ const b=bike(String(d.get('bike')||'')); if(!b){ toast('Bitte das Rad in deinem Bestand wählen (vorher unter Kunden anlegen)',true); return; }
+    if(b.qr&&b.qr.code){ toast(errMap.FYF_BIKE_HAS_PASS,true); return; } if(await passHandover(b,f.dataset.code,String(d.get('transfer')||''))) bikeDrawer(b.id); }
+});
+const handoverField=()=>`<div class="field"><label for="ho_t">Übergabe-Code (Teil II)</label><input class="input mono" id="ho_t" name="transfer" required minlength="12" maxlength="16" placeholder="XXXX-XXXX-XXXX" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase"></div>`;
+{ const PO=passOpen; passOpen=async function(code){ await PO(code); const box=document.getElementById('drawerBody'), c=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,''); const dr=document.querySelector('.drawer'); if(!box||S.bikes.some(b=>b.qr&&b.qr.code===c)||!dr||dr.getAttribute('aria-label')!=='Fahrradpass '+c) return;
+    const free=S.bikes.filter(b=>!(b.qr&&b.qr.code)); box.insertAdjacentHTML('beforeend',`<hr><form class="form" data-form="passHandoverForeign" data-code="${esc(c)}"><p class="wide" style="margin:0"><b>Rad übernehmen (Besitzerwechsel)</b> <span class="faint" style="font-size:12.5px">– der neue Besitzer legt die Karte „Teil II“ vor. Die Geschichte bleibt, der Pass wird in deinem Laden weitergeführt.</span></p>
+      <div class="field"><label for="ho_b">Rad in deinem Bestand</label><select class="input" id="ho_b" name="bike"><option value="">– bitte wählen –</option>${free.map(b=>`<option value="${b.id}">${esc(bikeName(b))} · ${esc((cust(b.customerId)||{}).name||'')}</option>`).join('')}</select></div>${handoverField()}
+      <div class="wide"><button class="btn" type="submit">Pass übernehmen</button></div></form>`); }; }
+
+// ---------- QR-Pass-Fenster: Fahrradschein, Etikett, Einträge mit Vertrauensstufe, Korrektur, Besitzerwechsel ----------
+{ const QP=ACT.qrPass; ACT.qrPass=function(el){ QP.apply(this,arguments); const b=bike(el.dataset.id), box=document.getElementById('drawerBody'); if(!b||!box||!b.qr||!b.qr.code) return;
+    if(b.qr.moved){ box.insertAdjacentHTML('afterbegin',`<div class="notice" style="display:block;margin-bottom:10px">${esc(errMap.FYF_PASS_MOVED)} Dein Laden kann nichts mehr eintragen.</div>`); return; }
+    box.insertAdjacentHTML('beforeend',`<hr><div class="stack" style="gap:8px"><b>Fahrradschein und Etikett</b><p class="muted" style="margin:0;font-size:13.5px"><b>Teil I</b> = QR-Aufkleber/Karte (öffentlich). <b>Teil II</b> = Karte mit geheimem Übergabe-Code für den Besitzerwechsel – wie ein Fahrzeugbrief.${b.qr.cardAt?' Letzter Fahrradschein: '+esc(b.qr.cardAt)+'.':''}</p>
+      <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm primary" data-act="passCard" data-id="${b.id}">Fahrradschein drucken (Teil I + II)</button><button class="btn sm" data-act="passLabel" data-id="${b.id}">Etikett fürs Etikettiergerät (24 mm)</button></div></div>
+      <hr><form class="form" data-form="passHandoverOwn" data-id="${b.id}"><p class="wide" style="margin:0"><b>Besitzerwechsel eintragen</b> <span class="faint" style="font-size:12.5px">– Käufer legt Teil II vor. Danach gibt es einen neuen Fahrradschein.</span></p>
+      <div class="field"><label for="ho_c">Neuer Besitzer (Kunde)</label><select class="input" id="ho_c" name="cust"><option value="">gleicher Kunde</option>${S.customers.filter(c=>c.id!==b.customerId).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></div>${handoverField()}
+      <div class="wide"><button class="btn" type="submit">Besitzerwechsel eintragen</button></div></form>
+      <hr><div><b>Einträge im Online-Pass</b> <span class="faint" style="font-size:12.5px">– können nicht geändert werden, nur korrigiert</span><div id="passEntries" class="muted" style="font-size:13.5px;margin-top:6px">Lädt …</div></div>`);
+    passEntriesInto(b); }; }
+async function passEntriesInto(b){ const box=document.getElementById('passEntries'); if(!box) return; let P;
+  try{ P=await clApi('/rest/v1/rpc/pass_get',{method:'POST',body:JSON.stringify({p_code:b.qr.code})}); }catch(e){ box.textContent=e.offline?'Keine Verbindung':'Nicht ladbar'; return; }
+  const E=(P&&P.entries)||[]; const corrected=new Set(E.filter(e=>e.corrects).map(e=>e.corrects));
+  box.innerHTML=(P&&P.owner_no?`<div class="faint" style="font-size:12.5px;margin-bottom:4px">Besitzer Nr. ${P.owner_no} seit ${fmtDate(P.owner_since)}</div>`:'')+(E.length?E.map(e=>`<div style="padding:7px 0;border-bottom:1px solid var(--line)${corrected.has(e.id)?';opacity:.55':''}"><b>${fmtDate(e.date)}</b>${e.km!=null?` · ${fmtNum(e.km)} km`:''} · ${esc(e.kind)}: ${esc(e.text)}${corrected.has(e.id)?' <i>(korrigiert)</i>':''}
+    <div class="faint" style="font-size:12px">${esc(e.shop)} · <span class="pill ${e.trust==='verified'?'ok':''}" style="font-size:11px">${esc((TRUST[e.trust]||TRUST.shop)[0])}</span>${e.corrects?' · Korrektur zu Nr. '+e.corrects:''} · Nr. ${e.id}</div>
+    ${e.corrects||corrected.has(e.id)?'':`<details style="margin-top:4px"><summary class="faint" style="font-size:12.5px;cursor:pointer">Korrigieren</summary><form class="form" data-form="passCorrect" data-id="${b.id}" data-e="${e.id}" style="margin-top:6px"><div class="field wide"><label for="pc_${e.id}">Richtige Angabe</label><input class="input" id="pc_${e.id}" name="text" required minlength="3" maxlength="500"></div><div class="wide"><button class="btn sm" type="submit">Korrektur eintragen</button></div></form></details>`}</div>`).join(''):'Noch keine Einträge. Sie entstehen automatisch, wenn ein Auftrag übergeben wird oder du Teile/Inspektionen am Rad einträgst.'); }
+Object.assign(FORMS,{
+  async passCorrect(f,d){ const b=bike(f.dataset.id); if(!b||!b.qr) return;
+    try{ await clApi('/rest/v1/rpc/pass_entry',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_code:b.qr.code,p_kind:'Korrektur',p_text:String(d.get('text')||'').trim(),p_km:null,p_date:today(),p_ref:null,p_corrects:Number(f.dataset.e)})}); }
+    catch(e){ toast(e.offline?'Keine Verbindung':netErr(e),true); return; }
+    audit(`Korrektur im Fahrradpass ${b.qr.code} zu Eintrag ${f.dataset.e}`); save(); toast('Korrektur eingetragen'); passEntriesInto(b); }
+});
+// Rad-Detail: Identität und Diebstahl
+{ const BD4=bikeDrawer; bikeDrawer=function(id){ BD4(id); const b=bike(id), box=document.getElementById('drawerBody'); if(!b||!b.id||!box) return; const row=box.querySelector('[data-act="usedCheck"]'); const html=`<button class="btn sm" data-act="bikeIdent" data-id="${b.id}">${ic('doc')} Identität & Diebstahlschutz</button><button class="btn sm ghost danger" data-act="theftKit" data-id="${b.id}">Diebstahl melden</button>`;
+    if(row&&row.parentElement) row.parentElement.insertAdjacentHTML('beforeend',html); else box.insertAdjacentHTML('afterbegin',`<div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:10px">${html}</div>`); }; }
+// Übergebene Aufträge sofort als Eintrag
+{ const N4=ACT.woNext; ACT.woNext=function(el){ const r=N4.apply(this,arguments); const w=S.workshop.find(x=>x.id===(el&&el.dataset&&el.dataset.id)); const b=w&&bike(w.bikeId); if(b&&b.qr&&b.qr.code&&w.status==='Übergeben'&&cloudReady()) passSync(b); return r; }; }
+{ const LE=FORMS.lifeEvent; if(LE) FORMS.lifeEvent=function(f,d){ const r=LE.apply(this,arguments); const b=bike(f.dataset.id); if(b&&b.qr&&b.qr.code&&cloudReady()) passSync(b); return r; }; }
+
+FEATURES.push(['FYF Passport – Kern','Einträge unveränderlich mit Vertrauensstufe und Korrektur, Fahrradschein Teil I/II mit Übergabe-Code, Besitzerwechsel ohne Namen, Etikett 24 mm, Identität & Diebstahl-Paket, Batteriepass-Link (Datenbank Stand 11)',2]);
 
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
