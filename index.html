@@ -1946,7 +1946,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-10.75';
+const APP_VER='2026-11-10.76';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -1982,7 +1982,9 @@ function savePill(){ const b=document.getElementById('savePill'); if(!b) return;
    Aus, bis der Laden unter Mehr → Deine Daten sichern eine Supabase-Adresse und den öffentlichen Schlüssel einträgt und sich anmeldet.
    Gespeichert wird der komplette Stand je Laden (docs/supabase/start.sql). Fotos/Videos liegen als Dateien im privaten Speicher „media“ unter <Laden>/<id> (docs/supabase/media.sql). */
 const CLOUD_KEY='fyf-cloud';
-let CL=(()=>{ try{ return JSON.parse(localStorage.getItem(CLOUD_KEY))||{}; }catch(e){ return {}; } })();
+// Feste Verbindung zum FYF-Projekt (nur Projekt-Adresse und öffentlicher Schlüssel – kein Geheimnis). Gilt auf der veröffentlichten Seite, solange nichts anderes eingetragen ist.
+const CL_DEFAULT={url:'https://tyfilehmrnibtoalwflf.supabase.co',key:'sb_publishable_DUIWZF8H-BD-HaBUMvTg-A_pbpz1mgT'};
+let CL=(()=>{ let c={}; try{ c=JSON.parse(localStorage.getItem(CLOUD_KEY))||{}; }catch(e){} if(!c.url&&!c.key&&/\.github\.io$/.test(location.hostname)) c={...CL_DEFAULT}; return c; })();
 let clTimer=null, clBusy=false, clAgain=false;
 const clBootHash=location.hash||''; // vor dem Router merken: der ersetzt den Hash beim Start
 function clSave(){ try{ localStorage.setItem(CLOUD_KEY,JSON.stringify(CL)); }catch(e){} }

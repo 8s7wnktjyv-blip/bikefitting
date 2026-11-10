@@ -33,7 +33,7 @@ a{color:var(--acc)}
 "use strict";
 // Öffentliche Händlersuche. Liest nur veröffentlichte Profile und freigegebene Produkte (Supabase, öffentlicher Schlüssel).
 // Konfiguration: fest unten in DEFAULT oder über den Link #cfg=... aus der App.
-const DEFAULT={u:'',k:''};
+const DEFAULT={u:'https://tyfilehmrnibtoalwflf.supabase.co',k:'sb_publishable_DUIWZF8H-BD-HaBUMvTg-A_pbpz1mgT'}; // öffentlicher Schlüssel, kein Geheimnis
 const LEGAL={impressum:'impressum.html',datenschutz:'datenschutz.html'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const eur=v=>Number(v||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
