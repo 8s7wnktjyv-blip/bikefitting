@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-10.77';
+const APP_VER='2026-11-10.78';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2173,14 +2173,15 @@ const sessOf = cid => S.sessions.filter(s=>s.customerId===cid).sort((a,b)=>a.dat
 const val = (rec) => rec ? rec.value : null;
 
 /* ---------- Navigation ---------- */
-const MAIN_ALL=[['dashboard','Start','dash'],['werkstatt','Werkstatt','wrench'],['kunden','Kunden','users'],['sitzung','Fitting','fit'],['mehr','Mehr','more']];
+const MAIN_ALL=[['dashboard','Start','dash'],['werkstatt','Werkstatt','wrench'],['kunden','Kunden','users'],['fitting','Fitting','fit'],['mehr','Mehr','more']];
+const FIT_HUB=['sitzung','koerper','vermessung','quickfit','motion','verlauf','followup','berichte','ki','portal'];
 const MAIN=MAIN_ALL;
 const mainNav=()=>{ let L=MAIN_ALL.slice(); if(!modOn('werkstatt')) L=L.map(m=>m[0]==='werkstatt'?['geometrie','Geometrie','grid']:m); const st=(S.settings||{}).shopType;
-  if(!modOn('fitting')) L=L.map(m=>m[0]==='sitzung'?(modOn('quickfit')?['quickfit','Quick-Fit','handover']:['geometrie','Geometrie','grid']):m);
+  if(!modOn('fitting')) L=L.map(m=>m[0]==='fitting'?(modOn('quickfit')?['quickfit','Quick-Fit','handover']:['geometrie','Geometrie','grid']):m);
   if(modOn('fahrwerk')&&(st==='werkstatt'||st==='ebike')) L=L.map(m=>m[0]==='geometrie'||(m[0]==='werkstatt'&&st!=='werkstatt')?['fahrwerk','Fahrwerk','susp']:m);
   if(st==='werkstatt'&&modOn('werkstatt')&&!L.some(m=>m[0]==='werkstatt')) L=L.map(m=>m[0]==='kunden'?['werkstatt','Werkstatt','wrench']:m);
   const seen=new Set(); return L.filter(m=>!seen.has(m[0])&&seen.add(m[0])); };
-const moreNav=()=>MORE.map(([g,items])=>[g,navVisible(items).filter(m=>m[0]!=='mehr')]).filter(([,items])=>items.length);
+const moreNav=()=>MORE.map(([g,items])=>[g,g==='Bikefitting'?(modOn('fitting')||modOn('quickfit')?[['fitting','Bikefitting','fit','Fitting starten und alles dazu: Körper, Vermessung, Video, Verlauf, Berichte']]:[]):navVisible(items).filter(m=>m[0]!=='mehr')]).filter(([,items])=>items.length);
 const NAV_AREAS0=[
   ['Dashboard',[['dashboard','Dashboard','dash','Überblick, Termine, offene Aufgaben']]],
   ['Kunden',[['kunden','Kunden','users','Kundenakten mit Rädern, Historie und Körpermaßen'],['fahrraeder','Fahrräder','bike','Alle Räder mit Einstellungen und Historie']]],
@@ -2209,7 +2210,7 @@ const NAV_AREAS=(()=>{ const all=Object.fromEntries(NAV_AREAS0.flatMap(([,it])=>
 const SHOP_TYPES=[['haendler','Fahrradhändler','Verkauf, Größenberatung, Übergabe'],['ebike','E-Bike / Pendler','Übergabe, Werkstatt, Fahrwerk'],['werkstatt','Werkstatt','Aufträge, Fahrwerk, Fahrradakte'],['studio','Fitting-Studio','Komplettes Bikefitting']];
 const MODS=[['fitting','Bikefitting','Fitting-Ablauf, Körperanalyse, Vergleich, Nachkontrollen, Berichte'],['quickfit','Quick-Fit Übergabe','Neues Rad in 10 Minuten einstellen'],['fahrwerk','Fahrwerk','Gabel und Dämpfer einstellen und dokumentieren'],['verkauf','Verkauf & Produkte','Größenberatung, Preise, Angebote, Produktdatenbank'],['werkstatt','Werkstatt','Aufträge und Lager']];
 const MOD_DEFAULT={haendler:['quickfit','verkauf','werkstatt'],ebike:['quickfit','verkauf','werkstatt','fahrwerk'],werkstatt:['werkstatt','fahrwerk','quickfit'],studio:['fitting','quickfit','verkauf','fahrwerk']};
-const ROUTE_MOD={sitzung:'fitting',verlauf:'fitting',followup:'fitting',koerper:'fitting',vermessung:'fitting',motion:'fitting',berichte:'fitting',quickfit:'quickfit',fahrwerk:'fahrwerk',preise:'verkauf',lager:'verkauf',produktdb:'verkauf',werkstatt:'werkstatt'};
+const ROUTE_MOD={fitting:'fitting',sitzung:'fitting',verlauf:'fitting',followup:'fitting',koerper:'fitting',vermessung:'fitting',motion:'fitting',berichte:'fitting',quickfit:'quickfit',fahrwerk:'fahrwerk',preise:'verkauf',lager:'verkauf',produktdb:'verkauf',werkstatt:'werkstatt'};
 const modsOn=()=>{ const st=S.settings||{}; return Array.isArray(st.mods)?st.mods:MODS.map(m=>m[0]); };
 const modOn=k=>modsOn().includes(k);
 const routeOn=r=>!ROUTE_MOD[r]||modOn(ROUTE_MOD[r]);
@@ -2221,7 +2222,7 @@ function shopTypeHtml(compact){ const st=(S.settings||{}).shopType;
 const navVisible=items=>items.filter(m=>(showExtra()||!EXTRA_ROUTES.includes(m[0]))&&routeOn(m[0]));
 const MORE=NAV_AREAS.filter(([a])=>a!=='Dashboard').map(([a,items])=>[a,items]);
 const AREA_OF=Object.fromEntries(NAV_AREAS.flatMap(([a,items])=>items.map(m=>[m[0],a])));
-const TITLES=Object.fromEntries([...MAIN.map(m=>[m[0],m[1]]),...MORE.flatMap(g=>g[1].map(m=>[m[0],m[1]]))]);
+const TITLES=Object.fromEntries([...MAIN.map(m=>[m[0],m[1]]),...MORE.flatMap(g=>g[1].map(m=>[m[0],m[1]]))]); TITLES.fitting='Bikefitting'; AREA_OF.fitting='Bikefitting'; if(!TITLES.werkstatt) TITLES.werkstatt='Werkstatt';
 const isMore=r=>!mainNav().some(m=>m[0]===r)&&!!AREA_OF[r];
 const TABALIAS={vergleich:'ergebnis',qualitaet:'ergebnis',bericht:'ergebnis'};
 
@@ -2242,12 +2243,12 @@ function renderNav(){
       <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" style="fill:var(--accent)"/><path d="M10 23l6-14h7M13 16h7" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <div><b>FYF</b><small>Fit your Frame · Bikefitting für deinen Laden</small></div>
     </div>
-    ${NAV_AREAS.map(([g,items])=>{ const it=navVisible(items); if(!it.length) return ''; return `<div class="navgroup area">${it.length>1?`<div class="label">${g}</div>`:''}${it.map(([r,l,i],k)=>btn(r,it.length>1?l:g,i,k?'small':'')).join('')}</div>`; }).join('')}
+    ${NAV_AREAS.map(([g,items])=>{ const it=navVisible(items); if(!it.length) return ''; if(g==='Bikefitting') return `<div class="navgroup area"><button class="navbtn" data-nav="fitting" ${ui.route==='fitting'||FIT_HUB.includes(ui.route)?'aria-current="page"':''}>${ic('fit')}<span>Bikefitting</span></button></div>`; return `<div class="navgroup area">${it.length>1?`<div class="label">${g}</div>`:''}${it.map(([r,l,i],k)=>btn(r,it.length>1?l:g,i,k?'small':'')).join('')}</div>`; }).join('')}
     <div class="demo-note">
       <span>${S.demoRemoved?'Deine Einträge bleiben nur in diesem Browser. Regelmäßig sichern (Mehr).':'Demo mit erfundenen Beispielkunden. Deine Einträge bleiben nur in diesem Browser.'}</span>
       ${S.demoRemoved?'<button class="btn sm" data-nav="mehr">Daten sichern</button>':'<button class="btn sm" data-act="removeDemo">Beispielkunden entfernen</button>'}
     </div>`;
-  document.getElementById('bottomnav').innerHTML = mainNav().map(([r,l,i])=>`<button data-nav="${r}" ${(ui.route===r||(r==='mehr'&&isMore(ui.route)))?'aria-current="page"':''}>${ic(i)}<span>${l}</span></button>`).join('');
+  document.getElementById('bottomnav').innerHTML = mainNav().map(([r,l,i])=>`<button data-nav="${r}" ${(ui.route===r||(r==='fitting'&&FIT_HUB.includes(ui.route))||(r==='mehr'&&isMore(ui.route)&&!FIT_HUB.includes(ui.route)))?'aria-current="page"':''}>${ic(i)}<span>${l}</span></button>`).join('');
   document.getElementById('crumb').textContent = AREA_OF[ui.route]&&AREA_OF[ui.route]!==TITLES[ui.route]&&ui.route!=='dashboard'?`${AREA_OF[ui.route]} / ${TITLES[ui.route]}`:(TITLES[ui.route]||'');
 }
 /* --- Dashboard-Widgets: ein-/ausblenden und anordnen --- */
@@ -2464,7 +2465,7 @@ function kpiTiles(){ const td=today(); const fin=S.sessions.filter(s=>s.status==
   const m=td.slice(0,7); const recs=S.sessions.flatMap(x=>(x.recs||[]).filter(r=>r.status==='angenommen')); const P=products(); const recSum=recs.reduce((a,r)=>a+(Number((P.find(p=>p.id===r.prodId)||{}).price)||0),0);
   const hoM=(S.handovers||[]).filter(h=>(h.date||'').startsWith(m)).length, spN=(S.suspension||[]).length;
   const L=[t('kunden',S.customers.length,'Kunden',S.bikes.length+' Fahrräder')];
-  if(modOn('fitting')) L.push(t('berichte',fin,'Fittings abgeschlossen',''),t('sitzung',upc,'Termine anstehend','heute und später'),t('followup',fu.length,'Nachkontrollen offen',fuDue?fuDue+' fällig':''));
+  if(modOn('fitting')) L.push(t('fitting',fin,'Fittings abgeschlossen',[upc?upc+' geplant':'',fuDue?fuDue+' Nachkontrollen fällig':''].filter(Boolean).join(' · ')));
   if(modOn('quickfit')) L.push(t('quickfit',hoM,'Übergaben diesen Monat',(S.handovers||[]).length+' insgesamt'));
   if(modOn('fahrwerk')) L.push(t('fahrwerk',spN,'Fahrwerk-Einstellungen',''));
   if(recs.length) L.push(t('produktdb',recs.length,'Empfehlungen angenommen',recSum?eur(recSum)+' Umsatz (VK)':''));
@@ -6939,7 +6940,7 @@ FEATURES.forEach(f=>{ if(f[0]==='Termine'){ f[1]='Kalender mit Wochenansicht, Ka
   if(f[0]==='Kundenportal'){ f[1]='Persönlicher Link: Fahrräder, Einstellungen, Fittings, Empfehlungen, Termin anfragen. Ohne Kunden-Konto, sperrbar'; f[2]=1; }
   if(f[0]==='Werkstatt'){ f[1]='Aufträge, Kostenvoranschlag, Freigabe per Link oder persönlich, Wartung, Kalender mit Auslastung'; f[2]=1; } });
 { const db=VIEWS.dashboard; VIEWS.dashboard=()=>{ const t=appts().filter(a=>a.date===today()).sort((a,b)=>hm(a.start)-hm(b.start));
-  const box=t.length?`<div class="notice" style="margin-bottom:12px;display:block"><b>Heute ${t.length===1?'1 Termin':t.length+' Termine'}</b>${t.map(a=>`<div class="li click" style="padding:4px 0" data-act="apptOpen" data-id="${a.id}"><span class="mono" style="font-size:12px">${esc(a.start)}</span><div class="grow" style="font-size:14px">${esc(a.kind)} · ${esc(a.customerId?cust(a.customerId).name:a.name)}</div></div>`).join('')}<div style="margin-top:6px"><button class="btn sm" data-nav="termine">Kalender</button></div></div>`:'';
+  const box=false&&t.length?`<div class="notice" style="margin-bottom:12px;display:block"><b>Heute ${t.length===1?'1 Termin':t.length+' Termine'}</b>${t.map(a=>`<div class="li click" style="padding:4px 0" data-act="apptOpen" data-id="${a.id}"><span class="mono" style="font-size:12px">${esc(a.start)}</span><div class="grow" style="font-size:14px">${esc(a.kind)} · ${esc(a.customerId?cust(a.customerId).name:a.name)}</div></div>`).join('')}<div style="margin-top:6px"><button class="btn sm" data-nav="termine">Kalender</button></div></div>`:'';
   return box+db(); }; }
 
 /* =================== Ende Plattform-Ausbau =================== */
@@ -7047,7 +7048,7 @@ FIT_TPL['Kurz-Check']={tests:['pain','legLen','sitBone'],focus:['Sattelhöhe und
 
 // ---------- Dashboard: Erste Schritte, Erinnerungen, Erfolgsbericht ----------
 { const D=VIEWS.dashboard; VIEWS.dashboard=()=>{ const R=reminders(); const rem=R.length?`<div class="notice" style="margin-bottom:12px;display:block"><b>${R.length===1?'1 Erinnerung':R.length+' Erinnerungen'} offen</b> – Inspektionen, Termine, Abholungen, Bewertungen.<div style="margin-top:6px"><button class="btn sm" data-nav="werkstatt">Ansehen</button></div></div>`:'';
-    return onboardHtml()+rem+D()+successHtml(); }; }
+    return rem+D()+successHtml()+onboardHtml(); }; }
 
 // ---------- Kalender: Online-Buchung ----------
 { const T=VIEWS.termine; VIEWS.termine=()=>{ const cap=capCfg(), fs=freeSlots(), n=fs.reduce((a,x)=>a+x.t.length,0);
@@ -7152,6 +7153,49 @@ Object.assign(ACT,{
 // Fahrradpass auch im Kundenportal
 { const PP=portalPayload; portalPayload=function(c){ const p=PP(c); const bs=bikesOf(c.id); (p.bikes||[]).forEach((x,i)=>{ const b=bs[i]; if(!b) return; const D=bikePassData(b);
     x.pass={svc:D.svc.slice(0,40).map(s=>({date:s.date,km:s.km??null,title:s.title,parts:s.parts.slice(0,12)})),ev:D.ev.slice(0,40),km:D.bike.km,year:D.bike.year}; }); return p; }; }
+
+/* ===================== v.78 Bikefitting als eigener Bereich, Dashboard für den ganzen Laden ===================== */
+VIEWS.fitting=()=>{ const td=today(); const run=S.sessions.filter(s=>s.status==='in Arbeit'||s.status==='eingetroffen'||(s.status==='geplant'&&s.date>=td)).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||''))).slice(0,6);
+  const fu=S.sessions.flatMap(s=>(s.followUps||[]).filter(f=>f.status==='offen').map(f=>({s,f}))), fuDue=fu.filter(x=>x.f.due<=td).length, fin=S.sessions.filter(s=>s.status==='abgeschlossen').length;
+  const T=(nav,act,icn,t,sub,main)=>`<button class="tile ${main?'main':''}" ${nav?`data-nav="${nav}"`:`data-act="${act}"`}><span class="ti">${ic(icn)}</span><b>${t}</b><span>${sub}</span></button>`;
+  const fitOn=modOn('fitting');
+  return `${head('Bikefitting','Alles rund ums Fitting an einem Ort: Ablauf starten, Körper, Vermessung, Video, Verlauf, Nachkontrollen und Berichte.',fitOn?`<button class="btn primary" data-act="newSession">${ic('plus')}Neues Fitting</button>`:'')}
+  ${run.length&&fitOn?panel('Laufende und geplante Fittings',`<div class="list">${run.map(s=>{ const c=cust(s.customerId), b=bike(s.bikeId)||{}; return `<div class="li click" data-act="openSession" data-id="${s.id}"><span class="time">${s.date===td?esc(s.time||''):fmtDate(s.date).slice(0,6)}</span><div class="grow"><div class="t">${esc(c.name)}</div><div class="sub">${esc(s.type||'Fitting')} · ${esc([b.brand,b.model].filter(Boolean).join(' '))}</div></div><span class="chip nodot">${esc(s.status)}</span></div>`; }).join('')}</div>`):''}
+  <div class="tiles">
+    ${fitOn?T('','newSession','plus','Neues Fitting','Kunde wählen und loslegen',1):''}
+    ${fitOn?T('sitzung','','fit','Fitting fortsetzen','Geführter Ablauf'):''}
+    ${modOn('quickfit')?T('quickfit','','handover','Quick-Fit Übergabe','Neues Rad in 10 Minuten'):''}
+    ${fitOn?T('koerper','','body','Körperanalyse','Maße, Beinlänge, Tests'):''}
+    ${fitOn?T('vermessung','','ruler','Bike-Vermessung','Sitzposition je Rad'):''}
+    ${fitOn?T('motion','','motion','Bewegung & Video','Gelenkwinkel automatisch'):''}
+    ${fitOn?T('verlauf','','history','Verlauf & Vergleich','Sitzungen nebeneinander'):''}
+    ${fitOn?T('followup','','loop','Nachkontrollen',fu.length?`${fu.length} offen${fuDue?', '+fuDue+' fällig':''}`:'keine offen'):''}
+    ${fitOn?T('berichte','','doc','Berichte',`${fin} abgeschlossen`):''}
+    ${T('ki','','ai','Schreibhilfe','Zusammenfassung, Kundentext')}
+    ${T('portal','','portal','Kundenportal','So sieht es der Kunde')}
+    ${T('geometrie','','grid','Geometrie-Bibliothek','Rahmenmaße, Größenberatung')}
+  </div>`; };
+// Dashboard: Laden zuerst, Fitting als ein Teil
+{ const H0=heroHtml; heroHtml=function(greet,todays,upcoming){ let h=H0(greet,todays,upcoming); const td=today(), nowT=new Date().toTimeString().slice(0,5);
+    const ap=appts().filter(a=>a.date===td).sort((a,b)=>hm(a.start)-hm(b.start)), woDue=S.workshop.filter(w=>w.status!=='Übergeben'&&w.due===td).length, ready=S.workshop.filter(w=>w.status==='Abholbereit').length;
+    const parts=[ap.length?`${ap.length} ${ap.length===1?'Termin':'Termine'}`:'',woDue?`${woDue} ${woDue===1?'Auftrag':'Aufträge'} fällig`:'',ready?`${ready} abholbereit`:'',todays.length?`${todays.length} ${todays.length===1?'Fitting':'Fittings'}`:''].filter(Boolean);
+    h=h.replace(/<p>Heute (steht|stehen)[^<]*<\/p>|<p>Heute ist kein Fitting geplant\.<\/p>/,`<p>${parts.length?'Heute: '+parts.join(' · ')+'.':'Heute ist nichts eingeplant.'}</p>`);
+    const na=ap.find(a=>a.start>=nowT); if(na&&!todays.some(s=>s.status!=='abgeschlossen'&&(s.time||'')<=na.start&&(s.time||'')>=nowT)){
+      h=h.replace(/<div class="nextbox">[\s\S]*?<\/div><\/div>|<div class="nextbox">[\s\S]*?<\/button><\/div>/,`<div class="nextbox"><div class="grow"><small>Als Nächstes · ${esc(na.start)} Uhr</small><b>${esc(na.customerId?cust(na.customerId).name:na.name)} · ${esc(na.kind)}</b></div><button class="btn sm" data-act="apptOpen" data-id="${na.id}">Öffnen</button></div>`); }
+    return h.replace('data-act="newSession">Neues Fitting</button>','data-act="apptNew">Termin anlegen</button>'); }; }
+{ const K0=kpiTiles; kpiTiles=function(){ const h=K0(); const td=today(); const t=(nav,v,l,sub)=>`<button class="kpi" data-nav="${nav}"><b class="num">${v}</b><span>${l}</span>${sub?`<i>${sub}</i>`:''}</button>`;
+    const open=S.workshop.filter(w=>w.status!=='Übergeben'), ready=open.filter(w=>w.status==='Abholbereit').length, apT=appts().filter(a=>a.date===td).length, apW=appts().filter(a=>a.date>=td&&a.date<=dayOff(6)).length;
+    const shop=t('werkstatt',open.length,'Werkstatt offen',ready?ready+' abholbereit':'')+t('termine',apT,'Termine heute',apW+' in 7 Tagen');
+    return h.replace(/(<button class="kpi" data-nav="kunden">[\s\S]*?<\/button>)/,`${shop}$1`); }; }
+{ const D1=VIEWS.dashboard; VIEWS.dashboard=()=>{ let h=D1(); const td=today();
+    // Kacheln: Laden-Aktionen vorn, Fitting als eine Kachel
+    h=h.replace(/<div class="tiles">\n([\s\S]*?)<\/div>\n/,(m,inner)=>{ const keep=(inner.match(/<button class="tile[^"]*" data-act="(newCustomer|findCustomer|tourStart)"[\s\S]*?<\/button>/g)||[]).join('');
+      return `<div class="tiles"><button class="tile main" data-act="intakeNew"><span class="ti">${ic('wrench')}</span><b>Rad annehmen</b><span>Auftrag mit Unterschrift</span></button><button class="tile" data-act="apptNew"><span class="ti">${ic('history')}</span><b>Termin anlegen</b><span>Werkstatt, Fitting, Beratung</span></button>${keep}${modOn('fitting')||modOn('quickfit')?`<button class="tile" data-nav="fitting"><span class="ti">${ic('fit')}</span><b>Bikefitting</b><span>Fitting starten, Körper, Video, Berichte</span></button>`:''}</div>\n`; });
+    // Heute: Termine und fällige Aufträge zusätzlich zu Fittings
+    const ap=appts().filter(a=>a.date===td).sort((a,b)=>hm(a.start)-hm(b.start)), wd=S.workshop.filter(w=>w.status!=='Übergeben'&&w.due===td);
+    const extra=(ap.length||wd.length)?`<div class="list">${ap.map(a=>`<div class="li click" data-act="apptOpen" data-id="${a.id}"><span class="time">${esc(a.start)}</span><div class="grow"><div class="t">${esc(a.customerId?cust(a.customerId).name:a.name)}</div><div class="sub">${esc(a.kind)}</div></div></div>`).join('')}${wd.map(w=>`<div class="li click" data-act="openWO" data-id="${w.id}"><span class="time">heute</span><div class="grow"><div class="t">${esc(w.title)}</div><div class="sub">${esc(cust(w.customerId).name)} · ${esc(w.status)}</div></div></div>`).join('')}</div>`:'';
+    if(extra) h=h.replace(/(<section class="panel" id="today"><div class="panel-h"><h3>Heute<\/h3><\/div>)(<div class="empty">[\s\S]*?<\/div>)?/,(m,a,empty)=>a+extra);
+    return h; }; }
 
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
