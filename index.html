@@ -14,7 +14,7 @@
   --bg:#f6f5f2; --surface:#ffffff; --surface-2:#f2f0eb; --line:#e7e3dc; --fg:#1c1f22; --muted:#5c626a; --faint:#8b9097;
   --accent:#e8620f; --accent-ink:#ffffff; --accent-strong:#b54a08; --accent-soft:#fdf0e6; --accent-line:#f5c7a4;
   --ok:#1a8754; --ok-soft:#e5f4ec; --warn:#9a6a05; --warn-soft:#fcf3dc; --bad:#c23b3b; --bad-soft:#fbe8e8; --info:#2665a8; --info-soft:#e6eef9;
-  --il-bg:#f4f2ee; --il-grid:rgba(28,31,34,.045); --il-frame:#4a5058; --il-tire:#2b2f34; --il-body:#2c3136; --il-soft:#d8d3ca;
+  --il-bg:#f4f2ee; --il-grid:rgba(28,31,34,.045); --il-frame:#4a5058; --il-tire:#2b2f34; --il-body:#2c3136; --il-soft:#d8d3ca; --il-skin:#eedfd0; --il-cloth:#39424a; --il-cloth2:#5b6670; --il-ink:#23292e;
   --glass:rgba(255,255,255,.88); --shadow:0 1px 2px rgba(28,31,34,.04),0 6px 20px rgba(28,31,34,.06); --shadow-lg:0 12px 40px rgba(28,31,34,.14);
   --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
@@ -24,13 +24,13 @@
   --bg:#111214; --surface:#1a1c1f; --surface-2:#232629; --line:#2e3236; --fg:#eeece8; --muted:#a6abb2; --faint:#757b83;
   --accent:#ff7d2e; --accent-ink:#1a0c02; --accent-strong:#ff9d5c; --accent-soft:rgba(255,125,46,.13); --accent-line:rgba(255,125,46,.42);
   --ok:#4fca93; --ok-soft:rgba(79,202,147,.13); --warn:#ebc14d; --warn-soft:rgba(235,193,77,.13); --bad:#f27777; --bad-soft:rgba(242,119,119,.13); --info:#70b3f0; --info-soft:rgba(112,179,240,.13);
-  --il-bg:#1d2023; --il-grid:rgba(255,255,255,.04); --il-frame:#9aa1aa; --il-tire:#cfd3d8; --il-body:#e6e4df; --il-soft:#3a3f45;
+  --il-bg:#1d2023; --il-grid:rgba(255,255,255,.04); --il-frame:#9aa1aa; --il-tire:#cfd3d8; --il-body:#e6e4df; --il-soft:#3a3f45; --il-skin:#cdb9a5; --il-cloth:#56606a; --il-cloth2:#77828c; --il-ink:#0d0f11;
   --glass:rgba(26,28,31,.9); --shadow:0 1px 2px rgba(0,0,0,.35); --shadow-lg:0 12px 40px rgba(0,0,0,.5); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#111214; --surface:#1a1c1f; --surface-2:#232629; --line:#2e3236; --fg:#eeece8; --muted:#a6abb2; --faint:#757b83;
   --accent:#ff7d2e; --accent-ink:#1a0c02; --accent-strong:#ff9d5c; --accent-soft:rgba(255,125,46,.13); --accent-line:rgba(255,125,46,.42);
   --ok:#4fca93; --ok-soft:rgba(79,202,147,.13); --warn:#ebc14d; --warn-soft:rgba(235,193,77,.13); --bad:#f27777; --bad-soft:rgba(242,119,119,.13); --info:#70b3f0; --info-soft:rgba(112,179,240,.13);
-  --il-bg:#1d2023; --il-grid:rgba(255,255,255,.04); --il-frame:#9aa1aa; --il-tire:#cfd3d8; --il-body:#e6e4df; --il-soft:#3a3f45;
+  --il-bg:#1d2023; --il-grid:rgba(255,255,255,.04); --il-frame:#9aa1aa; --il-tire:#cfd3d8; --il-body:#e6e4df; --il-soft:#3a3f45; --il-skin:#cdb9a5; --il-cloth:#56606a; --il-cloth2:#77828c; --il-ink:#0d0f11;
   --glass:rgba(26,28,31,.9); --shadow:0 1px 2px rgba(0,0,0,.35); --shadow-lg:0 12px 40px rgba(0,0,0,.5); color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -457,7 +457,7 @@ canvas{max-width:100%;display:block}
   --bg:#f5f3ef; --surface:#ffffff; --surface-2:#f2efea; --line:#e6e1d9; --fg:#1d2126; --muted:#585e66; --faint:#878d94;
   --accent:#d9622c; --accent-ink:#ffffff; --accent-strong:#b24c1d; --accent-soft:#fcefe7; --accent-line:#f1c6ad;
   --ok:#2f8f63; --ok-soft:#e5f3eb; --warn:#a8780e; --warn-soft:#fbf2d9; --bad:#c8402f; --bad-soft:#fae6e2; --info:#4a6f8a; --info-soft:#e8eff4;
-  --il-bg:#f2efea; --il-frame:#4a5058; --il-tire:#22272c; --il-body:#2c3238; --il-soft:#dcd6cc;
+  --il-bg:#f2efea; --il-frame:#4a5058; --il-tire:#22272c; --il-body:#2c3238; --il-soft:#dcd6cc; --il-skin:#eedfd0; --il-cloth:#39424a; --il-cloth2:#5b6670; --il-ink:#23292e;
   --f-head:"Archivo","Figtree",system-ui,sans-serif;
   --shadow:0 1px 2px rgba(29,33,38,.04),0 10px 30px -18px rgba(29,33,38,.22); --r:14px;
   --hero-glow:radial-gradient(120% 140% at 100% 0%,#fbe7da 0%,rgba(251,231,218,0) 55%);
@@ -466,13 +466,13 @@ canvas{max-width:100%;display:block}
   --sel:#f1f3f4; --sel-ink:#262b31; --mat:#f1f3f4; --mat-2:#c9cfd3;
   --bg:#3d4348; --surface:#484f55; --surface-2:#535a61; --line:#626a71; --fg:#f2f4f5; --muted:#cbd2d5; --faint:#a2abb0; --glass:rgba(72,79,85,.94);
   --accent:#f08a55; --laser:#f08a55; --accent-ink:#2a1206; --accent-strong:#ffa77a; --accent-soft:rgba(240,138,85,.16); --accent-line:rgba(240,138,85,.45);
-  --il-bg:#535a61; --il-frame:#c2ccd0; --il-tire:#e6eaec; --il-body:#f2f4f5; --il-soft:#6a737a;
+  --il-bg:#535a61; --il-frame:#c2ccd0; --il-tire:#e6eaec; --il-body:#f2f4f5; --il-soft:#6a737a; --il-skin:#d8c6b3; --il-cloth:#3a4248; --il-cloth2:#5b6670; --il-ink:#15181b;
   --hero-glow:radial-gradient(120% 140% at 100% 0%,rgba(240,138,85,.18) 0%,rgba(240,138,85,0) 55%);}}
 :root[data-theme="dark"]{
   --sel:#f1f3f4; --sel-ink:#262b31; --mat:#f1f3f4; --mat-2:#c9cfd3;
   --bg:#3d4348; --surface:#484f55; --surface-2:#535a61; --line:#626a71; --fg:#f2f4f5; --muted:#cbd2d5; --faint:#a2abb0; --glass:rgba(72,79,85,.94);
   --accent:#f08a55; --laser:#f08a55; --accent-ink:#2a1206; --accent-strong:#ffa77a; --accent-soft:rgba(240,138,85,.16); --accent-line:rgba(240,138,85,.45);
-  --il-bg:#535a61; --il-frame:#c2ccd0; --il-tire:#e6eaec; --il-body:#f2f4f5; --il-soft:#6a737a;
+  --il-bg:#535a61; --il-frame:#c2ccd0; --il-tire:#e6eaec; --il-body:#f2f4f5; --il-soft:#6a737a; --il-skin:#d8c6b3; --il-cloth:#3a4248; --il-cloth2:#5b6670; --il-ink:#15181b;
   --hero-glow:radial-gradient(120% 140% at 100% 0%,rgba(240,138,85,.18) 0%,rgba(240,138,85,0) 55%);}
 
 /* Schrift */
@@ -901,6 +901,70 @@ const HOW = {
 };
 
 /* ---------- Skizzen zu Messpunkten und Tests (eigene Zeichnungen, schematisch) ---------- */
+// Körperteile als gefüllte Formen mit durchgehender Außenlinie (statt dicker Striche)
+const SKIN=(()=>{ const C={skin:'var(--il-skin)',cloth:'var(--il-cloth)',shirt:'var(--il-cloth2)',ink:'var(--il-ink)',shoe:'var(--il-tire)',acc:'var(--accent)',helm:'var(--il-frame)'};
+  const sub=(a,b)=>[a[0]-b[0],a[1]-b[1]], add=(a,b)=>[a[0]+b[0],a[1]+b[1]], mul=(a,k)=>[a[0]*k,a[1]*k], len=a=>Math.hypot(a[0],a[1]);
+  const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+  // Segment a→b mit Radien ra/rb; bul>1 = Muskelbauch; bias verschiebt den Bauch (0..1); back: einseitiger Bauch (+1 Normalenseite / -1)
+  function seg(a,b,ra,rb,f,o={}){ const v=sub(b,a), L=len(v)||1, u=mul(v,1/L), n=[-u[1],u[0]], bul=o.bul??1.06, t=o.bias??.42;
+    const m=lerp(a,b,t), rm=(ra+(rb-ra)*t)*bul, k1=o.side===-1?1:bul, k2=o.side===1?1:bul;
+    const rm1=(ra+(rb-ra)*t)*(o.side===-1?1:bul), rm2=(ra+(rb-ra)*t)*(o.side===1?1:bul);
+    const X=p=>`${f.X(p[0]).toFixed(1)},${f.Y(p[1]).toFixed(1)}`;
+    const A1=add(a,mul(n,ra)), B1=add(b,mul(n,rb)), B2=add(b,mul(n,-rb)), A2=add(a,mul(n,-ra));
+    const M1=add(m,mul(n,rm1*1.0)), M2=add(m,mul(n,-rm2));
+    // Kontrollpunkte so, dass die Kurve durch M läuft
+    const q=(p0,pm,p2)=>[2*pm[0]-(p0[0]+p2[0])/2,2*pm[1]-(p0[1]+p2[1])/2];
+    const c1=q(A1,M1,B1), c2=q(B2,M2,A2);
+    return `M${X(A1)} Q${X(c1)} ${X(B1)} A${rb.toFixed(1)},${rb.toFixed(1)} 0 0 1 ${X(B2)} Q${X(c2)} ${X(A2)} A${ra.toFixed(1)},${ra.toFixed(1)} 0 0 1 ${X(A1)}Z`; }
+  function dot(c,r,f){ return `M${(f.X(c[0])-r).toFixed(1)},${f.Y(c[1]).toFixed(1)} a${r},${r} 0 1 0 ${2*r},0 a${r},${r} 0 1 0 ${-2*r},0Z`; }
+  // parts: [{d, fill}] → erst alle Umrisse (dicke Linie), dann alle Flächen → eine durchgehende Außenlinie
+  function render(parts,w){ return `<g>${parts.map(p=>`<path d="${p.d}" fill="${C.ink}" stroke="${C.ink}" stroke-width="${(w*2).toFixed(1)}" stroke-linejoin="round"/>`).join('')}${parts.map(p=>`<path d="${p.d}" fill="${p.fill}"/>`).join('')}</g>`; }
+  // Fahrer Seitenansicht. p: {hip,knee,ank,toe,heel,shd,elb,hand,headC,torsoA,H}; hl: {leg,torso}
+  function rider(p,f,o={}){ const H=p.H, parts=[], cl=o.hl&&o.hl.torso?C.acc:C.cloth, sh=o.hl&&o.hl.torso?C.acc:C.shirt, lg=o.hl&&o.hl.leg?C.acc:null;
+    const thighMid=lerp(p.hip,p.knee,.74);
+    if(!o.noArm&&o.armBehind) armParts();
+    // Bein
+    if(!o.noLeg){ parts.push({d:seg(p.knee,p.ank,0.039*H,0.022*H,f,{bul:1.14,bias:.3}),fill:lg||C.skin});
+    parts.push({d:seg(p.hip,p.knee,0.064*H,0.041*H,f,{bul:1.07,bias:.4}),fill:lg||C.skin});
+    parts.push({d:seg(p.hip,thighMid,0.066*H,0.046*H,f,{bul:1.06}),fill:lg||cl});
+    parts.push({d:seg(p.ank,p.toe,0.025*H,0.014*H,f,{bul:1}),fill:C.shoe});
+    if(p.heel) parts.push({d:seg(p.heel,p.toe,0.016*H,0.013*H,f,{bul:1}),fill:C.shoe}); }
+    // Rumpf
+    if(!o.noTorso){ parts.push({d:dot(add(p.hip,[-0.01*H,0.004*H]),0.064*H,f),fill:cl}); parts.push({d:seg(lerp(p.hip,p.shd,.18),p.shd,0.06*H,0.052*H,f,{bul:1.14,bias:.5,side:1}),fill:sh});
+      const nk=lerp(p.shd,p.headC,.62); parts.push({d:seg(p.shd,nk,0.03*H,0.024*H,f,{bul:1}),fill:C.skin}); parts.push({d:dot(p.headC,0.058*H,f),fill:C.skin}); }
+    if(!o.noArm&&!o.armBehind) armParts();
+    function armParts(){ if(!p.elb) return; const sl=lerp(p.shd,p.elb,.5);
+      parts.push({d:seg(p.elb,p.hand,0.024*H,0.017*H,f,{bul:1.08,bias:.3}),fill:C.skin});
+      parts.push({d:seg(p.shd,p.elb,0.031*H,0.024*H,f,{bul:1.08}),fill:C.skin});
+      parts.push({d:seg(p.shd,sl,0.034*H,0.03*H,f,{bul:1.02}),fill:sh});
+      parts.push({d:dot(p.hand,0.021*H,f),fill:C.skin}); }
+    return render(parts,o.w||0.0055*H); }
+
+  // Allgemeiner Körper Seitenansicht (Tests): j={hip,shd,headC,legs:[{knee,ank,toe,heel,hl,far}],arms:[{elb,hand,hl,far}]}
+  function side(j,f,o={}){ const H=o.H||1780, out=[]; const shoeF=o.barefoot?C.skin:C.shoe;
+    const leg=(l,parts)=>{ const fl=l.hl?C.acc:null; parts.push({d:seg(l.knee,l.ank,0.039*H,0.022*H,f,{bul:1.14,bias:.3}),fill:fl||C.skin},{d:seg(j.hip,l.knee,0.064*H,0.041*H,f,{bul:1.07,bias:.4}),fill:fl||C.skin},{d:seg(j.hip,lerp(j.hip,l.knee,.55),0.066*H,0.05*H,f,{bul:1.04}),fill:fl||C.cloth});
+      if(l.toe) parts.push({d:seg(l.heel||l.ank,l.toe,0.018*H,0.012*H,f,{bul:1}),fill:fl&&o.barefoot?fl:shoeF},{d:dot(l.ank,0.022*H,f),fill:fl&&o.barefoot?fl:shoeF}); };
+    const arm=(a,parts)=>{ const fl=a.hl?C.acc:null; parts.push({d:seg(a.elb,a.hand,0.024*H,0.017*H,f,{bul:1.08,bias:.3}),fill:fl||C.skin},{d:seg(j.shd,a.elb,0.031*H,0.024*H,f,{bul:1.08}),fill:fl||C.skin},{d:seg(j.shd,lerp(j.shd,a.elb,.45),0.034*H,0.03*H,f,{bul:1.02}),fill:fl||C.shirt},{d:dot(a.hand,0.021*H,f),fill:fl||C.skin}); };
+    const far=[]; (j.legs||[]).filter(l=>l.far).forEach(l=>leg(l,far)); (j.arms||[]).filter(a=>a.far).forEach(a=>arm(a,far)); if(far.length) out.push(`<g opacity=".45">${render(far,0.0055*H)}</g>`);
+    const main=[]; (j.legs||[]).filter(l=>!l.far).forEach(l=>leg(l,main)); const tc=o.hlTrunk?C.acc:C.cloth, ts=o.hlTrunk?C.acc:C.shirt;
+    main.push({d:dot(j.hip,0.062*H,f),fill:tc},{d:seg(lerp(j.hip,j.shd,.2),j.shd,0.06*H,0.052*H,f,{bul:1.12,bias:.5,side:o.backSide||1}),fill:ts},{d:seg(j.shd,lerp(j.shd,j.headC,.6),0.03*H,0.024*H,f,{bul:1}),fill:C.skin},{d:dot(j.headC,0.058*H,f),fill:C.skin});
+    out.push(render(main,0.0055*H)); const arms=[]; (j.arms||[]).filter(a=>!a.far).forEach(a=>arm(a,arms)); if(arms.length) out.push(render(arms,0.0055*H));
+    return out.join(''); }
+  // Vorder-/Rückansicht mit Gelenkpunkten: legs:[{hip,knee,ank,hl}], arms:[{S,elb,hand,hl}], sh:[L,R], pel:[L,R] (Hüftaußenpunkte)
+  function front(o,f){ const H=o.H||1780, parts=[], tc=o.hlTrunk?C.acc:C.cloth, shoeF=o.barefoot?C.skin:C.shoe;
+    (o.legs||[]).forEach((l,i)=>{ const s=i?1:-1, fl=l.hl?C.acc:null;
+      parts.push({d:seg(l.knee,l.ank,0.036*H,0.02*H,f,{bul:1.12,bias:.3}),fill:fl||C.skin},{d:seg(l.hip,l.knee,0.05*H,0.034*H,f,{bul:1.06,bias:.35}),fill:fl||C.skin},{d:seg(l.hip,lerp(l.hip,l.knee,.45),0.052*H,0.044*H,f,{bul:1.02}),fill:fl||C.cloth});
+      const ft=add(l.ank,[s*0.012*H,-0.03*H]); parts.push({d:seg(add(l.ank,[0,-0.01*H]),ft,0.022*H,0.018*H,f,{bul:1}),fill:fl&&o.barefoot?fl:shoeF}); });
+    const [sL,sR]=o.sh, [pL,pR]=o.pel, X=p=>`${f.X(p[0]).toFixed(1)},${f.Y(p[1]).toFixed(1)}`;
+    const wL=[pL[0]*0.86,(sL[1]+pL[1])/2-0.02*H], wR=[pR[0]*0.86,(sR[1]+pR[1])/2-0.02*H];
+    const tor=`M${X(add(sL,[0,0.012*H]))} Q${X([0,(sL[1]+sR[1])/2+0.035*H])} ${X(add(sR,[0,0.012*H]))} Q${X(add(sR,[0.02*H,-0.01*H]))} ${X(add(sR,[0,-0.03*H]))} Q${X(add(wR,[0.012*H,0.05*H]))} ${X(wR)} Q${X(add(pR,[0.006*H,0.03*H]))} ${X(pR)} L${X(add(pR,[0,-0.035*H]))} L${X(add(pL,[0,-0.035*H]))} L${X(pL)} Q${X(add(pL,[-0.006*H,0.03*H]))} ${X(wL)} Q${X(add(wL,[-0.012*H,0.05*H]))} ${X(add(sL,[0,-0.03*H]))} Q${X(add(sL,[-0.02*H,-0.01*H]))} ${X(add(sL,[0,0.012*H]))}Z`;
+    parts.push({d:tor,fill:o.hlTrunk?C.acc:C.shirt}); { const yb=Math.max(pL[1],pR[1])+0.075*H; parts.push({d:`M${X([pL[0]*1.02,yb])} L${X([pR[0]*1.02,yb])} L${X(add(pR,[0,-0.035*H]))} L${X(add(pL,[0,-0.035*H]))}Z`,fill:tc}); } const nb=[(sL[0]+sR[0])/2,(sL[1]+sR[1])/2+0.01*H], hc=o.head||add(nb,[0,0.125*H]);
+    parts.push({d:seg(nb,add(hc,[0,-0.04*H]),0.03*H,0.026*H,f,{bul:1}),fill:C.skin},{d:dot(hc,0.058*H,f),fill:C.skin});
+    const out=[render(parts,0.0055*H)], ap=[];
+    (o.arms||[]).forEach(a=>{ const fl=a.hl?C.acc:null; ap.push({d:seg(a.elb,a.hand,0.022*H,0.016*H,f,{bul:1.08,bias:.3}),fill:fl||C.skin},{d:seg(a.S,a.elb,0.03*H,0.023*H,f,{bul:1.08}),fill:fl||C.skin},{d:seg(a.S,lerp(a.S,a.elb,.4),0.033*H,0.029*H,f,{bul:1.02}),fill:fl||C.shirt},{d:dot(a.hand,0.02*H,f),fill:fl||C.skin}); });
+    if(ap.length) out.push(render(ap,0.0055*H)); return out.join(''); }
+  return {seg,dot,render,rider,side,front,C}; })();
+
 let IL = (()=>{
   const ln=(x1,y1,x2,y2,c='b',w)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="il-${c}"${w?` style="stroke-width:${w}"`:''}/>`;
   const ci=(x,y,r,c='b',fill)=>`<circle cx="${x}" cy="${y}" r="${r}" class="il-${c}${fill?' il-fill':''}"/>`;
@@ -1034,18 +1098,12 @@ const FIG=(()=>{
     return out.join(''); }
   function drawRider(p,f,o={}){ const H=p.H, col=o.ghost?C.soft:C.body; const sw={th:0.078*H,sh:0.058*H,ua:0.052*H,fa:0.042*H,tr:0.15*H};
     const far=o.far, out=[];
-    if(far){ out.push(`<g opacity=".4"><path d="${pathLeg(far,f)}" fill="none" stroke="${col}" stroke-width="${0.05*H}" stroke-linecap="round" stroke-linejoin="round"/><path d="${pathShoe(far,f)}" fill="none" stroke="${C.tire}" stroke-width="${0.04*H}" stroke-linecap="round" stroke-linejoin="round"/>${line([0,0],far.ped,f,22,C.frame)}${line(add(far.ped,[-45,0]),add(far.ped,[45,0]),f,18,C.tire)}</g>`); }
+    if(far){ out.push(`<g opacity=".5">${SKIN.rider(far,f,{noTorso:1,noArm:1})}${line([0,0],far.ped,f,22,C.frame)}${line(add(far.ped,[-45,0]),add(far.ped,[45,0]),f,18,C.tire)}</g>`); }
     return out.join(''); }
   function drawRiderNear(p,f,o={}){ const H=p.H, col=o.hlLeg?C.acc:C.body, colT=o.hlTorso?C.acc:C.body; const out=[];
     out.push(line([0,0],p.ped,f,24,o.hlCrank?C.acc:C.frame),line(add(p.ped,[-48,0]),add(p.ped,[48,0]),f,20,C.tire),circ([0,0],26,f,`fill="${C.frame}"`));
-    const tdir=sub(p.shd,p.hip), nrm=mul([-tdir[1],tdir[0]],0.07), mid=add(mul(add(p.hip,p.shd),.5),nrm);
-    out.push(`<path d="M${P(p.hip,f)} Q${P(mid,f)} ${P(p.shd,f)}" fill="none" stroke="${colT}" stroke-width="${0.105*H}" stroke-linecap="round"/>`);
-    out.push(circ(add(p.hip,[-0.012*H,0.005*H]),0.058*H,f,`fill="${colT}"`));
-    out.push(`<path d="M${P(p.hip,f)} L${P(p.knee,f)}" stroke="${col}" stroke-width="${0.066*H}" stroke-linecap="round" fill="none"/>`,`<path d="M${P(p.knee,f)} L${P(p.ank,f)}" stroke="${col}" stroke-width="${0.047*H}" stroke-linecap="round" fill="none"/>`);
-    out.push(`<path d="${pathShoe(p,f)}" fill="none" stroke="${C.tire}" stroke-width="${0.04*H}" stroke-linecap="round" stroke-linejoin="round"/>`);
-    out.push(line(p.shd,p.elb,f,0.042*H,C.body),line(p.elb,p.hand,f,0.034*H,C.body),circ(p.hand,0.022*H,f,`fill="${C.body}"`));
-    out.push(line(p.shd,add(p.headC,mul(dir(p.torsoA-150),0.035*H)),f,0.04*H,C.body),circ(p.headC,0.058*H,f,`fill="${C.body}"`));
-    if(o.helmet!==false){ const hc=Math.min(p.torsoA+45,85); out.push(`<path d="M${P(add(p.headC,mul(dir(hc+78),0.066*H)),f)} A${0.07*H},${0.07*H} 0 0 1 ${P(add(p.headC,mul(dir(hc-78),0.066*H)),f)}Z" fill="${C.frame}"/>`); }
+    out.push(SKIN.rider(p,f,{noArm:1,hl:{leg:o.hlLeg,torso:o.hlTorso}}),SKIN.rider(p,f,{noTorso:1,noLeg:1,hl:{torso:o.hlTorso}}));
+    if(o.helmet!==false){ const hc=Math.min(p.torsoA+45,85); out.push(`<path d="M${P(add(p.headC,mul(dir(hc+78),0.066*H)),f)} A${0.07*H},${0.07*H} 0 0 1 ${P(add(p.headC,mul(dir(hc-78),0.066*H)),f)}Z" fill="${C.frame}" stroke="var(--il-ink)" stroke-width="${0.0055*H}" stroke-linejoin="round"/>`); }
     return out.join(''); }
   function legAnim(g,H,f,frames=24,dur=2.6,opacity=.3){ const ks=[]; for(let i=0;i<=frames;i++) ks.push(riderPose(g,H,-(i*360/frames)));
     const vals=fn=>ks.map(fn).join(';'); const a=(attr,v)=>`<animate attributeName="${attr}" dur="${dur}s" repeatCount="indefinite" values="${v}"/>`;
@@ -1083,21 +1141,17 @@ const FIG=(()=>{
     const ps=sd=>{ const s=sd>0?1:-1; return {hip:[s*0.05*H,pel(s)],knee:[s*0.048*H,0.285*H+lift(s)],ank:[s*0.042*H,0.045*H+lift(s)]}; };
     const out=[`<line x1="0" y1="${f.Y(0)}" x2="${W}" y2="${f.Y(0)}" stroke="${C.soft}" stroke-width="${W/90}"/>`];
     if(blk) out.push(`<rect x="${f.X(0.01*H)}" y="${f.Y(blk)}" width="${0.1*H}" height="${blk}" fill="${C.acc}" opacity=".85" rx="${W/200}"/>`);
-    [-1,1].forEach(s=>{ const p=ps(s); out.push(line(p.hip,p.knee,f,0.07*H,C.body),line(p.knee,p.ank,f,0.05*H,C.body),line(add(p.ank,[0,-0.02*H]),add(p.ank,[s*0.012*H,-0.035*H]),f,0.05*H,C.tire)); });
     const sh=[0.105*H,0.80*H+blk/2+tilt/4], shL=[-0.105*H,0.80*H+blk/2-tilt/4];
-    out.push(`<path d="M${P(shL,f)} L${P(sh,f)} L${P([0.075*H,0.64*H+blk/2],f)} L${P([0.092*H,pel(1)-0.01*H],f)} L${P([-0.092*H,pel(-1)-0.01*H],f)} L${P([-0.075*H,0.64*H+blk/2],f)}Z" fill="${C.body}" stroke="${C.body}" stroke-width="${0.035*H}" stroke-linejoin="round"/>`);
-    out.push(line([0,0.83*H+blk/2],[0,0.88*H+blk/2],f,0.045*H,C.body),circ([0,0.925*H+blk/2],0.056*H,f,`fill="${C.body}"`));
     const crest=s=>[s*0.085*H,pel(s)+0.065*H];
-    [-1,1].forEach(s=>{ const S=s>0?sh:shL, el=[s*0.175*H,0.68*H+blk/2], hd=add(crest(s),[s*0.015*H,0]); out.push(line(S,el,f,0.04*H,C.body),line(el,hd,f,0.034*H,C.body),circ(hd,0.022*H,f,`fill="${C.body}"`)); });
+    const legs=[-1,1].map(s=>ps(s)), arms=[-1,1].map(s=>{ const S=s>0?sh:shL; return {S:add(S,[-s*0.012*H,-0.01*H]),elb:[s*0.165*H,0.65*H+blk/2],hand:[s*0.172*H,0.5*H+blk/2]}; });
+    out.push(SKIN.front({H,legs,arms,sh:[shL,sh],pel:[[-0.092*H,pel(-1)],[0.092*H,pel(1)]],head:[0,0.898*H+blk/2]},f));
     out.push(A.dot(crest(-1),W/70),A.dot(crest(1),W/70));
     const draw=o.draw?o.draw({A,f,H,crest,W,add}):''; return `<svg viewBox="0 0 ${W.toFixed(0)} ${Hh.toFixed(0)}" role="img" aria-label="${o.label||'Person von hinten'}">${A.defs}${out.join('')}${draw}</svg>`; }
   // Mensch liegend, Seitenansicht (Kopf links)
   function lying(o={}){ const H=o.H||H0, W=H*1.12, top=0.26*H; const minX=-0.05*H, maxY=top; const f={X:x=>x-minX,Y:y=>maxY-y}; const A=ann(f,W);
     const y=0.07*H, head=[0.07*H,y+0.01*H], shd=[0.19*H,y], hip=[0.47*H,y-0.005*H], knee=[0.715*H,y-0.012*H], ank=[0.955*H,y-0.03*H];
     const out=[`<rect x="${f.X(-0.03*H)}" y="${f.Y(0.02*H)}" width="${1.08*H}" height="${0.05*H}" rx="${W/120}" fill="${C.soft}"/>`,`<line x1="${f.X(0.05*H)}" y1="${f.Y(-0.03*H)}" x2="${f.X(0.05*H)}" y2="${f.Y(-0.09*H)}" stroke="${C.soft}" stroke-width="${W/90}"/><line x1="${f.X(0.98*H)}" y1="${f.Y(-0.03*H)}" x2="${f.X(0.98*H)}" y2="${f.Y(-0.09*H)}" stroke="${C.soft}" stroke-width="${W/90}"/>`];
-    out.push(line(shd,hip,f,0.1*H,C.body),circ(hip,0.055*H,f,`fill="${C.body}"`),line(hip,knee,f,0.068*H,C.body),line(knee,ank,f,0.048*H,C.body));
-    out.push(`<path d="M${P(add(ank,[-0.005*H,-0.02*H]),f)} L${P(add(ank,[0.03*H,0.005*H]),f)} L${P(add(ank,[0.035*H,0.1*H]),f)}" fill="none" stroke="${C.body}" stroke-width="${0.045*H}" stroke-linecap="round" stroke-linejoin="round"/>`);
-    out.push(line([0.12*H,y+0.005*H],shd,f,0.05*H,C.body),circ(head,0.058*H,f,`fill="${C.body}"`),line(add(shd,[0,0.02*H]),[0.43*H,y+0.045*H],f,0.045*H,C.body));
+    out.push(SKIN.side({hip,shd,headC:head,legs:[{knee,ank,heel:add(ank,[-0.01*H,-0.012*H]),toe:add(ank,[0.03*H,0.1*H])}],arms:[{elb:[0.31*H,y+0.04*H],hand:[0.43*H,y+0.045*H]}]},f,{H,barefoot:1,backSide:-1}));
     const asis=[0.49*H,y+0.045*H], mall=[0.955*H,y-0.03*H];
     const draw=o.draw?o.draw({A,f,H,asis,mall,hip,knee,ank,W,add}):''; return `<svg viewBox="0 0 ${W.toFixed(0)} ${(top+0.11*H).toFixed(0)}" role="img" aria-label="${o.label||'Person liegend'}">${A.defs}${out.join('')}${draw}</svg>`; }
   // Fahrradgrafik mit echten Messwerten (Sattelhöhe, Versatz, Abstand, Überhöhung) und antippbaren Bauteilen
@@ -1153,23 +1207,16 @@ const FIG2=(()=>{ const H=1780, d2r=Math.PI/180; let uid=0;
   const P=(p,f)=>`${f.X(p[0]).toFixed(1)},${f.Y(p[1]).toFixed(1)}`;
   const ln=(a,b,f,w,c,ex='')=>`<line x1="${f.X(a[0]).toFixed(1)}" y1="${f.Y(a[1]).toFixed(1)}" x2="${f.X(b[0]).toFixed(1)}" y2="${f.Y(b[1]).toFixed(1)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round" ${ex}/>`;
   const ci=(c,r,f,ex)=>`<circle cx="${f.X(c[0]).toFixed(1)}" cy="${f.Y(c[1]).toFixed(1)}" r="${r}" ${ex}/>`;
-  function drawSide(j,f,o={}){ const out=[], col=k=>(o.hl||[]).includes(k)?C.acc:C.body;
-    const legD=(l,k,op)=>`<g ${op?'opacity=".4"':''}>${ln(j.hip,l.knee,f,0.066*H,col(k))}${ln(l.knee,l.ank,f,0.047*H,col(k))}<path d="M${P(l.heel,f)} L${P(l.ank,f)} L${P(l.toe,f)}" fill="none" stroke="${o.barefoot?col(k):C.tire}" stroke-width="${0.034*H}" stroke-linecap="round" stroke-linejoin="round"/></g>`;
-    const armD=(a,k,op)=>`<g ${op?'opacity=".4"':''}>${ln(j.shd,a.elb,f,0.042*H,col(k))}${ln(a.elb,a.wr,f,0.034*H,col(k))}${ln(a.wr,a.hand,f,0.026*H,col(k))}</g>`;
-    if(j.L2) out.push(legD(j.L2,'leg2',1)); if(j.A2) out.push(armD(j.A2,'arm2',1));
-    const t=[j.shd[0]-j.hip[0],j.shd[1]-j.hip[1]], mid=add(mul(add(j.hip,j.shd),.5),mul([-t[1],t[0]],0.06));
-    out.push(`<path d="M${P(j.hip,f)} Q${P(mid,f)} ${P(j.shd,f)}" fill="none" stroke="${col('trunk')}" stroke-width="${0.105*H}" stroke-linecap="round"/>`,ci(j.hip,0.056*H,f,`fill="${col('trunk')}"`));
-    out.push(legD(j.L1,'leg1'),ln(j.shd,j.headC,f,0.04*H,C.body),ci(j.headC,L.head,f,`fill="${C.body}"`),armD(j.A1,'arm1'));
-    return out.join(''); }
+  function drawSide(j,f,o={}){ const hl=o.hl||[];
+    const legs=[j.L1&&{...j.L1,hl:hl.includes('leg1')}, j.L2&&{...j.L2,hl:hl.includes('leg2'),far:1}].filter(Boolean);
+    const arms=[j.A1&&{...j.A1,hl:hl.includes('arm1')}, j.A2&&{...j.A2,hl:hl.includes('arm2'),far:1}].filter(Boolean);
+    return SKIN.side({hip:j.hip,shd:j.shd,headC:j.headC,legs,arms},f,{H,barefoot:o.barefoot,hlTrunk:hl.includes('trunk')}); }
   // Vorder-/Rückansicht stehend mit Parametern
-  function front(o,f){ const out=[], c=o.col||{}; const col=k=>c[k]?C.acc:C.body; const sw=0.105*H, hw=0.085*H, y0=o.y0||0;
-    const legs=o.legs||[{hip:[-0.05*H,0.53*H],knee:[-0.048*H,0.285*H],ank:[-0.042*H,0.045*H]},{hip:[0.05*H,0.53*H],knee:[0.048*H,0.285*H],ank:[0.042*H,0.045*H]}];
-    legs.forEach((l,i)=>{ const k=i?'legR':'legL'; out.push(ln(add(l.hip,[0,y0]),add(l.knee,[0,y0]),f,0.07*H,col(k)),ln(add(l.knee,[0,y0]),add(l.ank,[0,y0]),f,0.05*H,col(k)),ln(add(l.ank,[0,y0-0.025*H]),add(l.ank,[(i?1:-1)*0.012*H,y0-0.035*H]),f,0.045*H,o.barefoot?col(k):C.tire)); });
-    const sy=(o.shY||0.8*H)+y0, tl=o.tiltSh||0;
-    out.push(`<path d="M${P([-sw,sy-tl/2],f)} L${P([sw,sy+tl/2],f)} L${P([0.075*H,0.64*H+y0],f)} L${P([hw+0.007*H,0.52*H+y0],f)} L${P([-hw-0.007*H,0.52*H+y0],f)} L${P([-0.075*H,0.64*H+y0],f)}Z" fill="${col('trunk')}" stroke="${col('trunk')}" stroke-width="${0.035*H}" stroke-linejoin="round"/>`);
-    out.push(ln([0,0.83*H+y0],[0,0.88*H+y0],f,0.045*H,C.body),ci([0,0.925*H+y0],L.head,f,`fill="${C.body}"`));
-    (o.arms||[[[-0.16*H,0.64*H],[-0.17*H,0.49*H]],[[0.16*H,0.64*H],[0.17*H,0.49*H]]]).forEach((a,i)=>{ const S=[(i?1:-1)*sw,sy+(i?tl/2:-tl/2)]; out.push(ln(S,add(a[0],[0,y0]),f,0.04*H,col(i?'armR':'armL')),ln(add(a[0],[0,y0]),add(a[1],[0,y0]),f,0.034*H,col(i?'armR':'armL')),ci(add(a[1],[0,y0]),0.022*H,f,`fill="${col(i?'armR':'armL')}"`)); });
-    return out.join(''); }
+  function front(o,f){ const c=o.col||{}, y0=o.y0||0, sw=0.105*H; const Y=p=>[p[0],p[1]+y0];
+    const legs=(o.legs||[{hip:[-0.05*H,0.53*H],knee:[-0.048*H,0.285*H],ank:[-0.042*H,0.045*H]},{hip:[0.05*H,0.53*H],knee:[0.048*H,0.285*H],ank:[0.042*H,0.045*H]}]).map((l,i)=>({hip:Y(l.hip),knee:Y(l.knee),ank:Y(l.ank),hl:!!c[i?'legR':'legL']}));
+    const sy=(o.shY||0.8*H)+y0, tl=o.tiltSh||0, sh=[[-sw,sy-tl/2],[sw,sy+tl/2]];
+    const arms=(o.arms||[[[-0.16*H,0.64*H],[-0.17*H,0.49*H]],[[0.16*H,0.64*H],[0.17*H,0.49*H]]]).map((a,i)=>({S:add(sh[i],[(i?-1:1)*0.012*H,-0.01*H]),elb:Y(a[0]),hand:Y(a[1]),hl:!!c[i?'armR':'armL']}));
+    return SKIN.front({H,legs,arms,sh,pel:[[-0.092*H,0.53*H+y0],[0.092*H,0.53*H+y0]],head:[0,sy+0.098*H],barefoot:o.barefoot,hlTrunk:!!c.trunk},f); }
   function ann(f){ const id='fb'+(++uid), W=f.W, fs=W/22, sw=W/260;
     const defs=`<defs><marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10z" fill="${C.acc}"/></marker></defs>`;
     const text=(p,t,anchor='middle',small)=>`<text x="${f.X(p[0]).toFixed(1)}" y="${f.Y(p[1]).toFixed(1)}" text-anchor="${anchor}" font-size="${small?fs*.82:fs}" font-weight="${small?500:650}" fill="${small?'var(--muted)':'var(--fg)'}" style="paint-order:stroke;stroke:${C.bg};stroke-width:${fs*.35}px;stroke-linejoin:round">${t}</text>`;
@@ -1230,9 +1277,75 @@ const FIG2=(()=>{ const H=1780, d2r=Math.PI/180; let uid=0;
     const imp=x=>`<ellipse cx="${f.X(x)}" cy="${f.Y(120)}" rx="34" ry="46" fill="${C.body}" opacity=".55"/>`+A.dot([x,120]);
     return A.svg(board+imp(-63)+imp(63)+A.dim([-63,190],[63,190])+A.text([0,215],'Mitte zu Mitte','middle')+A.text([0,-40],'Abdrücke auf Wellpappe, aufrecht sitzen','middle',1),'Sitzknochenabstand'); };
   return S; })();
-Object.assign(FIG_GUIDES,FIG2);
+// Anatomische Figur Vorder-/Rückansicht. Einheiten: Anteil der Körpergröße, Boden y=0, Mitte x=0, y nach oben.
+const ANAT=(()=>{
+  // rechte Körperhälfte (x>=0), außen von Scheitel bis Fuß, dann innen hoch bis Schritt
+  const R=[[0,1],[.026,.996],[.042,.982],[.049,.958],[.049,.935],[.052,.927],[.05,.913],[.044,.909],[.04,.893],[.032,.879],[.02,.871],
+    [.027,.862],[.029,.848],[.06,.836],[.1,.829],[.122,.82],[.134,.8],[.138,.775],[.141,.745],[.146,.71],[.15,.672],[.152,.645],[.158,.6],[.164,.555],[.168,.515],[.17,.49],
+    [.178,.47],[.181,.445],[.176,.42],[.166,.405],[.157,.41],[.152,.432],[.15,.465],[.145,.49],[.14,.52],[.13,.57],[.124,.615],[.12,.645],[.116,.68],[.11,.715],[.104,.742],
+    [.1,.72],[.094,.69],[.086,.655],[.082,.625],[.086,.595],[.096,.56],[.104,.53],[.106,.5],[.103,.46],[.096,.41],[.087,.36],[.077,.315],[.072,.288],[.07,.262],[.075,.225],[.076,.195],
+    [.066,.15],[.054,.09],[.044,.055],[.046,.038],[.05,.022],[.058,.012],[.062,.004],[.055,0],[.024,0],[.017,.006],[.018,.03],[.02,.06],[.025,.12],[.03,.175],[.026,.225],[.019,.26],
+    [.02,.29],[.021,.32],[.018,.38],[.013,.43],[.007,.47],[0,.485]];
+  // Catmull-Rom -> Bezier
+  function smooth(pts,closed){ const n=pts.length; let d=`M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+    for(let i=0;i<(closed?n:n-1);i++){ const p0=pts[(i-1+n)%n],p1=pts[i],p2=pts[(i+1)%n],p3=pts[(i+2)%n]; const a=closed||i>0?p0:p1, b=closed||i<n-2?p3:p2;
+      const c1=[p1[0]+(p2[0]-a[0])/6,p1[1]+(p2[1]-a[1])/6], c2=[p2[0]-(b[0]-p1[0])/6,p2[1]-(b[1]-p1[1])/6];
+      d+=` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`; }
+    return d+(closed?'Z':''); }
+  function fig(o={}){ const H=o.H||1000, X=x=>(o.cx||0)+x*H, Y=y=>(o.base||H)-(y*H+(o.lift?0:0));
+    const tiltF=o.tilt||0; // Becken-Schiefstand rechts höher (+) in Anteil H, wirkt auf rechte Seite ab Hüfte abwärts nicht – nur Beckenlinie
+    const right=R.map(([x,y])=>[X(x),Y(y)]), left=R.slice().reverse().map(([x,y])=>[X(-x),Y(y)]);
+    const outline=[...right,...left.slice(1,-1)];
+    const S=o.stroke||'var(--il-ink)', F=o.fill||'var(--il-skin)', w=(o.w||2.2)*H/1000, wd=w*.6;
+    const p=(d,ex='')=>`<path d="${d}" fill="none" stroke="${S}" stroke-width="${wd}" stroke-linecap="round" stroke-linejoin="round" opacity=".55" ${ex}/>`;
+    const L=(pts)=>smooth(pts.map(([x,y])=>[X(x),Y(y)]),false);
+    const both=f=>f(1)+f(-1);
+    let det='';
+    if(!o.back){
+      det+=both(s=>p(L([[s*.012,.828],[s*.05,.826],[s*.098,.822]]))); // Schlüsselbein
+      det+=both(s=>p(L([[s*.01,.75],[s*.045,.742],[s*.08,.75],[s*.098,.77]]))); // Brustmuskel unten
+      det+=p(L([[0,.8],[0,.735]]));
+      det+=both(s=>p(L([[s*.035,.71],[s*.04,.66],[s*.038,.6]]),'opacity=".3"'));
+      det+=`<ellipse cx="${X(0)}" cy="${Y(.6)}" rx="${.004*H}" ry="${.006*H}" fill="${S}" opacity=".45"/>`;
+      det+=both(s=>p(L([[s*.085,.555],[s*.05,.515],[s*.012,.49]]))); // Leiste
+      det+=both(s=>p(L([[s*.035,.3],[s*.05,.31],[s*.062,.296],[s*.058,.27],[s*.045,.262],[s*.033,.272],[s*.035,.3]]),'opacity=".35"')); // Kniescheibe
+      det+=both(s=>p(L([[s*.13,.66],[s*.135,.64],[s*.142,.62]]),'opacity=".3"')); // Ellenbogen
+      det+=both(s=>p(L([[s*.016,.94],[s*.03,.945]]),'opacity=".45"'))+both(s=>p(L([[s*.014,.925],[s*.028,.925]]),'opacity=".55"'))+p(L([[0,.92],[.003,.905],[-.004,.9]]),'opacity=".35"')+p(L([[-.012,.888],[0,.885],[.012,.888]]),'opacity=".45"');
+    } else {
+      det+=p(L([[0,.85],[0,.61]]),'opacity=".4"'); // Wirbelsäule
+      det+=both(s=>p(L([[s*.03,.8],[s*.07,.79],[s*.085,.75],[s*.06,.72],[s*.035,.74]]))); // Schulterblatt
+      det+=both(s=>p(L([[s*.01,.49],[s*.05,.47],[s*.09,.5]]))); // Gesäßfalte
+      det+=both(s=>p(L([[s*.03,.27],[s*.05,.265],[s*.06,.275]]),'opacity=".35"')); // Kniekehle
+      det+=both(s=>p(L([[s*.006,.56],[s*.04,.585],[s*.09,.58]]),'opacity=".45"')); // Beckenkamm-Linie
+    }
+    // Hose
+    const shorts=o.shorts!==false?`<path d="${smooth([[-.0835,.6],[.0835,.6],[.097,.56],[.105,.52],[.104,.46],[.1,.42],[.05,.42],[.014,.43],[.005,.465],[0,.484],[-.005,.465],[-.014,.43],[-.05,.42],[-.1,.42],[-.104,.46],[-.105,.52],[-.097,.56]].map(([x,y])=>[X(x),Y(y)]),true)}" fill="var(--il-cloth)" stroke="${S}" stroke-width="${wd}" opacity=".95"/>`:'';
+    const body=`<path d="${smooth(outline,true)}" fill="${F}" stroke="${S}" stroke-width="${w}" stroke-linejoin="round"/>`;
+    return body+shorts+det; }
 
-{ const IL0=IL; IL=k=>{ if(FIG_GUIDES[k]){ try{ return `<div class="illus fig${['legBlock','pelvis','singleLeg','kneeTrack','shoulder','shoulderMob','pain','hipRot','ankle'].includes(k)?' tall':''}">${FIG_GUIDES[k]()}</div>`; }catch(e){ console.error(e); } } return IL0(k); }; }
+  // Messbild Grundmaße (nummeriert): 1 Körpergröße, 2 Schrittlänge, 3 Rumpflänge, 4 Armlänge, 5 Schulterbreite
+  function measure(){ const H=1000, W=760, Hh=1120, cx=400, base=1060, X=x=>cx+x*H, Y=y=>base-y*H, A='var(--accent)';
+    const badge=(x,y,n)=>`<circle cx="${x}" cy="${y}" r="31" fill="${A}" stroke="var(--il-bg)" stroke-width="5"/><text x="${x}" y="${y+12}" text-anchor="middle" font-size="35" font-weight="700" fill="#fff">${n}</text>`;
+    const line=(x1,y1,x2,y2,ex='')=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${A}" stroke-width="6" stroke-linecap="round" ${ex}/>`;
+    const tick=(x,y,horiz)=>horiz?line(x-13,y,x+13,y):line(x,y-13,x,y+13);
+    const dot=(x,y)=>`<circle cx="${x}" cy="${y}" r="8" fill="${A}" stroke="var(--il-bg)" stroke-width="3"/>`;
+    let o=`<line x1="${X(-.33)}" y1="${Y(0)}" x2="${X(.33)}" y2="${Y(0)}" stroke="var(--il-soft)" stroke-width="6"/>`;
+    o+=fig({H,cx,base});
+    // 1 Körpergröße
+    o+=line(X(-.27),Y(0),X(-.27),Y(1))+tick(X(-.27),Y(0),1)+tick(X(-.27),Y(1),1)+`<line x1="${X(-.27)}" y1="${Y(1)}" x2="${X(0)}" y2="${Y(1)}" stroke="${A}" stroke-width="2" stroke-dasharray="7 7"/>`+badge(X(-.27),Y(.6),1);
+    // 2 Schrittlänge + 3 Rumpflänge (Mittellinie)
+    o+=line(X(0),Y(0),X(0),Y(.483))+dot(X(0),Y(.483))+badge(X(0),Y(.2),2);
+    o+=line(X(0),Y(.483),X(0),Y(.818),'stroke-dasharray="2 10"')+dot(X(0),Y(.818))+badge(X(0),Y(.7),3);
+    // 4 Armlänge (rechter Arm, außen)
+    o+=line(X(.163),Y(.812),X(.205),Y(.43))+dot(X(.128),Y(.812))+`<line x1="${X(.128)}" y1="${Y(.812)}" x2="${X(.163)}" y2="${Y(.812)}" stroke="${A}" stroke-width="2" stroke-dasharray="6 6"/>`+dot(X(.205),Y(.43))+badge(X(.19),Y(.6),4);
+    // 5 Schulterbreite
+    o+=line(X(-.128),Y(.87),X(.128),Y(.87))+tick(X(-.128),Y(.87))+tick(X(.128),Y(.87))+[-.128,.128].map(x=>`<line x1="${X(x)}" y1="${Y(.87)}" x2="${X(x)}" y2="${Y(.812)}" stroke="${A}" stroke-width="2" stroke-dasharray="6 6"/>`+dot(X(x),Y(.812))).join('')+badge(X(.07),Y(.87),5);
+    return `<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Grundmaße: 1 Körpergröße, 2 Schrittlänge, 3 Rumpflänge, 4 Armlänge, 5 Schulterbreite">${o}</svg>`; }
+  return {fig,R,measure}; })();
+Object.assign(FIG_GUIDES,FIG2);
+FIG_GUIDES.grund=()=>ANAT.measure();
+
+{ const IL0=IL; IL=k=>{ if(FIG_GUIDES[k]){ try{ return `<div class="illus fig${['legBlock','pelvis','singleLeg','kneeTrack','shoulder','shoulderMob','pain','hipRot','ankle','grund'].includes(k)?' tall':''}">${FIG_GUIDES[k]()}</div>`; }catch(e){ console.error(e); } } return IL0(k); }; }
 /* ---------- Beinlänge: mehrfach messen, Messunsicherheit, Gegenprobe im Stehen ----------
    Grundsatz: Mit Maßband und Abtasten sind Unterschiede unter ca. 1 cm nicht sicher vom Messfehler zu trennen.
    Eine Empfehlung (Ausgleich, Fachperson) gibt es nur, wenn genug Messungen vorliegen, der Unterschied größer als
@@ -1811,7 +1924,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-10.73';
+const APP_VER='2026-11-10.74';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -3254,7 +3367,7 @@ SESSTAB.koerper = (s,c) => {
 function ckWizard(s,c,items,i){
   const it=items[i]; let fields='', auto=false;
   if(it.k==='grund'){
-    fields=[['height','Körpergröße','cm',1],['inseam','Schrittlänge','cm',1],['torso','Rumpflänge (optional)','cm',0],['arm','Armlänge (optional)','cm',0],['shoulder','Schulterbreite (optional, für die Lenkerbreite)','cm',0]].map(([k,l,u,req])=>{ const id='g_'+k, rg=rangeFor(BODY_RANGE[k],c);
+    fields=[['height','① Körpergröße','cm',1],['inseam','② Schrittlänge','cm',1],['torso','③ Rumpflänge (optional)','cm',0],['arm','④ Armlänge (optional)','cm',0],['shoulder','⑤ Schulterbreite (optional, für die Lenkerbreite)','cm',0]].map(([k,l,u,req])=>{ const id='g_'+k, rg=rangeFor(BODY_RANGE[k],c);
       return `<div class="field"><label for="${id}">${l} in ${u}</label><input class="input num" id="${id}" name="${k}" type="number" step="0.5" inputmode="decimal" value="${c.body[k]??''}" ${req?'required':''} ${rangeAttr(rg,id)}>${rangeHint(rg,id,c.body[k])}</div>`; }).join('');
   } else {
     auto=it.type!=='num'&&!it.side;
@@ -3278,7 +3391,7 @@ function ckWizard(s,c,items,i){
     fields+=`<details class="more" ${nt.obs||nt.int?'open':''}><summary>Beobachtung und Einschätzung (optional)</summary><div class="stack" style="margin-top:8px"><div class="field"><label for="ckObs">Beobachtung – was du gesehen hast</label><textarea class="input" id="ckObs" name="obs" rows="2" placeholder="z. B. Knie links weicht bei der 3. Wiederholung nach innen ab">${esc(nt.obs||'')}</textarea></div><div class="field"><label for="ckInt">Einschätzung – deine Interpretation</label><textarea class="input" id="ckInt" name="int" rows="2" placeholder="z. B. vermutlich Ermüdung, beim Fahren prüfen">${esc(nt.int||'')}</textarea></div><p class="faint" style="font-size:12px">Messwert, Beobachtung und Einschätzung werden getrennt gespeichert und im Bericht getrennt gezeigt.</p></div></details>`;
   }
   const how=it.steps?`<details class="more" open><summary>So geht's · ${esc(it.tool)}</summary><ol class="how">${it.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></details>`:`<details class="more" open><summary>So geht's · ${esc(it.tool)}</summary><ol class="how"><li>Körpergröße barfuß an der Wand messen.</li><li>Schrittlänge: barfuß an die Wand, ein Buch waagerecht fest in den Schritt drücken.</li><li>Vom Boden bis zur Buchoberkante messen.</li></ol></details>`;
-  return wizFrame(i,items.length,esc(it.label),esc(it.why),`${it.k!=='grund'?IL(it.k):''}<form id="wizForm" class="stack" data-form="checkOne" data-id="${s.id}" data-i="${i}" ${auto?'data-auto="1"':''}>${fields}</form>${how}`);
+  return wizFrame(i,items.length,esc(it.label),esc(it.why),`${IL(it.k)}<form id="wizForm" class="stack" data-form="checkOne" data-id="${s.id}" data-i="${i}" ${auto?'data-auto="1"':''}>${fields}</form>${how}`);
 }
 function measureTable(s,side){
   const recs=Object.keys(MK).filter(k=>s[side][k]).map(k=>s[side][k]);
