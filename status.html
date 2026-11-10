@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Wo steht mein Rad?</title>
+<style>
+:root{--bg:#f7f3ee;--card:#fffdf9;--ink:#1d2a30;--muted:#5f6b70;--line:#e5ddd2;--acc:#d9612c;--ok:#1d6b35}
+@media (prefers-color-scheme:dark){:root{--bg:#14191b;--card:#1c2326;--ink:#e8eef0;--muted:#9aa7ac;--line:#2c3539;--acc:#f07a45;--ok:#6fcf8f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:620px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:26px;margin:4px 0}.muted{color:var(--muted)}.small{font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.big{font-size:22px;font-weight:700;margin:0}
+ol.flow{list-style:none;margin:6px 0 0;padding:0}
+ol.flow li{position:relative;padding:0 0 18px 34px;color:var(--muted)}
+ol.flow li:before{content:"";position:absolute;left:8px;top:4px;width:14px;height:14px;border-radius:50%;border:2px solid var(--line);background:var(--card)}
+ol.flow li:after{content:"";position:absolute;left:15px;top:22px;bottom:2px;width:2px;background:var(--line)}
+ol.flow li:last-child:after{display:none}
+ol.flow li.done{color:var(--ink)}ol.flow li.done:before{background:var(--ok);border-color:var(--ok)}
+ol.flow li.now{color:var(--ink);font-weight:700}ol.flow li.now:before{background:var(--acc);border-color:var(--acc);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 25%,transparent)}
+a{color:var(--acc)}.btn{display:inline-block;font-weight:600;border-radius:10px;padding:10px 16px;background:var(--acc);color:#fff;text-decoration:none;margin:4px 6px 0 0}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">Lädt …</p></main>
+<script>
+"use strict";
+// Live-Status eines Werkstattauftrags. Liest genau einen Auftrag über seinen geheimen Schlüssel (t). Aktualisiert sich jede Minute.
+const DEFAULT={u:'https://tyfilehmrnibtoalwflf.supabase.co',k:'sb_publishable_DUIWZF8H-BD-HaBUMvTg-A_pbpz1mgT'}; // öffentlicher Schlüssel, kein Geheimnis
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur=v=>Number(v||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
+const fd=s=>{ if(!s) return ''; const [y,m,d]=String(s).slice(0,10).split('-'); return `${d}.${m}.${y}`; };
+const unb64u=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-s.length%4)%4))));
+const hp=new URLSearchParams((location.hash||'').slice(1)); const T=hp.get('t')||'';
+let CFG=DEFAULT; try{ if(hp.get('cfg')){ const c=JSON.parse(unb64u(hp.get('cfg'))); if(/^https:\/\/[a-z0-9.-]+$|^http:\/\/localhost(:\d+)?$/.test(c.u)&&c.k&&!/^sb_secret_/.test(c.k)) CFG=c; } }catch(e){}
+const app=document.getElementById('app'); const msg=(h,t)=>{ app.innerHTML=`<h1>${h}</h1><div class="card">${t}</div>`; };
+const TXT={'Angenommen':'Dein Rad ist bei uns angekommen.','Kostenvoranschlag':'Wir schauen uns an, was zu tun ist.','Freigabe ausstehend':'Wir warten auf deine Freigabe des Kostenvoranschlags.','In Arbeit':'Wir arbeiten an deinem Rad.','Abholbereit':'Fertig! Du kannst dein Rad abholen.','Übergeben':'Abgeholt. Gute Fahrt!'};
+async function load(){
+  if(!/^[a-f0-9]{32}$/.test(T)) return msg('Link unvollständig','Bitte den Link aus der Nachricht der Werkstatt vollständig öffnen.');
+  let p; try{ const r=await fetch(CFG.u+'/rest/v1/rpc/wo_status_get',{method:'POST',headers:{apikey:CFG.k,'Content-Type':'application/json'},body:JSON.stringify({p_token:T})}); if(!r.ok) throw 0; p=await r.json(); }catch(e){ return msg('Gerade nicht erreichbar','Bitte später noch einmal öffnen oder die Werkstatt anrufen.'); }
+  if(!p) return msg('Nicht mehr verfügbar','Dieser Status-Link ist abgelaufen. Bei Fragen bitte die Werkstatt anrufen.');
+  const sh=p.shop||{}, flow=p.flow||[], i=flow.indexOf(p.status);
+  const tel=sh.phone?`<a class="btn ghost" href="tel:${esc(String(sh.phone).replace(/[^\d+]/g,''))}">Anrufen</a>`:'';
+  const map=sh.addr?`<a class="btn ghost" href="https://maps.apple.com/?q=${encodeURIComponent((sh.name||'')+' '+sh.addr)}" target="_blank" rel="noopener">Route</a>`:'';
+  app.innerHTML=`<p class="muted small">${esc(sh.name||'Werkstatt')}${sh.addr?' · '+esc(sh.addr):''}</p><h1>${p.greet?`Hallo ${esc(p.greet)}`:'Dein Rad'}</h1>
+   <div class="card"><p class="muted small" style="margin:0">${esc(p.bike||'Fahrrad')} · ${esc((p.wo&&p.wo.title)||'')}</p><p class="big" style="margin-top:6px;color:${p.ready?'var(--ok)':'inherit'}">${esc(TXT[p.status]||p.status)}</p>
+   ${!p.ready&&!p.done&&p.due?`<p class="muted" style="margin:6px 0 0">Geplant fertig: <b>${fd(p.due)}</b></p>`:''}${p.ready&&sh.hours?`<p style="margin:6px 0 0">Öffnungszeiten: ${esc(sh.hours)}</p>`:''}${p.total!=null&&p.total>0?`<p class="muted small" style="margin:6px 0 0">Freigegebener Betrag: ${eur(p.total)}</p>`:''}</div>
+   <div class="card"><ol class="flow">${flow.map((f,k)=>`<li class="${k<i?'done':k===i?'now':''}">${esc(f)}</li>`).join('')}</ol></div>
+   ${p.pass?`<div class="card"><b>Fahrradpass</b><p class="muted small" style="margin:4px 0 8px">Alle Services und neuen Teile deines Rads – praktisch beim Verkauf.</p><a class="btn ghost" href="rad.html#c=${esc(p.pass)}${hp.get('cfg')?'&cfg='+esc(hp.get('cfg')):''}">Fahrradpass ansehen</a></div>`:''}
+   <div>${tel}${map}</div>
+   <p class="muted small" style="margin-top:18px">Stand: ${p.updated_at?new Date(p.updated_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''} · aktualisiert sich automatisch</p>`;
+}
+load(); setInterval(()=>{ if(document.visibilityState==='visible') load(); },60000);
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') load(); });
+</script>
+</body>
+</html>

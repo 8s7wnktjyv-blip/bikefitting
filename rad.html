@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="FYF Fahrradpass: Service-Geschichte eines Fahrrads prüfen – Services, neue Teile, Gebrauchtrad-Check und Diebstahl-Meldung.">
+<title>FYF Fahrradpass prüfen</title>
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#f7f3ee;--card:#fffdf9;--ink:#1d2a30;--muted:#5f6b70;--line:#e5ddd2;--acc:#d9612c;--ok:#1d6b35;--bad:#a23b2a}
+@media (prefers-color-scheme:dark){:root{--bg:#14191b;--card:#1c2326;--ink:#e8eef0;--muted:#9aa7ac;--line:#2c3539;--acc:#f07a45;--ok:#6fcf8f;--bad:#ff8a73}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:680px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:27px;margin:4px 0}h2{font-size:18px;margin:0 0 6px}.muted{color:var(--muted)}.small{font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.e{padding:9px 0;border-bottom:1px solid var(--line)}.e:last-child{border:0}
+.k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--line);border-radius:6px;padding:1px 7px;margin-right:6px}
+.alarm{background:var(--bad);color:#fff;border-radius:16px;padding:16px;margin:12px 0;font-weight:600}
+.ok{color:var(--ok);font-weight:700}
+form{display:flex;gap:8px;flex-wrap:wrap}input{flex:1 1 200px;font:600 20px ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+button,.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:11px 18px;background:var(--acc);color:#fff;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+a{color:var(--acc)}
+.brand{font-weight:800;letter-spacing:.08em;font-size:13px}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">Lädt …</p></main>
+<script>
+"use strict";
+// Öffentliche Ansicht eines FYF-Fahrradpasses (QR-Aufkleber am Rahmen). Zeigt nur, was der Besitzer freigegeben hat. Keine Daten über den Besitzer.
+const DEFAULT={u:'https://tyfilehmrnibtoalwflf.supabase.co',k:'sb_publishable_DUIWZF8H-BD-HaBUMvTg-A_pbpz1mgT'}; // öffentlicher Schlüssel, kein Geheimnis
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fd=s=>{ if(!s) return ''; const [y,m,d]=String(s).slice(0,10).split('-'); return `${d}.${m}.${y}`; };
+const num=v=>Number(v).toLocaleString('de-DE');
+const unb64u=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-s.length%4)%4))));
+const hp=new URLSearchParams((location.hash||'').slice(1)); const CF=hp.get('cfg');
+let CFG=DEFAULT; try{ if(CF){ const c=JSON.parse(unb64u(CF)); if(/^https:\/\/[a-z0-9.-]+$|^http:\/\/localhost(:\d+)?$/.test(c.u)&&c.k&&!/^sb_secret_/.test(c.k)) CFG=c; } }catch(e){}
+const app=document.getElementById('app');
+const norm=c=>String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const head=`<p class="brand">FYF · FAHRRADPASS</p>`;
+function askForm(err){
+  app.innerHTML=`${head}<h1>Geschichte eines Fahrrads prüfen</h1><p class="muted">Vor dem Kauf eines gebrauchten Rads: Code vom FYF-Aufkleber am Rahmen eingeben oder den QR-Code mit der Kamera scannen. Du siehst Services, neue Teile, den Gebrauchtrad-Check der Werkstatt – und ob das Rad als gestohlen gemeldet ist.</p>
+   <div class="card"><form id="f"><input id="c" maxlength="9" placeholder="z. B. K7QM3XPA" autocomplete="off" autocapitalize="characters" aria-label="Fahrradpass-Code" required><button>Prüfen</button></form>${err?`<p style="color:var(--bad);margin:8px 0 0">${esc(err)}</p>`:''}</div>
+   <p><a href="finder.html${CF?'#cfg='+esc(CF):''}">FYF-Partnerwerkstätten finden</a></p>`;
+  document.getElementById('f').onsubmit=e=>{ e.preventDefault(); location.hash='c='+norm(document.getElementById('c').value)+(CF?'&cfg='+CF:''); };
+}
+async function show(code){
+  if(!/^[A-HJ-NP-Z2-9]{8}$/.test(code)) return askForm('Der Code hat 8 Zeichen (ohne 0, O, 1 und I).');
+  let p; try{ const r=await fetch(CFG.u+'/rest/v1/rpc/pass_get',{method:'POST',headers:{apikey:CFG.k,'Content-Type':'application/json'},body:JSON.stringify({p_code:code})}); if(!r.ok) throw 0; p=await r.json(); }catch(e){ app.innerHTML=`${head}<h1>Gerade nicht erreichbar</h1><div class="card">Bitte später noch einmal versuchen.</div>`; return; }
+  if(!p) return askForm('Zu diesem Code gibt es keinen Fahrradpass.');
+  const b=p.bike||{}, sh=p.shop||{};
+  const tel=sh.phone?` · <a href="tel:${esc(String(sh.phone).replace(/[^\d+]/g,''))}">${esc(sh.phone)}</a>`:'';
+  const alarm=p.stolen?`<div class="alarm">Dieses Rad ist als gestohlen gemeldet. Bitte nicht kaufen und die Polizei oder die Werkstatt ${esc(sh.name||'')} informieren${sh.phone?' ('+esc(sh.phone)+')':''}.</div>`:'';
+  const shopLine=`<p class="muted small" style="margin:0">Pass geführt von <b>${esc(sh.name||'einer FYF-Werkstatt')}</b>${sh.addr?' · '+esc(sh.addr):''}${tel}</p>`;
+  const shopBtn=`<p><a class="btn ghost" href="index.html#rad=${code}">Ich bin Werkstatt: in FYF öffnen</a> <a class="btn ghost" href="finder.html${CF?'#cfg='+esc(CF):''}">FYF-Partner finden</a></p>`;
+  if(p.limited){ app.innerHTML=`${head}<h1>${esc(b.name||'Fahrrad')}</h1>${alarm}<div class="card">${p.stolen?'':'<p style="margin:0 0 6px"><b>Keine Diebstahlmeldung in FYF.</b> <span class="muted small">Das ist kein Nachweis – FYF ist mit keinem Polizei-Register verbunden.</span></p>'}<p style="margin:0 0 6px">Für dieses Rad gibt es einen FYF-Fahrradpass. Der Besitzer zeigt die Einträge nur Werkstätten.</p>${shopLine}<p class="muted small" style="margin:8px 0 0">Beim Kauf: Bitte den Verkäufer, den Pass auf „für jeden sichtbar“ stellen zu lassen, oder frag bei der Werkstatt nach.</p></div>${shopBtn}`; return; }
+  const items=[...(p.svc||[]).map(s=>({d:s.date,km:s.km,k:s.ins?'Inspektion':'Service',t:s.title,parts:s.parts||[],by:sh.name})),...(p.ev||[]).map(e=>({d:e.date,km:e.km,k:e.kind||'Eintrag',t:e.text,parts:[],by:sh.name})),...(p.entries||[]).map(e=>({d:e.date,km:e.km,k:e.kind,t:e.text,parts:[],by:e.shop}))].sort((a,x)=>String(x.d).localeCompare(String(a.d)));
+  const shops=[...new Set(items.map(i=>i.by).filter(Boolean))];
+  const chk=(p.checks||[])[0];
+  app.innerHTML=`${head}<h1>${esc(b.name||'Fahrrad')}</h1>${alarm}
+   <div class="card">${p.stolen?'':'<p style="margin:0 0 6px"><b>Keine Diebstahlmeldung in FYF.</b> <span class="muted small">Das ist kein Nachweis – FYF ist mit keinem Polizei-Register verbunden.</span></p>'}<p style="margin:0">${esc([b.type,b.size,b.year&&('Baujahr '+b.year)].filter(Boolean).join(' · '))}</p>${b.frame?`<p class="small" style="margin:4px 0 0">Rahmennummer (gekürzt): <b style="font-family:ui-monospace,monospace">${esc(b.frame)}</b> – mit der Nummer am Rad vergleichen</p>`:''}${b.km!=null?`<p class="small" style="margin:4px 0 0">Kilometerstand laut Werkstatt: <b>${num(b.km)} km</b></p>`:''}
+   <p class="muted small" style="margin:8px 0 0">${items.length} Einträge von ${shops.length||1} ${shops.length>1?'Werkstätten':'Werkstatt'} · Stand ${fd(p.updated_at||p.date)}</p></div>
+   ${chk?`<div class="card"><h2>Gebrauchtrad-Check</h2><p style="margin:0">Am ${fd(chk.date)}: Gesamtzustand <b>${esc(chk.grade)}</b>${chk.km!=null?` · ${num(chk.km)} km`:''}${chk.bat!=null?` · Akku ${num(chk.bat)} %`:''}</p>${chk.note?`<p class="muted small" style="margin:4px 0 0">${esc(chk.note)}</p>`:''}</div>`:''}
+   <div class="card"><h2>Service-Geschichte</h2>${items.length?items.map(i=>`<div class="e"><b>${fd(i.d)}</b>${i.km!=null?` · ${num(i.km)} km`:''}<div><span class="k">${esc(i.k)}</span>${esc(i.t)}</div>${i.parts.length?`<div class="small">Neue Teile: ${esc(i.parts.join(', '))}</div>`:''}<div class="muted small">${esc(i.by||'')}</div></div>`).join(''):'<p class="muted" style="margin:0">Noch keine Einträge.</p>'}</div>
+   <div class="card">${shopLine}<p class="muted small" style="margin:6px 0 0">Die Einträge stammen von den Werkstätten selbst. Der Pass enthält keine Daten über den Besitzer. Arbeiten außerhalb von FYF-Werkstätten fehlen, wenn sie nicht nachgetragen wurden.</p></div>${shopBtn}`;
+}
+function route(){ const h=new URLSearchParams((location.hash||'').slice(1)); const c=norm(h.get('c')); if(c) show(c); else askForm(''); }
+window.addEventListener('hashchange',route); route();
+</script>
+</body>
+</html>

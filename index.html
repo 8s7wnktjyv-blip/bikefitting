@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-10.78';
+const APP_VER='2026-11-10.79';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2051,7 +2051,7 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
 // Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
-const DB_SCHEMA=9; let dbSchema=null;
+const DB_SCHEMA=10; let dbSchema=null;
 async function dbCheck(){ if(!(CL.url&&CL.key)) return;
   try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
   catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
@@ -6760,7 +6760,7 @@ async function fbPull(){ if(!cloudReady()||dbSchema!==null&&dbSchema<8) return; 
     if(s.feedback.some(f=>f.ref===x.id)) return; s.feedback.push({date:String(x.created_at||'').slice(0,10)||today(),score:Number(x.score),text:x.body||'',via:'Link',ref:x.id}); n++; audit(`Feedback von ${c.name} über den Link: ${x.score}/10`,s.id); });
   if(n){ save(); render(); toast(n===1?'Neues Kunden-Feedback':`${n} neue Kunden-Feedbacks`); } }
 function kvaPayload(w){ const c=cust(w.customerId)||{}, b=bike(w.bikeId)||{}, sh=S.shop||{};
-  return {shop:{name:shopName()||'Werkstatt',phone:sh.phone||'',email:sh.email||'',addr:sh.addr||''},wo:{id:w.id,title:w.title},greet:firstName(c),bike:[b.brand,b.model].filter(Boolean).join(' '),
+  return {shop:{name:shopName()||(NET.profile&&NET.profile.name)||'Werkstatt',phone:sh.phone||'',email:sh.email||'',addr:sh.addr||''},wo:{id:w.id,title:w.title},greet:firstName(c),bike:[b.brand,b.model].filter(Boolean).join(' '),
     items:w.positions.map(p=>({t:p.t,kind:p.kind,qty:Number(p.qty)||0,price:Number(p.price)||0})),total:Math.round(w.positions.reduce((a,p)=>a+p.qty*p.price,0)*100)/100,date:today(),due:w.due||''}; }
 const kvaLink=tk=>location.origin+location.pathname.replace(/[^/]*$/,'')+'freigabe.html#cfg='+b64u(JSON.stringify({u:clBase(),k:CL.key}))+'&t='+tk;
 function kvaText(w){ const c=cust(w.customerId)||{}, b=bike(w.bikeId)||{}; return `Hallo ${firstName(c)},\nder Kostenvoranschlag für dein ${[b.brand,b.model].filter(Boolean).join(' ')||'Rad'} (${w.title}) ist fertig: ${eur(w.positions.reduce((a,p)=>a+p.qty*p.price,0))}.\nHier ansehen und freigeben:\n${kvaLink(w.kva.token)}\n\nViele Grüße\n${shopName()||''}`; }
@@ -7196,6 +7196,174 @@ VIEWS.fitting=()=>{ const td=today(); const run=S.sessions.filter(s=>s.status===
     const extra=(ap.length||wd.length)?`<div class="list">${ap.map(a=>`<div class="li click" data-act="apptOpen" data-id="${a.id}"><span class="time">${esc(a.start)}</span><div class="grow"><div class="t">${esc(a.customerId?cust(a.customerId).name:a.name)}</div><div class="sub">${esc(a.kind)}</div></div></div>`).join('')}${wd.map(w=>`<div class="li click" data-act="openWO" data-id="${w.id}"><span class="time">heute</span><div class="grow"><div class="t">${esc(w.title)}</div><div class="sub">${esc(cust(w.customerId).name)} · ${esc(w.status)}</div></div></div>`).join('')}</div>`:'';
     if(extra) h=h.replace(/(<section class="panel" id="today"><div class="panel-h"><h3>Heute<\/h3><\/div>)(<div class="empty">[\s\S]*?<\/div>)?/,(m,a,empty)=>a+extra);
     return h; }; }
+
+/* ===================== v.79 Live-Status, Gebrauchtrad-Check, QR-Fahrradpass über alle Läden, Partnerseite ===================== */
+const pageUrl=(file,hash)=>{ const def=CL&&CL.url&&String(CL.url).replace(/\/+$/,'')===CL_DEFAULT.url; return location.origin+location.pathname.replace(/[^/]*$/,'')+file+'#'+hash+(def||!CL||!CL.url?'':'&cfg='+b64u(JSON.stringify({u:clBase(),k:CL.key}))); };
+const needDb=(v,silent)=>{ if(dbSchema!==null&&dbSchema<v){ if(!silent) toast(`Erst die Datenbank aktualisieren (Stand ${v}) – GitHub → Actions → „Datenbank aktualisieren“`,true); return false; } return true; };
+const qrInto=(id,text)=>setTimeout(()=>{ const box=document.getElementById(id); if(!box) return; (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ box.innerHTML=qrSvg(text); }).catch(()=>{ box.innerHTML='<span class="faint" style="font-size:12px">QR-Code braucht Internet</span>'; }); },30);
+Object.assign(errMap,{FYF_NOT_VERIFIED:'Nur geprüfte FYF-Läden können hier eintragen. Die Prüfung beantragst du unter Händlerprofil.'});
+
+// ---------- 1. Live-Status für den Kunden (wie Paketverfolgung) ----------
+function stPayload(w){ const c=cust(w.customerId)||{}, b=bike(w.bikeId)||{}, sh=S.shop||{};
+  const flow=WO_FLOW.filter(f=>f!=='Kostenvoranschlag'&&f!=='Freigabe ausstehend'||w.status===f||(w.log||[]).some(l=>l.text&&l.text.includes(f)));
+  const steps=(w.log||[]).filter(l=>/^Status: |freigegeben|Annahme/.test(l.text||'')).slice(-12).map(l=>({time:l.time,text:String(l.text).replace(/^Status: /,'')}));
+  const tot=Math.round((w.positions||[]).reduce((a,p)=>a+p.qty*p.price,0)*100)/100;
+  return {shop:{name:shopName()||'Werkstatt',phone:sh.phone||'',addr:sh.addr||'',hours:sh.hours||''},greet:firstName(c),bike:bikeName(b),wo:{id:w.id,title:w.title},status:w.status,flow,
+    due:w.due||'',ready:w.status==='Abholbereit',done:w.status==='Übergeben',total:w.approval?tot:null,steps,pass:b.qr&&b.qr.code?b.qr.code:null}; }
+const stLink=tk=>pageUrl('status.html','t='+tk);
+async function stPush(w,silent){ if(!cloudReady()||!needDb(10,silent)) return null;
+  try{ const tk=String(await clApi('/rest/v1/rpc/wo_status_publish',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_wo:w.id,p_payload:stPayload(w)})})).replace(/"/g,''); const isNew=!w.st||w.st.token!==tk; w.st={token:tk,at:nowStamp()}; if(isNew) save(); return tk; }
+  catch(e){ if(!silent) toast(e.offline?'Keine Verbindung':clErrText(e.message),true); return null; } }
+function stText(w){ const c=cust(w.customerId)||{}, b=bike(w.bikeId)||{}; return `Hallo ${firstName(c)},\nhier siehst du jederzeit, wie weit dein ${bikeName(b)} ist (${w.title}):\n${stLink(w.st.token)}\n\nWir melden uns, sobald es abholbereit ist.\n\nViele Grüße\n${shopName()||''}`; }
+Object.assign(ACT,{
+  async stShare(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); if(!w) return; if(!cloudReady()){ toast('Live-Status braucht die Cloud-Speicherung (Mehr → Rolle und Datenspeicherung)',true); return; }
+    const tk=await stPush(w); if(!tk) return; if(!w.log.some(l=>l.text==='Live-Status-Link erstellt')) w.log.push({time:nowStamp(),text:'Live-Status-Link erstellt'}); audit(`${w.id}: Live-Status-Link`); save();
+    openDrawer('Live-Status an den Kunden',`<div class="stack"><p class="muted" style="margin:0;font-size:14px">Der Kunde sieht über den Link, wo sein Rad gerade steht – ohne Anruf. Jeder Statuswechsel hier wird automatisch übernommen. Der Link gilt 90 Tage nach der letzten Änderung.</p>
+      ${msgButtons(stText(w),cust(w.customerId))}<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="stCopy" data-id="${w.id}">Link kopieren</button><a class="btn sm ghost" href="${esc(stLink(tk))}" target="_blank" rel="noopener">Vorschau öffnen</a><button class="btn sm ghost" data-act="openWO" data-id="${w.id}">Zum Auftrag</button></div></div>`); },
+  stCopy(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); if(!w||!w.st) return; try{ navigator.clipboard.writeText(stLink(w.st.token)).then(()=>toast('Link kopiert'),()=>toast('Kopieren nicht möglich',true)); }catch(e){ toast('Kopieren nicht möglich',true); } }
+});
+// Jeder Statuswechsel aktualisiert den Live-Status
+['woNext','woBack','woManual'].forEach(k=>{ const o=ACT[k]; if(!o) return; ACT[k]=function(el){ const r=o.apply(this,arguments); const w=S.workshop.find(x=>x.id===(el&&el.dataset&&el.dataset.id)); if(w&&w.st) stPush(w,true); return r; }; });
+{ const KS=kvaSync; kvaSync=async function(){ const before=S.workshop.map(w=>w.status).join(); await KS.apply(this,arguments); if(S.workshop.map(w=>w.status).join()!==before) S.workshop.filter(w=>w.st).forEach(w=>stPush(w,true)); }; }
+{ const WD=woDrawer; woDrawer=function(id){ WD(id); const w=S.workshop.find(x=>x.id===id), box=document.getElementById('drawerBody'); if(!w||!box) return;
+    box.insertAdjacentHTML('afterbegin',`<div class="notice" style="display:block;margin-bottom:12px"><b>Live-Status für den Kunden</b> – wie eine Paketverfolgung: Angenommen → In Arbeit → Abholbereit. Spart Anrufe „Ist mein Rad fertig?“.${w.st?`<div class="faint" style="font-size:12.5px;margin-top:4px">Link aktiv · zuletzt aktualisiert ${esc(w.st.at)}</div>`:''}<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm ${w.st?'':'primary'}" data-act="stShare" data-id="${w.id}">${w.st?'Link erneut schicken':'Status-Link an Kunden'}</button></div></div>`); }; }
+
+// ---------- 2. Gebrauchtrad-Check mit Zertifikat ----------
+const USED_ITEMS=[['frame','Rahmen und Gabel (Risse, Dellen, Lack)'],['frameno','Rahmennummer lesbar, passt zum Kaufbeleg'],['head','Steuersatz'],['brakes','Bremsen (Beläge, Scheiben/Flanken, Hebel)'],['shift','Schaltung und Züge'],['drive','Kettenblätter und Ritzel'],['wheels','Laufräder (Rundlauf, Speichen)'],['tyres','Reifen'],['bearings','Naben und Tretlager (Spiel)'],['cockpit','Lenker, Vorbau, Sattelstütze (Drehmoment)'],['susp','Federung'],['light','Licht und Reflektoren (StVZO)'],['eb_bat','E-Bike: Akku'],['eb_motor','E-Bike: Motor und Fehlerspeicher'],['eb_tune','E-Bike: kein Tuning erkennbar']];
+const USED_ST=[['ok','In Ordnung'],['wear','Verschleiß'],['bad','Mangel'],['na','entfällt']];
+const usedGrade=r=>{ const v=Object.values(r||{}); return v.includes('bad')?'Mit Mängeln':v.includes('wear')?'Gut':'Sehr gut'; };
+const usedPrice=()=>Number(S.shop&&S.shop.usedCheckPrice)||39;
+Object.assign(ACT,{
+  usedCheck(el){ const b=bike(el.dataset.id); if(!b) return; const eb=/e-?bike|pedelec|s-pedelec/i.test(b.type||'');
+    openDrawer('Gebrauchtrad-Check',`<form class="form" data-form="usedCheck" data-id="${b.id}"><p class="wide muted" style="margin:0;font-size:13.5px">${esc(bikeName(b))}${b.frameNo?' · Rahmennr. '+esc(b.frameNo):''}. Zustand am Prüftag – das Zertifikat ist keine Garantie.</p>
+      <div class="field"><label for="uc_km">Kilometerstand</label><input class="input" id="uc_km" name="km" type="number" min="0" inputmode="numeric" value="${b.km??''}"></div>
+      <div class="field"><label for="uc_ch">Kettenverschleiß in %</label><input class="input" id="uc_ch" name="chain" type="number" min="0" max="1.5" step="0.05" inputmode="decimal" placeholder="z. B. 0.5"></div>
+      ${USED_ITEMS.map(([k,l])=>`<div class="field"><label for="uc_${k}">${esc(l)}</label><select class="input" id="uc_${k}" name="r_${k}">${opts(USED_ST,(k.startsWith('eb_')&&!eb)||(k==='susp')?'na':'ok')}</select></div>`).join('')}
+      ${eb?`<div class="field"><label for="uc_bat">Akku-Restkapazität in %</label><input class="input" id="uc_bat" name="bat" type="number" min="0" max="100" inputmode="numeric"></div><div class="field"><label for="uc_cyc">Ladezyklen</label><input class="input" id="uc_cyc" name="cycles" type="number" min="0" inputmode="numeric"></div>`:''}
+      <div class="field wide"><label for="uc_note">Hinweise für Käufer</label><textarea class="input" id="uc_note" name="note" rows="3" maxlength="600" placeholder="z. B. Bremsbeläge hinten bald tauschen"></textarea></div>
+      <div class="field"><label for="uc_by">Geprüft von</label><input class="input" id="uc_by" name="by" value="${esc(S.lastFitter||'')}"></div>
+      <div class="field"><label for="uc_pr">Preis</label><input class="input" id="uc_pr" name="price" type="number" min="0" step="1" value="${usedPrice()}"></div>
+      <label class="wide row" style="flex-wrap:nowrap;gap:8px"><input type="checkbox" name="bill" checked><span>Als Werkstattauftrag abrechnen</span></label>
+      <div class="wide row"><button class="btn primary" type="submit">Check speichern und Zertifikat öffnen</button></div></form>`); },
+  usedCert(el){ const b=bike(el.dataset.id); if(!b) return; const k=(b.usedChecks||[]).find(x=>x.id===el.dataset.c)||(b.usedChecks||[]).slice(-1)[0]; if(!k) return;
+    const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
+    const done=qr=>{ w.document.write(usedCertHtml(b,k,qr)); w.document.close(); };
+    if(b.qr&&b.qr.code){ (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>done(qrSvg(passUrl(b.qr.code)))).catch(()=>done('')); } else done(''); }
+});
+Object.assign(FORMS,{
+  usedCheck(f,d){ const b=bike(f.dataset.id); if(!b) return; const r={}; USED_ITEMS.forEach(([k])=>{ r[k]=String(d.get('r_'+k)||'ok'); });
+    const n=k=>d.get(k)===''||d.get(k)==null?null:Number(d.get(k)); const chain=n('chain'); if(chain!=null&&chain>=0.75&&r.drive==='ok') r.drive='wear';
+    const k={id:uid('uc'),date:today(),km:n('km'),chain,bat:n('bat'),cycles:n('cycles'),r,grade:usedGrade(r),note:String(d.get('note')||'').trim().slice(0,600),by:String(d.get('by')||'').trim().slice(0,60),price:n('price')};
+    (b.usedChecks=b.usedChecks||[]).push(k); if(k.km!=null&&k.km>(Number(b.km)||0)) b.km=k.km;
+    (b.events=b.events||[]).push({id:uid('ev'),date:today(),kind:'Gebrauchtrad-Check',text:`Ergebnis: ${k.grade}${k.note?' – '+k.note:''}`,km:k.km});
+    if(d.get('bill')==='on'&&k.price){ const id='WO-'+(Math.max(1000,...S.workshop.map(w=>Number(String(w.id).split('-')[1])||0))+1); S.workshop.unshift({id,customerId:b.customerId,bikeId:b.id,title:'Gebrauchtrad-Check mit Zertifikat',status:'Abholbereit',created:today(),due:today(),readyAt:today(),mechanic:k.by||'–',positions:[{t:'Gebrauchtrad-Check mit Zertifikat',kind:'Arbeit',qty:1,price:k.price}],log:[{time:nowStamp(),text:'Aus dem Gebrauchtrad-Check angelegt'}],approval:{time:nowStamp(),by:'Kunde',via:'Auftrag vor Ort'}}); k.wo=id; }
+    audit(`Gebrauchtrad-Check: ${bikeName(b)} – ${k.grade}`); save(); if(b.qr) passPush(b,true); render(); bikeDrawer(b.id); toast(`Gebrauchtrad-Check gespeichert: ${k.grade}`);
+    ACT.usedCert({dataset:{id:b.id,c:k.id}}); }
+});
+function usedCertHtml(b,k,qr){ const lab=Object.fromEntries(USED_ST), sh=S.shop||{}; const col={ok:'#1d6b35',wear:'#9a6a00',bad:'#a23b2a',na:'#8a9499'};
+  const frame=String(b.frameNo||''); const fm=frame.length>6?frame.slice(0,3)+'•••'+frame.slice(-3):frame;
+  return `<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gebrauchtrad-Zertifikat ${esc(bikeName(b))}</title>
+<style>body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1d2a30;max-width:760px;margin:0 auto;padding:28px 20px 60px}h1{font-size:28px;margin:0}table{border-collapse:collapse;width:100%;font-size:14px}td{padding:7px 0;border-bottom:1px solid #e5ddd2;vertical-align:top}td.r{text-align:right;font-weight:600;white-space:nowrap}.m{color:#5f6b70;font-size:13px}.g{display:inline-block;font-size:20px;font-weight:700;border:2px solid #1d2a30;border-radius:12px;padding:6px 14px;margin:12px 0}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.qr{width:120px;flex:none}.qr svg{width:100%;height:auto}.bar{margin:0 0 18px}.bar button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:#1d2a30;color:#fff}@media print{.bar{display:none}body{padding:0}}</style>
+<div class="bar"><button onclick="print()">Drucken / als PDF sichern</button></div>
+<div class="top"><div><p class="m" style="margin:0;letter-spacing:.1em;text-transform:uppercase">Gebrauchtrad-Zertifikat</p><h1>${esc(bikeName(b))}</h1>
+<p class="m" style="margin:4px 0 0">Geprüft am ${fmtDate(k.date)}${k.by?' von '+esc(k.by):''}${sh.name?' · '+esc(sh.name):''}</p><div class="g">Gesamtzustand: ${esc(k.grade)}</div></div>${qr?`<div class="qr">${qr}<div class="m" style="text-align:center">Fahrradpass ${esc(b.qr.code)}</div></div>`:''}</div>
+<table><tr><td>Rahmennummer</td><td class="r" style="font-family:ui-monospace,monospace">${esc(fm||'–')}</td></tr>${[b.type,b.size,b.year].some(Boolean)?`<tr><td>Typ / Größe / Baujahr</td><td class="r">${esc([b.type,b.size,b.year].filter(Boolean).join(' · '))}</td></tr>`:''}
+${k.km!=null?`<tr><td>Kilometerstand</td><td class="r">${fmtNum(k.km)} km</td></tr>`:''}${k.chain!=null?`<tr><td>Kettenverschleiß</td><td class="r">${fmtNum(k.chain,2)} %</td></tr>`:''}${k.bat!=null?`<tr><td>Akku-Restkapazität</td><td class="r">${fmtNum(k.bat)} %</td></tr>`:''}${k.cycles!=null?`<tr><td>Ladezyklen</td><td class="r">${fmtNum(k.cycles)}</td></tr>`:''}
+${USED_ITEMS.filter(([x])=>k.r[x]&&k.r[x]!=='na').map(([x,l])=>`<tr><td>${esc(l)}</td><td class="r" style="color:${col[k.r[x]]}">${esc(lab[k.r[x]])}</td></tr>`).join('')}</table>
+${k.note?`<p style="margin-top:16px"><b>Hinweise:</b> ${esc(k.note)}</p>`:''}
+<p class="m" style="margin-top:26px">Das Zertifikat beschreibt den Zustand am Prüftag nach Sichtprüfung und Funktionstest. Es ist keine Garantie und keine Gewährleistung. Ob das Rad als gestohlen gemeldet ist, wurde nicht bei der Polizei abgefragt.${b.qr&&b.qr.code?' Den aktuellen Fahrradpass zeigt der QR-Code.':''}${sh.addr||sh.phone?'<br>'+esc([sh.name,sh.addr,sh.phone].filter(Boolean).join(' · ')):''}</p></html>`; }
+{ const BPD=bikePassData; bikePassData=function(b){ const P=BPD(b); P.checks=(b.usedChecks||[]).map(k=>({date:k.date,grade:k.grade,km:k.km,note:k.note,bat:k.bat})).reverse(); return P; }; }
+{ const BPH=bikePassHtml; bikePassHtml=function(P){ const h=BPH(P); if(!P.checks||!P.checks.length) return h; const sec=`<h2>Gebrauchtrad-Check (${P.checks.length})</h2>${P.checks.map(c=>`<div class="e"><b>${fmtDate(c.date)}</b> · Gesamtzustand <b>${esc(c.grade)}</b>${c.km!=null?` · ${fmtNum(c.km)} km`:''}${c.bat!=null?` · Akku ${fmtNum(c.bat)} %`:''}${c.note?`<div class="m">${esc(c.note)}</div>`:''}</div>`).join('')}`;
+    const i=h.lastIndexOf('<p class="m" style="margin-top:30px">'); return i<0?h:h.slice(0,i)+sec+h.slice(i); }; }
+
+// ---------- 3. QR-Fahrradpass am Rahmen – über alle FYF-Läden ----------
+const passUrl=code=>pageUrl('rad.html','c='+code);
+function passPayload(b){ const D=bikePassData(b); const fr=String(D.bike.frameNo||''); return {shop:D.shop,date:D.date,
+  bike:{name:D.bike.name,type:D.bike.type,size:D.bike.size,year:D.bike.year,km:D.bike.km,frame:fr.length>6?fr.slice(0,3)+'•••'+fr.slice(-3):fr},
+  svc:D.svc.filter(s=>s.title!=='Gebrauchtrad-Check mit Zertifikat').slice(0,60).map(s=>({date:s.date,km:s.km??null,title:s.title,parts:s.parts.slice(0,12),ins:s.ins})),
+  ev:D.ev.filter(e=>!e.via).slice(0,60).map(e=>({date:e.date,kind:e.kind,text:e.text,km:e.km??null})),checks:(D.checks||[]).slice(0,10)}; }
+async function passPush(b,silent){ if(!cloudReady()||!b.qr||!needDb(10,silent)) return null;
+  try{ const c=String(await clApi('/rest/v1/rpc/pass_publish',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_bike:b.id,p_payload:passPayload(b),p_visibility:b.qr.vis||'shops',p_stolen:!!b.qr.stolen})})).replace(/"/g,''); b.qr.code=c; b.qr.at=nowStamp(); save(); return c; }
+  catch(e){ if(!silent) toast(e.offline?'Keine Verbindung':netErr(e),true); return null; } }
+async function passPull(b){ if(!cloudReady()||!b.qr||!b.qr.code||(b.qr.pulled&&Date.now()-b.qr.pulled<60000)) return; b.qr.pulled=Date.now();
+  try{ const P=await clApi('/rest/v1/rpc/pass_get',{method:'POST',body:JSON.stringify({p_code:b.qr.code})}); let n=0;
+    ((P&&P.entries)||[]).forEach(e=>{ const ref='pe'+e.id; if((b.events||[]).some(x=>x.ref===ref)) return; (b.events=b.events||[]).push({id:uid('ev'),date:e.date,kind:e.kind,text:`${e.text} (${e.shop})`,km:e.km??null,via:e.shop,ref}); n++; });
+    if(n){ audit(`${n} Einträge anderer Werkstätten in den Fahrradpass übernommen: ${bikeName(b)}`); save(); { const t=document.getElementById('passForeign'); if(t) t.textContent=n===1?'1 neuer Eintrag einer anderen Werkstatt übernommen':`${n} neue Einträge anderer Werkstätten übernommen`; } toast(n===1?'1 Eintrag einer anderen Werkstatt übernommen':`${n} Einträge anderer Werkstätten übernommen`); } }catch(e){} }
+Object.assign(ACT,{
+  qrPass(el){ const b=bike(el.dataset.id); if(!b) return; const q=b.qr||{};
+    openDrawer('QR-Fahrradpass',`<form class="form" data-form="qrPass" data-id="${b.id}"><p class="wide muted" style="margin:0;font-size:13.5px">Ein Aufkleber mit QR-Code am Rahmen. Wer ihn scannt, sieht die Geschichte des Rads: Services, neue Teile, Gebrauchtrad-Check. <b>Kein Name, keine Adresse, keine Telefonnummer des Besitzers</b>, die Rahmennummer nur gekürzt. Andere geprüfte FYF-Werkstätten können Arbeiten nachtragen – so bleibt der Pass auch nach Werkstatt- oder Besitzerwechsel vollständig.</p>
+      <div class="field wide"><label for="qp_v">Wer sieht den Pass?</label><select class="input" id="qp_v" name="vis">${opts([['shops','Nur Werkstätten (geprüfte FYF-Läden)'],['public','Jeder, der den Code scannt (gut beim Verkauf)']],q.vis||'shops')}</select></div>
+      <label class="wide row" style="flex-wrap:nowrap;gap:8px;align-items:flex-start"><input type="checkbox" name="stolen" ${q.stolen?'checked':''} style="margin-top:4px"><span>Als <b>gestohlen</b> melden (jeder Scan zeigt eine Warnung)</span></label>
+      <label class="wide row" style="flex-wrap:nowrap;gap:8px;align-items:flex-start"><input type="checkbox" name="consent" required ${q.consent?'checked':''} style="margin-top:4px"><span>Der Besitzer ist einverstanden, dass die Fahrzeugdaten und die Werkstatt-Einträge online gespeichert und – je nach Auswahl – angezeigt werden.</span></label>
+      <div class="wide row" style="gap:6px;flex-wrap:wrap"><button class="btn primary" type="submit">${q.code?'Speichern':'QR-Fahrradpass erstellen'}</button>${q.code?`<button class="btn ghost danger" type="button" data-act="qrPassDel" data-id="${b.id}">Pass löschen</button>`:''}</div></form>
+      ${q.code?`<hr>${passStickerBox(b)}`:''}`); if(q.code) qrInto('qpQR',passUrl(q.code)); },
+  async qrPassDel(el){ const b=bike(el.dataset.id); if(!b||!b.qr) return; if(!confirmDel('QR-Fahrradpass online löschen? Der Aufkleber zeigt dann nichts mehr.')) return;
+    try{ await clApi('/rest/v1/rpc/pass_delete',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_bike:b.id})}); }catch(e){ toast(e.offline?'Keine Verbindung':netErr(e),true); return; }
+    delete b.qr; audit(`QR-Fahrradpass gelöscht: ${bikeName(b)}`); save(); closeDrawer(); render(); toast('Fahrradpass gelöscht'); },
+  passSticker(el){ const b=bike(el.dataset.id); if(!b||!b.qr||!b.qr.code) return; const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
+    (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ const s=qrSvg(passUrl(b.qr.code)); const one=`<div class="st"><div class="q">${s}</div><div><b>FYF Fahrradpass</b><div class="c">${esc(b.qr.code)}</div><div class="m">Scannen: Service-Geschichte</div></div></div>`;
+      w.document.write(`<!doctype html><html lang="de"><meta charset="utf-8"><title>Aufkleber ${esc(b.qr.code)}</title><style>body{font-family:system-ui,sans-serif;margin:16px}.g{display:grid;grid-template-columns:repeat(auto-fill,60mm);gap:6mm}.st{width:60mm;height:25mm;border:1px dashed #999;border-radius:3mm;display:flex;gap:2.5mm;align-items:center;padding:2mm;box-sizing:border-box}.q{width:21mm;height:21mm;flex:none}.q svg{width:100%;height:100%}.c{font:700 15px ui-monospace,monospace;letter-spacing:.08em}.m{font-size:9px;color:#555}b{font-size:10px}button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:#1d2a30;color:#fff;margin-bottom:12px}@media print{button,p{display:none}.st{border-color:#ddd}}</style><button onclick="print()">Drucken</button><p style="font-size:13px;color:#555">Auf Etikettenpapier oder normales Papier drucken, ausschneiden und mit klarer Folie überkleben. Am besten unter das Oberrohr oder an das Sitzrohr.</p><div class="g">${one.repeat(8)}</div></html>`); w.document.close(); }).catch(()=>{ w.close(); toast('QR-Code braucht Internet',true); }); },
+  passCopy(el){ const b=bike(el.dataset.id); if(!b||!b.qr) return; try{ navigator.clipboard.writeText(passUrl(b.qr.code)).then(()=>toast('Link kopiert'),()=>toast('Kopieren nicht möglich',true)); }catch(e){ toast('Kopieren nicht möglich',true); } }
+});
+function passStickerBox(b){ const q=b.qr; return `<div class="row" style="gap:14px;align-items:center;flex-wrap:wrap"><div id="qpQR" style="width:120px;height:120px;background:#fff;border-radius:10px;padding:6px"></div><div class="stack" style="gap:6px;min-width:0"><span class="label">Fahrradpass-Code</span><b class="mono" style="font-size:22px;letter-spacing:.08em">${esc(q.code)}</b><span class="faint" style="font-size:12.5px">${q.vis==='public'?'Für jeden sichtbar':'Nur für Werkstätten voll sichtbar'}${q.stolen?' · <b style="color:var(--bad,#a23b2a)">als gestohlen gemeldet</b>':''} · aktualisiert ${esc(q.at||'')}</span><div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm primary" data-act="passSticker" data-id="${b.id}">Aufkleber drucken</button><button class="btn sm" data-act="passCopy" data-id="${b.id}">Link kopieren</button><a class="btn sm ghost" href="${esc(passUrl(q.code))}" target="_blank" rel="noopener">Ansehen wie ein Käufer</a></div></div></div>`; }
+const confirmDel=t=>{ try{ return window.confirm(t); }catch(e){ return true; } };
+Object.assign(FORMS,{
+  async qrPass(f,d){ const b=bike(f.dataset.id); if(!b) return; if(!cloudReady()){ toast('Der QR-Fahrradpass braucht die Cloud-Speicherung (Mehr → Rolle und Datenspeicherung)',true); return; } if(!needDb(10)) return;
+    if(d.get('consent')!=='on'){ toast('Bitte die Zustimmung des Besitzers bestätigen',true); return; }
+    const was=b.qr?{...b.qr}:null; b.qr={...(b.qr||{}),vis:String(d.get('vis')||'shops'),stolen:d.get('stolen')==='on',consent:(b.qr&&b.qr.consent)||today()};
+    const c=await passPush(b); if(!c){ if(was) b.qr=was; else delete b.qr; save(); return; }
+    audit(`QR-Fahrradpass ${was&&was.code?'aktualisiert':'erstellt'}: ${bikeName(b)} (${c})${b.qr.stolen?' – als gestohlen gemeldet':''}`); save(); render(); ACT.qrPass({dataset:{id:b.id}}); toast(was&&was.code?'Fahrradpass aktualisiert':'QR-Fahrradpass erstellt'); }
+});
+// Bike-Detail: Hinweise für Check und QR-Pass, fremde Einträge abholen
+{ const BD3=bikeDrawer; bikeDrawer=function(id){ BD3(id); const b=bike(id), box=document.getElementById('drawerBody'); if(!b||!b.id||!box) return; const last=(b.usedChecks||[]).slice(-1)[0];
+    const n=box.querySelector('.notice'); const html=`<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" data-act="qrPass" data-id="${b.id}">${ic('box')} ${b.qr&&b.qr.code?'QR-Fahrradpass '+esc(b.qr.code):'QR-Aufkleber für den Rahmen'}</button><button class="btn sm" data-act="usedCheck" data-id="${b.id}">${ic('check')} Gebrauchtrad-Check</button>${last?`<button class="btn sm ghost" data-act="usedCert" data-id="${b.id}" data-c="${last.id}">Zertifikat ${fmtDate(last.date)}: ${esc(last.grade)}</button>`:''}</div>${b.qr&&b.qr.stolen?'<div style="margin-top:6px;color:var(--bad,#a23b2a);font-weight:600">Als gestohlen gemeldet</div>':''}<div id="passForeign" class="faint" style="font-size:12.5px;margin-top:4px"></div>`;
+    if(n) n.insertAdjacentHTML('beforeend',html); else box.insertAdjacentHTML('afterbegin',`<div class="notice" style="display:block;margin-bottom:12px">${html}</div>`);
+    if(b.qr&&b.qr.code) passPull(b); }; }
+// Übergebene Aufträge und neue Teile landen auch im Online-Pass
+{ const N3=ACT.woNext; ACT.woNext=function(el){ const r=N3.apply(this,arguments); const w=S.workshop.find(x=>x.id===(el&&el.dataset&&el.dataset.id)); const b=w&&bike(w.bikeId); if(b&&b.qr&&(w.status==='Übergeben'||w.status==='Abholbereit')) passPush(b,true); return r; }; }
+// Kundenportal: Link zum QR-Pass
+{ const PP2=portalPayload; portalPayload=function(c){ const p=PP2(c); const bs=bikesOf(c.id); (p.bikes||[]).forEach((x,i)=>{ const b=bs[i]; if(b&&b.qr&&b.qr.code){ x.qr={code:b.qr.code,url:passUrl(b.qr.code)}; } if(b&&b.usedChecks&&b.usedChecks.length&&x.pass){ x.pass.checks=bikePassData(b).checks.slice(0,5); } }); return p; }; }
+
+// Fremdes Rad: Code eingeben oder QR scannen (index.html#rad=CODE) → Pass ansehen, Arbeit nachtragen
+const PASS_KINDS=['Service','Reparatur','Teiletausch','Umbau','Inspektion','Gebrauchtrad-Check'];
+async function passOpen(code){ code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if(!/^[A-HJ-NP-Z2-9]{8}$/.test(code)){ toast('Der Code hat 8 Zeichen (ohne 0, O, 1, I)',true); return; }
+  const own=S.bikes.find(b=>b.qr&&b.qr.code===code); if(own){ bikeDrawer(own.id); return; }
+  if(!cloudReady()){ toast('Zum Nachschlagen braucht es die Cloud-Speicherung',true); return; }
+  let P; try{ P=await clApi('/rest/v1/rpc/pass_get',{method:'POST',body:JSON.stringify({p_code:code})}); }catch(e){ toast(e.offline?'Keine Verbindung':netErr(e),true); return; }
+  if(!P){ toast('Kein Fahrradpass mit diesem Code',true); return; }
+  const ver=NET.plat&&NET.plat.verified, bk=P.bike||{}, sh=P.shop||{};
+  const list=[...(P.svc||[]).map(s=>({date:s.date,t:s.title+(s.parts&&s.parts.length?' · Teile: '+s.parts.join(', '):''),by:sh.name,km:s.km})),...(P.ev||[]).map(e=>({date:e.date,t:(e.kind?e.kind+': ':'')+e.text,by:sh.name,km:e.km})),...(P.entries||[]).map(e=>({date:e.date,t:e.kind+': '+e.text,by:e.shop,km:e.km}))].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  openDrawer('Fahrradpass '+code,`<div class="stack">${P.stolen?'<div class="notice" style="border-color:var(--bad,#a23b2a)"><b style="color:var(--bad,#a23b2a)">Als gestohlen gemeldet.</b> Bitte nicht annehmen und den ausstellenden Laden informieren.</div>':''}
+    <div><b style="font-size:18px">${esc(bk.name||'Fahrrad')}</b><div class="muted" style="font-size:13.5px">${esc([bk.type,bk.size,bk.year].filter(Boolean).join(' · '))}${bk.frame?' · Rahmennr. '+esc(bk.frame):''}${bk.km!=null?' · '+fmtNum(bk.km)+' km':''}</div><div class="faint" style="font-size:12.5px">Pass geführt von ${esc(sh.name||'–')}${sh.phone?' · '+esc(sh.phone):''}</div></div>
+    ${P.limited?`<div class="notice">${ic('info')}<span>Der Besitzer zeigt den Pass nur Werkstätten. Voll sichtbar für geprüfte FYF-Läden${ver?'':' – dein Laden ist noch nicht geprüft (Händlerprofil → Prüfung)'}.</span></div>`:`<div class="stack" style="gap:0">${list.length?list.slice(0,40).map(x=>`<div style="padding:7px 0;border-bottom:1px solid var(--line)"><b>${fmtDate(x.date)}</b>${x.km!=null?` · ${fmtNum(x.km)} km`:''} · ${esc(x.t)}<div class="faint" style="font-size:12px">${esc(x.by||'')}</div></div>`).join(''):'<span class="muted">Noch keine Einträge.</span>'}</div>
+    ${(P.checks||[]).length?`<div><span class="label">Gebrauchtrad-Check</span><div>${fmtDate(P.checks[0].date)}: <b>${esc(P.checks[0].grade)}</b></div></div>`:''}`}
+    ${P.limited?'':`<hr><form class="form" data-form="passAdd" data-code="${code}"><p class="wide" style="margin:0"><b>Arbeit nachtragen</b> <span class="faint" style="font-size:12.5px">– erscheint mit deinem Ladennamen im Pass${ver?'':'. Nur geprüfte FYF-Läden'}</span></p>
+      <div class="field"><label for="pa_k">Art</label><select class="input" id="pa_k" name="kind">${opts(PASS_KINDS,'Service')}</select></div>
+      <div class="field"><label for="pa_d">Datum</label><input class="input" id="pa_d" name="date" type="date" value="${today()}" max="${today()}"></div>
+      <div class="field wide"><label for="pa_t">Was wurde gemacht?</label><input class="input" id="pa_t" name="text" required minlength="3" maxlength="500" placeholder="z. B. Kette und Kassette getauscht"></div>
+      <div class="field"><label for="pa_km">Kilometerstand</label><input class="input" id="pa_km" name="km" type="number" min="0" inputmode="numeric"></div>
+      <div class="wide"><button class="btn primary" type="submit">Eintragen</button></div></form>`}</div>`); }
+Object.assign(FORMS,{
+  async passAdd(f,d){ const km=d.get('km')===''?null:Number(d.get('km'));
+    try{ await clApi('/rest/v1/rpc/pass_add',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_code:f.dataset.code,p_kind:String(d.get('kind')),p_text:String(d.get('text')||'').trim(),p_km:km,p_date:String(d.get('date')||today())})}); }
+    catch(e){ toast(e.offline?'Keine Verbindung':netErr(e),true); return; }
+    audit(`Arbeit in fremden Fahrradpass ${f.dataset.code} eingetragen`); save(); toast('Eingetragen'); passOpen(f.dataset.code); }
+});
+Object.assign(ACT,{ passLookup(){ const i=document.getElementById('passCode'); passOpen(i&&i.value); } });
+CHG.passCodeKey=()=>{};
+{ const W2=VIEWS.werkstatt; VIEWS.werkstatt=()=>W2()+panel('Rad mit FYF-Fahrradpass?',`<p class="muted" style="margin:0 0 8px;font-size:13.5px">QR-Aufkleber am Rahmen mit der iPhone-Kamera scannen – oder den 8-stelligen Code hier eingeben. Du siehst die Service-Geschichte (auch von anderen Werkstätten) und kannst deine Arbeit nachtragen.</p><div class="row" style="gap:6px;flex-wrap:nowrap"><input class="input mono" id="passCode" maxlength="9" placeholder="z. B. K7QM3XPA" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;max-width:200px"><button class="btn" data-act="passLookup">Öffnen</button></div>`); }
+if(/^#rad=/.test(clBootHash)){ const code=decodeURIComponent(clBootHash.slice(5)); let n=0; const t=setInterval(()=>{ n++; if(cloudReady()||n>40){ clearInterval(t); go('werkstatt'); passOpen(code); } },150); }
+
+// ---------- 4. Partnerseite: welche FYF-Funktionen der Laden zeigt ----------
+const FEAT_LIST=[['fitting','Bikefitting mit FYF'],['pass','QR-Fahrradpass'],['status','Werkstatt-Status live'],['usedcheck','Gebrauchtrad-Check mit Zertifikat']];
+const featOn=()=>{ const f=S.shop&&S.shop.features; return Array.isArray(f)?f:FEAT_LIST.map(x=>x[0]); };
+async function featPublish(silent){ if(!cloudReady()||!needDb(10,true)) return; try{ await clApi('/rest/v1/rpc/profile_features',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_features:featOn()})}); if(!silent) toast('Auf der Partnerseite aktualisiert'); }catch(e){ if(!silent) toast(e.offline?'Keine Verbindung':netErr(e),true); } }
+CHG.featSet=el=>{ S.shop=S.shop||{}; const on=new Set(featOn()); if(el.checked) on.add(el.dataset.k); else on.delete(el.dataset.k); S.shop.features=FEAT_LIST.map(x=>x[0]).filter(k=>on.has(k)); audit(`Partnerseite: ${el.dataset.k} ${el.checked?'an':'aus'}`); save(); featPublish(); };
+{ const NV=VIEWS.netz; VIEWS.netz=()=>{ const h=NV(); if(!cloudReady()) return h; const fo=featOn();
+    return h+panel('Auf der FYF-Partnerseite zeigen',`<p class="muted" style="margin:0 0 8px;font-size:13.5px">Kunden finden dich in der FYF-Händlersuche und sehen, was du anbietest. Sie können dort auch einen Fahrradpass-Code prüfen.</p>${FEAT_LIST.map(([k,l])=>`<label class="row" style="gap:8px;flex-wrap:nowrap"><input type="checkbox" data-change="featSet" data-k="${k}" ${fo.includes(k)?'checked':''}><span>${esc(l)}</span></label>`).join('')}<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><a class="btn sm ghost" href="${esc(location.origin+location.pathname.replace(/[^/]*$/,'')+'finder.html')}" target="_blank" rel="noopener">Partnerseite ansehen</a></div>`); }; }
+{ const o=FORMS.profileSave; if(o) FORMS.profileSave=async function(f,d){ const r=await o.call(this,f,d); featPublish(true); return r; }; }
+
+FEATURES.push(['Live-Status für Kunden','Link wie eine Paketverfolgung, aktualisiert sich bei jedem Statuswechsel (Datenbank Stand 10)',2],['Gebrauchtrad-Check','Checkliste, Gesamtzustand, Zertifikat zum Drucken, Abrechnung als Auftrag',1],['QR-Fahrradpass','Aufkleber am Rahmen, Sichtbarkeit wählt der Besitzer, Diebstahl-Warnung, andere geprüfte FYF-Läden tragen nach (Datenbank Stand 10)',2],['Partnerseite','Händlersuche zeigt Bikefitting, QR-Pass, Live-Status, Gebrauchtrad-Check; Fahrradpass-Code prüfen',2]);
 
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
