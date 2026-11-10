@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>FYF – Fit your Frame</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="theme-color" content="#1f2a30">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FYF">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..800&family=Figtree:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -1230,6 +1238,11 @@ const FIG2=(()=>{ const H=1780, d2r=Math.PI/180; let uid=0;
   function footPath(f,o){ const l=o.l||270, b=o.b||100, x0=o.x||0, y0=o.y||0, rot=o.rot||0, mir=o.mirror?-1:1;
     const pts=[[0,0],[0.3,0.04],[0.46,0.3],[0.5,0.62],[0.44,0.8],[0.3,0.92],[0.1,0.98],[-0.12,1],[-0.34,0.94],[-0.48,0.8],[-0.5,0.62],[-0.4,0.42],[-0.36,0.2],[-0.24,0.04]].map(([x,y])=>{ const p=[x*b*mir,y*l]; const r=[p[0]*Math.cos(rot*d2r)-p[1]*Math.sin(rot*d2r),p[0]*Math.sin(rot*d2r)+p[1]*Math.cos(rot*d2r)]; return [r[0]+x0,r[1]+y0]; });
     let d=`M${P(pts[0],f)}`; for(let i=0;i<pts.length;i++){ const p=pts[i], n=pts[(i+1)%pts.length]; const m=mul(add(p,n),.5); d+=` Q${P(p,f)} ${P(m,f)}`; } return d+'Z'; }
+  function footSkin(f,o){ const l=o.l||270, b=o.b||100, x0=o.x||0, y0=o.y||0, rot=o.rot||0, mir=o.mirror?-1:1;
+    const T=([x,y])=>{ const p=[x*b*mir,y*l]; return [p[0]*Math.cos(rot*d2r)-p[1]*Math.sin(rot*d2r)+x0,p[0]*Math.sin(rot*d2r)+p[1]*Math.cos(rot*d2r)+y0]; };
+    const toes=[[-0.27,0.95,0.15],[-0.03,0.965,0.1],[0.13,0.935,0.09],[0.27,0.885,0.08],[0.38,0.815,0.07]];
+    const parts=[{d:footPath(f,o),fill:SKIN.C.skin},...toes.map(([x,y,r])=>({d:SKIN.dot(T([x,y]),r*b,f),fill:SKIN.C.skin}))];
+    return SKIN.render(parts,o.w||4)+toes.map(([x,y,r])=>{ const c=T([x,y]); return `<path d="M${f.X(c[0]-r*b*.45).toFixed(1)},${f.Y(c[1]+r*b*.35).toFixed(1)} q${(r*b*.45).toFixed(1)},${(-r*b*.35).toFixed(1)} ${(r*b*.9).toFixed(1)},0" fill="none" stroke="${SKIN.C.ink}" stroke-width="2" opacity=".35"/>`; }).join(''); }
   const S={};
   S.hamstring=()=>{ const f=frame(-300,-60,1100,1180), A=ann(f); const j=side({hip:[0,0.53*H],trunk:-22,head:-40,thigh:-84,shank:-88,foot:0,uarm:-96,farm:-92,thigh2:-86,shank2:-89,foot2:0,uarm2:-98,farm2:-93});
     const h=j.A1.hand; return A.svg(A.floor(0,-300,1100)+drawSide(j,f,{hl:['trunk']})+A.dim([h[0]+60,h[1]-10],[h[0]+60,8])+A.text([h[0]+110,h[1]/2],'Finger bis Boden','start')+A.text([400,1110],'Knie gestreckt, langsam nach vorn beugen','middle',1),'Finger-Boden-Abstand'); };
@@ -1258,21 +1271,21 @@ const FIG2=(()=>{ const H=1780, d2r=Math.PI/180; let uid=0;
   S.pain=()=>{ const f=frame(-450,-60,1100,1900), A=ann(f); const bub=`<path d="M${P([300,1500],f)} h${700} a40,40 0 0 1 40,40 v220 a40,40 0 0 1 -40,40 h-560 l-90,80 v-80 h-50 a40,40 0 0 1 -40,-40 v-220 a40,40 0 0 1 40,-40Z" fill="none" stroke="${C.acc}" stroke-width="${A.sw*3}"/>`;
     return A.svg(A.floor(0,-450,1100)+front({},f)+bub+A.text([650,1660],'Wo tut es weh?','middle')+A.text([650,1580],'Wann? Wie stark (0–10)?','middle',1),'Nach Beschwerden fragen'); };
   // Füße und Schuhe
-  S.footWidth=()=>{ const f=frame(-160,-60,160,330), A=ann(f); return A.svg(`<path d="${footPath(f,{})}" fill="${C.body}" opacity=".9"/>`+A.dim([-52,0.64*270],[52,0.64*270])+A.text([0,0.64*270+30],'Breiteste Stelle','middle')+A.text([0,-35],'Stehend, voll belastet, von oben','middle',1),'Fußbreite'); };
-  S.footAngle=()=>{ const f=frame(-380,-60,380,360), A=ann(f); return A.svg(`<path d="${footPath(f,{x:-120,rot:12,mirror:1})}" fill="${C.body}"/><path d="${footPath(f,{x:120,rot:-12})}" fill="${C.body}"/>`+A.dash([120,0],[120,300])+A.dash([-120,0],[-120,300])+A.arc([120,0],230,90,102)+A.text([200,320],'Fußwinkel','start')+A.text([0,-35],'Im Gehen: Zehen nach außen?','middle',1),'Fußwinkel'); };
-  S.arch=()=>{ const f=frame(-40,-90,340,150), A=ann(f); const sole=`<path d="M${P([0,20],f)} Q${P([0,0],f)} ${P([30,0],f)} L${P([70,0],f)} Q${P([130,44],f)} ${P([190,0],f)} L${P([275,0],f)} Q${P([305,2],f)} ${P([300,18],f)} Q${P([260,30],f)} ${P([200,60],f)} Q${P([150,80],f)} ${P([110,105],f)} L${P([55,105],f)} Q${P([10,90],f)} ${P([0,20],f)}Z" fill="${C.body}"/>`;
+  S.footWidth=()=>{ const f=frame(-160,-60,160,330), A=ann(f); return A.svg(footSkin(f,{})+A.dim([-52,0.64*270],[52,0.64*270])+A.text([0,0.64*270+30],'Breiteste Stelle','middle')+A.text([0,-35],'Stehend, voll belastet, von oben','middle',1),'Fußbreite'); };
+  S.footAngle=()=>{ const f=frame(-380,-60,380,360), A=ann(f); return A.svg(footSkin(f,{x:-120,rot:12,mirror:1})+footSkin(f,{x:120,rot:-12})+A.dash([120,0],[120,300])+A.dash([-120,0],[-120,300])+A.arc([120,0],230,90,102)+A.text([200,320],'Fußwinkel','start')+A.text([0,-35],'Im Gehen: Zehen nach außen?','middle',1),'Fußwinkel'); };
+  S.arch=()=>{ const f=frame(-40,-90,340,150), A=ann(f); const sole=`<path d="M${P([0,20],f)} Q${P([0,0],f)} ${P([30,0],f)} L${P([70,0],f)} Q${P([130,44],f)} ${P([190,0],f)} L${P([275,0],f)} Q${P([305,2],f)} ${P([300,18],f)} Q${P([260,30],f)} ${P([200,60],f)} Q${P([150,80],f)} ${P([110,105],f)} L${P([55,105],f)} Q${P([10,90],f)} ${P([0,20],f)}Z" fill="${SKIN.C.skin}" stroke="${SKIN.C.ink}" stroke-width="5" stroke-linejoin="round"/>`;
     return A.svg(A.floor(0,-40,340)+sole+A.dim([130,2],[130,21])+A.text([130,-50],'Gewölbehöhe innen: flach · normal · hoch?','middle',1),'Fußgewölbe'); };
-  S.forefoot=()=>{ const f=frame(-220,-60,220,280), A=ann(f); const heel=`<path d="M${P([-55,0],f)} Q${P([-60,90],f)} ${P([-48,150],f)} L${P([48,150],f)} Q${P([60,90],f)} ${P([55,0],f)} Q${P([0,-25],f)} ${P([-55,0],f)}Z" fill="${C.body}"/>`;
+  S.forefoot=()=>{ const f=frame(-220,-60,220,280), A=ann(f); const heel=`<path d="M${P([-55,0],f)} Q${P([-60,90],f)} ${P([-48,150],f)} L${P([48,150],f)} Q${P([60,90],f)} ${P([55,0],f)} Q${P([0,-25],f)} ${P([-55,0],f)}Z" fill="${SKIN.C.skin}" stroke="${SKIN.C.ink}" stroke-width="5" stroke-linejoin="round"/>`;
     return A.svg(heel+`<path d="M${P([-110,190],f)} L${P([110,230],f)}" stroke="${C.acc}" stroke-width="${A.sw*5}" stroke-linecap="round"/>`+A.dash([-150,190],[150,190])+A.arc([-110,190],120,0,10)+A.text([0,260],'Linie der Zehenballen','middle')+A.text([0,-35],'Bauchlage, Fuß von hinten','middle',1),'Vorfußstellung'); };
-  S.cleatFore=()=>{ const f=frame(-30,-80,360,190), A=ann(f); const shoe=`<path d="M${P([0,20],f)} Q${P([0,90],f)} ${P([60,110],f)} L${P([180,115],f)} Q${P([300,100],f)} ${P([330,40],f)} L${P([330,22],f)} L${P([0,10],f)}Z" fill="${C.body}"/><rect x="${f.X(0)}" y="${f.Y(22)}" width="${330}" height="14" rx="6" fill="${C.tire}"/>`;
+  S.cleatFore=()=>{ const f=frame(-30,-80,360,190), A=ann(f); const shoe=`<path d="M${P([0,20],f)} Q${P([0,90],f)} ${P([60,110],f)} L${P([180,115],f)} Q${P([300,100],f)} ${P([330,40],f)} L${P([330,22],f)} L${P([0,10],f)}Z" fill="${SKIN.C.cloth}" stroke="${SKIN.C.ink}" stroke-width="5" stroke-linejoin="round"/><rect x="${f.X(0)}" y="${f.Y(22)}" width="${330}" height="14" rx="6" fill="${C.tire}" stroke="${SKIN.C.ink}" stroke-width="3"/><path d="M${P([150,112],f)} L${P([210,40],f)} M${P([110,108],f)} L${P([160,60],f)}" stroke="${SKIN.C.ink}" stroke-width="4" opacity=".4" stroke-linecap="round"/>`;
     return A.svg(shoe+`<path d="M${P([190,8],f)} L${P([250,8],f)} L${P([235,-12],f)} L${P([200,-12],f)}Z" fill="${C.acc}"/>`+A.dash([220,-40],[220,150])+A.dot([220,70])+A.text([220,160],'Großzehen-Grundgelenk','middle',1)+A.text([220,-62],'Pedalachse unter dem Gelenk oder knapp dahinter','middle',1),'Cleat längs'); };
   S.cleatRotR=()=>{ const f=frame(-180,-60,180,360), A=ann(f); return A.svg(`<path d="${footPath(f,{l:300,b:110})}" fill="none" stroke="${C.body}" stroke-width="${A.sw*4}"/>`+`<g transform="rotate(8 ${f.X(0)} ${f.Y(200)})"><path d="M${P([-45,170],f)} L${P([45,170],f)} L${P([30,240],f)} L${P([-30,240],f)}Z" fill="${C.acc}"/></g>`+A.dash([0,-20],[0,330])+A.arc([0,200],120,90,82)+A.text([0,-38],'Sohle von unten: Cleat-Drehung','middle',1),'Cleat-Drehung'); };
   S.cleatRotL=S.cleatRotR;
   S.saddleTilt=()=>{ const f=frame(-180,-90,190,120), A=ann(f); const sad=`<path d="M${P([-150,10],f)} Q${P([-160,40],f)} ${P([-120,38],f)} L${P([50,20],f)} Q${P([140,14],f)} ${P([155,0],f)} L${P([120,-8],f)} Q${P([-20,-10],f)} ${P([-150,10],f)}Z" fill="${C.tire}"/>`;
     return A.svg(sad+`<rect x="${f.X(-90)}" y="${f.Y(52)}" width="180" height="22" rx="6" fill="${C.acc}" opacity=".85" transform="rotate(5 ${f.X(0)} ${f.Y(40)})"/>`+A.dash([-170,40],[180,40])+A.arc([-90,40],150,0,-5)+A.text([0,95],'Wasserwaage längs auflegen','middle',1)+A.text([0,-70],'Neigung zur Waagerechten in Grad','middle',1),'Sattelneigung'); };
-  S.barWidth=()=>{ const f=frame(-420,-80,420,560), A=ann(f); const bar=`<path d="M${P([-210,200],f)} L${P([210,200],f)} M${P([-210,200],f)} Q${P([-250,200],f)} ${P([-250,140],f)} Q${P([-250,80],f)} ${P([-220,60],f)} M${P([210,200],f)} Q${P([250,200],f)} ${P([250,140],f)} Q${P([250,80],f)} ${P([220,60],f)}" fill="none" stroke="${C.frame}" stroke-width="26" stroke-linecap="round"/>`;
-    const tor=`<path d="M${P([-0.105*H,470],f)} L${P([0.105*H,470],f)} L${P([0.085*H,320],f)} L${P([-0.085*H,320],f)}Z" fill="${C.body}" opacity=".35"/>`;
-    return A.svg(tor+bar+A.dash([-0.105*H,470],[-0.105*H,240])+A.dash([0.105*H,470],[0.105*H,240])+A.dim([-0.105*H,520],[0.105*H,520])+A.text([0,540],'Schulterbreite','middle',1)+A.dim([-250,20],[250,20])+A.text([0,-50],'Lenkerbreite außen–außen bzw. Mitte–Mitte','middle',1),'Lenkerbreite'); };
+  S.barWidth=()=>{ const f=frame(-420,-80,420,800), A=ann(f); const bar=`<path d="M${P([-210,200],f)} L${P([210,200],f)} M${P([-210,200],f)} Q${P([-250,200],f)} ${P([-250,140],f)} Q${P([-250,80],f)} ${P([-220,60],f)} M${P([210,200],f)} Q${P([250,200],f)} ${P([250,140],f)} Q${P([250,80],f)} ${P([220,60],f)}" fill="none" stroke="${C.frame}" stroke-width="26" stroke-linecap="round"/>`;
+    const tor=SKIN.front({H,legs:[],sh:[[-0.105*H,470],[0.105*H,470]],pel:[[-0.085*H,120],[0.085*H,120]],head:[0,470+0.098*H],arms:[-1,1].map(s=>({S:[s*0.093*H,460],elb:[s*235,330],hand:[s*212,205]}))},f);
+    return A.svg(tor+bar+A.dash([-0.105*H,470],[-0.105*H,240])+A.dash([0.105*H,470],[0.105*H,240])+A.dim([-0.105*H,395],[0.105*H,395])+A.text([0,415],'Schulterbreite','middle',1)+A.dim([-250,20],[250,20])+A.text([0,-50],'Lenkerbreite außen–außen bzw. Mitte–Mitte','middle',1),'Lenkerbreite'); };
   S.sitBone=()=>{ const f=frame(-260,-70,260,280), A=ann(f); const board=`<rect x="${f.X(-240)}" y="${f.Y(250)}" width="480" height="250" rx="12" fill="${C.soft}"/>`+[0,1,2,3,4,5,6,7,8].map(i=>ln([-240,20+i*27],[240,20+i*27],f,3,'var(--il-bg)')).join('');
     const imp=x=>`<ellipse cx="${f.X(x)}" cy="${f.Y(120)}" rx="34" ry="46" fill="${C.body}" opacity=".55"/>`+A.dot([x,120]);
     return A.svg(board+imp(-63)+imp(63)+A.dim([-63,190],[63,190])+A.text([0,215],'Mitte zu Mitte','middle')+A.text([0,-40],'Abdrücke auf Wellpappe, aufrecht sitzen','middle',1),'Sitzknochenabstand'); };
@@ -1745,10 +1758,19 @@ function sizeAdvice(s,g){
 }
 const geoRowObj=row=>{ const o={}; GCOLS.forEach((c,i)=>o[c]=row[i]); return o; };
 
+// Unterschriftenfeld (Finger/Maus). Speichert ein kleines PNG ins versteckte Feld.
+function sigInit(){ const cv=document.getElementById('sigPad'), out=document.getElementById('sigVal'); if(!cv||cv.dataset.ready) return; cv.dataset.ready='1';
+  const g=cv.getContext('2d'); g.lineWidth=3.2; g.lineCap='round'; g.lineJoin='round'; g.strokeStyle='#111'; let down=false, last=null;
+  const pos=e=>{ const r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height]; };
+  const fin=()=>{ if(!cv.dataset.drawn) return; try{ out.value=cv.toDataURL('image/png'); }catch(e){} };
+  cv.addEventListener('pointerdown',e=>{ down=true; last=pos(e); try{ cv.setPointerCapture(e.pointerId); }catch(x){} e.preventDefault(); });
+  cv.addEventListener('pointermove',e=>{ if(!down) return; const p=pos(e); g.beginPath(); g.moveTo(last[0],last[1]); g.lineTo(p[0],p[1]); g.stroke(); last=p; cv.dataset.drawn='1'; e.preventDefault(); });
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>cv.addEventListener(t,()=>{ if(down){ down=false; fin(); } })); }
 const CONSENT_TEXT=`<h3>Einwilligung zur Datenverarbeitung beim Bikefitting</h3>
 <p><b>Wer:</b> %%SHOP%%</p>
 <p><b>Wofür:</b> Wir speichern deine Angaben, um dein Rad an dich anzupassen, das Ergebnis zu dokumentieren und bei Nachkontrollen vergleichen zu können.</p>
 <p><b>Welche Daten:</b> Name, Kontaktdaten, Körpermaße, Fahrrad- und Einstellungsdaten. Nur wenn du zusätzlich zustimmst: Beschwerden und Ergebnisse des Körperchecks (Gesundheitsdaten nach Art. 9 DSGVO) sowie Fotos und Videos von dir auf dem Rad.</p>
+<p><b>Anonyme Auswertung (freiwillig):</b> Wenn du zustimmst, werden deine Mess- und Fittingdaten ohne Namen und Kontaktdaten ausgewertet, um die Fitting-Software zu verbessern. Ein Rückschluss auf dich ist dabei nicht vorgesehen.</p>
 <p><b>Wie lange:</b> bis du die Löschung verlangst, längstens [Frist eintragen] nach dem letzten Termin.</p>
 <p><b>Deine Rechte:</b> Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit und Beschwerde bei einer Datenschutzbehörde. Du kannst die Einwilligung jederzeit widerrufen. Bis dahin bleibt die Verarbeitung rechtmäßig.</p>
 <p><b>Freiwillig:</b> Ohne Gesundheitsangaben ist ein Fitting möglich, aber weniger genau.</p>`;
@@ -1924,7 +1946,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-10.74';
+const APP_VER='2026-11-10.75';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2026,7 +2048,7 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
 // Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
-const DB_SCHEMA=7; let dbSchema=null;
+const DB_SCHEMA=8; let dbSchema=null;
 async function dbCheck(){ if(!(CL.url&&CL.key)) return;
   try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
   catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
@@ -2584,11 +2606,11 @@ function customerDrawer(id,tab){
   let body='';
   if(T==='uebersicht') body=`${consentRow}
     <dl class="dl"><dt>Disziplin</dt><dd>${esc(c.discipline)}</dd>${prof}<dt>Letztes Fitting</dt><dd>${lastS?`${fmtDate(lastS.date)} · ${esc(lastS.type)}`:'<span class="faint">–</span>'}</dd><dt>Nächste Nachkontrolle</dt><dd>${openFu[0]?fmtDate(openFu[0].due)+(openFu[0].due<today()?' <span class="chip c-bad nodot">überfällig</span>':''):'<span class="faint">–</span>'}</dd></dl>
-    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm primary" data-act="newSession" data-cust="${c.id}">${ic('plus')}Neues Fitting</button><button class="btn sm" data-act="editCustomer" data-id="${c.id}">Stammdaten bearbeiten</button><button class="btn sm" data-act="portalShare" data-id="${c.id}">${ic('portal')}Kundenportal-Link</button><button class="btn sm" data-act="newBike" data-id="${c.id}">${ic('plus')}Fahrrad</button><button class="btn sm" data-act="purchaseNew" data-id="${c.id}">${ic('plus')}Kauf</button>${ss.length>1?`<button class="btn sm" data-act="compareCustomer" data-id="${c.id}">Sitzungen vergleichen</button>`:''}</div>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm primary" data-act="newSession" data-cust="${c.id}">${ic('plus')}Neues Fitting</button><button class="btn sm" data-act="editCustomer" data-id="${c.id}">Stammdaten bearbeiten</button><button class="btn sm" data-act="portalShare" data-id="${c.id}">${ic('portal')}Kundenportal-Link</button><button class="btn sm" data-act="feedbackAsk" data-id="${c.id}">Feedback anfragen</button><button class="btn sm" data-act="newBike" data-id="${c.id}">${ic('plus')}Fahrrad</button><button class="btn sm" data-act="purchaseNew" data-id="${c.id}">${ic('plus')}Kauf</button>${ss.length>1?`<button class="btn sm" data-act="compareCustomer" data-id="${c.id}">Sitzungen vergleichen</button>`:''}</div>
     <hr><div class="stack"><h3>Fahrräder</h3>${bikeList}</div>
     <hr><div class="stack"><h3>Letzte Fittings</h3>${ss.slice(0,3).map(sessRow).join('')||'<span class="muted">Noch keine Sitzung.</span>'}${ss.length>3?`<button class="btn sm ghost" data-act="custTab" data-id="${c.id}" data-k="historie" style="align-self:flex-start">Alle ${ss.length} anzeigen</button>`:''}</div>`;
   else if(T==='person') body=`${consentRow}
-    <dl class="dl"><dt>E-Mail</dt><dd>${esc(c.email)}</dd><dt>Telefon</dt><dd class="mono">${esc(c.phone)}</dd><dt>Kunde seit</dt><dd>${fmtDate(c.since)}</dd><dt>Disziplin</dt><dd>${esc(c.discipline)}</dd>${prof}${c.consentInfo?`<dt>Einwilligung</dt><dd>${esc(c.consentInfo.date||'')}${c.consentInfo.health?' · Gesundheitsangaben':''}${c.consentInfo.media?' · Fotos/Videos':''}</dd>`:''}</dl>
+    <dl class="dl"><dt>E-Mail</dt><dd>${esc(c.email)}</dd><dt>Telefon</dt><dd class="mono">${esc(c.phone)}</dd><dt>Kunde seit</dt><dd>${fmtDate(c.since)}</dd><dt>Disziplin</dt><dd>${esc(c.discipline)}</dd>${prof}${c.consentInfo?`<dt>Einwilligung</dt><dd>${esc(c.consentInfo.date||'')}${c.consentInfo.health?' · Gesundheitsangaben':''}${c.consentInfo.media?' · Fotos/Videos':''}${c.consentInfo.research?' · anonyme Auswertung':''}${c.consentInfo.sig?`<br><img src="${c.consentInfo.sig}" alt="Unterschrift" style="max-width:220px;height:auto;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:6px">`:''}</dd>`:''}</dl>
     <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="editCustomer" data-id="${c.id}">Stammdaten bearbeiten</button>${c.consent?`<button class="btn sm ghost" data-act="consent" data-id="${c.id}">Einwilligung ändern</button>`:''}<button class="btn sm ghost" data-act="custExport" data-id="${c.id}">Daten exportieren (Auskunft)</button>${PERMANENT_IDS.includes(c.id)?'':`<button class="btn sm ghost danger" data-act="custDelete" data-id="${c.id}">Kunde löschen</button>`}</div>
     <hr>${bodyTypeHtml(c)}<div class="stack"><div class="row" style="justify-content:space-between"><h3>Körpermaße</h3><button class="btn sm" type="button" data-act="estBody" data-id="${c.id}">Fehlende aus Körpergröße schätzen</button></div><p class="faint" style="font-size:12px">Diese Maße speisen die Simulation. Eingetragene Werte haben Vorrang vor Schätzungen.</p>
     ${bodyFormHtml(c,'drawer')}</div>`;
@@ -4575,7 +4597,7 @@ function fbForm(s,i,kind){ return `<form class="form" data-form="feedback" data-
 function fbAnswers(f){ if(!f.q) return ''; return FB_Q.filter(([k])=>f.q[k]).map(([k,q])=>`<div class="sub" style="white-space:normal">${esc(q)} <b>${esc(f.q[k])}</b>${f.q[k+'Text']?` – ${esc(f.q[k+'Text'])}`:''}</div>`).join(''); }
 function fbHtml(s){ const L=s.feedback||[]; const first=L.find(f=>f.kind!=='Nachkontrolle'&&f.q), lastFu=[...L].reverse().find(f=>f.kind==='Nachkontrolle'&&f.q);
   return `<div class="stack" style="gap:8px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Kundenfeedback (subjektiv)</h3><button class="btn sm" data-act="fbOpen" data-id="${s.id}">${ic('plus')}Feedback erfassen</button></div>
-  ${L.length?`<div class="list">${L.map(f=>`<div class="li" style="padding:8px 0;align-items:flex-start"><span class="mono faint" style="font-size:12px">${fmtDate(f.date)}</span><div class="grow" style="min-width:0">${f.kind?`<div class="sub">${esc(f.kind)}</div>`:''}${f.text?`<div>${esc(f.text)}</div>`:''}${fbAnswers(f)}</div><span class="chip nodot">${f.q?'Zufriedenheit':'Komfort'} ${f.score}/10</span></div>`).join('')}</div>`:'<span class="muted">Noch kein Feedback.</span>'}
+  ${L.length?`<div class="list">${L.map(f=>`<div class="li" style="padding:8px 0;align-items:flex-start"><span class="mono faint" style="font-size:12px">${fmtDate(f.date)}</span><div class="grow" style="min-width:0">${f.kind||f.via?`<div class="sub">${esc([f.kind,f.via?'vom Kunden per Link':''].filter(Boolean).join(' · '))}</div>`:''}${f.text?`<div>${esc(f.text)}</div>`:''}${fbAnswers(f)}</div><span class="chip nodot">${f.q?'Zufriedenheit':'Komfort'} ${f.score}/10</span></div>`).join('')}</div>`:'<span class="muted">Noch kein Feedback.</span>'}
   ${first&&lastFu?`<details class="more"><summary>Fitting und Nachkontrolle nebeneinander</summary><div class="tw" style="margin-top:6px"><table><thead><tr><th>Frage</th><th>Fitting ${fmtDate(first.date)}</th><th>Nachkontrolle ${fmtDate(lastFu.date)}</th></tr></thead><tbody>${FB_Q.map(([k,q])=>`<tr><td>${esc(q)}</td><td>${esc(first.q[k]||'–')}</td><td>${esc(lastFu.q[k]||'–')}</td></tr>`).join('')}<tr><td>Zufriedenheit</td><td class="num">${first.score}/10</td><td class="num">${lastFu.score}/10</td></tr></tbody></table></div></details>`:''}</div>`; }
 function sessMediaThumbs(sid){ const L=mediaOf('s:'+sid); return L.length?`<div class="mgrid">${L.map(m=>`<figure class="mitem"><div class="mthumb" data-media="${m.id}">…</div><figcaption class="faint" style="font-size:11.5px">${esc([m.phase,m.note].filter(Boolean).join(' · ')||fmtDate(m.date))}</figcaption></figure>`).join('')}</div>`:''; }
 function cmpExtraHtml(A,B){
@@ -5344,6 +5366,7 @@ function shopHtml(){ const p=S.shop||{};
     <div class="field"><label for="sh_p">Telefon</label><input class="input" id="sh_p" name="phone" type="tel" value="${esc(p.phone||'')}"></div>
     <div class="field"><label for="sh_e">E-Mail</label><input class="input" id="sh_e" name="email" type="email" value="${esc(p.email||'')}"></div>
     <div class="field wide"><label for="sh_w">Website</label><input class="input" id="sh_w" name="web" value="${esc(p.web||'')}"></div>
+    <div class="field wide"><label for="sh_r">Link zu deinen Google-Bewertungen (optional)</label><input class="input" id="sh_r" name="reviewUrl" type="url" value="${esc(p.reviewUrl||'')}" placeholder="https://g.page/r/…/review"><p class="faint" style="font-size:12.5px;margin:2px 0 0">Im Google-Unternehmensprofil unter „Nach Rezensionen fragen“ kopieren. Wird Kunden nach ihrem Feedback als freiwillige Bitte angezeigt.</p></div>
     <div class="field wide"><h4 style="margin:6px 0 0">Für Rechnungen</h4><p class="faint" style="font-size:12.5px;margin:2px 0 0">Adresse bitte als „Straße Nr, PLZ Ort“. Diese Angaben stehen auf jeder Rechnung.</p></div>
     <div class="field wide"><label for="sh_o">Inhaber (Vor- und Nachname)</label><input class="input" id="sh_o" name="owner" value="${esc(p.owner||'')}"></div>
     <div class="field"><label for="sh_t">Steuernummer</label><input class="input" id="sh_t" name="taxNo" value="${esc(p.taxNo||'')}" placeholder="z. B. 216/123/45678"></div>
@@ -6018,8 +6041,11 @@ const ACT = {
       <label class="row" style="align-items:flex-start;flex-wrap:nowrap"><input type="checkbox" name="basic" required style="margin-top:4px"><span>Ich bin einverstanden, dass meine Kontaktdaten, Körpermaße und Fahrradeinstellungen für das Bikefitting gespeichert werden.</span></label>
       <label class="row" style="align-items:flex-start;flex-wrap:nowrap"><input type="checkbox" name="health" style="margin-top:4px"><span>Ich bin ausdrücklich einverstanden, dass auch gesundheitsbezogene Angaben (Beschwerden, Ergebnisse des Körperchecks) gespeichert werden. Freiwillig.</span></label>
       <label class="row" style="align-items:flex-start;flex-wrap:nowrap"><input type="checkbox" name="media" ${c.consentInfo&&c.consentInfo.media?'checked':''} style="margin-top:4px"><span>Ich bin einverstanden, dass Fotos und Videos von mir auf dem Rad für das Fitting gespeichert werden (nur auf dem Gerät des Ladens). Freiwillig, jederzeit widerrufbar.</span></label>
+      <label class="row" style="align-items:flex-start;flex-wrap:nowrap"><input type="checkbox" name="research" ${c.consentInfo&&c.consentInfo.research?'checked':''} style="margin-top:4px"><span>Ich bin einverstanden, dass meine Mess- und Fittingdaten ohne Namen und Kontaktdaten (anonymisiert) ausgewertet werden, um die Fitting-Software zu verbessern. Freiwillig, jederzeit widerrufbar.</span></label>
       <div class="field"><label for="cs_name">Name der Kundin / des Kunden zur Bestätigung</label><input class="input" id="cs_name" name="name" required value="" placeholder="${esc(c.name)}"></div>
-      <div><button class="btn primary" type="submit">Einwilligung speichern</button></div></form></div>`); },
+      <div class="field"><label>Unterschrift mit dem Finger</label><canvas id="sigPad" width="600" height="200" style="width:100%;max-width:520px;aspect-ratio:3/1;background:#fff;border:1px solid var(--line);border-radius:12px;touch-action:none;cursor:crosshair"></canvas><input type="hidden" name="sig" id="sigVal"><div class="row" style="margin-top:6px"><button type="button" class="btn sm ghost" data-act="sigClear">Unterschrift löschen</button><span class="faint" style="font-size:12px">Ort und Datum werden automatisch gespeichert.</span></div></div>
+      <div><button class="btn primary" type="submit">Einwilligung speichern</button></div></form></div>`); setTimeout(sigInit,0); },
+  sigClear(){ const cv=document.getElementById('sigPad'); if(!cv) return; cv.getContext('2d').clearRect(0,0,cv.width,cv.height); cv.dataset.drawn=''; const v=document.getElementById('sigVal'); if(v) v.value=''; },
   printReport(){ if(window.self!==window.top){ toast('Drucken geht hier nicht. Öffne die App über den GitHub-Link und tippe dort auf „Drucken“.',true); return; } try{ window.print(); }catch(e){ toast('Drucken nicht möglich',true); } },
   newCustomer(){ openDrawer('Kunde anlegen',`<form class="form" data-form="customer"><div class="field wide"><label for="nc_n">Name</label><input class="input" id="nc_n" name="name" required placeholder="Vor- und Nachname (fiktiv)"></div><div class="field"><label for="nc_e">E-Mail</label><input class="input" id="nc_e" name="email" type="email" placeholder="name@example.com"></div><div class="field"><label for="nc_p">Telefon</label><input class="input" id="nc_p" name="phone" type="tel"></div><div class="field"><label for="nc_d">Disziplin</label><select class="input" id="nc_d" name="discipline">${opts(['Rennrad','Gravel','MTB','Triathlon','E-Bike Pendeln','Allroad'])}</select></div>${[["height","Körpergröße","cm"],["inseam","Schrittlänge","cm"],["torso","Rumpflänge","cm"],["arm","Armlänge","cm"],["shoulder","Schulterbreite","cm"],["footR","Fußlänge","mm"]].map(([k,l,u])=>`<div class="field"><label for="nc_${k}">${l} (${u})</label><input class="input num" id="nc_${k}" name="${k}" type="number" step="0.5" inputmode="decimal"></div>`).join("")}<div class="field"><label for="nc_bd">Geburtsdatum</label><input class="input" id="nc_bd" name="birth" type="date" min="1920-01-01" max="${today()}"></div><div class="field"><label for="nc_w">Gewicht (kg)</label><input class="input num" id="nc_w" name="weight" type="number" step="0.5" min="25" max="250" inputmode="decimal"></div><div class="field"><label for="nc_ham">Hintere Oberschenkel</label><select class="input" id="nc_ham" name="hamstring">${opts(["unauffällig","eingeschränkt"])}</select></div><div class="field wide"><label><input type="checkbox" name="est" checked> Fehlende Maße aus der Körpergröße schätzen</label></div><div class="field wide"><label><input type="checkbox" name="consent"> Einwilligung zur Datenverarbeitung liegt vor</label></div><div class="wide notice">${ic('info')}Bitte keine echten Personendaten eingeben. Die Demo speichert nur unverschlüsselt im Browser.</div><div class="wide"><button class="btn primary" type="submit">Kunde anlegen</button></div></form>`); },
   editCustomer(el){ const c=cust(el.dataset.id); if(!c) return; const D=['Rennrad','Gravel','MTB','Triathlon','E-Bike Pendeln','Allroad']; openDrawer('Stammdaten bearbeiten',`<form class="form" data-form="customerEdit" data-id="${c.id}">
@@ -6169,7 +6195,8 @@ const FORMS = {
   prices(f,data){ S.prices=S.prices||{}; Object.keys(PRICE_DEFAULT).forEach(k=>{ const v=parseFloat(String(data.get(k)||'').replace(',','.')); if(isFinite(v)&&v>=0) S.prices[k]=v; }); save(); render(); toast('Preise gespeichert – gilt ab dem nächsten Angebot (oder „Neu berechnen“)'); },
   shop(f,data){ const g=k=>String(data.get(k)||'').trim(); const iban=g('iban').replace(/\s+/g,'').toUpperCase(), vat=g('vatId').replace(/\s+/g,'').toUpperCase(), bic=g('bic').replace(/\s+/g,'').toUpperCase();
     if(iban&&!ibanOk(iban)){ toast('IBAN ist nicht gültig – bitte prüfen',true); return; } if(vat&&!/^DE\d{9}$/.test(vat)){ toast('USt-ID bitte im Format DE123456789',true); return; } if(bic&&!/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bic)){ toast('BIC prüfen (8 oder 11 Zeichen)',true); return; }
-    S.shop=S.shop||{}; ['name','addr','phone','email','web','owner','taxNo','bank'].forEach(k=>S.shop[k]=g(k)); S.shop.iban=iban; S.shop.vatId=vat; S.shop.bic=bic; save(); render(); toast('Ladendaten gespeichert'); },
+    if(g('reviewUrl')&&!/^https:\/\/\S+$/.test(g('reviewUrl'))){ toast('Bewertungslink muss mit https:// beginnen',true); return; }
+    S.shop=S.shop||{}; ['name','addr','phone','email','web','owner','taxNo','bank','reviewUrl'].forEach(k=>S.shop[k]=g(k)); S.shop.iban=iban; S.shop.vatId=vat; S.shop.bic=bic; save(); render(); toast('Ladendaten gespeichert'); },
   anaOne(f,data){ const s=sess(f.dataset.id); const i=Number(f.dataset.i); const k=ANA_Q[i][0]; s.anamnesis[k]=String(data.get(k)||'').trim(); if(s.status==='geplant'||s.status==='eingetroffen') s.status='in Arbeit'; audit(`Ziel/Anamnese: ${ANA_Q[i][1]}`,s.id); save();
     ui.wIdx=i+1<ANA_Q.length?i+1:null; render(); window.scrollTo({top:0}); if(ui.wIdx==null) toast('Alle Fragen beantwortet'); },
   anaNotes(f,data){ const s=sess(f.dataset.id); s.notes=data.get('notes'); save(); toast('Notizen gespeichert'); },
@@ -6195,7 +6222,8 @@ const FORMS = {
     save(); ui.wIdx=i+1<items.length?i+1:null; render(); window.scrollTo({top:0});
     if(ui.wIdx==null){ const n=checkFindings(s).filter(x=>x.lvl!=='ok').length; toast(n?`Körpercheck fertig – ${n} Punkte zum Beachten`:'Körpercheck fertig – keine Auffälligkeiten'); } },
   consent(f,data){ const c=cust(f.dataset.id); if(String(data.get('name')).trim().toLowerCase()!==c.name.trim().toLowerCase()){ toast(`Bitte den Namen „${c.name}“ genau eintragen`,true); return; }
-    c.consent=true; c.consentInfo={date:nowStamp(),health:data.get('health')==='on',media:data.get('media')==='on',version:'Muster 2'}; audit(`Einwilligung erfasst: ${c.name}${c.consentInfo.health?' inkl. Gesundheitsangaben':''}${c.consentInfo.media?' inkl. Fotos/Videos':''}`,c.id); save(); render(); customerDrawer(c.id); toast('Einwilligung gespeichert'); },
+    const sig=String(data.get('sig')||''); if(!/^data:image\/png;base64,/.test(sig)||sig.length<800){ toast('Bitte mit dem Finger im weißen Feld unterschreiben',true); return; }
+    c.consent=true; c.consentInfo={date:nowStamp(),health:data.get('health')==='on',media:data.get('media')==='on',research:data.get('research')==='on',sig:sig.length<120000?sig:'',version:'Muster 3'}; audit(`Einwilligung erfasst: ${c.name}${c.consentInfo.health?' inkl. Gesundheitsangaben':''}${c.consentInfo.media?' inkl. Fotos/Videos':''}`,c.id); save(); render(); customerDrawer(c.id); toast('Einwilligung gespeichert'); },
   bikeGeo(f,data){ const b=bike(f.dataset.id); const g=geoById(data.get('geo')); if(!g||!data.get('geoSize')){ toast('Bitte Modell und Größe wählen',true); return; } b.geo={id:g.id,size:data.get('geoSize')}; b.size=b.geo.size; S.sessions.filter(x=>x.bikeId===b.id&&x.status!=='abgeschlossen').forEach(applyMaker); audit(`Geometrie zugeordnet: ${b.brand} ${b.model} → ${g.brand} ${g.model} ${b.geo.size}`); save(); bikeDrawer(b.id); render(); toast('Geometrie zugeordnet'); },
   newGeo(f,data){ const id=uid('g'); S.geoCustom.push({id,brand:data.get('brand').trim(),model:data.get('model').trim(),year:data.get('year')?Number(data.get('year')):null,type:data.get('type'),src:data.get('src')||'',rows:[]}); audit(`Geometrie-Modell angelegt: ${data.get('brand')} ${data.get('model')}`); save(); render(); geoDrawer(id); },
   geoRow(f,data){ const g=S.geoCustom.find(x=>x.id===f.dataset.id); const row=GCOLS.map(c=>{ if(c==='size') return data.get('size').trim(); const v=data.get(c); return v===null||v===''?null:Number(v); }); g.rows=g.rows.filter(r=>String(r[0])!==row[0]); g.rows.push(row); save(); geoDrawer(g.id); render(); toast(`Größe ${row[0]} gespeichert`); },
@@ -6704,7 +6732,14 @@ const _mehr=VIEWS.mehr; VIEWS.mehr=()=>_mehr()+panel('Filialen',filialHtml())+pa
 let inqAt=0, kvaAt=0;
 async function inqPoll(force){ if(!cloudReady()||(!force&&Date.now()-inqAt<60000)) return; inqAt=Date.now();
   try{ const r=await clApi(`/rest/v1/inquiries?tenant_id=eq.${encodeURIComponent(CL.tenant)}&status=eq.neu&select=id,name,topic,created_at&order=created_at.desc&limit=50`,{method:'GET'})||[];
-    const before=NET.newCount||0; NET.newList=r; NET.newCount=r.length; if(NET.newCount!==before){ if(NET.newCount>before&&before>=0&&inqAt) toast(NET.newCount===1?'Neue Anfrage':`${NET.newCount} neue Anfragen`); render(); } }catch(e){} }
+    const before=NET.newCount||0; NET.newList=r; NET.newCount=r.length; if(NET.newCount!==before){ if(NET.newCount>before&&before>=0&&inqAt) toast(NET.newCount===1?'Neue Anfrage':`${NET.newCount} neue Anfragen`); render(); } }catch(e){}
+  fbPull(); }
+// Kunden-Feedback aus dem Portal abholen und an das letzte Fitting hängen
+async function fbPull(){ if(!cloudReady()||dbSchema!==null&&dbSchema<8) return; let r; try{ r=await clApi('/rest/v1/rpc/portal_feedback_take',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant})})||[]; }catch(e){ return; }
+  if(!Array.isArray(r)||!r.length) return; let n=0;
+  r.forEach(x=>{ const c=cust(x.customer_id); const s=c&&latestSess(S.sessions.filter(y=>y.customerId===c.id)); if(!s) return; s.feedback=s.feedback||[];
+    if(s.feedback.some(f=>f.ref===x.id)) return; s.feedback.push({date:String(x.created_at||'').slice(0,10)||today(),score:Number(x.score),text:x.body||'',via:'Link',ref:x.id}); n++; audit(`Feedback von ${c.name} über den Link: ${x.score}/10`,s.id); });
+  if(n){ save(); render(); toast(n===1?'Neues Kunden-Feedback':`${n} neue Kunden-Feedbacks`); } }
 function kvaPayload(w){ const c=cust(w.customerId)||{}, b=bike(w.bikeId)||{}, sh=S.shop||{};
   return {shop:{name:shopName()||'Werkstatt',phone:sh.phone||'',email:sh.email||'',addr:sh.addr||''},wo:{id:w.id,title:w.title},greet:firstName(c),bike:[b.brand,b.model].filter(Boolean).join(' '),
     items:w.positions.map(p=>({t:p.t,kind:p.kind,qty:Number(p.qty)||0,price:Number(p.price)||0})),total:Math.round(w.positions.reduce((a,p)=>a+p.qty*p.price,0)*100)/100,date:today(),due:w.due||''}; }
@@ -6824,7 +6859,7 @@ function portalPayload(c){ const sh=S.shop||{}; const lab=k=>(MK[k]&&MK[k].label
     recs:(s.recs||[]).filter(r=>r.status!=='abgelehnt').slice(0,6).map(r=>{ const p=products().find(x=>x.id===r.prodId)||{}; return {name:p.name||r.name||'',why:String(r.reason||'').slice(0,160)}; }),
     next:((s.followUps||[]).find(f=>f.status==='offen')||{}).due||''}));
   const slug=(typeof NET!=='undefined'&&NET.profile&&NET.profile.published)?NET.profile.slug:'';
-  return {greet:firstName(c),date:today(),shop:{name:shopName()||'',phone:sh.phone||'',email:sh.email||'',addr:sh.addr||''},bikes,fits,bookUrl:slug?finderLink(slug):''}; }
+  return {greet:firstName(c),date:today(),shop:{name:shopName()||'',phone:sh.phone||'',email:sh.email||'',addr:sh.addr||''},bikes,fits,bookUrl:slug?finderLink(slug):'',reviewUrl:/^https:\/\//.test(sh.reviewUrl||'')?sh.reviewUrl:''}; }
 const portalLink=tk=>location.origin+location.pathname.replace(/[^/]*$/,'')+'portal.html#cfg='+b64u(JSON.stringify({u:clBase(),k:CL.key}))+'&t='+tk;
 /* Terminwunsch in Anfragen */
 const _inqHtmlFix=1;
@@ -6843,6 +6878,18 @@ Object.assign(ACT,{
     openDrawer('Kundenportal-Link',`<div class="stack"><p class="muted" style="margin:0;font-size:14px">${esc(firstName(c))} sieht damit Fahrräder, Einstellungen, die letzten Fittings und Empfehlungen – ohne Konto. Stand von jetzt. Ein neuer Link ersetzt den alten. 180 Tage gültig.</p>
       ${msgButtons(`Hallo ${firstName(c)},\nhier findest du deine Fahrräder, Einstellungen und Fitting-Ergebnisse:\n${link}\n\nDer Link ist persönlich, bitte nicht weitergeben.\n${shopName()||''}`,c)}
       <div class="row" style="gap:6px;flex-wrap:wrap"><a class="btn sm ghost" href="${esc(link)}" target="_blank" rel="noopener">Vorschau</a><button class="btn sm ghost" data-act="portalRevoke" data-id="${esc(c.id)}">Link sperren</button></div></div>`); },
+  async feedbackAsk(el){ const c=cust(el.dataset.id); if(!c||!c.id) return;
+    if(!cloudReady()){ toast('Feedback per Link braucht die Cloud-Speicherung',true); return; }
+    if(!c.consent){ toast('Erst die Einwilligung des Kunden erfassen',true); return; }
+    let tk; try{ tk=String(await clApi('/rest/v1/rpc/portal_publish',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_customer:c.id,p_payload:portalPayload(c)})})).replace(/"/g,''); }catch(e){ toast(e.offline?'Keine Verbindung':clErrText(e.message),true); return; }
+    c.portal={sent:nowStamp()}; c.fbAsked=nowStamp(); audit(`Feedback angefragt: ${c.name}`); save(); const link=portalLink(tk)+'&fb=1';
+    openDrawer('Feedback anfragen',`<div class="stack"><p class="muted" style="margin:0;font-size:14px">${esc(firstName(c))} bewertet das Fitting mit 0–10 und schreibt kurz, wie es sich fährt. Die Antwort erscheint automatisch beim letzten Fitting. Gut nach 1 und nach 4 Wochen.</p>
+      ${msgButtons(`Hallo ${firstName(c)},
+wie fährt sich dein Rad seit dem Fitting? Sag mir kurz Bescheid, dauert 1 Minute:
+${link}
+
+Dort findest du auch alle deine Einstellungen.
+${shopName()||''}`,c)}<div class="row"><a class="btn sm ghost" href="${esc(link)}" target="_blank" rel="noopener">Vorschau</a></div></div>`); },
   async portalRevoke(el){ try{ await clApi('/rest/v1/rpc/portal_revoke',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_customer:el.dataset.id})}); const c=cust(el.dataset.id); if(c) delete c.portal; audit('Kundenportal-Link gesperrt'); save(); toast('Link gesperrt'); closeDrawer(); }catch(e){ toast(clErrText(e.message),true); } }
 });
 Object.assign(FORMS,{
@@ -6879,6 +6926,7 @@ FEATURES.forEach(f=>{ if(f[0]==='Termine'){ f[1]='Kalender mit Wochenansicht, Ka
 
 /* =================== Ende Plattform-Ausbau =================== */
 
+try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
