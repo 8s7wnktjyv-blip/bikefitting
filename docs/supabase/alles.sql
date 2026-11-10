@@ -1,4 +1,4 @@
--- FYF – Fit your Frame · KOMPLETTE Datenbank (Stand 12). Automatisch erzeugt aus: start.sql media.sql team.sql netz.sql freigabe.sql pair.sql ausbau.sql feedback.sql werkstatt.sql pass.sql passport.sql
+-- FYF – Fit your Frame · KOMPLETTE Datenbank (Stand 13). Automatisch erzeugt aus: start.sql media.sql team.sql netz.sql freigabe.sql pair.sql ausbau.sql feedback.sql werkstatt.sql pass.sql passport.sql
 -- Nicht von Hand ändern – stattdessen die Einzeldatei ändern und tools/build-alles.sh ausführen.
 -- Mehrfach ausführen schadet nicht: es wird nur ergänzt und ersetzt, keine Daten gelöscht.
 -- Normal läuft das über GitHub → Actions → „Datenbank aktualisieren“ → Run workflow.
@@ -1196,6 +1196,14 @@ alter table bike_passes add column if not exists withdrawn_at timestamptz;
 -- Was der Besitzer selbst (mit Teil II) eingestellt hat, gilt vor der Einstellung des Ladens – bis einer von beiden es wieder ändert.
 alter table bike_passes add column if not exists owner_vis text check (owner_vis in ('public','shops'));
 alter table bike_passes add column if not exists owner_stolen boolean;
+-- Selbst registrierte Räder (ohne Laden): tenant_id/bike_ref leer, bis eine Werkstatt den Pass mit Teil II übernimmt.
+alter table bike_passes alter column tenant_id drop not null;
+alter table bike_passes alter column bike_ref drop not null;
+-- Diebstahl-Abgleich: nur der Hash der Rahmennummer (nie die Nummer selbst)
+alter table bike_passes add column if not exists frame_hash text check (frame_hash ~ '^[0-9a-f]{64}$');
+create index if not exists bike_passes_fh on bike_passes (frame_hash) where frame_hash is not null;
+alter table bike_passes add column if not exists owner_fails int not null default 0;
+alter table bike_passes add column if not exists owner_fail_at timestamptz;
 
 -- Räder, deren Pass an einen anderen Besitzer / eine andere Werkstatt übergeben wurde (der alte Laden darf nicht mehr schreiben)
 create table if not exists bike_pass_moved (
@@ -1226,7 +1234,7 @@ begin
   if k.code is null then raise exception 'FYF_NOT_FOUND'; end if;
   if k.withdrawn_at is not null then raise exception 'FYF_WITHDRAWN'; end if;
   select name, verified into sh, v from tenants where id = p_tenant;
-  if k.tenant_id <> p_tenant and not coalesce(v, false) then raise exception 'FYF_NOT_VERIFIED'; end if;
+  if k.tenant_id is distinct from p_tenant and not coalesce(v, false) then raise exception 'FYF_NOT_VERIFIED'; end if;
   if p_ref is not null then
     if length(p_ref) > 60 then raise exception 'FYF_BAD_DATA'; end if;
     select id into n from bike_pass_entries where code = k.code and tenant_id = p_tenant and ref = p_ref;
@@ -1252,20 +1260,21 @@ end $$;
 
 create or replace function pass_publish(p_tenant uuid, p_bike text, p_payload jsonb, p_visibility text, p_stolen boolean) returns text
 language plpgsql security definer set search_path = public as $$
-declare c text;
+declare c text; fh text; pl jsonb;
 begin
   if not is_member(p_tenant) then raise exception 'FYF_DENIED'; end if;
   if p_payload is null or jsonb_typeof(p_payload) <> 'object' or length(p_payload::text) > 40000 or length(coalesce(p_bike, '')) not between 1 and 60 then raise exception 'FYF_BAD_DATA'; end if;
   if p_visibility not in ('public','shops') then raise exception 'FYF_BAD_DATA'; end if;
   if exists (select 1 from bike_pass_moved where tenant_id = p_tenant and bike_ref = p_bike) then raise exception 'FYF_PASS_MOVED'; end if;
+  fh := nullif(p_payload->>'fh', ''); if fh is not null and fh !~ '^[0-9a-f]{64}$' then raise exception 'FYF_BAD_DATA'; end if; pl := p_payload - 'fh';
   select code into c from bike_passes where tenant_id = p_tenant and bike_ref = p_bike;
   if c is null then
     if (select count(*) from bike_passes where tenant_id = p_tenant and created_at > now() - interval '1 day') >= 200 then raise exception 'FYF_RATE'; end if;
     c := fyf_pass_code();
-    insert into bike_passes(code, tenant_id, bike_ref, visibility, stolen, payload) values (c, p_tenant, p_bike, p_visibility, coalesce(p_stolen, false), p_payload);
+    insert into bike_passes(code, tenant_id, bike_ref, visibility, stolen, payload, frame_hash) values (c, p_tenant, p_bike, p_visibility, coalesce(p_stolen, false), pl, fh);
     perform fyf_audit(p_tenant, 'pass_create', jsonb_build_object('bike', p_bike, 'code', c));
   else
-    update bike_passes set payload = p_payload,
+    update bike_passes set payload = pl, frame_hash = coalesce(fh, frame_hash),
       owner_vis = case when p_visibility is distinct from visibility then null else owner_vis end,
       owner_stolen = case when coalesce(p_stolen, false) is distinct from stolen then null else owner_stolen end,
       visibility = p_visibility, stolen = coalesce(p_stolen, false), withdrawn_at = null, updated_at = now() where code = c;
@@ -1321,8 +1330,8 @@ begin
     perform fyf_audit(p_tenant, 'pass_handover_fail', jsonb_build_object('code', k.code));
     return jsonb_build_object('error', 'FYF_BAD_TRANSFER'); -- kein raise, damit der Fehlversuch gezählt bleibt
   end if;
-  if (k.tenant_id <> p_tenant or k.bike_ref <> p_bike) and exists (select 1 from bike_passes where tenant_id = p_tenant and bike_ref = p_bike) then raise exception 'FYF_BIKE_HAS_PASS'; end if;
-  if k.tenant_id <> p_tenant or k.bike_ref <> p_bike then
+  if (k.tenant_id is distinct from p_tenant or k.bike_ref is distinct from p_bike) and exists (select 1 from bike_passes where tenant_id = p_tenant and bike_ref = p_bike) then raise exception 'FYF_BIKE_HAS_PASS'; end if;
+  if k.tenant_id is not null and (k.tenant_id <> p_tenant or k.bike_ref <> p_bike) then
     insert into bike_pass_moved(tenant_id, bike_ref, code) values (k.tenant_id, k.bike_ref, k.code) on conflict (tenant_id, bike_ref) do update set code = excluded.code, moved_at = now();
     delete from bike_pass_moved where tenant_id = p_tenant and bike_ref = p_bike;
   end if;
@@ -1351,7 +1360,7 @@ begin
   end if;
   full_view := k.visibility = 'public' or is_member(k.tenant_id) or my_verified_tenant() is not null;
   if not full_view then
-    return jsonb_build_object('code', c, 'limited', true, 'stolen', k.stolen, 'owner_no', k.owner_no,
+    return jsonb_build_object('code', c, 'limited', true, 'stolen', k.stolen, 'owner_no', k.owner_no, 'self', k.tenant_id is null,
       'bike', jsonb_build_object('name', k.payload->'bike'->>'name'),
       'shop', jsonb_build_object('name', coalesce(nullif(k.payload->'shop'->>'name', ''), sh), 'phone', k.payload->'shop'->>'phone'));
   end if;
@@ -1382,9 +1391,9 @@ declare k record; c text := upper(regexp_replace(coalesce(p_code, ''), '[^A-Za-z
 begin
   select * into k from bike_passes where code = c;
   if k.code is null or k.withdrawn_at is not null then return jsonb_build_object('error', 'FYF_NOT_FOUND'); end if;
-  if (select count(*) from audit_log where tenant_id = k.tenant_id and action = 'pass_owner_fail' and detail->>'code' = c and at > now() - interval '1 day') >= 10 then return jsonb_build_object('error', 'FYF_RATE'); end if;
+  if k.owner_fails >= 10 and k.owner_fail_at > now() - interval '1 day' then return jsonb_build_object('error', 'FYF_RATE'); end if;
   if k.transfer_hash is null or encode(sha256(convert_to(t, 'UTF8')), 'hex') <> k.transfer_hash then
-    perform fyf_audit(k.tenant_id, 'pass_owner_fail', jsonb_build_object('code', c));
+    update bike_passes set owner_fails = case when owner_fail_at > now() - interval '1 day' then owner_fails + 1 else 1 end, owner_fail_at = now() where code = c;
     return jsonb_build_object('error', 'FYF_BAD_TRANSFER');
   end if;
   if p_action = 'vis' then
@@ -1412,6 +1421,48 @@ end $$;
 revoke all on function pass_owner(text, text, text, jsonb) from public;
 grant execute on function pass_owner(text, text, text, jsonb) to anon, authenticated;
 
+
+-- ---------- Rad selbst registrieren (Besitzer, ohne Laden) ----------
+-- Gibt Pass-Code und Übergabe-Code zurück. Eine bereits registrierte Rahmennummer wird abgelehnt (auch gegen das „Neuanmelden“ gestohlener Räder).
+create or replace function pass_register(p_payload jsonb, p_fh text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare c text; t text;
+begin
+  if p_payload is null or jsonb_typeof(p_payload) <> 'object' or length(p_payload::text) > 6000 or length(coalesce(p_payload->'bike'->>'name', '')) not between 2 and 120 then return jsonb_build_object('error', 'FYF_BAD_DATA'); end if;
+  if coalesce(p_fh, '') !~ '^[0-9a-f]{64}$' then return jsonb_build_object('error', 'FYF_BAD_DATA'); end if;
+  if exists (select 1 from bike_passes where frame_hash = p_fh) then return jsonb_build_object('error', 'FYF_FRAME_EXISTS'); end if;
+  if (select count(*) from bike_passes where tenant_id is null and created_at > now() - interval '1 day') >= 300 then return jsonb_build_object('error', 'FYF_RATE'); end if;
+  c := fyf_pass_code(); t := fyf_transfer_code();
+  insert into bike_passes(code, tenant_id, bike_ref, visibility, stolen, payload, frame_hash, transfer_hash)
+    values (c, null, null, 'shops', false, (p_payload - 'fh') || jsonb_build_object('self', true, 'shop', jsonb_build_object('name', '')), p_fh, encode(sha256(convert_to(t, 'UTF8')), 'hex'));
+  insert into bike_pass_entries(code, tenant_id, shop, kind, body, done_on, trust) values (c, null, 'Besitzer', 'Registrierung', 'Rad vom Besitzer registriert', current_date, 'self');
+  return jsonb_build_object('code', c, 'transfer', t);
+end $$;
+
+-- ---------- Diebstahl-Abgleich bei der Annahme (nur Werkstätten) ----------
+create or replace function frame_check(p_tenant uuid, p_fh text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare k record; sh text;
+begin
+  if not is_member(p_tenant) then raise exception 'FYF_DENIED'; end if;
+  if coalesce(p_fh, '') !~ '^[0-9a-f]{64}$' then return jsonb_build_object('found', false); end if;
+  if (select count(*) from audit_log where tenant_id = p_tenant and action = 'frame_check' and at > now() - interval '1 day') >= 300 then raise exception 'FYF_RATE'; end if;
+  perform fyf_audit(p_tenant, 'frame_check', null);
+  select * into k from bike_passes where frame_hash = p_fh and withdrawn_at is null order by coalesce(owner_stolen, stolen) desc, updated_at desc limit 1;
+  if k.code is null then return jsonb_build_object('found', false); end if;
+  select name into sh from tenants where id = k.tenant_id;
+  if coalesce(k.owner_stolen, k.stolen) then
+    perform fyf_audit(p_tenant, 'frame_check_stolen', jsonb_build_object('code', k.code));
+    return jsonb_build_object('found', true, 'stolen', true, 'code', k.code, 'mine', is_member(k.tenant_id),
+      'shop', coalesce(nullif(k.payload->'shop'->>'name', ''), sh, 'vom Besitzer registriert'), 'phone', k.payload->'shop'->>'phone');
+  end if;
+  return jsonb_build_object('found', true, 'stolen', false, 'mine', is_member(k.tenant_id));
+end $$;
+revoke all on function pass_register(jsonb, text) from public;
+grant execute on function pass_register(jsonb, text) to anon, authenticated;
+revoke all on function frame_check(uuid, text) from public, anon;
+grant execute on function frame_check(uuid, text) to authenticated;
+
 -- ===================== Stand der Datenbank (für die Prüfung in der App) =====================
-create or replace function fyf_schema() returns int language sql immutable as $$ select 12 $$;
+create or replace function fyf_schema() returns int language sql immutable as $$ select 13 $$;
 grant execute on function fyf_schema() to anon, authenticated;

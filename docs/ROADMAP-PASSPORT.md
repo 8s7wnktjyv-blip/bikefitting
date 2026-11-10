@@ -1,6 +1,6 @@
 # FYF – Bestandsaufnahme, Marktcheck und Roadmap (Passport, Network, Market)
 
-Stand: 10.11.2026 · App-Version v.81 · Datenbank Stand 12.
+Stand: 10.11.2026 · App-Version v.82 · Datenbank Stand 13.
 Dieses Dokument ist **nur Analyse und Plan**. Umgesetzt ist ausschließlich, was unter „Bestand“ als vorhanden markiert ist.
 
 Legende: ✅ vorhanden · 🟡 vorhanden, verbesserungswürdig · 🟠 teilweise · ❌ fehlt
@@ -261,3 +261,19 @@ Bewertung jeweils 1–5. Spalten: **K** Kunde, **H** Händler, **I** Innovation,
   - In der Händlersuche erscheint eine Liste „Gebrauchträder mit Fahrradpass“ mit Link zum Pass und Anfrage an den Laden.
   - Ohne Bezahlung über FYF.
 - **Offen**: Belege und Fotos hochladen („Beleg vorhanden“), Besitzer-Konto mit Übersicht aller eigenen Räder, Käuferschutz.
+
+## 11. Umgesetzt in v.82 – Wachstum über Radfahrer und Läden
+- **Diebstahl-Abgleich im Werkstattablauf**:
+  - Läuft bei jeder Annahme, bei neuem Rad und bei geänderter Rahmennummer automatisch. Zusätzlich gibt es das Feld „Rahmennummer prüfen“ in der Werkstatt.
+  - Verglichen wird nur ein Hash der Rahmennummer; die Nummer verlässt den Laden nicht.
+  - Bei einem Treffer erscheint eine Warnung mit Pass-Code und meldendem Laden. Hinweis: Die Meldung stammt aus FYF, nicht von der Polizei.
+- **Radfahrer registrieren selbst, kostenlos und ohne Konto**:
+  - Sie bekommen sofort Pass-Code und Übergabe-Code (Teil II) und drucken Fahrradschein und Aufkleber selbst.
+  - Eine schon registrierte Rahmennummer wird abgelehnt. Das verhindert das Neuanmelden gestohlener Räder.
+  - Höchstens 300 Selbstregistrierungen pro Tag.
+- **„Service bei einer FYF-Werkstatt buchen“** direkt aus dem Pass: Die Händlersuche öffnet sich mit dem Pass-Code. Die Anfrage enthält den Code, und in der App öffnet ein Knopf den Pass.
+- **Werkstatt übernimmt selbst registrierte Pässe** mit Teil II; ungeprüfte Betriebe können in fremde Pässe nicht schreiben.
+- **Daten gehören dem Besitzer**: Er kann den Pass als Datei (JSON) sichern oder drucken.
+- **Quick-Fit**: Hatte der Kunde schon ein Fitting auf einem anderen Rad, rechnet Quick-Fit die gemessene Position auf das neue Rad um. Dafür nutzt es die vorhandene Funktion „1:1 übertragen“ mit der Geometrie-Bibliothek.
+- **Kostenloser Pass-Zugang für Läden**: Pass-Einträge sind ohne Abo möglich (es gibt ohnehin noch keine Abrechnung). Die 99 € gelten für das Cockpit, sobald die Abrechnung kommt.
+- **Noch nicht aktiv**: Versand wetterfester Aufkleber (4,90 €). Dafür braucht es vorher Gewerbe, Impressum, Widerrufsbelehrung und einen Zahlungsweg.
