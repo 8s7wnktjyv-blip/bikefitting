@@ -1,6 +1,6 @@
 # FYF – Bestandsaufnahme, Marktcheck und Roadmap (Passport, Network, Market)
 
-Stand: 10.11.2026 · App-Version v.80 · Datenbank Stand 11.
+Stand: 10.11.2026 · App-Version v.81 · Datenbank Stand 12.
 Dieses Dokument ist **nur Analyse und Plan**. Umgesetzt ist ausschließlich, was unter „Bestand“ als vorhanden markiert ist.
 
 Legende: ✅ vorhanden · 🟡 vorhanden, verbesserungswürdig · 🟠 teilweise · ❌ fehlt
@@ -248,3 +248,16 @@ Bewertung jeweils 1–5. Spalten: **K** Kunde, **H** Händler, **I** Innovation,
 - **Etikett** als Bild für 24-mm-Band (740 × 256 px ≈ 52 × 18 mm bei 360 dpi), teilbar in die App des Etikettiergeräts.
 - **Identität & Diebstahlschutz**: Farbe, Merkmale, Codierung, Akku-Nr., Batteriepass-Link, Kauf. Öffentlich sind nur Farbe, gekürzte Akku-Nr. und Batteriepass-Link.
 - **Diebstahl-Paket**: Angaben für die Anzeige drucken oder als PDF sichern, Pass als gestohlen markieren. Hinweis, dass FYF mit keinem Polizei-Register verbunden ist.
+
+## 10. Umgesetzt in v.81
+- **Besitzer-Bereich ohne Konto**: Auf der Pass-Seite gibt der Besitzer den Code von Teil II ein. Dann kann er:
+  - die Sichtbarkeit wählen,
+  - selbst Diebstahl melden oder aufheben,
+  - eigene Arbeiten als „Selbstauskunft“ eintragen.
+  - Nach 10 falschen Codes pro Tag ist der Bereich für 24 h gesperrt.
+- **Einstellung des Besitzers geht vor.** Ein späteres Speichern im Laden mit alten Werten hebt sie nicht auf. Die Werkstatt übernimmt Einstellungen und Selbstauskünfte automatisch in die Fahrradakte.
+- **Fitting-Werte im Pass**, nur mit Häkchen „Besitzer ist einverstanden“: Sattelhöhe, Sattelversatz, Reach, Überhöhung, Vorbau, Lenker, Kurbel, Cleat.
+- **Gebrauchtrad mit Fahrradpass anbieten**: läuft über die vorhandene Produktliste, es gibt keinen zweiten Marktplatz.
+  - In der Händlersuche erscheint eine Liste „Gebrauchträder mit Fahrradpass“ mit Link zum Pass und Anfrage an den Laden.
+  - Ohne Bezahlung über FYF.
+- **Offen**: Belege und Fotos hochladen („Beleg vorhanden“), Besitzer-Konto mit Übersicht aller eigenen Räder, Käuferschutz.

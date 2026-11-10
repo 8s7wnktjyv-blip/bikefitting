@@ -44,7 +44,8 @@ let CFG=DEFAULT; try{ if(hp.get('cfg')){ const c=JSON.parse(unb64u(hp.get('cfg')
 const api=async(path,opt={})=>{ const r=await fetch(CFG.u+path,{...opt,headers:{apikey:CFG.k,'Content-Type':'application/json',...(opt.headers||{})}}); const t=await r.text(); let j=null; try{ j=t?JSON.parse(t):null; }catch(e){} if(!r.ok) throw new Error((j&&(j.message||j.msg))||('Fehler '+r.status)); return j; };
 const app=document.getElementById('app');
 const foot=`<footer class="muted"><a href="${LEGAL.impressum}">Impressum</a> · <a href="${LEGAL.datenschutz}">Datenschutz</a> · Angaben der Händler ohne Gewähr. Preise inkl. MwSt.; Kauf und Bezahlung direkt beim Händler.</footer>`;
-let ALL=[], Q={q:'',svc:'',feat:''};
+let ALL=[], USED=[], Q={q:'',svc:'',feat:''};
+const passOf=n=>{ const m=String(n||'').match(/Fahrradpass ([A-HJ-NP-Z2-9]{8})/); return m?m[1]:''; };
 const FEAT={fitting:'Bikefitting mit FYF',pass:'QR-Fahrradpass',status:'Werkstatt-Status live',usedcheck:'Gebrauchtrad-Check'};
 const featChips=x=>(x.features||[]).filter(k=>FEAT[k]).map(k=>`<span class="chip f">${esc(FEAT[k])}</span>`).join('');
 const cfgQ=()=>{ const c=new URLSearchParams((location.hash||'').slice(1)).get('cfg'); return c?'&cfg='+c:''; };
@@ -56,6 +57,7 @@ async function start(){
   const F='slug,name,street,zip,city,phone,email,web,about,services,hours,partner,certified';
   try{ try{ ALL=await api(`/rest/v1/dealer_profiles?published=eq.true&select=${F},slots,features&order=name`)||[]; }catch(eF){ try{ ALL=await api(`/rest/v1/dealer_profiles?published=eq.true&select=${F},slots&order=name`)||[]; }catch(e0){ ALL=await api(`/rest/v1/dealer_profiles?published=eq.true&select=${F}&order=name`)||[]; } } }
   catch(e){ app.innerHTML=`<h1>FYF-Partner finden</h1><div class="card note">Gerade nicht erreichbar. Bitte später noch einmal.</div>${foot}`; return; }
+  try{ USED=await api(`/rest/v1/public_products?cat=eq.Gebrauchtrad&select=slug,id,name,price,note&order=price`)||[]; }catch(e){ USED=[]; }
   if(d) return dealer(d); list(); }
 function list(){ setHash(''); document.title='FYF-Partner finden';
   const svcs=[...new Set(ALL.flatMap(x=>x.services||[]))].sort(); const q=Q.q.toLowerCase().trim();
@@ -63,6 +65,7 @@ function list(){ setHash(''); document.title='FYF-Partner finden';
   const fk=Object.keys(FEAT).filter(k=>ALL.some(x=>(x.features||[]).includes(k)));
   app.innerHTML=`<p class="muted small" style="margin:0;letter-spacing:.1em;font-weight:700">FYF – FIT YOUR FRAME</p><h1>FYF-Partner finden</h1><p class="muted">Fahrradläden und Werkstätten, die mit FYF arbeiten: Bikefitting, Werkstatt mit Live-Status, QR-Fahrradpass und Gebrauchtrad-Check. Anfrage direkt an den Laden – ohne Konto.</p>
    <div class="card"><h2>Gebrauchtes Rad? Fahrradpass prüfen</h2><p class="muted small" style="margin:0 0 8px">Code vom FYF-Aufkleber am Rahmen eingeben: Services, neue Teile, Gebrauchtrad-Check und Diebstahl-Meldung.</p><form id="pc" class="row"><input id="pcc" maxlength="9" placeholder="z. B. K7QM3XPA" autocomplete="off" autocapitalize="characters" style="flex:1 1 180px;width:auto;text-transform:uppercase;font-family:ui-monospace,monospace;letter-spacing:.08em" aria-label="Fahrradpass-Code"><button>Prüfen</button></form></div>
+   ${USED.filter(u=>passOf(u.note)&&ALL.some(d=>d.slug===u.slug)).length?`<div class="card"><h2>Gebrauchträder mit Fahrradpass</h2><p class="muted small" style="margin:0 0 6px">Angeboten von FYF-Werkstätten. Die Geschichte jedes Rads ist im Fahrradpass einsehbar. Bezahlung und Übergabe direkt mit dem Laden.</p>${USED.filter(u=>passOf(u.note)&&ALL.some(d=>d.slug===u.slug)).slice(0,30).map(u=>{ const d=ALL.find(x=>x.slug===u.slug); return `<div class="prod"><span><b>${esc(u.name)}</b><br><span class="muted small">${esc(String(u.note||'').replace(/^Fahrradpass [A-Z0-9]{8}( · )?/,''))}</span><br><span class="small">${esc(d.name)}${d.city?' · '+esc(d.city):''}</span></span><span style="text-align:right;white-space:nowrap"><b>${eur(u.price)}</b><br><a class="small" href="rad.html#c=${passOf(u.note)}${cfgQ()}">Fahrradpass</a> · <a href="#" class="small" data-u="${esc(u.slug)}" data-up="${esc(u.id)}">Anfragen</a></span></div>`; }).join('')}</div>`:''}
    ${fk.length?`<div class="row" style="margin:4px 0">${['',...fk].map(k=>`<button class="${Q.feat===k?'':'btn ghost'}" style="padding:7px 12px;font-size:14px" data-f="${k}">${k?esc(FEAT[k]):'Alle Partner'}</button>`).join('')}</div>`:''}
    <div class="card"><div class="row"><div style="flex:2 1 220px"><label for="q">Ort oder PLZ</label><input id="q" value="${esc(Q.q)}" placeholder="z. B. Erlangen oder 910" autocomplete="postal-code"></div>
    <div style="flex:1 1 180px"><label for="s">Leistung</label><select id="s"><option value="">Alle</option>${svcs.map(s=>`<option ${s===Q.svc?'selected':''}>${esc(s)}</option>`).join('')}</select></div></div></div>
@@ -72,6 +75,7 @@ function list(){ setHash(''); document.title='FYF-Partner finden';
   const qi=document.getElementById('q'); qi.oninput=()=>{ Q.q=qi.value; list(); const n=document.getElementById('q'); n.focus(); n.setSelectionRange(n.value.length,n.value.length); };
   document.getElementById('s').onchange=e=>{ Q.svc=e.target.value; list(); };
   app.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ Q.feat=b.dataset.f; list(); });
+  app.querySelectorAll('[data-u]').forEach(a=>a.onclick=async e=>{ e.preventDefault(); await dealer(a.dataset.u); const pp=document.getElementById('pp'); if(pp){ document.getElementById('t').value='Produkt'; pp.value=a.dataset.up; document.getElementById('form').scrollIntoView(); } });
   document.getElementById('pc').onsubmit=e=>{ e.preventDefault(); const c=String(document.getElementById('pcc').value||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if(c) location.href='rad.html#c='+c+cfgQ(); };
   app.querySelectorAll('[data-d]').forEach(a=>a.onclick=e=>{ e.preventDefault(); dealer(a.dataset.d); }); }
 async function dealer(slug){ const x=ALL.find(d=>d.slug===slug); if(!x){ list(); return; } setHash(slug); document.title=x.name+' – '+(x.city||''); scrollTo(0,0);
@@ -83,7 +87,7 @@ async function dealer(slug){ const x=ALL.find(d=>d.slug===slug); if(!x){ list();
      <p style="margin:0">${esc([x.street,[x.zip,x.city].filter(Boolean).join(' ')].filter(Boolean).join(', '))}</p>
      ${x.hours?`<p class="muted" style="margin:6px 0 0">${esc(x.hours)}</p>`:''}
      <div class="row" style="margin-top:10px">${x.phone?`<a class="btn ghost" href="tel:${esc(String(x.phone).replace(/[^\d+]/g,''))}">Anrufen</a>`:''}${x.email?`<a class="btn ghost" href="mailto:${esc(x.email)}">E-Mail</a>`:''}${x.web?`<a class="btn ghost" href="${esc(/^https?:/.test(x.web)?x.web:'https://'+x.web)}" rel="noopener nofollow" target="_blank">Website</a>`:''}</div></div>
-   ${P.length?`<div class="card"><h2>Produkte</h2>${P.map(p=>`<div class="prod"><span>${esc(p.name)}<br><span class="muted small">${esc(p.cat||'')}${p.note?' · '+esc(p.note):''}</span></span><span style="text-align:right;white-space:nowrap"><b>${eur(p.price)}</b><br><a href="#" class="small" data-p="${esc(p.id)}">Anfragen</a></span></div>`).join('')}<p class="muted small" style="margin-bottom:0">Preise inkl. MwSt. Verfügbarkeit bitte anfragen.</p></div>`:''}
+   ${P.length?`<div class="card"><h2>Produkte</h2>${P.map(p=>`<div class="prod"><span>${esc(p.name)}<br><span class="muted small">${esc(p.cat||'')}${p.note?' · '+esc(p.note):''}${passOf(p.note)?` · <a href="rad.html#c=${passOf(p.note)}${cfgQ()}">Fahrradpass ansehen</a>`:''}</span></span><span style="text-align:right;white-space:nowrap"><b>${eur(p.price)}</b><br><a href="#" class="small" data-p="${esc(p.id)}">Anfragen</a></span></div>`).join('')}<p class="muted small" style="margin-bottom:0">Preise inkl. MwSt. Verfügbarkeit bitte anfragen.</p></div>`:''}
    <div class="card" id="form"><h2>Anfrage an den Laden</h2>
      <form id="inq"><label for="t">Worum geht es?</label><select id="t" name="topic">${['Bikefitting','Werkstatt','Terminwunsch','Produkt','Allgemein'].map(t=>`<option ${pre&&t==='Produkt'?'selected':''}>${t}</option>`).join('')}</select>
      <select id="pp" name="product" style="margin-top:8px;${P.length?'':'display:none'}"><option value="">– kein bestimmtes Produkt –</option>${P.map(p=>`<option value="${esc(p.id)}" ${p.id===pre?'selected':''}>${esc(p.name)}</option>`).join('')}</select>

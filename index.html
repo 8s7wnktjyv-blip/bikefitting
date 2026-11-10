@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-10.80';
+const APP_VER='2026-11-10.81';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2051,7 +2051,7 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
 // Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
-const DB_SCHEMA=11; let dbSchema=null;
+const DB_SCHEMA=12; let dbSchema=null;
 async function dbCheck(){ if(!(CL.url&&CL.key)) return;
   try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
   catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
@@ -7510,6 +7510,55 @@ Object.assign(FORMS,{
 { const LE=FORMS.lifeEvent; if(LE) FORMS.lifeEvent=function(f,d){ const r=LE.apply(this,arguments); const b=bike(f.dataset.id); if(b&&b.qr&&b.qr.code&&cloudReady()) passSync(b); return r; }; }
 
 FEATURES.push(['FYF Passport – Kern','Einträge unveränderlich mit Vertrauensstufe und Korrektur, Fahrradschein Teil I/II mit Übergabe-Code, Besitzerwechsel ohne Namen, Etikett 24 mm, Identität & Diebstahl-Paket, Batteriepass-Link (Datenbank Stand 11)',2]);
+
+/* ===================== v.81 Passport: Besitzer-Einstellungen übernehmen, Fitting im Pass, Gebrauchtrad mit Pass anbieten ===================== */
+// Fremde Einträge + was der Besitzer selbst (mit Teil II) eingestellt hat, in die Fahrradakte übernehmen
+passPull=async function(b){ if(!cloudReady()||!b.qr||!b.qr.code||b.qr.moved||(b.qr.pulled&&Date.now()-b.qr.pulled<60000)) return; b.qr.pulled=Date.now();
+  try{ const P=await clApi('/rest/v1/rpc/pass_get',{method:'POST',body:JSON.stringify({p_code:b.qr.code})}); if(!P) return; let n=0, ch=false;
+    if(!P.mine){ b.qr.moved=true; save(); return; }
+    ((P.entries)||[]).filter(e=>e.trust==='self'||e.shop!==(P.shop&&P.shop.name)).forEach(e=>{ const ref='pe'+e.id; if((b.events||[]).some(x=>x.ref===ref)) return; (b.events=b.events||[]).push({id:uid('ev'),date:e.date,kind:e.kind,text:`${e.text} (${e.trust==='self'?'Selbstauskunft Besitzer':e.shop})`,km:e.km??null,via:e.trust==='self'?'Besitzer':e.shop,ref}); n++; });
+    if(typeof P.stolen==='boolean'&&P.stolen!==!!b.qr.stolen){ b.qr.stolen=P.stolen; ch=true; } if(P.visibility&&P.visibility!==b.qr.vis){ b.qr.vis=P.visibility; ch=true; }
+    if(n||ch){ audit(`Fahrradpass ${b.qr.code}: ${n} neue Einträge${ch?', Einstellung des Besitzers übernommen':''}`); save(); const t=document.getElementById('passForeign'); if(t) t.textContent=[n?`${n} neue Einträge übernommen`:'',ch?(b.qr.stolen?'Besitzer hat das Rad als gestohlen gemeldet':'Einstellung des Besitzers übernommen'):''].filter(Boolean).join(' · '); if(n) toast(`${n} neue Einträge im Fahrradpass`); } }catch(e){} };
+
+// ---------- Fitting-Werte im Pass (nur mit Zustimmung) ----------
+const FIT_PASS_KEYS=['saddleHeight','saddleSetback','reach','drop','stemLength','barWidth','crankLength','cleatFore'];
+const fitVal=x=>x&&typeof x==='object'?(x.value??null):(x??null);
+function fitPassText(s){ const A=s.after||{}; const parts=FIT_PASS_KEYS.filter(k=>fitVal(A[k])!=null&&MK[k]).map(k=>`${MK[k].label} ${fmtNum(Number(fitVal(A[k])),Number.isInteger(Number(fitVal(A[k])))?0:1)}${MK[k].unit?' '+MK[k].unit:''}`); return parts.length?('Sitzposition nach Bikefitting: '+parts.join(', ')).slice(0,500):''; }
+{ const PI=passItems; passItems=function(b){ const out=PI(b); if(b.qr&&b.qr.fit) S.sessions.filter(s=>s.bikeId===b.id&&s.status==='abgeschlossen').forEach(s=>{ const t=fitPassText(s); if(t) out.push({ref:'fit:'+s.id,kind:'Bikefitting',text:t,km:null,date:s.date||today()}); }); return out.sort((a,x)=>String(a.date).localeCompare(String(x.date))); }; }
+{ const QP2=ACT.qrPass; ACT.qrPass=function(el){ QP2.apply(this,arguments); const b=bike(el.dataset.id), f=document.querySelector('form[data-form="qrPass"]'); if(!b||!f) return; const btn=f.querySelector('button[type=submit]'); const row=btn&&btn.closest('div');
+    if(row) row.insertAdjacentHTML('beforebegin',`<label class="wide row" style="flex-wrap:nowrap;gap:8px;align-items:flex-start"><input type="checkbox" name="fit" ${b.qr&&b.qr.fit?'checked':''} style="margin-top:4px"><span>Ergebnis des Bikefittings (Sitzhöhe, Sattelversatz, Reach …) im Pass dokumentieren – der Besitzer ist einverstanden. Gut beim Verkauf und beim nächsten Fitting.</span></label>`); }; }
+{ const QF=FORMS.qrPass; FORMS.qrPass=async function(f,d){ const b=bike(f.dataset.id), fit=d.get('fit')==='on'; if(b&&b.qr) b.qr.fit=fit; await QF.call(this,f,d); if(b&&b.qr){ if(!!b.qr.fit!==fit){ b.qr.fit=fit; save(); } if(fit&&b.qr.code) passSync(b); } }; }
+
+// ---------- Gebrauchtrad mit Fahrradpass anbieten (gleiche Produktliste, kein zweiter Marktplatz) ----------
+const usedProd=b=>products().find(p=>p.id==='used-'+b.id);
+Object.assign(ACT,{
+  usedSale(el){ const b=bike(el.dataset.id); if(!b) return; if(!b.qr||!b.qr.code){ toast('Zuerst einen QR-Fahrradpass anlegen – Käufer sehen dann die Geschichte',true); ACT.qrPass(el); return; }
+    const p=usedProd(b), last=(b.usedChecks||[]).slice(-1)[0];
+    openDrawer('Gebrauchtrad anbieten',`<form class="form" data-form="usedSale" data-id="${b.id}"><p class="wide muted" style="margin:0;font-size:13.5px">Das Rad erscheint in der FYF-Händlersuche unter „Gebrauchträder mit Fahrradpass“ und auf deiner Profilseite. Käufer öffnen den Pass und schicken dir eine Anfrage. Bezahlung läuft nicht über FYF.${last?'':' Tipp: vorher einen Gebrauchtrad-Check machen – er erscheint dann mit im Angebot.'}</p>
+      <div class="field"><label for="us_p">Preis (€)</label><input class="input" id="us_p" name="price" type="number" min="1" step="1" required value="${esc(p?p.price:'')}"></div>
+      <div class="field wide"><label for="us_n">Kurzbeschreibung</label><input class="input" id="us_n" name="note" maxlength="160" value="${esc(p&&p.desc||'')}" placeholder="z. B. Top gepflegt, neue Kette"></div>
+      ${b.qr.vis==='public'?'':'<p class="wide notice" style="margin:0">Der Pass wird dafür auf „für jeden sichtbar“ gestellt.</p>'}
+      <div class="wide row" style="gap:6px;flex-wrap:wrap"><button class="btn primary" type="submit">${p?'Angebot speichern':'Anbieten'}</button>${p?`<button class="btn ghost danger" type="button" data-act="usedSaleEnd" data-id="${b.id}">Angebot beenden</button>`:''}</div></form>`); },
+  usedSaleEnd(el){ const b=bike(el.dataset.id); if(!b) return; S.products=products().filter(p=>p.id!=='used-'+b.id); audit(`Gebrauchtrad-Angebot beendet: ${bikeName(b)}`); save(); closeDrawer(); render(); toast('Angebot beendet'); }
+});
+Object.assign(FORMS,{
+  async usedSale(f,d){ const b=bike(f.dataset.id); if(!b||!b.qr) return; const price=Number(d.get('price'))||0; if(price<1){ toast('Bitte einen Preis eingeben',true); return; }
+    if(b.qr.vis!=='public'){ b.qr.vis='public'; await passPush(b,true); }
+    const last=(b.usedChecks||[]).slice(-1)[0], desc=String(d.get('note')||'').trim().slice(0,160);
+    const note=[`Fahrradpass ${b.qr.code}`,last?`Gebrauchtrad-Check ${fmtDate(last.date)}: ${last.grade}`:'',b.km!=null?fmtNum(b.km)+' km':'',desc].filter(Boolean).join(' · ').slice(0,300);
+    const name=[bikeName(b),b.size&&('Gr. '+b.size),b.year].filter(Boolean).join(' · ').slice(0,200);
+    let p=usedProd(b); if(!p){ p={id:'used-'+b.id,cat:'Gebrauchtrad'}; products().push(p); } Object.assign(p,{name,price,pub:true,note,desc,bikeId:b.id});
+    audit(`Gebrauchtrad angeboten: ${bikeName(b)} für ${fmtNum(price)} €`); save(); render(); bikeDrawer(b.id); toast('Angebot gespeichert – erscheint nach dem nächsten Cloud-Sichern in der Händlersuche'); }
+});
+{ const BD5=bikeDrawer; bikeDrawer=function(id){ BD5(id); const b=bike(id), box=document.getElementById('drawerBody'); if(!b||!b.id||!box) return; const row=box.querySelector('[data-act="usedCheck"]'), p=usedProd(b);
+    const html=`<button class="btn sm ${p?'primary':''}" data-act="usedSale" data-id="${b.id}">${p?'Angeboten für '+fmtNum(p.price)+' €':'Gebrauchtrad anbieten'}</button>`; if(row&&row.parentElement) row.parentElement.insertAdjacentHTML('beforeend',html); }; }
+
+// Stand-Tabelle ehrlich aktualisieren
+{ const set=(n,st,d)=>{ const x=FEATURES.find(f=>f[0]===n); if(x){ x[2]=st; if(d) x[1]=d; } };
+  set('Live-Status für Kunden',1); set('Partnerseite',1);
+  set('QR-Fahrradpass',1,'Aufkleber/Etikett am Rahmen, Sichtbarkeit, Diebstahl-Warnung, Einträge anderer geprüfter Läden, Besitzer stellt mit Teil II selbst ein (Datenbank Stand 12)');
+  set('FYF Passport – Kern',2,'Unveränderliche Einträge mit Vertrauensstufe und Korrektur, Fahrradschein Teil I/II, Besitzerwechsel ohne Namen, Besitzer-Bereich mit Teil II (Sichtbarkeit, Diebstahl, Selbstauskunft), Fitting-Werte mit Zustimmung. Fehlt: Belege/Fotos hochladen');
+  set('Öffentlicher Marktplatz',2,'Öffentliche Produkte und Gebrauchträder mit Fahrradpass, mit Anfrage. Bestellung/Bezahlung bewusst nicht (Käuferschutz nur über externen Anbieter, noch nicht gewählt)'); }
 
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};

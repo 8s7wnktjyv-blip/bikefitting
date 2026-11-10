@@ -46,10 +46,11 @@ function askForm(err){
    <p><a href="finder.html${CF?'#cfg='+esc(CF):''}">FYF-Partnerwerkstätten finden</a></p>`;
   document.getElementById('f').onsubmit=e=>{ e.preventDefault(); location.hash='c='+norm(document.getElementById('c').value)+(CF?'&cfg='+CF:''); };
 }
-async function show(code){
+async function show0(code){ window.__P=null;
   if(!/^[A-HJ-NP-Z2-9]{8}$/.test(code)) return askForm('Der Code hat 8 Zeichen (ohne 0, O, 1 und I).');
   let p; try{ const r=await fetch(CFG.u+'/rest/v1/rpc/pass_get',{method:'POST',headers:{apikey:CFG.k,'Content-Type':'application/json'},body:JSON.stringify({p_code:code})}); if(!r.ok) throw 0; p=await r.json(); }catch(e){ app.innerHTML=`${head}<h1>Gerade nicht erreichbar</h1><div class="card">Bitte später noch einmal versuchen.</div>`; return; }
   if(!p) return askForm('Zu diesem Code gibt es keinen Fahrradpass.');
+  window.__P=p;
   const b=p.bike||{}, sh=p.shop||{};
   const tel=sh.phone?` · <a href="tel:${esc(String(sh.phone).replace(/[^\d+]/g,''))}">${esc(sh.phone)}</a>`:'';
   const alarm=p.stolen?`<div class="alarm">Dieses Rad ist als gestohlen gemeldet. Bitte nicht kaufen und die Polizei oder die Werkstatt ${esc(sh.name||'')} informieren${sh.phone?' ('+esc(sh.phone)+')':''}.</div>`:'';
@@ -72,6 +73,24 @@ async function show(code){
    <p class="leg"><b>Werkstatt-bestätigt</b> = eingetragen von einem durch FYF geprüften Betrieb. Einträge können nachträglich nicht geändert werden, nur durch einen sichtbaren Korrektur-Eintrag ergänzt.</p></div>
    <div class="card">${shopLine}<p class="muted small" style="margin:6px 0 0">Die Einträge stammen von den Werkstätten selbst. Der Pass enthält keine Daten über Besitzer – auch nicht über frühere. Arbeiten außerhalb von FYF-Werkstätten fehlen, wenn sie nicht nachgetragen wurden.</p></div>${shopBtn}`;
 }
+// Besitzer-Bereich: mit dem Übergabe-Code von Teil II (kein Konto nötig)
+let OWN='';
+async function ownerCall(code,action,value){ const r=await fetch(CFG.u+'/rest/v1/rpc/pass_owner',{method:'POST',headers:{apikey:CFG.k,'Content-Type':'application/json'},body:JSON.stringify({p_code:code,p_transfer:OWN,p_action:action,p_value:value||null})}); if(!r.ok) throw new Error('net'); return r.json(); }
+const OERR={FYF_BAD_TRANSFER:'Der Übergabe-Code stimmt nicht. Er steht auf der Karte „Teil II“ (12 Zeichen).',FYF_RATE:'Zu viele Versuche. Bitte morgen erneut versuchen.',FYF_BAD_DATA:'Bitte die Eingaben prüfen.',FYF_NOT_FOUND:'Pass nicht gefunden.'};
+function ownerBox(code,r0){ const P=window.__P||{}; if(P.withdrawn) return; const box=document.createElement('div'); box.className='card'; box.id='own'; app.appendChild(box);
+  const lock=()=>{ box.innerHTML=`<h2>Du bist der Besitzer?</h2><p class="muted small" style="margin:0 0 8px">Mit dem Übergabe-Code von deiner Karte „Teil II“ kannst du selbst einstellen, wer den Pass sieht, das Rad als gestohlen melden und eigene Arbeiten eintragen (als „Selbstauskunft“ gekennzeichnet).</p><form id="of"><input id="oc" maxlength="16" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" aria-label="Übergabe-Code"><button>Öffnen</button></form><p id="oe" style="color:var(--bad);margin:6px 0 0"></p>`;
+    box.querySelector('#of').onsubmit=async e=>{ e.preventDefault(); OWN=String(box.querySelector('#oc').value||''); try{ const r=await ownerCall(code,'check'); if(r.error){ OWN=''; box.querySelector('#oe').textContent=OERR[r.error]||'Nicht möglich'; return; } panel(r); }catch(x){ box.querySelector('#oe').textContent='Gerade nicht erreichbar.'; } }; };
+  const panel=r=>{ box.innerHTML=`<h2>Besitzer-Bereich</h2><p class="muted small" style="margin:0 0 10px">${r.owner_no?r.owner_no+'. Besitzer · ':''}Änderungen gelten sofort. Deine Werkstatt sieht sie ebenfalls.</p>
+     <p style="margin:0 0 6px"><b>Wer sieht den Pass?</b></p><div class="row" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn ${r.visibility==='public'?'':'ghost'}" data-v="public">Jeder (gut beim Verkauf)</button><button class="btn ${r.visibility==='shops'?'':'ghost'}" data-v="shops">Nur Werkstätten</button></div>
+     <p style="margin:14px 0 6px"><b>Diebstahl</b></p>${r.stolen?'<button class="btn" data-s="0">Rad ist wieder da – Meldung aufheben</button>':'<button class="btn" style="background:var(--bad)" data-s="1">Als gestohlen melden</button>'}<p class="muted small" style="margin:6px 0 0">Die Anzeige bei der Polizei musst du selbst erstatten – FYF ist mit keinem Polizei-Register verbunden.</p>
+     <p style="margin:14px 0 6px"><b>Eigene Arbeit eintragen</b> <span class="muted small">(erscheint als „Selbstauskunft“)</span></p>
+     <form id="oen" style="display:grid;gap:8px"><select id="ok" style="font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:inherit">${['Umbau','Teiletausch','Pflege','Reparatur','Schaden','Kauf'].map(x=>`<option>${x}</option>`).join('')}</select><input id="ot" required minlength="3" maxlength="500" placeholder="Was wurde gemacht? z. B. neuer Sattel" style="font:inherit;letter-spacing:0;text-transform:none;font-weight:400"><input id="okm" type="number" min="0" inputmode="numeric" placeholder="Kilometerstand (optional)" style="font:inherit;letter-spacing:0;font-weight:400"><button>Eintragen</button></form><p id="om" class="muted small" style="margin:6px 0 0"></p>`;
+    const act=async(a,v)=>{ try{ const x=await ownerCall(code,a,v); if(x.error){ box.querySelector('#om').textContent=OERR[x.error]||'Nicht möglich'; return; } await show0(code); ownerBox(code,x); const nb=document.getElementById('own'); if(nb) nb.scrollIntoView({block:'start'}); }catch(e){ box.querySelector('#om').textContent='Gerade nicht erreichbar.'; } };
+    box.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>act('vis',{v:b.dataset.v}));
+    box.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{ if(b.dataset.s==='1'&&!confirm('Rad als gestohlen melden? Jeder Scan zeigt dann eine Warnung, und eine Übergabe an einen neuen Besitzer ist gesperrt.')) return; act('stolen',{v:b.dataset.s==='1'}); });
+    box.querySelector('#oen').onsubmit=e=>{ e.preventDefault(); act('entry',{kind:box.querySelector('#ok').value,text:box.querySelector('#ot').value,km:box.querySelector('#okm').value}); }; };
+  if(r0) panel(r0); else lock(); }
+async function show(code){ await show0(code); if(window.__P&&/^[A-HJ-NP-Z2-9]{8}$/.test(code)) ownerBox(code); }
 function route(){ const h=new URLSearchParams((location.hash||'').slice(1)); const c=norm(h.get('c')); if(c) show(c); else askForm(''); }
 window.addEventListener('hashchange',route); route();
 </script>
