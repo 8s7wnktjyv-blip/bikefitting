@@ -1771,6 +1771,7 @@ const CONSENT_TEXT=`<h3>Einwilligung zur Datenverarbeitung beim Bikefitting</h3>
 <p><b>Wofür:</b> Wir speichern deine Angaben, um dein Rad an dich anzupassen, das Ergebnis zu dokumentieren und bei Nachkontrollen vergleichen zu können.</p>
 <p><b>Welche Daten:</b> Name, Kontaktdaten, Körpermaße, Fahrrad- und Einstellungsdaten. Nur wenn du zusätzlich zustimmst: Beschwerden und Ergebnisse des Körperchecks (Gesundheitsdaten nach Art. 9 DSGVO) sowie Fotos und Videos von dir auf dem Rad.</p>
 <p><b>Anonyme Auswertung (freiwillig):</b> Wenn du zustimmst, werden deine Mess- und Fittingdaten ohne Namen und Kontaktdaten ausgewertet, um die Fitting-Software zu verbessern. Ein Rückschluss auf dich ist dabei nicht vorgesehen.</p>
+<p><b>Service-Erinnerung (freiwillig):</b> Wenn du zustimmst, erinnern wir dich einmal im Jahr an den Service deines Fahrrads. Du kannst das jederzeit abbestellen.</p>
 <p><b>Wie lange:</b> bis du die Löschung verlangst, längstens [Frist eintragen] nach dem letzten Termin.</p>
 <p><b>Deine Rechte:</b> Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit und Beschwerde bei einer Datenschutzbehörde. Du kannst die Einwilligung jederzeit widerrufen. Bis dahin bleibt die Verarbeitung rechtmäßig.</p>
 <p><b>Freiwillig:</b> Ohne Gesundheitsangaben ist ein Fitting möglich, aber weniger genau.</p>`;
@@ -1946,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-10.76';
+const APP_VER='2026-11-10.77';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2050,7 +2051,7 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
 // Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
-const DB_SCHEMA=8; let dbSchema=null;
+const DB_SCHEMA=9; let dbSchema=null;
 async function dbCheck(){ if(!(CL.url&&CL.key)) return;
   try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
   catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
@@ -2172,15 +2173,15 @@ const sessOf = cid => S.sessions.filter(s=>s.customerId===cid).sort((a,b)=>a.dat
 const val = (rec) => rec ? rec.value : null;
 
 /* ---------- Navigation ---------- */
-const MAIN_ALL=[['dashboard','Start','dash'],['kunden','Kunden','users'],['sitzung','Fitting','fit'],['werkstatt','Werkstatt','wrench'],['mehr','Mehr','more']];
+const MAIN_ALL=[['dashboard','Start','dash'],['werkstatt','Werkstatt','wrench'],['kunden','Kunden','users'],['sitzung','Fitting','fit'],['mehr','Mehr','more']];
 const MAIN=MAIN_ALL;
-const mainNav=()=>{ let L=showExtra()?MAIN_ALL:MAIN_ALL.map(m=>m[0]==='werkstatt'?['geometrie','Geometrie','grid']:m); const st=(S.settings||{}).shopType;
+const mainNav=()=>{ let L=MAIN_ALL.slice(); if(!modOn('werkstatt')) L=L.map(m=>m[0]==='werkstatt'?['geometrie','Geometrie','grid']:m); const st=(S.settings||{}).shopType;
   if(!modOn('fitting')) L=L.map(m=>m[0]==='sitzung'?(modOn('quickfit')?['quickfit','Quick-Fit','handover']:['geometrie','Geometrie','grid']):m);
   if(modOn('fahrwerk')&&(st==='werkstatt'||st==='ebike')) L=L.map(m=>m[0]==='geometrie'||(m[0]==='werkstatt'&&st!=='werkstatt')?['fahrwerk','Fahrwerk','susp']:m);
   if(st==='werkstatt'&&modOn('werkstatt')&&!L.some(m=>m[0]==='werkstatt')) L=L.map(m=>m[0]==='kunden'?['werkstatt','Werkstatt','wrench']:m);
   const seen=new Set(); return L.filter(m=>!seen.has(m[0])&&seen.add(m[0])); };
 const moreNav=()=>MORE.map(([g,items])=>[g,navVisible(items).filter(m=>m[0]!=='mehr')]).filter(([,items])=>items.length);
-const NAV_AREAS=[
+const NAV_AREAS0=[
   ['Dashboard',[['dashboard','Dashboard','dash','Überblick, Termine, offene Aufgaben']]],
   ['Kunden',[['kunden','Kunden','users','Kundenakten mit Rädern, Historie und Körpermaßen'],['fahrraeder','Fahrräder','bike','Alle Räder mit Einstellungen und Historie']]],
   ['Bikefitting',[['sitzung','Fitting','fit','Geführter Ablauf vom Ziel bis zum Ergebnis'],['verlauf','Verlauf & Vergleich','history','Sitzungen nebeneinander und über die Zeit'],['followup','Nachkontrollen','loop','Wer ist wann wieder dran?']]],
@@ -2194,6 +2195,16 @@ const NAV_AREAS=[
   ['Händlernetzwerk',[['netz','Händlerprofil & Anfragen','users','Öffentliches Profil, Anfragen von Kunden, QR-Code'],['boerse','Händlerbörse','box','Restposten unter geprüften Händlern (B2B)'],['academy','Academy','book','Lernpfade fürs Team, Teilnahmebestätigung']]],
   ['Einstellungen',[['mehr','Einstellungen & Daten','gear','Laden, Sicherung, Darstellung'],['betrieb','Zahlen & Team','ops','Kennzahlen pro Monat, Team'],['qualitaet','Messdaten & Qualität','quality','Herkunft und Vollständigkeit aller Werte'],['hardware','Hardware Lab','hw','Geplante eigene Messhilfen (Konzept)'],['module','Stand aller Funktionen','grid','Was fertig ist, was teilweise, was fehlt']]]
 ];
+// Neuordnung: Werkstatt und Kunden vorn, Bikefitting als ein Bereich unter mehreren. Keine Funktion entfällt.
+const NAV_AREAS=(()=>{ const all=Object.fromEntries(NAV_AREAS0.flatMap(([,it])=>it).map(m=>[m[0],m])), used=new Set();
+  const take=ks=>ks.filter(k=>all[k]&&!used.has(k)).map(k=>(used.add(k),all[k]));
+  const out=[['Dashboard',take(['dashboard'])],['Werkstatt & Termine',take(['werkstatt','termine','fahrwerk'])],['Kunden & Räder',take(['kunden','fahrraeder'])],
+    ['Verkauf & Rechnungen',take(['rechnungen','lager','preise'])],
+    ['Bikefitting',take(['sitzung','koerper','vermessung','quickfit','motion','verlauf','followup','berichte','ki','portal'])]];
+  const rest=NAV_AREAS0.map(([g,it])=>[g,it.filter(m=>!used.has(m[0]))]).filter(([,it])=>it.length);
+  const merged={}; rest.forEach(([g,it])=>{ const G=g==='Produktempfehlungen'?'Verkauf & Rechnungen':g; (merged[G]=merged[G]||[]).push(...it); });
+  out.forEach(a=>{ if(merged[a[0]]){ a[1].push(...merged[a[0]]); delete merged[a[0]]; } });
+  return out.concat(Object.entries(merged)).filter(([,it])=>it.length); })();
 /* --- Ladentyp und Module: jeder Laden sieht nur, was er braucht --- */
 const SHOP_TYPES=[['haendler','Fahrradhändler','Verkauf, Größenberatung, Übergabe'],['ebike','E-Bike / Pendler','Übergabe, Werkstatt, Fahrwerk'],['werkstatt','Werkstatt','Aufträge, Fahrwerk, Fahrradakte'],['studio','Fitting-Studio','Komplettes Bikefitting']];
 const MODS=[['fitting','Bikefitting','Fitting-Ablauf, Körperanalyse, Vergleich, Nachkontrollen, Berichte'],['quickfit','Quick-Fit Übergabe','Neues Rad in 10 Minuten einstellen'],['fahrwerk','Fahrwerk','Gabel und Dämpfer einstellen und dokumentieren'],['verkauf','Verkauf & Produkte','Größenberatung, Preise, Angebote, Produktdatenbank'],['werkstatt','Werkstatt','Aufträge und Lager']];
@@ -2612,7 +2623,7 @@ function customerDrawer(id,tab){
     <hr><div class="stack"><h3>Fahrräder</h3>${bikeList}</div>
     <hr><div class="stack"><h3>Letzte Fittings</h3>${ss.slice(0,3).map(sessRow).join('')||'<span class="muted">Noch keine Sitzung.</span>'}${ss.length>3?`<button class="btn sm ghost" data-act="custTab" data-id="${c.id}" data-k="historie" style="align-self:flex-start">Alle ${ss.length} anzeigen</button>`:''}</div>`;
   else if(T==='person') body=`${consentRow}
-    <dl class="dl"><dt>E-Mail</dt><dd>${esc(c.email)}</dd><dt>Telefon</dt><dd class="mono">${esc(c.phone)}</dd><dt>Kunde seit</dt><dd>${fmtDate(c.since)}</dd><dt>Disziplin</dt><dd>${esc(c.discipline)}</dd>${prof}${c.consentInfo?`<dt>Einwilligung</dt><dd>${esc(c.consentInfo.date||'')}${c.consentInfo.health?' · Gesundheitsangaben':''}${c.consentInfo.media?' · Fotos/Videos':''}${c.consentInfo.research?' · anonyme Auswertung':''}${c.consentInfo.sig?`<br><img src="${c.consentInfo.sig}" alt="Unterschrift" style="max-width:220px;height:auto;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:6px">`:''}</dd>`:''}</dl>
+    <dl class="dl"><dt>E-Mail</dt><dd>${esc(c.email)}</dd><dt>Telefon</dt><dd class="mono">${esc(c.phone)}</dd><dt>Kunde seit</dt><dd>${fmtDate(c.since)}</dd><dt>Disziplin</dt><dd>${esc(c.discipline)}</dd>${prof}${c.consentInfo?`<dt>Einwilligung</dt><dd>${esc(c.consentInfo.date||'')}${c.consentInfo.health?' · Gesundheitsangaben':''}${c.consentInfo.media?' · Fotos/Videos':''}${c.consentInfo.research?' · anonyme Auswertung':''}${c.consentInfo.remind?' · jährliche Service-Erinnerung':''}${c.consentInfo.sig?`<br><img src="${c.consentInfo.sig}" alt="Unterschrift" style="max-width:220px;height:auto;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:6px">`:''}</dd>`:''}</dl>
     <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="editCustomer" data-id="${c.id}">Stammdaten bearbeiten</button>${c.consent?`<button class="btn sm ghost" data-act="consent" data-id="${c.id}">Einwilligung ändern</button>`:''}<button class="btn sm ghost" data-act="custExport" data-id="${c.id}">Daten exportieren (Auskunft)</button>${PERMANENT_IDS.includes(c.id)?'':`<button class="btn sm ghost danger" data-act="custDelete" data-id="${c.id}">Kunde löschen</button>`}</div>
     <hr>${bodyTypeHtml(c)}<div class="stack"><div class="row" style="justify-content:space-between"><h3>Körpermaße</h3><button class="btn sm" type="button" data-act="estBody" data-id="${c.id}">Fehlende aus Körpergröße schätzen</button></div><p class="faint" style="font-size:12px">Diese Maße speisen die Simulation. Eingetragene Werte haben Vorrang vor Schätzungen.</p>
     ${bodyFormHtml(c,'drawer')}</div>`;
@@ -5273,7 +5284,7 @@ function frameFinder(s){
 
 /* ---------- Ladenprofil, Export, Zahlen ---------- */
 const EXTRA_ROUTES=['portal','hardware','ki','qualitaet'];
-const showExtra=()=>!!(S.settings&&S.settings.extra);
+const showExtra=()=>!(S.settings&&S.settings.extra===false);
 const DEMO_IDS={customers:['c1','c2','c3','c4']};
 const isDemoCust=id=>DEMO_IDS.customers.includes(id)&&!S.demoRemoved;
 function shopName(){ return (S.shop&&S.shop.name)||''; }
@@ -6044,6 +6055,7 @@ const ACT = {
       <label class="row" style="align-items:flex-start;flex-wrap:nowrap"><input type="checkbox" name="health" style="margin-top:4px"><span>Ich bin ausdrücklich einverstanden, dass auch gesundheitsbezogene Angaben (Beschwerden, Ergebnisse des Körperchecks) gespeichert werden. Freiwillig.</span></label>
       <label class="row" style="align-items:flex-start;flex-wrap:nowrap"><input type="checkbox" name="media" ${c.consentInfo&&c.consentInfo.media?'checked':''} style="margin-top:4px"><span>Ich bin einverstanden, dass Fotos und Videos von mir auf dem Rad für das Fitting gespeichert werden (nur auf dem Gerät des Ladens). Freiwillig, jederzeit widerrufbar.</span></label>
       <label class="row" style="align-items:flex-start;flex-wrap:nowrap"><input type="checkbox" name="research" ${c.consentInfo&&c.consentInfo.research?'checked':''} style="margin-top:4px"><span>Ich bin einverstanden, dass meine Mess- und Fittingdaten ohne Namen und Kontaktdaten (anonymisiert) ausgewertet werden, um die Fitting-Software zu verbessern. Freiwillig, jederzeit widerrufbar.</span></label>
+      <label class="row" style="align-items:flex-start;flex-wrap:nowrap"><input type="checkbox" name="remind" ${c.consentInfo&&c.consentInfo.remind?'checked':''} style="margin-top:4px"><span>Ich möchte einmal im Jahr eine Erinnerung an den Service meines Fahrrads bekommen (per WhatsApp, SMS oder E-Mail). Freiwillig, jederzeit abbestellbar.</span></label>
       <div class="field"><label for="cs_name">Name der Kundin / des Kunden zur Bestätigung</label><input class="input" id="cs_name" name="name" required value="" placeholder="${esc(c.name)}"></div>
       <div class="field"><label>Unterschrift mit dem Finger</label><canvas id="sigPad" width="600" height="200" style="width:100%;max-width:520px;aspect-ratio:3/1;background:#fff;border:1px solid var(--line);border-radius:12px;touch-action:none;cursor:crosshair"></canvas><input type="hidden" name="sig" id="sigVal"><div class="row" style="margin-top:6px"><button type="button" class="btn sm ghost" data-act="sigClear">Unterschrift löschen</button><span class="faint" style="font-size:12px">Ort und Datum werden automatisch gespeichert.</span></div></div>
       <div><button class="btn primary" type="submit">Einwilligung speichern</button></div></form></div>`); setTimeout(sigInit,0); },
@@ -6225,7 +6237,7 @@ const FORMS = {
     if(ui.wIdx==null){ const n=checkFindings(s).filter(x=>x.lvl!=='ok').length; toast(n?`Körpercheck fertig – ${n} Punkte zum Beachten`:'Körpercheck fertig – keine Auffälligkeiten'); } },
   consent(f,data){ const c=cust(f.dataset.id); if(String(data.get('name')).trim().toLowerCase()!==c.name.trim().toLowerCase()){ toast(`Bitte den Namen „${c.name}“ genau eintragen`,true); return; }
     const sig=String(data.get('sig')||''); if(!/^data:image\/png;base64,/.test(sig)||sig.length<800){ toast('Bitte mit dem Finger im weißen Feld unterschreiben',true); return; }
-    c.consent=true; c.consentInfo={date:nowStamp(),health:data.get('health')==='on',media:data.get('media')==='on',research:data.get('research')==='on',sig:sig.length<120000?sig:'',version:'Muster 3'}; audit(`Einwilligung erfasst: ${c.name}${c.consentInfo.health?' inkl. Gesundheitsangaben':''}${c.consentInfo.media?' inkl. Fotos/Videos':''}`,c.id); save(); render(); customerDrawer(c.id); toast('Einwilligung gespeichert'); },
+    c.consent=true; c.consentInfo={date:nowStamp(),health:data.get('health')==='on',media:data.get('media')==='on',research:data.get('research')==='on',remind:data.get('remind')==='on',sig:sig.length<120000?sig:'',version:'Muster 3'}; audit(`Einwilligung erfasst: ${c.name}${c.consentInfo.health?' inkl. Gesundheitsangaben':''}${c.consentInfo.media?' inkl. Fotos/Videos':''}`,c.id); save(); render(); customerDrawer(c.id); toast('Einwilligung gespeichert'); },
   bikeGeo(f,data){ const b=bike(f.dataset.id); const g=geoById(data.get('geo')); if(!g||!data.get('geoSize')){ toast('Bitte Modell und Größe wählen',true); return; } b.geo={id:g.id,size:data.get('geoSize')}; b.size=b.geo.size; S.sessions.filter(x=>x.bikeId===b.id&&x.status!=='abgeschlossen').forEach(applyMaker); audit(`Geometrie zugeordnet: ${b.brand} ${b.model} → ${g.brand} ${g.model} ${b.geo.size}`); save(); bikeDrawer(b.id); render(); toast('Geometrie zugeordnet'); },
   newGeo(f,data){ const id=uid('g'); S.geoCustom.push({id,brand:data.get('brand').trim(),model:data.get('model').trim(),year:data.get('year')?Number(data.get('year')):null,type:data.get('type'),src:data.get('src')||'',rows:[]}); audit(`Geometrie-Modell angelegt: ${data.get('brand')} ${data.get('model')}`); save(); render(); geoDrawer(id); },
   geoRow(f,data){ const g=S.geoCustom.find(x=>x.id===f.dataset.id); const row=GCOLS.map(c=>{ if(c==='size') return data.get('size').trim(); const v=data.get(c); return v===null||v===''?null:Number(v); }); g.rows=g.rows.filter(r=>String(r[0])!==row[0]); g.rows.push(row); save(); geoDrawer(g.id); render(); toast(`Größe ${row[0]} gespeichert`); },
@@ -6405,12 +6417,16 @@ const ST6={1:['Fertig','s1','vollständig umgesetzt und getestet'],2:['Teilweise
 const st6=n=>`<span class="chip nodot st6 st6-${n}" title="${esc(ST6[n][2])}">${n} ${ST6[n][0]}</span>`;
 const FEATURES=[
  ['Kunden','Kundenakte, Einwilligungen, Auskunft und Löschen',1],
+ ['Erinnerungen','Inspektion fällig, Termin morgen, Abholung, Dienstrad-Inspektion, jährliche Service-Erinnerung (nur mit Zustimmung) – Nachricht mit einem Tipp',1],
+ ['Fahrradpass','Alle Services, Reparaturen und nachgerüsteten Teile je Rad – zum Drucken, als PDF und im Kundenportal',1],
+ ['Dienstrad / Leasing','Leasinggeber, Vertrag, jährliche Inspektion, Auftrag mit Checkliste, Abrechnungsliste (ohne Portal-Anbindung)',2],
+ ['Erfolgsbericht','Monatlich: Werkstatt, Fittings, Zubehör, Feedback – was FYF dem Laden gebracht hat',1],
  ['Fahrräder','Fahrradakte mit Lebenslauf: Kauf, Garantie, Kilometer, Teiletausch, Fittings, Werkstatt',1],
  ['FYF Bikefitting','Geführter Ablauf, Körperanalyse, Vermessung mit Doppelmessung, Bericht, Nachkontrollen. Beinlänge: 3 Messungen je Seite, Streuung, Gegenprobe im Stehen',1],
  ['Zeichnungen','Fahrrad nach echter Geometrie, Fahrer und alle Körpertests nach Körperproportionen, Füße, Schuhe, Sattel und Lenker neu gezeichnet, Tretbewegung animiert',1],
- ['Bewegung & Video','Winkel aus Video; Live-Analyse ist Beta',2],
- ['Werkstatt','Aufträge, Kostenvoranschlag, Wartung. Kundenfreigabe per Link fehlt noch (simuliert)',2],
- ['Termine','Termine an Fittings und im Dashboard; Terminwünsche über Anfragen. Kein eigener Kalender, keine Online-Buchung',2],
+ ['Bewegung & Video','Winkel aus Video, automatische Gelenkerkennung live und aus Video-Datei (Beta)',2],
+ ['Werkstatt','Aufträge, Annahme mit Unterschrift, Kostenvoranschlag mit Freigabe per Link, Checklisten, Fertig-Meldung, Bewertung, Export',1],
+ ['Termine','Kalender mit Kapazität, Terminwunsch und freie Zeiten online buchbar (Laden bestätigt), Erinnerung am Vortag',1],
  ['Verkauf & Angebote','Angebote aus dem Fitting, Produktempfehlungen mit Begründung',1],
  ['Rechnungen','Pflichtangaben, Storno, PDF, E-Rechnung (XRechnung). Server schützt ausgestellte Rechnungen. Nicht mit dem offiziellen Prüfprogramm geprüft',2],
  ['Zahlungen','Teil-, Anzahlung und Kombizahlung je Rechnung erfassen, offener Betrag',1],
@@ -6428,12 +6444,12 @@ const FEATURES=[
  ['Fitting Equipment','Messmittel-Verwaltung. Eigene Messhilfen nur als Konzept, keine Maße erfunden',3],
  ['Marketing','QR-Code und Link zum eigenen Profil, Werbepaket (Druckdateien). Gemeinsame Kampagnen fehlen',2],
  ['Mitarbeiter & Rollen','Einladen per E-Mail, Rollen vom Server, Protokoll',1],
- ['Filialen','Filialen anlegen, Gerät einer Filiale zuordnen, Vergleich. Bestand je Filiale fehlt',2],
- ['Unternehmensgruppen','Gruppe → Unternehmen → Marke → Filiale: noch nicht',4],
+ ['Filialen','Filialen anlegen, Gerät einer Filiale zuordnen, Bestand je Filiale, Umlagerung, Vergleich',1],
+ ['Unternehmensgruppen','Gruppe → Unternehmen → Marke → Filiale innerhalb eines Kontos; getrennte Konten unter einer Gruppe fehlen noch',2],
  ['Auswertungen','Kennzahlen pro Monat, Filialvergleich, Datenbank-Lesekopie für spätere Auswertungen',2],
  ['Import & Export','Kunden-Import (CSV), Kunden-, Produkt- und Rechnungsliste als CSV',1],
  ['DATEV / Buchhaltung','Rechnungsliste als CSV. Offizielles DATEV-Format braucht Prüfung mit dem Steuerberater',5],
- ['Kundenportal','Nur Vorschau, kein Kunden-Login',3],
+ ['Kundenportal','Persönlicher Link ohne Konto: Räder, Einstellungen, Fittings, Fahrradpass, Feedback',1],
  ['Datenbank-Tabellen','Lesekopie in Tabellen bei jedem Speichern. Schreiben weiter als ein Datensatz je Laden',6]];
 VIEWS.module = () => `
   ${head('Stand aller Funktionen',`${esc(BRAND.platform)} (Name noch offen) mit ${esc(BRAND.fit)}. Jede Funktion mit ehrlichem Stand.`)}
@@ -6927,6 +6943,215 @@ FEATURES.forEach(f=>{ if(f[0]==='Termine'){ f[1]='Kalender mit Wochenansicht, Ka
   return box+db(); }; }
 
 /* =================== Ende Plattform-Ausbau =================== */
+
+/* ===================== v.77 Werkstatt-Nutzen auch ohne Fitting =====================
+   Erinnerungen mit einem Tipp, Fahrrad-Annahme mit Unterschrift, Bewertung nach dem Auftrag,
+   freie Termine online, Dienstrad-/Leasing-Inspektionen, Erfolgsbericht, Erste Schritte, Export. */
+const LEASE_PROV=['JobRad','BusinessBike','Bikeleasing-Service','Eurorad','mein-dienstrad','Lease a Bike','Company Bike','Deutsche Dienstrad','Andere'];
+const INSPECT_CHECK=['Rahmen und Gabel auf Risse geprüft','Bremsen geprüft und eingestellt','Bremsbeläge/-scheiben Verschleiß gemessen','Schaltung eingestellt','Kette auf Verschleiß gemessen','Reifen und Luftdruck geprüft','Laufräder: Rundlauf und Speichen','Steuersatz und Lager geprüft','Licht und Klingel geprüft','Schrauben mit Drehmoment nachgezogen','E-Bike: Fehlerspeicher und Akku ausgelesen','Probefahrt'];
+const addMonths=(d,m)=>{ const x=new Date((d||today())+'T12:00'); x.setMonth(x.getMonth()+m); return iso(x); };
+const sig2=()=>shopName()?`\n\nViele Grüße\n${shopName()}${S.shop&&S.shop.phone?'\n'+S.shop.phone:''}`:'';
+function leaseNext(b){ const l=b&&b.lease; if(!l||!l.provider) return ''; return l.lastInsp?addMonths(l.lastInsp,12):(l.start?addMonths(l.start,12):''); }
+function bikeName(b){ return [b&&b.brand,b&&b.model].filter(Boolean).join(' ')||'Fahrrad'; }
+
+// ---------- Erinnerungen ----------
+function reminders(){ const out=[], td=today(), rv=S.shop&&/^https:\/\//.test(S.shop.reviewUrl||'');
+  (S.services||[]).forEach((x,i)=>{ const b=bike(x.bikeId); if(!b||!b.id||!x.next||x.next>dayOff(14)||(x.reminded&&x.reminded>=dayOff(-30))) return;
+    out.push({k:'svc',id:String(i),c:b.customerId,t:`${x.task} fällig`,sub:`${bikeName(b)} · ${fmtDate(x.next)}`,warn:x.next<td}); });
+  appts().filter(a=>a.date===dayOff(1)&&!a.reminded).forEach(a=>out.push({k:'appt',id:a.id,c:a.customerId,t:`Termin morgen ${a.start}`,sub:`${a.kind} · ${a.customerId?cust(a.customerId).name:a.name}`}));
+  S.workshop.filter(w=>w.status==='Abholbereit'&&(w.readyAt||w.due)<=dayOff(-2)&&!(w.pickRem&&w.pickRem>=dayOff(-3))).forEach(w=>out.push({k:'pick',id:w.id,c:w.customerId,t:'Rad wartet auf Abholung',sub:`${w.id} · ${bikeName(bike(w.bikeId))}`}));
+  S.bikes.forEach(b=>{ const n=leaseNext(b); if(n&&n<=dayOff(30)&&!(b.lease.reminded&&b.lease.reminded>=dayOff(-30))) out.push({k:'lease',id:b.id,c:b.customerId,t:`Dienstrad-Inspektion ${n<td?'überfällig':'fällig'}`,sub:`${b.lease.provider} · ${bikeName(b)} · ${fmtDate(n)}`,warn:n<td}); });
+  if(rv) S.workshop.filter(w=>w.status==='Übergeben'&&!w.reviewAsked&&(w.doneAt||w.due||'')>=dayOff(-14)).forEach(w=>out.push({k:'review',id:w.id,c:w.customerId,t:'Um Bewertung bitten',sub:`${w.id} · ${w.title}`}));
+  return out.filter(r=>r.c&&cust(r.c)&&cust(r.c).id); }
+function remText(r){ const c=cust(r.c), n=firstName(c);
+  if(r.k==='svc'){ const x=S.services[Number(r.id)], b=bike(x.bikeId); return `Hallo ${n},\nbei deinem ${bikeName(b)} steht „${x.task}“ an (fällig ${fmtDate(x.next)}). Sollen wir einen Termin ausmachen? Einfach kurz antworten.${sig2()}`; }
+  if(r.k==='appt'){ const a=appts().find(x=>x.id===r.id); const d=new Date(a.date+'T12:00').toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit'}); return `Hallo ${n},\nkurze Erinnerung an deinen Termin (${a.kind}) morgen, ${d}, um ${a.start} Uhr.${S.shop&&S.shop.addr?'\nAdresse: '+S.shop.addr:''}\nFalls etwas dazwischenkommt, sag bitte kurz Bescheid.${sig2()}`; }
+  if(r.k==='pick'){ const w=S.workshop.find(x=>x.id===r.id); return `Hallo ${n},\ndein ${bikeName(bike(w.bikeId))} ist fertig und wartet auf dich. Wann passt dir die Abholung?${sig2()}`; }
+  if(r.k==='lease'){ const b=bike(r.id); return `Hallo ${n},\nfür dein Dienstrad (${bikeName(b)}, ${b.lease.provider}) ist die jährliche Inspektion ${leaseNext(b)<today()?'überfällig':'bald fällig'} (${fmtDate(leaseNext(b))}). Sie ist für deinen Leasingvertrag wichtig. Wann passt dir ein Termin?${sig2()}`; }
+  if(r.k==='review'){ const w=S.workshop.find(x=>x.id===r.id); return reviewText(w); }
+  return ''; }
+function reviewText(w){ const c=cust(w.customerId); return `Hallo ${firstName(c)},\ndanke, dass du mit deinem ${bikeName(bike(w.bikeId))} bei uns warst! Wenn du zufrieden warst, freuen wir uns sehr über eine kurze Google-Bewertung:\n${S.shop.reviewUrl}\n\nUnd wenn etwas nicht gepasst hat, sag es uns bitte direkt.${sig2()}`; }
+const REM_IC={svc:'loop',appt:'calendar',pick:'check',lease:'doc',review:'quality'};
+function remindersHtml(){ const R=reminders(); if(!R.length) return '';
+  return panel(`Heute zu erledigen (${R.length})`,`<p class="muted" style="margin:0 0 8px;font-size:13.5px">Nachricht antippen – Text ist fertig, du schickst ihn per WhatsApp, SMS oder E-Mail.</p><div class="list">${R.slice(0,12).map(r=>`<div class="li" style="padding:8px 0"><div class="grow" style="min-width:0"><div style="font-weight:600${r.warn?';color:var(--bad)':''}">${esc(r.t)}</div><div class="faint" style="font-size:12.5px">${esc(cust(r.c).name)} · ${esc(r.sub)}</div></div><button class="btn sm" data-act="remMsg" data-k="${r.k}" data-id="${esc(r.id)}">Nachricht</button></div>`).join('')}</div>${R.length>12?`<p class="faint" style="font-size:12px">+ ${R.length-12} weitere</p>`:''}`); }
+function remMark(k,id){ const t=today();
+  if(k==='svc'){ const x=S.services[Number(id)]; if(x) x.reminded=t; } if(k==='appt'){ const a=appts().find(x=>x.id===id); if(a) a.reminded=t; }
+  if(k==='pick'){ const w=S.workshop.find(x=>x.id===id); if(w) w.pickRem=t; } if(k==='lease'){ const b=bike(id); if(b&&b.lease) b.lease.reminded=t; }
+  if(k==='review'){ const w=S.workshop.find(x=>x.id===id); if(w){ w.reviewAsked=t; w.log.push({time:nowStamp(),text:'Um Google-Bewertung gebeten'}); } } }
+
+// ---------- Freie Termine online ----------
+function freeSlots(days=14){ const cap=capCfg(), out=[]; const nStaff=Math.max(1,cap.staff.length), o=hm(cap.open), cl=hm(cap.close);
+  for(let i=1;i<=days;i++){ const d=dayOff(i), L=dayLoad(d); if(!L.open||L.used>=L.capH-0.5) continue; const t=[];
+    for(let m=o;m+60<=cl;m+=60){ const busy=L.ap.filter(a=>hm(a.start)<m+60&&hm(a.start)+(Number(a.dur)||60)>m).length; if(busy<nStaff) t.push(`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`); }
+    if(t.length) out.push({d,t:t.slice(0,8)}); }
+  return out; }
+async function slotsPublish(silent){ if(!cloudReady()) { if(!silent) toast('Freie Zeiten online brauchen die Cloud-Speicherung',true); return; }
+  if(dbSchema!==null&&dbSchema<9){ if(!silent) toast('Erst die Datenbank aktualisieren (Stand 9)',true); return; }
+  const on=!!(S.capacity&&S.capacity.online); const slots=on?freeSlots():[];
+  try{ await clApi('/rest/v1/rpc/profile_slots',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_slots:slots})}); S.slotsAt=nowStamp(); save(); if(!silent) toast(on?`${slots.reduce((a,x)=>a+x.t.length,0)} freie Zeiten online`:'Online-Buchung ausgeschaltet'); }
+  catch(e){ if(!silent) toast(e.offline?'Keine Verbindung':clErrText(e.message),true); } }
+
+// ---------- Erfolgsbericht ----------
+function monthReport(ym){ const inM=d=>String(d||'').slice(0,7)===ym;
+  const fits=S.sessions.filter(s=>inM(s.date)), fitRev=fits.reduce((a,s)=>a+(Number(s.price)||0),0);
+  const wos=S.workshop.filter(w=>w.status==='Übergeben'&&inM(w.doneAt||w.due)), woRev=wos.reduce((a,w)=>a+w.positions.reduce((x,p)=>x+p.qty*p.price,0),0);
+  const prods=products(); let recRev=0, recN=0; fits.forEach(s=>(s.recs||[]).filter(r=>r.status==='angenommen'||r.status==='verkauft'||r.status==='done').forEach(r=>{ const p=prods.find(x=>x.id===r.prodId)||{}; recRev+=Number(p.price||r.price||0); recN++; }));
+  const after=S.workshop.filter(w=>inM(w.created)&&/Fitting/i.test(w.title)).length;
+  const fb=S.sessions.flatMap(s=>(s.feedback||[]).filter(f=>inM(f.date))), fbAvg=fb.length?fb.reduce((a,f)=>a+Number(f.score||0),0)/fb.length:null;
+  const rev=S.workshop.filter(w=>inM(w.reviewAsked)).length, intake=S.workshop.filter(w=>w.intake&&inM(w.intake.date)).length;
+  return {fits:fits.length,fitRev,wos:wos.length,woRev,recN,recRev,after,fbAvg,fbN:fb.length,rev,intake,total:fitRev+woRev+recRev}; }
+function successHtml(){ const ym=today().slice(0,7), R=monthReport(ym), mn=new Date(ym+'-15T12:00').toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+  const k=(l,v,s)=>`<div class="panel kpi"><span class="label">${l}</span><span class="v">${v}</span>${s?`<span class="s">${s}</span>`:''}</div>`;
+  return panel(`Dein Monat mit FYF · ${mn}`,`<div class="grid g4">${k('Werkstatt übergeben',R.wos,eur(R.woRev))}${k('Fittings',R.fits,R.fitRev?eur(R.fitRev):'Preis am Fitting erfassen')}${k('Zubehör aus Empfehlungen',R.recN,eur(R.recRev))}${k('Kunden-Feedback',R.fbN,R.fbAvg!=null?`Ø ${fmtNum(Math.round(R.fbAvg*10)/10)} von 10`:'–')}</div>
+    <p style="margin:10px 0 0">Über FYF dokumentierter Umsatz: <b>${eur(R.total)}</b> · FYF kostet 99 € im Monat.${R.total>=99?' <span class="chip c-ok">mehr als gedeckt</span>':''}</p>
+    <p class="faint" style="font-size:12px;margin:4px 0 0">Gezählt wird nur, was in FYF erfasst ist: übergebene Aufträge, Fitting-Preise, angenommene Empfehlungen. ${R.intake} Annahmen mit Unterschrift, ${R.rev} Bewertungsanfragen in diesem Monat.</p>`); }
+
+// ---------- Erste Schritte ----------
+function onboardHtml(){ if(S.onboardDone) return ''; const st=[
+  ['Ladendaten eintragen',!!(S.shop&&S.shop.name&&S.shop.addr),'data-nav="mehr"'],
+  ['Öffnungszeiten und Kapazität einstellen',!!S.capacity,'data-nav="termine"'],
+  ['Cloud-Speicherung verbinden',cloudReady(),'data-nav="mehr"'],
+  ['Link zu Google-Bewertungen eintragen',!!(S.shop&&S.shop.reviewUrl),'data-nav="mehr"'],
+  ['Erstes Rad mit Annahmeprotokoll aufnehmen',S.workshop.some(w=>w.intake),'data-nav="werkstatt"'],
+  ['Händlerprofil veröffentlichen',!!(NET.profile&&NET.profile.published),'data-nav="netz"']];
+  const n=st.filter(x=>x[1]).length; if(n===st.length) return '';
+  return panel(`Erste Schritte · ${n} von ${st.length}`,`<div class="list">${st.map(([t,ok,a])=>`<div class="li ${ok?'':'click'}" style="padding:7px 0" ${ok?'':a}><span class="chip nodot ${ok?'c-ok':''}" style="min-width:24px;justify-content:center">${ok?'✓':'·'}</span><div class="grow"${ok?' style="opacity:.6"':''}>${esc(t)}</div></div>`).join('')}</div><div style="margin-top:8px"><button class="btn sm ghost" data-act="onboardHide">Ausblenden</button></div>`); }
+
+// ---------- Werkstatt-Ansicht erweitern ----------
+{ const W=VIEWS.werkstatt; VIEWS.werkstatt=()=>{ const h=W(); const i=h.indexOf('<div class="row">'); const extra=remindersHtml()+leaseHtml();
+    const tools=`<div class="row" style="gap:6px;flex-wrap:wrap;margin:-4px 0 4px"><button class="btn sm" data-act="intakeNew">${ic('plus')}Rad annehmen (mit Unterschrift)</button><button class="btn sm ghost" data-act="woExportAll">Alle Aufträge als CSV</button><button class="btn sm ghost" data-act="leaseCsv">Dienstrad-Abrechnung (CSV)</button></div>`;
+    return i<0?extra+tools+h:h.slice(0,i)+tools+extra+h.slice(i); }; }
+function leaseHtml(){ const L=S.bikes.filter(b=>b.lease&&b.lease.provider); if(!L.length) return '';
+  return panelFlush(`Dienstrad-Inspektionen (${L.length})`,`<div class="tw"><table><thead><tr><th>Fahrrad</th><th>Leasing</th><th>Nächste Inspektion</th><th></th></tr></thead><tbody>${L.sort((a,b)=>leaseNext(a).localeCompare(leaseNext(b))).map(b=>{ const n=leaseNext(b); return `<tr><td>${esc(bikeName(b))}<div class="faint" style="font-size:12px">${esc(cust(b.customerId).name)}</div></td><td>${esc(b.lease.provider)}<div class="faint mono" style="font-size:11px">${esc(b.lease.contract||'')}</div></td><td class="${n&&n<today()?'':''}">${n?fmtDate(n):'–'}${n&&n<today()?' <span class="chip c-bad">überfällig</span>':''}</td><td class="r"><button class="btn sm" data-act="leaseWO" data-id="${b.id}">Auftrag anlegen</button></td></tr>`; }).join('')}</tbody></table></div>`); }
+
+// ---------- Auftrags-Drawer erweitern: Annahme, Checkliste, Bewertung ----------
+{ const WD=woDrawer; woDrawer=function(id){ WD(id); const w=S.workshop.find(x=>x.id===id), box=document.getElementById('drawerBody'); if(!w||!box) return;
+    const I=w.intake; let h=`<div class="stack"><h3>Annahme</h3>${I?`<p style="margin:0;font-size:14px">${fmtDate(I.date)} · ${I.km!=null?fmtNum(I.km)+' km · ':''}${esc((I.issues||[]).join(', ')||'keine Vorschäden notiert')}${(I.items||[]).length?' · abgegeben: '+esc(I.items.join(', ')):''}${I.limit?` · Rückfrage ab ${eur(I.limit)}`:''}</p>${I.wish?`<p class="muted" style="margin:0;font-size:13.5px">Wunsch: ${esc(I.wish)}</p>`:''}${I.sig?`<img src="${I.sig}" alt="Unterschrift" style="max-width:200px;background:#fff;border:1px solid var(--line);border-radius:8px">`:''}<div class="row"><button class="btn sm ghost" data-act="intakeMsg" data-id="${w.id}">Annahme an Kunden schicken</button></div>`:`<div><button class="btn sm" data-act="intakeOpen" data-id="${w.id}">Annahmeprotokoll mit Unterschrift</button></div>`}</div>`;
+    if(w.checklist) h+=`<div class="stack"><h3>Checkliste (${w.checklist.filter(x=>x.ok).length}/${w.checklist.length})</h3><div class="list">${w.checklist.map((x,i)=>`<label class="li" style="padding:5px 0;gap:10px"><input type="checkbox" data-act="woChk" data-id="${w.id}" data-i="${i}" ${x.ok?'checked':''}><span>${esc(x.t)}</span></label>`).join('')}</div></div>`;
+    if(w.status==='Übergeben'||w.status==='Abholbereit') h+=`<div class="stack"><h3>Bewertung</h3><div class="row"><button class="btn sm" data-act="woReview" data-id="${w.id}">Um Google-Bewertung bitten</button>${w.reviewAsked?`<span class="faint" style="font-size:12.5px">gefragt am ${fmtDate(w.reviewAsked)}</span>`:''}</div></div>`;
+    box.insertAdjacentHTML('afterbegin',`<div class="stack" style="gap:14px;margin-bottom:14px">${h}</div>`); }; }
+
+// ---------- Fahrrad-Drawer erweitern: Dienstrad/Leasing ----------
+{ const BD=bikeDrawer; bikeDrawer=function(id){ BD(id); const b=bike(id), box=document.getElementById('drawerBody'); if(!b||!b.id||!box) return; const l=b.lease||{};
+    box.insertAdjacentHTML('beforeend',`<hr><details class="more" ${l.provider?'open':''}><summary>Dienstrad / Leasing${l.provider?' · '+esc(l.provider):''}</summary><form class="form" data-form="bikeLease" data-id="${b.id}" style="margin-top:8px">
+      <div class="field"><label for="ls_p">Leasinggeber</label><select class="input" id="ls_p" name="provider"><option value="">kein Dienstrad</option>${opts(LEASE_PROV,l.provider||'')}</select></div>
+      <div class="field"><label for="ls_c">Vertrags-/Nutzernummer</label><input class="input mono" id="ls_c" name="contract" value="${esc(l.contract||'')}"></div>
+      <div class="field"><label for="ls_s">Vertragsbeginn</label><input class="input" id="ls_s" name="start" type="date" value="${esc(l.start||'')}"></div>
+      <div class="field"><label for="ls_e">Vertragsende</label><input class="input" id="ls_e" name="end" type="date" value="${esc(l.end||'')}"></div>
+      <div class="field"><label for="ls_l">Letzte Inspektion</label><input class="input" id="ls_l" name="lastInsp" type="date" value="${esc(l.lastInsp||'')}"></div>
+      <div class="field"><label for="ls_v">Service-Paket</label><select class="input" id="ls_v" name="pack">${opts(['unbekannt','Inspektion enthalten','Vollservice','ohne Service'],l.pack||'unbekannt')}</select></div>
+      <div class="wide row"><button class="btn primary" type="submit">Speichern</button>${leaseNext(b)?`<span class="faint" style="font-size:12.5px">Nächste Inspektion: ${fmtDate(leaseNext(b))}</span>`:''}</div></form></details>`); }; }
+
+// ---------- Kurz-Check als Vorlage ----------
+FIT_TPL['Kurz-Check']={tests:['pain','legLen','sitBone'],focus:['Sattelhöhe und Kniewinkel','Sattelposition und Neigung','Cleat-Position']};
+
+// ---------- Dashboard: Erste Schritte, Erinnerungen, Erfolgsbericht ----------
+{ const D=VIEWS.dashboard; VIEWS.dashboard=()=>{ const R=reminders(); const rem=R.length?`<div class="notice" style="margin-bottom:12px;display:block"><b>${R.length===1?'1 Erinnerung':R.length+' Erinnerungen'} offen</b> – Inspektionen, Termine, Abholungen, Bewertungen.<div style="margin-top:6px"><button class="btn sm" data-nav="werkstatt">Ansehen</button></div></div>`:'';
+    return onboardHtml()+rem+D()+successHtml(); }; }
+
+// ---------- Kalender: Online-Buchung ----------
+{ const T=VIEWS.termine; VIEWS.termine=()=>{ const cap=capCfg(), fs=freeSlots(), n=fs.reduce((a,x)=>a+x.t.length,0);
+    return T()+panel('Freie Zeiten online buchbar',`<p class="muted" style="margin:0 0 8px;font-size:13.5px">Kunden sehen auf deiner Profilseite die freien Zeiten der nächsten 14 Tage (aus Öffnungszeiten, Kapazität und Terminen) und schicken eine Terminanfrage für eine feste Uhrzeit. Du bestätigst sie mit einem Tipp.</p>
+      <label class="row" style="flex-wrap:nowrap"><input type="checkbox" data-act="slotsToggle" ${cap.online?'checked':''}><span>Online-Buchung einschalten</span></label>
+      <p style="margin:8px 0 0;font-size:14px">Gerade frei: <b>${n}</b> Zeiten an ${fs.length} Tagen${S.slotsAt?` · zuletzt online gestellt ${esc(S.slotsAt)}`:''}</p>
+      <div style="margin-top:8px"><button class="btn sm" data-act="slotsPub">Jetzt aktualisieren</button></div>`); }; }
+
+Object.assign(ACT,{
+  remMsg(el){ const r=reminders().find(x=>x.k===el.dataset.k&&x.id===el.dataset.id); if(!r) return; const c=cust(r.c);
+    openDrawer(r.t,`<div class="stack"><p class="muted" style="margin:0;font-size:14px">${esc(c.name)} · ${esc(r.sub)}</p>${msgButtons(remText(r),c)}<div class="row"><button class="btn sm" data-act="remDone" data-k="${r.k}" data-id="${esc(r.id)}">Erledigt – aus der Liste nehmen</button></div></div>`); },
+  remDone(el){ remMark(el.dataset.k,el.dataset.id); audit('Erinnerung verschickt'); save(); closeDrawer(); render(); toast('Erledigt'); },
+  onboardHide(){ S.onboardDone=1; save(); render(); },
+  woChk(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); const x=w&&w.checklist&&w.checklist[Number(el.dataset.i)]; if(!x) return; x.ok=el.checked; x.at=el.checked?nowStamp():''; save(); },
+  woReview(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); if(!w) return; if(!(S.shop&&/^https:\/\//.test(S.shop.reviewUrl||''))){ toast('Erst unter Mehr → Dein Laden den Link zu deinen Google-Bewertungen eintragen',true); return; }
+    remMark('review',w.id); save(); openDrawer('Um Bewertung bitten',`<div class="stack">${msgButtons(reviewText(w),cust(w.customerId))}<p class="faint" style="font-size:12.5px;margin:0">Die Bitte geht an jeden Kunden gleich – egal wie zufrieden er ist. So verlangen es die Google-Regeln.</p></div>`); },
+  intakeNew(){ openDrawer('Rad annehmen',`<form class="form" data-form="intakeStart"><div class="field wide"><label for="in_b">Fahrrad</label><select class="input" id="in_b" name="bid" required><option value="">Fahrrad wählen</option>${S.bikes.filter(b=>b.id).map(b=>`<option value="${b.id}">${esc(cust(b.customerId).name)} · ${esc(bikeName(b))}</option>`).join('')}</select></div><div class="field wide"><label for="in_t">Auftrag</label><input class="input" id="in_t" name="title" required placeholder="z. B. Inspektion, Bremsen quietschen"></div><div class="wide row"><button class="btn primary" type="submit">Weiter zur Annahme</button><span class="faint" style="font-size:12.5px">Neuer Kunde? Erst unter Kunden anlegen.</span></div></form>`); },
+  intakeOpen(el){ intakeDrawer(el.dataset.id); },
+  intakeMsg(el){ const w=S.workshop.find(x=>x.id===el.dataset.id), I=w&&w.intake; if(!I) return; const c=cust(w.customerId);
+    openDrawer('Annahme schicken',msgButtons(`Hallo ${firstName(c)},\nwir haben dein ${bikeName(bike(w.bikeId))} angenommen (${w.id}).\nAuftrag: ${w.title}\n${I.km!=null?'Kilometerstand: '+fmtNum(I.km)+' km\n':''}Zustand: ${(I.issues||[]).join(', ')||'keine Vorschäden notiert'}\n${(I.items||[]).length?'Abgegeben: '+I.items.join(', ')+'\n':''}${I.limit?`Wir melden uns vor Arbeiten über ${eur(I.limit)}.\n`:''}${I.pickup?'Geplante Fertigstellung: '+fmtDate(I.pickup)+'\n':''}${sig2()}`,c)); },
+  leaseWO(el){ const b=bike(el.dataset.id); if(!b||!b.lease) return; const n=Math.max(1000,...S.workshop.map(w=>Number(String(w.id).split('-')[1])||0))+1, id='WO-'+n;
+    S.workshop.unshift({id,customerId:b.customerId,bikeId:b.id,title:`Dienstrad-Inspektion (${b.lease.provider})`,status:'Angenommen',created:today(),due:dayOff(3),mechanic:'',positions:[{t:'Jahresinspektion Dienstrad',kind:'Arbeit',qty:1,price:Number(S.shop&&S.shop.inspPrice)||0}],log:[{time:nowStamp(),text:'Aus Dienstrad-Inspektion angelegt'}],lease:{provider:b.lease.provider,contract:b.lease.contract||''},checklist:INSPECT_CHECK.map(t=>({t,ok:false}))});
+    audit(`${id}: Dienstrad-Inspektion angelegt`); save(); render(); woDrawer(id); toast('Auftrag mit Checkliste angelegt'); },
+  leaseCsv(){ const ym=today().slice(0,7); const rows=S.workshop.filter(w=>w.lease&&String(w.doneAt||w.due||w.created).slice(0,7)===ym);
+    const q=v=>`"${String(v??'').replace(/"/g,'""')}"`; const csv=['Auftrag;Datum;Leasinggeber;Vertrag;Kunde;Fahrrad;Rahmennummer;Status;Summe brutto'].concat(rows.map(w=>{ const b=bike(w.bikeId)||{}; return [w.id,w.doneAt||w.due,w.lease.provider,w.lease.contract,cust(w.customerId).name,bikeName(b),b.frameNo||'',w.status,w.positions.reduce((a,p)=>a+p.qty*p.price,0).toFixed(2).replace('.',',')].map(q).join(';'); })).join('\n');
+    if(!rows.length){ toast('In diesem Monat keine Dienstrad-Aufträge',true); return; } try{ download(`Dienstrad-Abrechnung-${ym}.csv`,'﻿'+csv,'text/csv;charset=utf-8'); toast('CSV erstellt'); }catch(e){ copyText(csv); } },
+  woExportAll(){ const q=v=>`"${String(v??'').replace(/"/g,'""')}"`; const csv=['Auftrag;Angelegt;Fällig;Status;Kunde;E-Mail;Telefon;Fahrrad;Rahmennummer;Titel;Positionen;Summe brutto'].concat(S.workshop.map(w=>{ const c=cust(w.customerId)||{}, b=bike(w.bikeId)||{}; return [w.id,w.created,w.due,w.status,c.name,c.email,c.phone,bikeName(b),b.frameNo||'',w.title,w.positions.map(p=>`${p.qty}× ${p.t}`).join(', '),w.positions.reduce((a,p)=>a+p.qty*p.price,0).toFixed(2).replace('.',',')].map(q).join(';'); })).join('\n');
+    try{ download(`Werkstattauftraege-${today()}.csv`,'﻿'+csv,'text/csv;charset=utf-8'); toast('CSV erstellt'); }catch(e){ copyText(csv); } },
+  slotsToggle(el){ const cap=capCfg(); cap.online=el.checked; audit(`Online-Buchung ${el.checked?'ein':'aus'}`); save(); slotsPublish(); render(); },
+  slotsPub(){ slotsPublish(); }
+});
+function intakeDrawer(id){ const w=S.workshop.find(x=>x.id===id); if(!w) return; const b=bike(w.bikeId)||{}, I=w.intake||{};
+  const ch=(name,list,sel)=>list.map(t=>`<label class="row" style="flex-wrap:nowrap;gap:8px"><input type="checkbox" name="${name}" value="${esc(t)}" ${(sel||[]).includes(t)?'checked':''}><span>${esc(t)}</span></label>`).join('');
+  openDrawer(`Annahme · ${w.id}`,`<form class="form" data-form="woIntake" data-id="${w.id}">
+    <div class="field wide"><p style="margin:0"><b>${esc(cust(w.customerId).name)}</b> · ${esc(bikeName(b))}${b.frameNo?` · <span class="mono">${esc(b.frameNo)}</span>`:''}</p><p class="muted" style="margin:2px 0 0;font-size:13.5px">${esc(w.title)}</p></div>
+    <div class="field"><label for="ik_km">Kilometerstand</label><input class="input num" id="ik_km" name="km" type="number" min="0" inputmode="numeric" value="${esc(I.km??b.km??'')}"></div>
+    <div class="field"><label for="ik_p">Fertig bis (geplant)</label><input class="input" id="ik_p" name="pickup" type="date" value="${esc(I.pickup||w.due||'')}"></div>
+    <div class="field wide"><label>Zustand / Vorschäden</label><div class="stack" style="gap:4px">${ch('issue',['Kratzer am Rahmen','Lackschaden','Delle/Riss sichtbar','Schaltung hakt','Bremsen schwach','Reifen abgefahren','Licht defekt','Akku/Display: Fehler'],I.issues)}</div></div>
+    <div class="field wide"><label>Mit abgegeben</label><div class="stack" style="gap:4px">${ch('item',['Akku','Ladegerät','Schlüssel','Schloss','Tacho/Navi','Taschen','Pumpe'],I.items)}</div></div>
+    <div class="field wide"><label for="ik_w">Wunsch des Kunden</label><textarea class="input" id="ik_w" name="wish" rows="2" placeholder="z. B. quietscht beim Bremsen vorn">${esc(I.wish||'')}</textarea></div>
+    <div class="field"><label for="ik_l">Rückfrage, wenn teurer als (€)</label><input class="input num" id="ik_l" name="limit" type="number" min="0" step="10" value="${esc(I.limit??'')}"></div>
+    <div class="field wide"><label>Unterschrift des Kunden</label><canvas id="sigPad" width="600" height="200" style="width:100%;max-width:520px;aspect-ratio:3/1;background:#fff;border:1px solid var(--line);border-radius:12px;touch-action:none"></canvas><input type="hidden" name="sig" id="sigVal"><div class="row" style="margin-top:6px"><button type="button" class="btn sm ghost" data-act="sigClear">Löschen</button><span class="faint" style="font-size:12px">Bestätigt Zustand, Auftrag und Rückfrage-Grenze.</span></div></div>
+    <div class="wide"><button class="btn primary" type="submit">Annahme speichern</button></div></form>`); setTimeout(sigInit,0); }
+Object.assign(FORMS,{
+  intakeStart(f,d){ const b=bike(d.get('bid')); if(!b||!b.id){ toast('Bitte ein Fahrrad wählen',true); return; } const n=Math.max(1000,...S.workshop.map(w=>Number(String(w.id).split('-')[1])||0))+1, id='WO-'+n;
+    S.workshop.unshift({id,customerId:b.customerId,bikeId:b.id,title:String(d.get('title')||'').trim()||'Werkstattauftrag',status:'Angenommen',created:today(),due:dayOff(3),mechanic:'',positions:[],log:[{time:nowStamp(),text:'Auftrag bei der Annahme angelegt'}]}); audit(`${id}: angelegt`); save(); render(); intakeDrawer(id); },
+  woIntake(f,d){ const w=S.workshop.find(x=>x.id===f.dataset.id); if(!w) return; const sig=String(d.get('sig')||'');
+    if(!/^data:image\/png;base64,/.test(sig)||sig.length<800){ toast('Bitte den Kunden im weißen Feld unterschreiben lassen',true); return; }
+    const km=d.get('km')===''?null:Number(d.get('km')), lim=d.get('limit')===''?null:Number(d.get('limit'));
+    w.intake={date:today(),time:nowStamp(),km,pickup:String(d.get('pickup')||''),issues:d.getAll('issue'),items:d.getAll('item'),wish:String(d.get('wish')||'').trim().slice(0,600),limit:lim,sig:sig.length<120000?sig:''};
+    if(w.intake.pickup) w.due=w.intake.pickup; const b=bike(w.bikeId); if(b&&km!=null&&km>(Number(b.km)||0)) b.km=km;
+    w.log.push({time:nowStamp(),text:'Annahmeprotokoll mit Unterschrift'}); audit(`${w.id}: Annahme mit Unterschrift`); save(); render(); woDrawer(w.id); toast('Annahme gespeichert'); },
+  bikeLease(f,d){ const b=bike(f.dataset.id); if(!b) return; const g=k=>String(d.get(k)||'').trim(); const p=g('provider');
+    if(!p){ delete b.lease; } else b.lease={...(b.lease||{}),provider:p,contract:g('contract'),start:g('start'),end:g('end'),lastInsp:g('lastInsp'),pack:g('pack')};
+    audit(`Dienstrad-Daten ${p?'gespeichert':'entfernt'}: ${bikeName(b)}`); save(); render(); bikeDrawer(b.id); toast('Gespeichert'); }
+});
+// Fertigmeldung/Übergabe-Zeitpunkt merken
+{ const N=ACT.woNext; ACT.woNext=function(el){ N.call(this,el); const w=S.workshop.find(x=>x.id===el.dataset.id); if(!w) return; if(w.status==='Abholbereit'&&!w.readyAt) w.readyAt=today(); if(w.status==='Übergeben'&&!w.doneAt){ w.doneAt=today(); const b=bike(w.bikeId); if(w.lease&&b&&b.lease){ b.lease.lastInsp=today(); } } save(); }; }
+// Terminanfrage mit fester Uhrzeit → Termin vorbelegen
+{ const Q=ACT.inqToAppt; ACT.inqToAppt=function(el){ Q.call(this,el); const q=(NET.inq||[]).find(x=>x.id===el.dataset.id); const m=String(q&&q.preferred||'').match(/(\d{2})\.(\d{2})\.(\d{4})(?:\D+(\d{1,2}:\d{2}))?/); if(!m) return;
+    const d=document.getElementById('ap_d'), s=document.getElementById('ap_s'); if(d) d.value=`${m[3]}-${m[2]}-${m[1]}`; if(s&&m[4]) s.value=m[4].padStart(5,'0'); }; }
+// Nach dem Speichern von Profil/Kapazität/Terminen freie Zeiten neu veröffentlichen
+['profileSave','capSave','apptSave'].forEach(k=>{ const o=FORMS[k]; if(!o) return; FORMS[k]=async function(f,d){ const r=await o.call(this,f,d); if(S.capacity&&S.capacity.online) slotsPublish(true); return r; }; });
+
+// ---------- Jährliche Service-Erinnerung (nur mit Zustimmung) ----------
+function lastVisit(c){ const ds=[...S.workshop.filter(w=>w.customerId===c.id).map(w=>w.doneAt||w.created),...S.sessions.filter(s=>s.customerId===c.id).map(s=>s.date),c.since].filter(Boolean).sort(); return ds.pop()||''; }
+function annualDue(){ return S.customers.filter(c=>c.id&&c.consentInfo&&c.consentInfo.remind&&lastVisit(c)<=addMonths(today(),-11)&&!(c.annualAt&&c.annualAt>addMonths(today(),-11))&&S.bikes.some(b=>b.customerId===c.id)); }
+{ const R0=reminders; reminders=function(){ const out=R0(); annualDue().forEach(c=>out.push({k:'annual',id:c.id,c:c.id,t:'Jährliche Service-Erinnerung',sub:`letzter Besuch ${fmtDate(lastVisit(c))}`})); return out; }; }
+{ const T0=remText; remText=function(r){ if(r.k!=='annual') return T0(r); const c=cust(r.id), bs=S.bikes.filter(b=>b.customerId===c.id);
+    return `Hallo ${firstName(c)},\nein Jahr ist rum – Zeit für den Jahres-Check ${bs.length===1?'deines '+bikeName(bs[0]):'deiner Räder'}. Wir prüfen Bremsen, Schaltung, Kette und Reifen, damit du sicher in die Saison startest.\nWann passt dir ein Termin? Einfach kurz antworten.\n\n(Du bekommst diese Erinnerung einmal im Jahr, weil du zugestimmt hast. Antworte „Stopp“, dann schicken wir keine mehr.)${sig2()}`; }; }
+{ const M0=remMark; remMark=function(k,id){ if(k==='annual'){ const c=cust(id); if(c) c.annualAt=today(); return; } M0(k,id); }; }
+REM_IC.annual='calendar';
+Object.assign(ACT,{ remStop(el){ const c=cust(el.dataset.id); if(c&&c.consentInfo){ c.consentInfo.remind=false; c.consentInfo.remindOff=today(); audit(`Service-Erinnerung abbestellt: ${c.name}`); save(); closeDrawer(); render(); toast('Keine Erinnerungen mehr für diesen Kunden'); } } });
+{ const RM=ACT.remMsg; ACT.remMsg=function(el){ RM.call(this,el); if(el.dataset.k!=='annual') return; const b=document.getElementById('drawerBody'); if(b) b.insertAdjacentHTML('beforeend',`<div class="row" style="margin-top:8px"><button class="btn sm ghost" data-act="remStop" data-id="${esc(el.dataset.id)}">Kunde möchte keine Erinnerung mehr</button></div>`); }; }
+
+// ---------- Fahrradpass (wie ein Fahrzeugschein: alle Services und nachgerüsteten Teile) ----------
+function bikePassData(b){ const c=cust(b.customerId)||{}, L=b.life||{};
+  const svc=S.workshop.filter(w=>w.bikeId===b.id&&(w.status==='Übergeben'||w.status==='Abholbereit')).map(w=>({date:w.doneAt||w.readyAt||w.due,km:w.intake&&w.intake.km,title:w.title,work:w.positions.filter(p=>!/Teil/i.test(p.kind||'')).map(p=>p.t),parts:w.positions.filter(p=>/Teil/i.test(p.kind||'')).map(p=>`${p.qty>1?p.qty+'× ':''}${p.t}`),ins:!!w.lease,id:w.id}));
+  const ev=(b.events||[]).map(e=>({date:e.date,kind:e.kind,text:e.text,km:e.km}));
+  const fits=S.sessions.filter(s=>s.bikeId===b.id&&s.status==='abgeschlossen').map(s=>({date:s.date,n:(s.changes||[]).length}));
+  return {shop:{name:shopName()||'',addr:(S.shop&&S.shop.addr)||'',phone:(S.shop&&S.shop.phone)||''},date:today(),bike:{name:bikeName(b),type:b.type||'',size:b.size||'',year:b.year||'',frameNo:b.frameNo||'',km:b.km??null,buy:L.buy||'',warranty:L.warrantyUntil||''},owner:firstName(c),
+    svc:svc.sort((a,x)=>String(x.date).localeCompare(String(a.date))),ev:ev.sort((a,x)=>String(x.date).localeCompare(String(a.date))),fits}; }
+function bikePassHtml(P){ const row=(a,b)=>`<tr><td style="padding:6px 8px 6px 0;color:#5f6b70;white-space:nowrap;vertical-align:top">${a}</td><td style="padding:6px 0">${b}</td></tr>`;
+  return `<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fahrradpass ${esc(P.bike.name)}</title>
+<style>body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1d2a30;max-width:760px;margin:0 auto;padding:28px 20px 60px}h1{font-size:28px;margin:0}h2{font-size:17px;margin:26px 0 8px;border-bottom:2px solid #1d2a30;padding-bottom:4px}table{border-collapse:collapse;width:100%;font-size:14px}.e{border-bottom:1px solid #e5ddd2;padding:9px 0}.m{color:#5f6b70;font-size:13px}.k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:#efe7dc;border-radius:6px;padding:2px 7px;margin-right:6px}.bar{display:flex;gap:8px;margin:0 0 18px}.bar button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:#1d2a30;color:#fff}@media print{.bar{display:none}body{padding:0}}</style>
+<div class="bar"><button onclick="print()">Drucken / als PDF sichern</button></div>
+<p class="m" style="margin:0;letter-spacing:.1em;text-transform:uppercase">Fahrradpass</p><h1>${esc(P.bike.name)}</h1><p class="m" style="margin:4px 0 0">Ausgestellt ${fmtDate(P.date)}${P.shop.name?' von '+esc(P.shop.name):''}</p>
+<h2>Fahrzeugdaten</h2><table>${row('Rahmennummer',`<b style="font-family:ui-monospace,monospace">${esc(P.bike.frameNo||'–')}</b>`)}${row('Typ / Größe',esc([P.bike.type,P.bike.size].filter(Boolean).join(' · ')||'–'))}${row('Baujahr',esc(P.bike.year||'–'))}${row('Kilometerstand',P.bike.km!=null?fmtNum(P.bike.km)+' km (Stand '+fmtDate(P.date)+')':'–')}${P.bike.buy?row('Gekauft',fmtDate(P.bike.buy)):''}${P.bike.warranty?row('Garantie bis',fmtDate(P.bike.warranty)):''}</table>
+<h2>Service und Reparaturen (${P.svc.length})</h2>${P.svc.length?P.svc.map(s=>`<div class="e"><b>${fmtDate(s.date)}</b>${s.km!=null?` · ${fmtNum(s.km)} km`:''} · ${esc(s.title)}${s.ins?' <span class="k">Dienstrad-Inspektion</span>':''}${s.work.length?`<div class="m">Arbeiten: ${esc(s.work.join(', '))}</div>`:''}${s.parts.length?`<div><span class="k">Neue Teile</span>${esc(s.parts.join(', '))}</div>`:''}<div class="m">Auftrag ${esc(s.id)}</div></div>`).join(''):'<p class="m">Noch keine Werkstattaufträge.</p>'}
+<h2>Umbauten und nachgerüstete Teile (${P.ev.length})</h2>${P.ev.length?P.ev.map(e=>`<div class="e"><b>${fmtDate(e.date)}</b> <span class="k">${esc(e.kind||'')}</span>${esc(e.text||'')}${e.km!=null?` <span class="m">· ${fmtNum(e.km)} km</span>`:''}</div>`).join(''):'<p class="m">Keine Einträge.</p>'}
+${P.fits.length?`<h2>Bikefitting</h2>${P.fits.map(f=>`<div class="e"><b>${fmtDate(f.date)}</b> · Fitting mit ${f.n} Änderungen</div>`).join('')}`:''}
+<p class="m" style="margin-top:30px">Dieser Fahrradpass listet die Arbeiten, die${P.shop.name?' bei '+esc(P.shop.name):' in dieser Werkstatt'} dokumentiert wurden. Arbeiten anderer Werkstätten sind nur enthalten, wenn sie nachgetragen wurden.${P.shop.addr||P.shop.phone?'<br>'+esc([P.shop.name,P.shop.addr,P.shop.phone].filter(Boolean).join(' · ')):''}</p></html>`; }
+Object.assign(ACT,{
+  bikePass(el){ const b=bike(el.dataset.id); if(!b||!b.id) return; const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; } w.document.write(bikePassHtml(bikePassData(b))); w.document.close(); audit(`Fahrradpass erstellt: ${bikeName(b)}`); },
+  bikePassSend(el){ const b=bike(el.dataset.id); if(!b) return; const c=cust(b.customerId); if(!c||!c.id) return; const x=document.createElement('button'); x.dataset.id=c.id; ACT.portalShare(x); }
+});
+{ const BD2=bikeDrawer; bikeDrawer=function(id){ BD2(id); const b=bike(id), box=document.getElementById('drawerBody'); if(!b||!b.id||!box) return;
+    box.insertAdjacentHTML('afterbegin',`<div class="notice" style="display:block;margin-bottom:12px"><b>Fahrradpass</b> – alle Services, Reparaturen und nachgerüsteten Teile auf einen Blick. Wichtig, wenn der Kunde das Rad verkauft.<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm primary" data-act="bikePass" data-id="${b.id}">Fahrradpass öffnen / drucken</button><button class="btn sm" data-act="bikePassSend" data-id="${b.id}">Online an Kunden (Kundenportal)</button></div></div>`); }; }
+// Übergebene Aufträge mit Teilen automatisch in den Lebenslauf (nachgerüstete Teile)
+{ const N2=ACT.woNext; ACT.woNext=function(el){ N2.call(this,el); const w=S.workshop.find(x=>x.id===el.dataset.id); if(!w||w.status!=='Übergeben'||w.partsLogged) return; const b=bike(w.bikeId); if(!b) return;
+    w.positions.filter(p=>/Teil/i.test(p.kind||'')).forEach(p=>(b.events=b.events||[]).push({id:uid('ev'),date:today(),kind:'Teiletausch',text:`${p.qty>1?p.qty+'× ':''}${p.t} (${w.id})`,km:w.intake&&w.intake.km!=null?w.intake.km:null})); w.partsLogged=1; save(); }; }
+// Fahrradpass auch im Kundenportal
+{ const PP=portalPayload; portalPayload=function(c){ const p=PP(c); const bs=bikesOf(c.id); (p.bikes||[]).forEach((x,i)=>{ const b=bs[i]; if(!b) return; const D=bikePassData(b);
+    x.pass={svc:D.svc.slice(0,40).map(s=>({date:s.date,km:s.km??null,title:s.title,parts:s.parts.slice(0,12)})),ev:D.ev.slice(0,40),km:D.bike.km,year:D.bike.year}; }); return p; }; }
 
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
