@@ -1006,7 +1006,7 @@ const FIG=(()=>{
     const knee=ik(hip,ank,th,sh,true);
     let best=null; for(let a=8;a<=88;a+=1){ const s=add(hip,mul(dir(a),tr)); const e=Math.abs(len(sub(g.hood,s))-(o.armK||0.93)*(ua+fa)); if(!best||e<best.e) best={a,s,e}; }
     const shd=best.s, elb=ik(shd,g.hood,ua,fa,false);
-    const hb=Math.min(best.a+48,105), headC=add(shd,mul(dir(hb),0.105*H));
+    const hb=Math.min(best.a+22,78), headC=add(shd,mul(dir(hb),0.11*H)); // Kopf vor und über der Schulter (Blick nach vorn)
     return {hip,knee,ank,toe,heel,ped,shd,elb,hand:g.hood,headC,torsoA:best.a,H}; }
   const P=(p,f)=>`${f.X(p[0]).toFixed(1)},${f.Y(p[1]).toFixed(1)}`;
   const line=(a,b,f,w,col,ex='')=>`<line x1="${f.X(a[0]).toFixed(1)}" y1="${f.Y(a[1]).toFixed(1)}" x2="${f.X(b[0]).toFixed(1)}" y2="${f.Y(b[1]).toFixed(1)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" ${ex}/>`;
@@ -1045,7 +1045,7 @@ const FIG=(()=>{
     out.push(`<path d="${pathShoe(p,f)}" fill="none" stroke="${C.tire}" stroke-width="${0.04*H}" stroke-linecap="round" stroke-linejoin="round"/>`);
     out.push(line(p.shd,p.elb,f,0.042*H,C.body),line(p.elb,p.hand,f,0.034*H,C.body),circ(p.hand,0.022*H,f,`fill="${C.body}"`));
     out.push(line(p.shd,add(p.headC,mul(dir(p.torsoA-150),0.035*H)),f,0.04*H,C.body),circ(p.headC,0.058*H,f,`fill="${C.body}"`));
-    if(o.helmet!==false) out.push(`<path d="M${P(add(p.headC,mul(dir(p.torsoA+70),0.066*H)),f)} A${0.068*H},${0.068*H} 0 0 1 ${P(add(p.headC,mul(dir(p.torsoA-70),0.066*H)),f)}Z" fill="${C.frame}"/>`);
+    if(o.helmet!==false){ const hc=Math.min(p.torsoA+45,85); out.push(`<path d="M${P(add(p.headC,mul(dir(hc+78),0.066*H)),f)} A${0.07*H},${0.07*H} 0 0 1 ${P(add(p.headC,mul(dir(hc-78),0.066*H)),f)}Z" fill="${C.frame}"/>`); }
     return out.join(''); }
   function legAnim(g,H,f,frames=24,dur=2.6,opacity=.3){ const ks=[]; for(let i=0;i<=frames;i++) ks.push(riderPose(g,H,-(i*360/frames)));
     const vals=fn=>ks.map(fn).join(';'); const a=(attr,v)=>`<animate attributeName="${attr}" dur="${dur}s" repeatCount="indefinite" values="${v}"/>`;
@@ -1811,7 +1811,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-10.72';
+const APP_VER='2026-11-10.73';
 let loadIssue = null;
 function load(){
   let raw=null;
