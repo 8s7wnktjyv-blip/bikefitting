@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-11.96';
+const APP_VER='2026-11-11.97';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -7723,6 +7723,27 @@ Object.assign(FORMS,{ async passReissue(f,d){ if(!cloudReady()) return toast('Er
 Object.assign(ACT,{ reissueClear(){ ui.reissue=null; render(); }, reissuePrint(){ const r=ui.reissue; if(!r) return; const w=window.open('','_blank'); if(!w) return toast('Pop-ups erlauben',true); const tr=r.transfer.replace(/(.{4})(?=.)/g,'$1-');
    w.document.write(`<!doctype html><html lang="de"><meta charset="utf-8"><title>Teil II ${esc(r.code)}</title><style>body{font-family:system-ui,sans-serif;margin:16px}.card{width:85.6mm;height:54mm;border:1px solid #bbb;border-radius:3.2mm;padding:3.5mm;box-sizing:border-box}.t{font-size:7pt;letter-spacing:.12em;font-weight:800;color:#d9612c}.tr{font:700 15pt ui-monospace,monospace;letter-spacing:.06em;margin:3mm 0}.m{font-size:6.5pt;color:#555}@media print{button{display:none}}</style><button onclick="print()">Drucken</button><div class="card"><div class="t">FYF FAHRRADSCHEIN · TEIL II – ÜBERGABE</div><div style="font-size:10pt;font-weight:700;margin-top:1mm">Fahrradpass ${esc(r.code)}</div><div class="m">Neuer geheimer Übergabe-Code (ersetzt den alten):</div><div class="tr">${tr}</div><div class="m">Ausgestellt von ${esc(shopName()||'FYF-Werkstatt')} am ${fmtDate(today())} nach Eigentumsprüfung. Sicher aufbewahren, nur beim Verkauf weitergeben.</div></div></html>`); w.document.close(); } });
 { const PV5=VIEWS.passport; VIEWS.passport=()=>PV5()+(cloudReady()?reissueHtml():''); }
+
+/* ===================== v.97 Partnerseite: Sichtbarkeit prüfen (warum ist mein Laden nicht zu finden?) ===================== */
+async function visCheck(){ const I=[]; const FIT=/fitting|cleat|sattel.*analyse|schuh|quick-?fit|triathlon/i, SALE=/^verkauf|^gebrauchträder$/i;
+  if(!cloudReady()){ ui.vis=[['bad','Nicht mit FYF Cloud verbunden','Unter „Mehr → FYF Cloud“ verbinden und anmelden. Ohne Cloud gibt es keinen Eintrag auf der Partnerseite.']]; render(); return; }
+  ui.vis=[['info','Prüfe …','']]; render();
+  let own=null, pub=null, err='';
+  try{ const r=await clApi(`/rest/v1/dealer_profiles?tenant_id=eq.${CL.tenant}&select=slug,published,name,city,zip,services,features,partner`); own=(r||[])[0]||null; }catch(e){ err=e.offline?'Keine Verbindung':netErr(e); }
+  try{ const r=await fetch(CL.url+`/rest/v1/dealer_profiles?tenant_id=eq.${CL.tenant}&published=eq.true&select=slug,features,services`,{headers:{apikey:CL.key}}); if(r.ok) pub=(await r.json())[0]||null; }catch(e){}
+  if(err) I.push(['bad','Prüfung nicht möglich',err]);
+  else if(!own) I.push(['bad','Profil noch nicht gespeichert','Oben im Händlerprofil Name, Kurzname (Adresse), Ort und PLZ ausfüllen, „Veröffentlichen“ anhaken und speichern. Nur Admins dürfen das Profil speichern.']);
+  else { I.push(['ok','Profil gespeichert',`${own.name||'(ohne Name)'} · ${[own.zip,own.city].filter(Boolean).join(' ')||'ohne Ort'}`]);
+    I.push(own.published?['ok','Veröffentlicht','']:['bad','Nicht veröffentlicht','Im Händlerprofil „Veröffentlichen“ anhaken und speichern.']);
+    if(own.published) I.push(pub?['ok','Für Kunden sichtbar','Die Partnerseite findet deinen Laden.']:['warn','Für Kunden noch nicht sichtbar','Profil einmal neu speichern. Bleibt es so, Datenbank aktualisieren (GitHub → Actions).']);
+    if(!own.city&&!own.zip) I.push(['warn','Ort/PLZ fehlt','Kunden suchen nach Ort oder PLZ – bitte eintragen.']);
+    const sv=own.services||[], fe=own.features||[]; const fit=sv.filter(x=>FIT.test(x)), ws=sv.filter(x=>!FIT.test(x)&&!SALE.test(x));
+    I.push(fit.length||fe.includes('fitting')?['ok','Erscheint bei „Bikefitting buchen“',fit.join(', ')||'Merkmal „Bikefitting mit FYF“']:['warn','Erscheint nicht bei „Bikefitting buchen“','Im Händlerprofil unter Leistungen → Bikefitting etwas ankreuzen und speichern.']);
+    I.push(ws.length||fe.includes('status')?['ok','Erscheint bei „Service buchen“',ws.join(', ')||'Merkmal „Werkstatt-Status live“']:['warn','Erscheint nicht bei „Service buchen“','Im Händlerprofil unter Leistungen → Werkstatt etwas ankreuzen und speichern.']);
+    if(pub&&own.slug) ui.visLink=location.origin+location.pathname.replace(/[^/]*$/,'')+'finder.html#d='+encodeURIComponent(own.slug); }
+  ui.vis=I; render(); }
+Object.assign(ACT,{ visCheck(){ visCheck(); } });
+{ const NV7=VIEWS.netz; VIEWS.netz=()=>{ const h=NV7(); const V=ui.vis; const p=panel('Bin ich auf der Partnerseite zu finden?',`<p class="faint" style="margin:0 0 8px">Prüft, ob Kunden deinen Laden in der FYF-Händlersuche und in der Pass-App sehen – und was fehlt.</p><button class="btn primary" data-act="visCheck">Sichtbarkeit prüfen</button>${V?`<div style="margin-top:10px">${V.map(([s,t,d])=>`<div class="row" style="gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);flex-wrap:nowrap"><span class="chip ${s==='ok'?'c-ok':s==='bad'?'c-bad':s==='warn'?'c-warn':'c-info'}">${s==='ok'?'ok':s==='bad'?'fehlt':s==='warn'?'prüfen':'…'}</span><div><b>${esc(t)}</b>${d?`<div class="faint" style="font-size:13px">${esc(d)}</div>`:''}</div></div>`).join('')}${ui.visLink?`<p style="margin:10px 0 0"><a class="btn sm" href="${esc(ui.visLink)}" target="_blank" rel="noopener">So sehen Kunden deinen Laden</a></p>`:''}</div>`:''}`); const i=h.indexOf('</div>',h.indexOf('pagehead')); return i<0?p+h:h.slice(0,i+6)+p+h.slice(i+6); }; }
 
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};

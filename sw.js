@@ -1,6 +1,6 @@
 // FYF Offline-Speicher. Immer zuerst das Netz (damit Updates sofort ankommen), ohne Netz die letzte gespeicherte Version.
 // Nur Dateien dieser Seite – Anfragen an Supabase und andere Server werden nie zwischengespeichert.
-const CACHE = 'fyf-app-v1-p13';
+const CACHE = 'fyf-app-v1-p14';
 const CORE = ['./', './index.html', './manifest.webmanifest', './rad.html', './pass.webmanifest', './finder.html', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
