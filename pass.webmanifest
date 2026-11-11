@@ -6,11 +6,55 @@
   "start_url": "./rad.html#meine",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f7f3ee",
-  "theme_color": "#1f2a30",
+  "background_color": "#f3f3f1",
+  "theme_color": "#f3f3f1",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "./rad.html",
+  "orientation": "portrait",
+  "categories": [
+    "lifestyle",
+    "sports",
+    "utilities"
+  ],
+  "shortcuts": [
+    {
+      "name": "Garage",
+      "url": "./rad.html#meine",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Rad prüfen",
+      "url": "./rad.html#pruefen",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }
