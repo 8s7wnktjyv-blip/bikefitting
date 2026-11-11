@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-11.85';
+const APP_VER='2026-11-11.94';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2051,7 +2051,7 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
 // Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
-const DB_SCHEMA=13; let dbSchema=null;
+const DB_SCHEMA=14; let dbSchema=null;
 async function dbCheck(){ if(!(CL.url&&CL.key)) return;
   try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
   catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
@@ -7631,6 +7631,10 @@ TITLES.passport='FYF Fahrradpass'; AREA_OF.passport='Kunden & Räder';
 { const W4=VIEWS.werkstatt; VIEWS.werkstatt=()=>W4()+panel('FYF Fahrradpass',`<p class="muted" style="margin:0 0 8px;font-size:13.5px">QR-Code eines Rads öffnen, Rahmennummer auf Diebstahl prüfen, Pass anlegen.</p><button class="btn sm" data-nav="passport">${ic('quality')} Zum Fahrradpass</button>`); }
 // Dashboard: Kachel
 { const FT=FEATURES.find(f=>f[0]==='BikePassport'); if(FT){ FT[1]='Digitale Akte je Fahrrad – jetzt als FYF Fahrradpass mit eigenem Bereich'; } }
+
+/* ===================== v.94 Fahrradpass: Ausstattung aus der Werkstatt + Akku-Werte vom Check in den Pass (die Pass-App übernimmt sie automatisch) ===================== */
+{ const PL5=passPayload; passPayload=function(b){ const p=PL5(b); if(p&&p.bike&&b){ const pp=b.parts||{}, o={}; PART_F.forEach(([k,l,u])=>{ const v=pp[k]; if(v!==''&&v!=null){ const t=String(v).trim().slice(0,60); o[k]=u&&/^[\d.,]+$/.test(t)?t+' '+u:t; } }); if(Object.keys(o).length) p.bike.parts=o; } return p; }; }
+{ const BPD5=bikePassData; bikePassData=function(b){ const P=BPD5(b); P.checks=(b.usedChecks||[]).map(k=>({date:k.date,grade:k.grade,km:k.km,note:k.note,bat:k.bat,cycles:k.cycles,chain:k.chain})).reverse(); return P; }; }
 
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
