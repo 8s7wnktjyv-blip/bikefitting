@@ -60,6 +60,53 @@ button,.btn{transition:transform .12s ease,filter .2s ease}button:active,.btn:ac
 .ill .scanline{animation:fyScan 1.6s ease-in-out infinite}.ill .draw{stroke-dasharray:600;stroke-dashoffset:600;animation:fyDraw 1.6s .2s ease forwards}
 .okcheck{width:64px;height:64px;margin:4px auto 6px;display:block}.okcheck circle{fill:var(--ok);animation:fyPop .45s both}.okcheck path{fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:fyDraw .5s .35s ease forwards}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.ill .draw,.okcheck path{stroke-dashoffset:0}}
+
+/* ===== Design v.89 – angelehnt an Hersteller-Apps (Garage, Status, Daten-Kacheln), dunkel mit FYF-Orange ===== */
+:root,:root[data-x]{--bg:#0b0e10;--bg2:#101417;--card:#151a1d;--card2:#1c2227;--ink:#f3f5f6;--muted:#8e99a0;--line:#232a2f;--acc:#ff6b2c;--acc2:#ff9a4d;--ok:#35d07f;--bad:#ff4f3d;--sh:0 1px 0 rgba(255,255,255,.04) inset,0 18px 40px -22px rgba(0,0,0,.8);--r:20px;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0e10;--card:#151a1d;--ink:#f3f5f6;--muted:#8e99a0;--line:#232a2f;--acc:#ff6b2c;--ok:#35d07f;--bad:#ff4f3d}}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+body{background:radial-gradient(900px 420px at 110% -8%,rgba(255,107,44,.16),transparent 60%),var(--bg);background-attachment:fixed;color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:110px}
+main{padding-top:calc(12px + env(safe-area-inset-top))}
+h1{font-size:30px;line-height:1.08;font-weight:800;letter-spacing:-.02em;margin:8px 0 10px;text-transform:uppercase}
+h2{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)!important;margin:0 0 10px}
+.muted{color:var(--muted)}
+.brand,main>p.muted.small:first-child{display:inline-flex;align-items:center;gap:8px;font-size:11px!important;font-weight:800;letter-spacing:.18em;color:var(--ink)!important;background:transparent;border:0;padding:0;margin:0 0 4px!important}
+.brand::before,main>p.muted.small:first-child::before{content:"";width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--acc),var(--acc2));-webkit-mask:radial-gradient(circle at 50% 50%,#000 38%,transparent 40%),linear-gradient(#000,#000);-webkit-mask-composite:xor;mask-composite:exclude}
+.card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:var(--r);padding:18px;margin:12px 0;box-shadow:var(--sh)}
+button,.btn{font:inherit;font-weight:700;font-size:15px;letter-spacing:.02em;border:0;border-radius:14px;padding:13px 20px;background:var(--acc);color:#fff;box-shadow:0 10px 24px -12px rgba(255,107,44,.9)}
+.btn.ghost{background:var(--card2);border:1px solid var(--line);color:var(--ink);box-shadow:none}
+input,select,textarea{color:var(--ink)!important;border-radius:14px!important;background:#0f1316!important;border:1px solid var(--line)!important;padding:13px 14px!important;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)!important;box-shadow:0 0 0 4px rgba(255,107,44,.18)}
+input::placeholder{color:#5f6b72;letter-spacing:.01em;text-transform:none;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-weight:500;font-size:16px}
+a{color:var(--acc);text-underline-offset:3px}
+.tabs{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));padding:8px 6px;border-radius:22px;background:rgba(21,26,29,.82);-webkit-backdrop-filter:saturate(1.4) blur(18px);backdrop-filter:saturate(1.4) blur(18px);border:1px solid var(--line);box-shadow:0 16px 40px -12px rgba(0,0,0,.8);max-width:520px;margin:0 auto}
+.tabs a{border-radius:14px;padding:6px 0;font-size:10.5px;letter-spacing:.04em;color:#7d888e}.tabs a.on{color:#fff;background:rgba(255,107,44,.16)}.tabs a.on svg{stroke:var(--acc)}.tabs a.on::after{display:none}
+.k{border-radius:6px;background:rgba(255,107,44,.14);color:var(--acc)}
+.tb{border-radius:999px;padding:2px 9px;border-color:var(--line);color:var(--muted)}.tb.v{background:rgba(53,208,127,.14);color:var(--ok);border-color:transparent}
+.ok{color:var(--ok)}
+.alarm{border-radius:var(--r);background:linear-gradient(135deg,#c2271a,#ff4f3d);box-shadow:0 16px 34px -16px #ff4f3d}
+.chip{border-radius:999px;padding:3px 10px;background:var(--card2);color:var(--ink);border:1px solid var(--line)}.chip.ok{background:rgba(53,208,127,.12);color:var(--ok);border-color:transparent}.chip.f{background:rgba(255,107,44,.14)!important;color:var(--acc)!important;border-color:transparent}
+.prod{padding:14px 0;border-color:var(--line)}
+.note{background:rgba(255,154,77,.12);color:var(--acc2)}
+.help{background:transparent;border:1px solid var(--line);border-radius:16px}.help summary::before{background:var(--card2);color:var(--acc)}
+.step b.n{background:var(--acc)}
+.skel{background:linear-gradient(90deg,var(--card) 0,var(--card2) 40%,var(--card) 80%);background-size:400px 100%}
+.intro{background:radial-gradient(700px 380px at 50% -10%,rgba(255,107,44,.22),transparent 60%),var(--bg)}
+.intro .ill{width:200px;height:200px;border-radius:50%;background:var(--card2);border:1px solid var(--line);padding:28px;display:grid;place-items:center;color:var(--ink)!important}
+.wallet{background:radial-gradient(260px 160px at 100% 0%,rgba(255,107,44,.45),transparent 70%),linear-gradient(145deg,#1c2429,#11171a)!important;border:1px solid #2a3338!important;border-radius:24px!important;box-shadow:0 22px 44px -18px rgba(0,0,0,.9)!important;padding:20px!important}
+/* Daten in der Akte als Zeitstrahl */
+.e{position:relative;padding:12px 0 12px 22px;border-bottom:0!important}.e::before{content:"";position:absolute;left:5px;top:20px;width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px rgba(255,107,44,.15)}.e::after{content:"";position:absolute;left:9px;top:32px;bottom:-12px;width:1px;background:var(--line)}.e:last-child::after{display:none}
+/* Garage */
+.garage{display:grid;gap:12px}
+.bikecard{display:block;text-decoration:none;color:var(--ink);background:radial-gradient(320px 180px at 100% 0%,rgba(255,107,44,.18),transparent 70%),linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:22px;padding:16px 16px 14px;position:relative;overflow:hidden;box-shadow:var(--sh)}
+.bikecard .bk-ill{position:absolute;right:-8px;top:8px;width:150px;opacity:.9}.bikecard .bk-ill svg{width:100%;height:auto}
+.bikecard .bk-name{font-weight:800;font-size:20px;letter-spacing:-.01em;text-transform:uppercase;max-width:60%;line-height:1.15}
+.bikecard .bk-code{font:600 12px ui-monospace,Menlo,monospace;letter-spacing:.14em;color:var(--muted);margin-top:4px}
+.status{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:14px;color:var(--ok)}.status i{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 20%,transparent)}.status.bad{color:var(--bad)}.status.warn{color:var(--acc2)}
+.tiles4{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+.tile{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:18px;padding:14px}.tile .l{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}.tile .v{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:4px}.tile .v small{font-size:13px;color:var(--muted);font-weight:600;margin-left:3px}
+.hero{position:relative;border-radius:24px;overflow:hidden;padding:18px 18px 16px;margin:6px 0 12px;background:radial-gradient(400px 220px at 100% 0%,rgba(255,107,44,.28),transparent 70%),linear-gradient(160deg,#1a2126,#0f1417);border:1px solid var(--line)}
+.hero .bk-ill{width:78%;max-width:340px;margin:4px auto 0;display:block}
 </style>
 </head>
 <body>

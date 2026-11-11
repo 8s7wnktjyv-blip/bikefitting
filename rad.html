@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FYF Pass">
-<meta name="theme-color" content="#1f2a30">
+<meta name="theme-color" content="#0b0e10">
 <style>
 :root{--bg:#f7f3ee;--card:#fffdf9;--ink:#1d2a30;--muted:#5f6b70;--line:#e5ddd2;--acc:#d9612c;--ok:#1d6b35;--bad:#a23b2a}
 @media (prefers-color-scheme:dark){:root{--bg:#14191b;--card:#1c2326;--ink:#e8eef0;--muted:#9aa7ac;--line:#2c3539;--acc:#f07a45;--ok:#6fcf8f;--bad:#ff8a73}}
@@ -58,6 +58,53 @@ button,.btn{transition:transform .12s ease,filter .2s ease}button:active,.btn:ac
 .ill .scanline{animation:fyScan 1.6s ease-in-out infinite}.ill .draw{stroke-dasharray:600;stroke-dashoffset:600;animation:fyDraw 1.6s .2s ease forwards}
 .okcheck{width:64px;height:64px;margin:4px auto 6px;display:block}.okcheck circle{fill:var(--ok);animation:fyPop .45s both}.okcheck path{fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:fyDraw .5s .35s ease forwards}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.ill .draw,.okcheck path{stroke-dashoffset:0}}
+
+/* ===== Design v.89 – angelehnt an Hersteller-Apps (Garage, Status, Daten-Kacheln), dunkel mit FYF-Orange ===== */
+:root,:root[data-x]{--bg:#0b0e10;--bg2:#101417;--card:#151a1d;--card2:#1c2227;--ink:#f3f5f6;--muted:#8e99a0;--line:#232a2f;--acc:#ff6b2c;--acc2:#ff9a4d;--ok:#35d07f;--bad:#ff4f3d;--sh:0 1px 0 rgba(255,255,255,.04) inset,0 18px 40px -22px rgba(0,0,0,.8);--r:20px;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0e10;--card:#151a1d;--ink:#f3f5f6;--muted:#8e99a0;--line:#232a2f;--acc:#ff6b2c;--ok:#35d07f;--bad:#ff4f3d}}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+body{background:radial-gradient(900px 420px at 110% -8%,rgba(255,107,44,.16),transparent 60%),var(--bg);background-attachment:fixed;color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:110px}
+main{padding-top:calc(12px + env(safe-area-inset-top))}
+h1{font-size:30px;line-height:1.08;font-weight:800;letter-spacing:-.02em;margin:8px 0 10px;text-transform:uppercase}
+h2{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)!important;margin:0 0 10px}
+.muted{color:var(--muted)}
+.brand,main>p.muted.small:first-child{display:inline-flex;align-items:center;gap:8px;font-size:11px!important;font-weight:800;letter-spacing:.18em;color:var(--ink)!important;background:transparent;border:0;padding:0;margin:0 0 4px!important}
+.brand::before,main>p.muted.small:first-child::before{content:"";width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--acc),var(--acc2));-webkit-mask:radial-gradient(circle at 50% 50%,#000 38%,transparent 40%),linear-gradient(#000,#000);-webkit-mask-composite:xor;mask-composite:exclude}
+.card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:var(--r);padding:18px;margin:12px 0;box-shadow:var(--sh)}
+button,.btn{font:inherit;font-weight:700;font-size:15px;letter-spacing:.02em;border:0;border-radius:14px;padding:13px 20px;background:var(--acc);color:#fff;box-shadow:0 10px 24px -12px rgba(255,107,44,.9)}
+.btn.ghost{background:var(--card2);border:1px solid var(--line);color:var(--ink);box-shadow:none}
+input,select,textarea{color:var(--ink)!important;border-radius:14px!important;background:#0f1316!important;border:1px solid var(--line)!important;padding:13px 14px!important;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)!important;box-shadow:0 0 0 4px rgba(255,107,44,.18)}
+input::placeholder{color:#5f6b72;letter-spacing:.01em;text-transform:none;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-weight:500;font-size:16px}
+a{color:var(--acc);text-underline-offset:3px}
+.tabs{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));padding:8px 6px;border-radius:22px;background:rgba(21,26,29,.82);-webkit-backdrop-filter:saturate(1.4) blur(18px);backdrop-filter:saturate(1.4) blur(18px);border:1px solid var(--line);box-shadow:0 16px 40px -12px rgba(0,0,0,.8);max-width:520px;margin:0 auto}
+.tabs a{border-radius:14px;padding:6px 0;font-size:10.5px;letter-spacing:.04em;color:#7d888e}.tabs a.on{color:#fff;background:rgba(255,107,44,.16)}.tabs a.on svg{stroke:var(--acc)}.tabs a.on::after{display:none}
+.k{border-radius:6px;background:rgba(255,107,44,.14);color:var(--acc)}
+.tb{border-radius:999px;padding:2px 9px;border-color:var(--line);color:var(--muted)}.tb.v{background:rgba(53,208,127,.14);color:var(--ok);border-color:transparent}
+.ok{color:var(--ok)}
+.alarm{border-radius:var(--r);background:linear-gradient(135deg,#c2271a,#ff4f3d);box-shadow:0 16px 34px -16px #ff4f3d}
+.chip{border-radius:999px;padding:3px 10px;background:var(--card2);color:var(--ink);border:1px solid var(--line)}.chip.ok{background:rgba(53,208,127,.12);color:var(--ok);border-color:transparent}.chip.f{background:rgba(255,107,44,.14)!important;color:var(--acc)!important;border-color:transparent}
+.prod{padding:14px 0;border-color:var(--line)}
+.note{background:rgba(255,154,77,.12);color:var(--acc2)}
+.help{background:transparent;border:1px solid var(--line);border-radius:16px}.help summary::before{background:var(--card2);color:var(--acc)}
+.step b.n{background:var(--acc)}
+.skel{background:linear-gradient(90deg,var(--card) 0,var(--card2) 40%,var(--card) 80%);background-size:400px 100%}
+.intro{background:radial-gradient(700px 380px at 50% -10%,rgba(255,107,44,.22),transparent 60%),var(--bg)}
+.intro .ill{width:200px;height:200px;border-radius:50%;background:var(--card2);border:1px solid var(--line);padding:28px;display:grid;place-items:center;color:var(--ink)!important}
+.wallet{background:radial-gradient(260px 160px at 100% 0%,rgba(255,107,44,.45),transparent 70%),linear-gradient(145deg,#1c2429,#11171a)!important;border:1px solid #2a3338!important;border-radius:24px!important;box-shadow:0 22px 44px -18px rgba(0,0,0,.9)!important;padding:20px!important}
+/* Daten in der Akte als Zeitstrahl */
+.e{position:relative;padding:12px 0 12px 22px;border-bottom:0!important}.e::before{content:"";position:absolute;left:5px;top:20px;width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px rgba(255,107,44,.15)}.e::after{content:"";position:absolute;left:9px;top:32px;bottom:-12px;width:1px;background:var(--line)}.e:last-child::after{display:none}
+/* Garage */
+.garage{display:grid;gap:12px}
+.bikecard{display:block;text-decoration:none;color:var(--ink);background:radial-gradient(320px 180px at 100% 0%,rgba(255,107,44,.18),transparent 70%),linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:22px;padding:16px 16px 14px;position:relative;overflow:hidden;box-shadow:var(--sh)}
+.bikecard .bk-ill{position:absolute;right:-8px;top:8px;width:150px;opacity:.9}.bikecard .bk-ill svg{width:100%;height:auto}
+.bikecard .bk-name{font-weight:800;font-size:20px;letter-spacing:-.01em;text-transform:uppercase;max-width:60%;line-height:1.15}
+.bikecard .bk-code{font:600 12px ui-monospace,Menlo,monospace;letter-spacing:.14em;color:var(--muted);margin-top:4px}
+.status{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:14px;color:var(--ok)}.status i{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 20%,transparent)}.status.bad{color:var(--bad)}.status.warn{color:var(--acc2)}
+.tiles4{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+.tile{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:18px;padding:14px}.tile .l{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}.tile .v{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:4px}.tile .v small{font-size:13px;color:var(--muted);font-weight:600;margin-left:3px}
+.hero{position:relative;border-radius:24px;overflow:hidden;padding:18px 18px 16px;margin:6px 0 12px;background:radial-gradient(400px 220px at 100% 0%,rgba(255,107,44,.28),transparent 70%),linear-gradient(160deg,#1a2126,#0f1417);border:1px solid var(--line)}
+.hero .bk-ill{width:78%;max-width:340px;margin:4px auto 0;display:block}
 </style>
 </head>
 <body>
@@ -108,7 +155,7 @@ function askForm(err){
    <div class="card${mine().length?'':' pulse'}"><h2>Eigenes Rad registrieren – kostenlos</h2><p class="muted small" style="margin:0 0 10px">Dein Rad bekommt einen FYF-Fahrradpass mit QR-Code. Jede FYF-Werkstatt trägt Services ein, du kannst es als gestohlen melden, und beim Verkauf gibst du die Geschichte einfach weiter. Ohne Konto, ohne Namen.</p><button class="btn" id="regb" type="button">Rad registrieren</button></div>
    <p><a href="finder.html${CF?'#cfg='+esc(CF):''}">FYF-Partnerwerkstätten finden</a></p>`;
   document.getElementById('regb').onclick=()=>regForm();
-  app.insertAdjacentHTML('beforeend',installHint()+'<p class="small"><a href="#" id="rintro">Einführung nochmal ansehen</a></p>'); const ri=document.getElementById('rintro'); if(ri) ri.onclick=e=>{ e.preventDefault(); intro(true); }; app.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ if(confirm('Rad aus „Meine Räder“ auf diesem Gerät entfernen? Der Pass selbst bleibt bestehen.')){ mineDel(b.dataset.del); askForm(''); } });
+  app.insertAdjacentHTML('beforeend',installHint()+'<p class="small"><a href="#" id="rintro">Einführung nochmal ansehen</a></p>'); const ri=document.getElementById('rintro'); if(ri) ri.onclick=e=>{ e.preventDefault(); intro(true); }; app.querySelectorAll('[data-del]').forEach(b=>b.onclick=e=>{ e.preventDefault(); e.stopPropagation(); if(confirm('Rad aus „Meine Räder“ auf diesem Gerät entfernen? Der Pass selbst bleibt bestehen.')){ mineDel(b.dataset.del); askForm(''); } });
   document.getElementById('f').onsubmit=e=>{ e.preventDefault(); location.hash='c='+norm(document.getElementById('c').value)+(CF?'&cfg='+CF:''); };
 }
 async function show0(code){ window.__P=null; window.__OFF=null;
@@ -131,6 +178,8 @@ async function show0(code){ window.__P=null; window.__OFF=null;
   const shops=[...new Set(items.map(i=>i.by).filter(Boolean))];
   const chk=(p.checks||[])[0];
   app.innerHTML=`${head}<h1>${esc(b.name||'Fahrrad')}</h1>${alarm}
+   <div class="hero"><div class="status ${p.stolen?'bad':''}" style="margin:0 0 6px"><i></i>${p.stolen?'Als gestohlen gemeldet':'Keine Diebstahlmeldung in FYF'}</div><div style="font-size:13px;color:var(--muted)">${esc([b.type,b.size,b.year&&('Baujahr '+b.year),b.color].filter(Boolean).join(' · '))}</div><div class="bk-ill">${BIKE_SVG}</div></div>
+   <div class="tiles4"><div class="tile"><div class="l">Kilometer</div><div class="v">${b.km!=null?num(b.km):'–'}<small>${b.km!=null?'km':''}</small></div></div><div class="tile"><div class="l">Einträge</div><div class="v">${items.length}</div></div><div class="tile"><div class="l">Bestätigt</div><div class="v">${nv}</div></div><div class="tile"><div class="l">Besitzer</div><div class="v">${p.owner_no||1}<small>.</small></div></div></div>
    <div class="card">${p.stolen?'':'<p style="margin:0 0 6px"><b>Keine Diebstahlmeldung in FYF.</b> <span class="muted small">Das ist kein Nachweis – FYF ist mit keinem Polizei-Register verbunden.</span></p>'}<p style="margin:0">${esc([b.type,b.size,b.year&&('Baujahr '+b.year)].filter(Boolean).join(' · '))}</p>${b.frame?`<p class="small" style="margin:4px 0 0">Rahmennummer (gekürzt): <b style="font-family:ui-monospace,monospace">${esc(b.frame)}</b> – mit der Nummer am Rad vergleichen</p>`:''}${b.km!=null?`<p class="small" style="margin:4px 0 0">Kilometerstand laut Werkstatt: <b>${num(b.km)} km</b></p>`:''}
    ${b.color?`<p class="small" style="margin:4px 0 0">Farbe: ${esc(b.color)}</p>`:''}${b.bat?`<p class="small" style="margin:4px 0 0">Akku (gekürzt): <b style="font-family:ui-monospace,monospace">${esc(b.bat)}</b></p>`:''}${b.batPass?`<p class="small" style="margin:4px 0 0"><a href="${esc(b.batPass)}" target="_blank" rel="noopener nofollow">Batteriepass des Herstellers öffnen</a></p>`:''}
    <p class="muted small" style="margin:8px 0 0">${items.length} Einträge von ${shops.length||1} ${shops.length>1?'Werkstätten':'Werkstatt'}, davon ${nv} werkstatt-bestätigt${p.owner_no?` · ${p.owner_no}. Besitzer seit ${fd(p.owner_since)}`:''}${p.created_at?` · Pass seit ${fd(p.created_at)}`:''}</p></div>
@@ -199,7 +248,7 @@ async function show(code){ await show0(code); const P=window.__P; if(!P||!/^[A-H
   if(isMine){ mineAdd(code,name); if(h1) h1.insertAdjacentHTML('afterend',await walletCard(code,name)+(P.limited&&!P.withdrawn?`<div class="card small">Dein Pass ist auf „Nur Werkstätten“ gestellt – darum siehst du hier nur die Kurzansicht. Unten im <b>Besitzer-Bereich</b> mit dem Code von Teil II auf „Jeder“ stellen, dann siehst du die ganze Geschichte.</div>`:'')); }
   if(window.__OFF&&h1) h1.insertAdjacentHTML('afterend',`<div class="card small" style="border-color:var(--acc)">Offline – gespeicherter Stand vom ${fd(window.__OFF)}.</div>`);
   const bar=document.createElement('p'); bar.innerHTML=isMine?`<a href="#meine${CF?'&cfg='+CF:''}">← Meine Räder</a>`:`<button class="btn" id="addMine">Zu „Meine Räder“ hinzufügen</button> <span class="muted small">– nur auf diesem Gerät gespeichert</span>`; app.appendChild(bar);
-  const am=document.getElementById('addMine'); if(am) am.onclick=()=>{ mineAdd(code,name); cacheSet(code,P); show(code); };
+  const am=document.getElementById('addMine'); if(am) am.onclick=()=>{ mineAdd(code,name); cacheSet(code,P); tabs('meine'); scrollTo(0,0); show(code); };
   if(!window.__OFF) ownerBox(code); }
 // ---------- App „FYF Pass“: Meine Räder (nur auf diesem Gerät), digitaler Pass mit QR, offline lesbar ----------
 const LS=k=>{ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(e){ return null; } }, LSset=(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
@@ -209,12 +258,15 @@ const mineDel=code=>{ LSset('fyfpass:mine',mine().filter(m=>m.code!==code)); try
 const cacheGet=code=>LS('fyfpass:c:'+code), cacheSet=(code,p)=>LSset('fyfpass:c:'+code,{p,at:new Date().toISOString()});
 const standalone=()=>window.navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
 const ios=()=>/iPhone|iPad|iPod/.test(navigator.userAgent);
+const BIKE_SVG='<svg viewBox="0 0 200 110" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="45" cy="72" r="32" stroke="#3a454c"/><circle cx="155" cy="72" r="32" stroke="#3a454c"/><path d="M45 72l30-46h56l24 46M75 26l25 46H45M131 26l-8-14h-14M100 72l31-46" stroke="#e9edef"/><path d="M68 18h18" stroke="#ff6b2c"/><circle cx="100" cy="72" r="5" fill="#ff6b2c" stroke="none"/></svg>';
+function bikeStatus(code){ const c=cacheGet(code); if(!c||!c.p) return ['','Pass aktiv']; const P=c.p; if(P.stolen) return ['bad','Als gestohlen gemeldet']; if(P.withdrawn) return ['warn','Pass zurückgezogen'];
+  const last=(P.entries||[]).filter(e=>e.kind!=='Registrierung').map(e=>e.date).sort().pop(); if(!last) return ['warn','Noch kein Service eingetragen']; const days=Math.round((Date.now()-new Date(last))/864e5); return days>365?['warn',`Letzter Service vor ${Math.round(days/30)} Monaten`]:['',`Gepflegt · Service ${fd(last)}`]; }
 function myBikesHtml(){ const l=mine(); if(!l.length) return '';
-  return `<div class="card"><h2>Meine Räder</h2>${l.map(m=>`<div class="e" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><a href="#c=${m.code}${CF?'&cfg='+CF:''}" style="color:inherit;text-decoration:none;flex:1"><b>${esc(m.name)}</b><br><span class="muted small" style="font-family:ui-monospace,monospace">${m.code}</span></a><button class="btn ghost" data-del="${m.code}" aria-label="Entfernen" style="padding:6px 10px">×</button></div>`).join('')}</div>`; }
+  return `<h2 style="margin-top:6px">Meine Garage</h2><div class="garage">${l.map(m=>{ const [cls,txt]=bikeStatus(m.code); return `<a class="bikecard" href="#c=${m.code}${CF?'&cfg='+CF:''}"><div class="bk-ill">${BIKE_SVG}</div><div class="bk-name">${esc(m.name)}</div><div class="bk-code">${m.code}</div><div class="status ${cls}"><i></i>${esc(txt)}</div><button class="btn ghost" data-del="${m.code}" aria-label="Aus Garage entfernen" style="position:absolute;right:10px;bottom:10px;padding:6px 11px;font-size:13px" onclick="event.preventDefault()">×</button></a>`; }).join('')}</div>`; }
 function installHint(){ if(standalone()) return ''; return `<div class="card"><b>Als App aufs iPhone</b><p class="muted small" style="margin:4px 0 0">${ios()?'In Safari unten auf <b>Teilen</b> (Quadrat mit Pfeil) → <b>Zum Home-Bildschirm</b>. Dann hast du „FYF Pass“ wie eine App.':'Im Browser-Menü <b>App installieren</b> bzw. <b>Zum Startbildschirm</b> wählen.'}</p></div>`; }
 async function walletCard(code,name){ const url=location.origin+location.pathname+'#c='+code+(CF?'&cfg='+CF:''); let qr=''; try{ await loadQR(); const q=window.qrcode(0,'M'); q.addData(url); q.make(); qr=q.createSvgTag({cellSize:4,margin:1,scalable:true}); }catch(e){}
   return `<div class="card wallet" style="background:#1f2a30;color:#fff;border:0"><div style="display:flex;gap:14px;align-items:center"><div style="width:96px;height:96px;background:#fff;border-radius:10px;padding:5px;flex:none">${qr||'<span style="color:#555;font-size:11px">QR braucht Internet</span>'}</div><div style="min-width:0"><div style="font-size:11px;letter-spacing:.14em;font-weight:800;color:#f07a45">FYF FAHRRADPASS</div><div style="font-weight:700;font-size:18px;margin:2px 0">${esc(name||'Fahrrad')}</div><div style="font:700 20px ui-monospace,monospace;letter-spacing:.08em">${code}</div><div style="font-size:12px;opacity:.75;margin-top:4px">In der Werkstatt vorzeigen</div></div></div></div>`; }
-function route(){ const h=new URLSearchParams((location.hash||'').slice(1)); const c=norm(h.get('c')); tabs(c?(mine().some(m=>m.code===c)?'meine':'pruefen'):(/pruefen/.test(location.hash)?'pruefen':'meine')); if(c) show(c); else askForm(''); }
+function route(){ scrollTo(0,0); const h=new URLSearchParams((location.hash||'').slice(1)); const c=norm(h.get('c')); tabs(c?(mine().some(m=>m.code===c)?'meine':'pruefen'):(/pruefen/.test(location.hash)?'pruefen':'meine')); if(c) show(c); else askForm(''); }
 window.addEventListener('hashchange',route); route();
 if(!new URLSearchParams((location.hash||'').slice(1)).get('c')) intro();
 try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); }catch(e){}
