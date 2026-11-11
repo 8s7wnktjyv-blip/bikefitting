@@ -7,6 +7,11 @@
 <meta name="description" content="FYF Fahrradpass: Service-Geschichte eines Fahrrads prüfen – Services, neue Teile, Gebrauchtrad-Check und Diebstahl-Meldung.">
 <title>FYF Fahrradpass prüfen</title>
 <link rel="icon" href="icon-192.png">
+<link rel="manifest" href="pass.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FYF Pass">
+<meta name="theme-color" content="#1f2a30">
 <style>
 :root{--bg:#f7f3ee;--card:#fffdf9;--ink:#1d2a30;--muted:#5f6b70;--line:#e5ddd2;--acc:#d9612c;--ok:#1d6b35;--bad:#a23b2a}
 @media (prefers-color-scheme:dark){:root{--bg:#14191b;--card:#1c2326;--ink:#e8eef0;--muted:#9aa7ac;--line:#2c3539;--acc:#f07a45;--ok:#6fcf8f;--bad:#ff8a73}}
@@ -41,16 +46,19 @@ const app=document.getElementById('app');
 const norm=c=>String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const head=`<p class="brand">FYF · FAHRRADPASS</p>`;
 function askForm(err){
-  app.innerHTML=`${head}<h1>Geschichte eines Fahrrads prüfen</h1><p class="muted">Vor dem Kauf eines gebrauchten Rads: Code vom FYF-Aufkleber am Rahmen eingeben oder den QR-Code mit der Kamera scannen. Du siehst Services, neue Teile, den Gebrauchtrad-Check der Werkstatt – und ob das Rad als gestohlen gemeldet ist.</p>
+  const my=myBikesHtml();
+  app.innerHTML=`${head}${my?`<h1>FYF Pass</h1>${my}<h2 style="margin:22px 0 6px">Anderes Rad prüfen</h2>`:'<h1>Geschichte eines Fahrrads prüfen</h1>'}<p class="muted">Vor dem Kauf eines gebrauchten Rads: Code vom FYF-Aufkleber am Rahmen eingeben oder den QR-Code mit der Kamera scannen. Du siehst Services, neue Teile, den Gebrauchtrad-Check der Werkstatt – und ob das Rad als gestohlen gemeldet ist.</p>
    <div class="card"><form id="f"><input id="c" maxlength="9" placeholder="z. B. K7QM3XPA" autocomplete="off" autocapitalize="characters" aria-label="Fahrradpass-Code" required><button>Prüfen</button></form>${err?`<p style="color:var(--bad);margin:8px 0 0">${esc(err)}</p>`:''}</div>
    <div class="card"><h2>Eigenes Rad registrieren – kostenlos</h2><p class="muted small" style="margin:0 0 10px">Dein Rad bekommt einen FYF-Fahrradpass mit QR-Code. Jede FYF-Werkstatt trägt Services ein, du kannst es als gestohlen melden, und beim Verkauf gibst du die Geschichte einfach weiter. Ohne Konto, ohne Namen.</p><button class="btn" id="regb" type="button">Rad registrieren</button></div>
    <p><a href="finder.html${CF?'#cfg='+esc(CF):''}">FYF-Partnerwerkstätten finden</a></p>`;
   document.getElementById('regb').onclick=()=>regForm();
+  app.insertAdjacentHTML('beforeend',installHint()); app.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ if(confirm('Rad aus „Meine Räder“ auf diesem Gerät entfernen? Der Pass selbst bleibt bestehen.')){ mineDel(b.dataset.del); askForm(''); } });
   document.getElementById('f').onsubmit=e=>{ e.preventDefault(); location.hash='c='+norm(document.getElementById('c').value)+(CF?'&cfg='+CF:''); };
 }
-async function show0(code){ window.__P=null;
+async function show0(code){ window.__P=null; window.__OFF=null;
   if(!/^[A-HJ-NP-Z2-9]{8}$/.test(code)) return askForm('Der Code hat 8 Zeichen (ohne 0, O, 1 und I).');
-  let p; try{ const r=await fetch(CFG.u+'/rest/v1/rpc/pass_get',{method:'POST',headers:{apikey:CFG.k,'Content-Type':'application/json'},body:JSON.stringify({p_code:code})}); if(!r.ok) throw 0; p=await r.json(); }catch(e){ app.innerHTML=`${head}<h1>Gerade nicht erreichbar</h1><div class="card">Bitte später noch einmal versuchen.</div>`; return; }
+  let p; try{ const r=await fetch(CFG.u+'/rest/v1/rpc/pass_get',{method:'POST',headers:{apikey:CFG.k,'Content-Type':'application/json'},body:JSON.stringify({p_code:code})}); if(!r.ok) throw 0; p=await r.json(); }catch(e){ const c0=cacheGet(code); if(c0){ p=c0.p; window.__OFF=c0.at; } else { app.innerHTML=`${head}<h1>Gerade nicht erreichbar</h1><div class="card">Bitte später noch einmal versuchen.</div>`; return; } }
+  if(p&&!window.__OFF&&mine().some(m=>m.code===code)) cacheSet(code,p);
   if(!p) return askForm('Zu diesem Code gibt es keinen Fahrradpass.');
   window.__P=p;
   const b=p.bike||{}, sh=p.shop||{};
@@ -94,7 +102,7 @@ function regForm(err){ app.innerHTML=`${head}<h1>Rad registrieren</h1><p class="
     const bike={name:(g('rb')+' '+g('rm')).trim(),type:g('rt'),size:g('rs'),year:g('ry')?Number(g('ry')):'',color:g('rc'),frame:mask(frameNorm(g('rf'))),km:g('rk')?Number(g('rk')):null};
     let r; try{ const fh=await frameHash(g('rf')); const x=await fetch(CFG.u+'/rest/v1/rpc/pass_register',{method:'POST',headers:{apikey:CFG.k,'Content-Type':'application/json'},body:JSON.stringify({p_payload:{bike,date:new Date().toISOString().slice(0,10)},p_fh:fh})}); if(!x.ok) throw 0; r=await x.json(); }catch(x){ return regForm('Gerade nicht erreichbar. Bitte später erneut versuchen.'); }
     if(!r||r.error) return regForm(r&&r.error==='FYF_FRAME_EXISTS'?'Für diese Rahmennummer gibt es schon einen FYF-Fahrradpass. Hast du das Rad gekauft? Lass dir vom Verkäufer die Karte „Teil II“ geben und gehe damit in eine FYF-Werkstatt.':r&&r.error==='FYF_RATE'?'Heute sind sehr viele Registrierungen eingegangen. Bitte morgen erneut versuchen.':'Bitte die Eingaben prüfen.');
-    regDone(r.code,r.transfer,bike); }; }
+    mineAdd(r.code,bike.name); regDone(r.code,r.transfer,bike); }; }
 function loadQR(){ return window.qrcode?Promise.resolve():new Promise((ok,no)=>{ const s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'; s.onload=ok; s.onerror=no; document.head.appendChild(s); }); }
 async function regDone(code,transfer,bike){ const url=location.origin+location.pathname+'#c='+code+(CF?'&cfg='+CF:''); let qr=''; try{ await loadQR(); const q=window.qrcode(0,'M'); q.addData(url); q.make(); qr=q.createSvgTag({cellSize:4,margin:1,scalable:true}); }catch(e){}
   const tr=transfer.replace(/(.{4})(?=.)/g,'$1-');
@@ -130,9 +138,29 @@ function ownerBox(code,r0){ const P=window.__P||{}; if(P.withdrawn) return; cons
     box.querySelector('#oexp').onclick=()=>{ const P=window.__P||{}; const data={format:'FYF-Fahrradpass',version:1,exported:new Date().toISOString(),code,bike:P.bike,owner_no:P.owner_no,owner_since:P.owner_since,stolen:P.stolen,checks:P.checks||[],entries:(P.entries||[]).map(e=>({nr:e.id,date:e.date,kind:e.kind,text:e.text,km:e.km,by:e.shop,trust:e.trust,corrects:e.corrects||null}))}; const u=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})); const a=document.createElement('a'); a.href=u; a.download='FYF-Fahrradpass-'+code+'.json'; document.body.appendChild(a); a.click(); a.remove(); };
     box.querySelector('#oen').onsubmit=e=>{ e.preventDefault(); act('entry',{kind:box.querySelector('#ok').value,text:box.querySelector('#ot').value,km:box.querySelector('#okm').value}); }; };
   if(r0) panel(r0); else lock(); }
-async function show(code){ await show0(code); if(window.__P&&/^[A-HJ-NP-Z2-9]{8}$/.test(code)) ownerBox(code); }
+async function show(code){ await show0(code); const P=window.__P; if(!P||!/^[A-HJ-NP-Z2-9]{8}$/.test(code)) return;
+  const name=(P.bike&&P.bike.name)||'Fahrrad', isMine=mine().some(m=>m.code===code), h1=app.querySelector('h1');
+  if(isMine){ mineAdd(code,name); if(h1) h1.insertAdjacentHTML('afterend',await walletCard(code,name)+(P.limited&&!P.withdrawn?`<div class="card small">Dein Pass ist auf „Nur Werkstätten“ gestellt – darum siehst du hier nur die Kurzansicht. Unten im <b>Besitzer-Bereich</b> mit dem Code von Teil II auf „Jeder“ stellen, dann siehst du die ganze Geschichte.</div>`:'')); }
+  if(window.__OFF&&h1) h1.insertAdjacentHTML('afterend',`<div class="card small" style="border-color:var(--acc)">Offline – gespeicherter Stand vom ${fd(window.__OFF)}.</div>`);
+  const bar=document.createElement('p'); bar.innerHTML=isMine?`<a href="#meine${CF?'&cfg='+CF:''}">← Meine Räder</a>`:`<button class="btn" id="addMine">Zu „Meine Räder“ hinzufügen</button> <span class="muted small">– nur auf diesem Gerät gespeichert</span>`; app.appendChild(bar);
+  const am=document.getElementById('addMine'); if(am) am.onclick=()=>{ mineAdd(code,name); cacheSet(code,P); show(code); };
+  if(!window.__OFF) ownerBox(code); }
+// ---------- App „FYF Pass“: Meine Räder (nur auf diesem Gerät), digitaler Pass mit QR, offline lesbar ----------
+const LS=k=>{ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(e){ return null; } }, LSset=(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
+const mine=()=>LS('fyfpass:mine')||[];
+const mineAdd=(code,name)=>{ const l=mine().filter(m=>m.code!==code); l.unshift({code,name:String(name||'Fahrrad').slice(0,80),at:new Date().toISOString().slice(0,10)}); LSset('fyfpass:mine',l.slice(0,20)); };
+const mineDel=code=>{ LSset('fyfpass:mine',mine().filter(m=>m.code!==code)); try{ localStorage.removeItem('fyfpass:c:'+code); }catch(e){} };
+const cacheGet=code=>LS('fyfpass:c:'+code), cacheSet=(code,p)=>LSset('fyfpass:c:'+code,{p,at:new Date().toISOString()});
+const standalone=()=>window.navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+const ios=()=>/iPhone|iPad|iPod/.test(navigator.userAgent);
+function myBikesHtml(){ const l=mine(); if(!l.length) return '';
+  return `<div class="card"><h2>Meine Räder</h2>${l.map(m=>`<div class="e" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><a href="#c=${m.code}${CF?'&cfg='+CF:''}" style="color:inherit;text-decoration:none;flex:1"><b>${esc(m.name)}</b><br><span class="muted small" style="font-family:ui-monospace,monospace">${m.code}</span></a><button class="btn ghost" data-del="${m.code}" aria-label="Entfernen" style="padding:6px 10px">×</button></div>`).join('')}</div>`; }
+function installHint(){ if(standalone()) return ''; return `<div class="card"><b>Als App aufs iPhone</b><p class="muted small" style="margin:4px 0 0">${ios()?'In Safari unten auf <b>Teilen</b> (Quadrat mit Pfeil) → <b>Zum Home-Bildschirm</b>. Dann hast du „FYF Pass“ wie eine App.':'Im Browser-Menü <b>App installieren</b> bzw. <b>Zum Startbildschirm</b> wählen.'}</p></div>`; }
+async function walletCard(code,name){ const url=location.origin+location.pathname+'#c='+code+(CF?'&cfg='+CF:''); let qr=''; try{ await loadQR(); const q=window.qrcode(0,'M'); q.addData(url); q.make(); qr=q.createSvgTag({cellSize:4,margin:1,scalable:true}); }catch(e){}
+  return `<div class="card" style="background:#1f2a30;color:#fff;border:0"><div style="display:flex;gap:14px;align-items:center"><div style="width:96px;height:96px;background:#fff;border-radius:10px;padding:5px;flex:none">${qr||'<span style="color:#555;font-size:11px">QR braucht Internet</span>'}</div><div style="min-width:0"><div style="font-size:11px;letter-spacing:.14em;font-weight:800;color:#f07a45">FYF FAHRRADPASS</div><div style="font-weight:700;font-size:18px;margin:2px 0">${esc(name||'Fahrrad')}</div><div style="font:700 20px ui-monospace,monospace;letter-spacing:.08em">${code}</div><div style="font-size:12px;opacity:.75;margin-top:4px">In der Werkstatt vorzeigen</div></div></div></div>`; }
 function route(){ const h=new URLSearchParams((location.hash||'').slice(1)); const c=norm(h.get('c')); if(c) show(c); else askForm(''); }
 window.addEventListener('hashchange',route); route();
+try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); }catch(e){}
 </script>
 </body>
 </html>
