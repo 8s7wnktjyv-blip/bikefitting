@@ -31,7 +31,8 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const fd=s=>{ if(!s) return ''; const [y,m,d]=String(s).slice(0,10).split('-'); return `${d}.${m}.${y}`; };
 const unb64u=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-s.length%4)%4))));
 const hp=new URLSearchParams((location.hash||'').slice(1)); const T=hp.get('t')||'';
-let CFG=null; try{ const c=JSON.parse(unb64u(hp.get('cfg')||'')); if(/^https:\/\/[a-z0-9.-]+$|^http:\/\/localhost(:\d+)?$/.test(c.u)&&c.k&&!/^sb_secret_/.test(c.k)) CFG=c; }catch(e){}
+// Nur der offizielle FYF-Server (und localhost zum Testen) – gefälschte QR-Links können keine fremden Daten unter dieser Adresse anzeigen
+let CFG=null; try{ const c=JSON.parse(unb64u(hp.get('cfg')||'')); if(/^https:\/\/tyfilehmrnibtoalwflf\.supabase\.co$|^http:\/\/localhost(:\d+)?$/.test(c.u)&&c.k&&!/^sb_secret_/.test(c.k)) CFG=c; }catch(e){}
 const app=document.getElementById('app'); const msg=(h,t)=>{ app.innerHTML=`<h1>${h}</h1><div class="card">${t}</div>`; };
 (async()=>{ if(!CFG||!/^[a-f0-9]{32}$/.test(T)) return msg('Link unvollständig','Bitte den Link aus der Nachricht deines Fahrradladens vollständig öffnen.');
   let p; try{ const r=await fetch(CFG.u+'/rest/v1/rpc/portal_get',{method:'POST',headers:{apikey:CFG.k,'Content-Type':'application/json'},body:JSON.stringify({p_token:T})}); if(!r.ok) throw 0; p=await r.json(); }catch(e){ return msg('Gerade nicht erreichbar','Bitte später noch einmal öffnen.'); }

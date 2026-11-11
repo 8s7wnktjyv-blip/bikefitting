@@ -126,7 +126,8 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const eur=v=>Number(v||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 const unb64u=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-s.length%4)%4))));
 const hp=new URLSearchParams((location.hash||'').slice(1));
-let CFG=DEFAULT; try{ if(hp.get('cfg')){ const c=JSON.parse(unb64u(hp.get('cfg'))); if(/^https:\/\/[a-z0-9.-]+$|^http:\/\/localhost(:\d+)?$/.test(c.u)&&c.k&&!/^sb_secret_/.test(c.k)) CFG=c; } }catch(e){}
+// Nur der offizielle FYF-Server (und localhost zum Testen) – gefälschte QR-Links können keine fremden Daten unter dieser Adresse anzeigen
+let CFG=DEFAULT; try{ if(hp.get('cfg')){ const c=JSON.parse(unb64u(hp.get('cfg'))); if(/^https:\/\/tyfilehmrnibtoalwflf\.supabase\.co$|^http:\/\/localhost(:\d+)?$/.test(c.u)&&c.k&&!/^sb_secret_/.test(c.k)) CFG=c; } }catch(e){}
 const api=async(path,opt={})=>{ const r=await fetch(CFG.u+path,{...opt,headers:{apikey:CFG.k,'Content-Type':'application/json',...(opt.headers||{})}}); const t=await r.text(); let j=null; try{ j=t?JSON.parse(t):null; }catch(e){} if(!r.ok) throw new Error((j&&(j.message||j.msg))||('Fehler '+r.status)); return j; };
 const app=document.getElementById('app');
 // Einblenden nach jedem Seitenwechsel (Karten nacheinander)
