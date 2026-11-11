@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-11.83';
+const APP_VER='2026-11-11.84';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -7406,6 +7406,11 @@ function passCardHtml(b,code,transfer,qr){ const I=b.ident||{}, sh=S.shop||{};
 async function passCardOpen(b,transfer){ const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
   let qr=''; try{ if(!window.qrcode) await loadScript(QR_JS()); qr=qrSvg(passUrl(b.qr.code)); }catch(e){}
   w.document.write(passCardHtml(b,b.qr.code,transfer,qr)); w.document.close(); }
+// Mini-Etikett für 18-mm-Band: QR mit niedriger Fehlerkorrektur (L = kleinstmöglich), ganze Druckpunkte je Kästchen (180 dpi, Bild doppelt so fein)
+function miniLabelCanvas(code,url){ const q=window.qrcode(0,'L'); q.addData(url); q.make(); const n=q.getModuleCount(), m=6, qz=2*m, H=n*m+2*qz, W=H+122;
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H; const g=cv.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H); g.fillStyle='#000';
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(q.isDark(r,c)) g.fillRect(qz+c*m,qz+r*m,m,m);
+  g.save(); g.translate(H+40,H/2); g.rotate(-Math.PI/2); g.textAlign='center'; g.font='800 22px system-ui,-apple-system,sans-serif'; g.fillText('FYF',0,-30); g.font='700 30px ui-monospace,Menlo,monospace'; g.fillText(code.slice(0,4),0,5); g.fillText(code.slice(4),0,38); g.restore(); return cv; }
 function labelCanvas(code,url){ // 24-mm-Band: druckbare Höhe ca. 18 mm, 360 dpi → 256 px hoch, 52 mm lang
   const H=256, W=740, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const g=cv.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H);
   const q=window.qrcode(0,'M'); q.addData(url); q.make(); const n=q.getModuleCount(), s=Math.floor((H-16)/n), o=Math.floor((H-s*n)/2); g.fillStyle='#000';
@@ -7417,11 +7422,16 @@ Object.assign(ACT,{
     if(b.qr.cardAt&&!confirmDel(`Es gibt schon einen Fahrradschein vom ${b.qr.cardAt}. Ein neuer Druck macht dessen Übergabe-Code ungültig. Weiter?`)) return;
     let t; try{ t=String(await clApi('/rest/v1/rpc/pass_transfer_new',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_bike:b.id})})).replace(/"/g,''); }catch(e){ toast(e.offline?'Keine Verbindung':netErr(e),true); return; }
     b.qr.cardAt=nowStamp(); audit(`Fahrradschein mit neuem Übergabe-Code: ${bikeName(b)} (${b.qr.code})`); save(); passCardOpen(b,t); },
-  async passLabel(el){ const b=bike(el.dataset.id); if(!b||!b.qr||!b.qr.code) return;
+  passLabel(el){ const b=bike(el.dataset.id); if(!b||!b.qr||!b.qr.code) return;
+    openDrawer('Etikett fürs Etikettiergerät',`<div class="stack"><p class="muted" style="margin:0;font-size:13.5px">Welches Band nutzt du?</p>
+      <button class="btn primary" data-act="passLabelGo" data-id="${b.id}" data-f="mini">Mini – 18 mm Sicherheitsband (Brother TZe-SE4)<br><span style="font-weight:400;font-size:12.5px">QR ca. 15 × 15 mm, zeigt beim Abziehen ein Muster</span></button>
+      <button class="btn" data-act="passLabelGo" data-id="${b.id}" data-f="std">Standard – 24 mm laminiertes Band<br><span style="font-weight:400;font-size:12.5px">mit Text „FYF Fahrradpass“</span></button>
+      <p class="faint" style="margin:0;font-size:12.5px">Ohne Gerät: Aufkleber auf Papier drucken (im Pass-Fenster) und mit klarem Klebeband überkleben.</p></div>`); },
+  async passLabelGo(el){ const b=bike(el.dataset.id); if(!b||!b.qr||!b.qr.code) return; const mini=el.dataset.f==='mini';
     try{ if(!window.qrcode) await loadScript(QR_JS()); }catch(e){ toast('QR-Code braucht Internet',true); return; }
-    const cv=labelCanvas(b.qr.code,passUrl(b.qr.code)); const name=`FYF-Etikett-${b.qr.code}.png`;
+    const cv=mini?miniLabelCanvas(b.qr.code,passUrl(b.qr.code)):labelCanvas(b.qr.code,passUrl(b.qr.code)); const name=`FYF-Etikett-${mini?'18mm':'24mm'}-${b.qr.code}.png`;
     cv.toBlob(async bl=>{ try{ const f=new File([bl],name,{type:'image/png'}); if(navigator.canShare&&navigator.canShare({files:[f]})){ await navigator.share({files:[f],title:name}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
-      const u=URL.createObjectURL(bl); openDrawer('Etikett fürs Etikettiergerät',`<div class="stack"><img src="${u}" alt="Etikett ${esc(b.qr.code)}" style="width:100%;max-width:520px;border:1px solid var(--line);border-radius:8px;background:#fff"><p class="muted" style="margin:0;font-size:13.5px">Für 24-mm-Band (z. B. Brother P-touch mit laminiertem TZe-Band). Bild sichern und in der App des Etikettiergeräts als Bild einfügen. Ohne Gerät: auf Papier drucken und mit klarem Klebeband überkleben.</p><a class="btn primary" href="${u}" download="${name}">Bild sichern</a></div>`); },'image/png'); }
+      const u=URL.createObjectURL(bl); openDrawer('Etikett fürs Etikettiergerät',`<div class="stack"><img src="${u}" alt="Etikett ${esc(b.qr.code)}" style="width:100%;max-width:${mini?260:520}px;border:1px solid var(--line);border-radius:8px;background:#fff"><p class="muted" style="margin:0;font-size:13.5px">${mini?'Für 18-mm-Band (z. B. Brother TZe-SE4 Sicherheitsband). In der Brother-App als Bild einfügen, Ränder auf „schmal“ stellen. Auf glatter, sauberer Stelle aufkleben (z. B. Sitzrohr unten), 24 h nicht nass machen.':'Für 24-mm-Band (z. B. Brother P-touch mit laminiertem TZe-Band). Bild sichern und in der App des Etikettiergeräts als Bild einfügen.'}</p><a class="btn primary" href="${u}" download="${name}">Bild sichern</a></div>`); },'image/png'); }
 });
 
 // ---------- Identität & Diebstahlschutz ----------
