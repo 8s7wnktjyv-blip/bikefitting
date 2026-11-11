@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-11.97';
+const APP_VER='2026-11-11.98';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2051,7 +2051,7 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
 // Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
-const DB_SCHEMA=14; let dbSchema=null;
+const DB_SCHEMA=15; let dbSchema=null;
 async function dbCheck(){ if(!(CL.url&&CL.key)) return;
   try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
   catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
@@ -2385,6 +2385,7 @@ VIEWS.dashboard = () => {
   if(showExtra()){ openWO.filter(w=>w.status==='Freigabe ausstehend').forEach(w=>att.push({icon:'wrench',t:`${w.title}`,sub:`${cust(w.customerId).name} muss den Kostenvoranschlag freigeben`,a:`data-act="openWO" data-id="${w.id}"`,chip:'<span class="chip c-warn">wartet</span>'}));
   openWO.filter(w=>w.status==='Abholbereit').forEach(w=>att.push({icon:'wrench',t:`${w.title} ist fertig`,sub:`${cust(w.customerId).name} kann abholen`,a:`data-act="openWO" data-id="${w.id}"`,chip:'<span class="chip c-ok">abholbereit</span>'}));
   S.inventory.filter(x=>x.stock<x.min).forEach(x=>att.push({icon:'box',t:`${x.name} nachbestellen`,sub:`noch ${x.stock}, Minimum ${x.min}`,a:'data-nav="lager"',chip:'<span class="chip c-warn">knapp</span>'})); }
+  try{ copilotItems().filter(x=>/^(Teil fehlt|Rechnung überfällig|Garantiefall offen)$/.test(x.k)).forEach(x=>att.push({icon:x.k==='Teil fehlt'?'box':'loop',t:x.t,sub:x.sub,a:x.act?`data-act="${x.act}" data-id="${esc(x.id)}"`:`data-nav="${x.nav}"`,chip:`<span class="chip ${x.p===1?'c-bad':'c-warn'}">${esc(x.k)}</span>`})); }catch(e){}
   const appt=s=>{const c=cust(s.customerId),b=bike(s.bikeId);return `<div class="li"><span class="time">${esc(s.time)}</span><div class="avatar">${initials(c.name)}</div><div class="grow"><div class="t">${esc(c.name)}</div><div class="sub">${esc(s.type)} · ${esc(b.brand+' '+b.model)}</div></div>${sessChip(s.status)}${s.status==='geplant'||s.status==='eingetroffen'?`<button class="btn sm primary" data-act="startSession" data-id="${s.id}">Starten</button>`:`<button class="btn sm" data-act="openSession" data-id="${s.id}">Öffnen</button>`}</div>`;};
   return `
   ${!storageOk||inAppBrowser?`<div class="notice warn">${ic('warn')}<div><b>${!storageOk?'Achtung: Hier wird nichts gespeichert.':'Achtung: eingebetteter Browser.'}</b> ${!storageOk?'Wahrscheinlich privater Modus.':'Daten können verloren gehen.'} Öffne den Link direkt in Safari. <button class="btn sm" data-act="saveInfo">Mehr dazu</button></div></div>`:''}
@@ -7638,7 +7639,7 @@ TITLES.passport='FYF Fahrradpass'; AREA_OF.passport='Kunden & Räder';
 { const FT=FEATURES.find(f=>f[0]==='BikePassport'); if(FT){ FT[1]='Digitale Akte je Fahrrad – jetzt als FYF Fahrradpass mit eigenem Bereich'; } }
 
 /* ===================== v.94 Fahrradpass: Ausstattung aus der Werkstatt + Akku-Werte vom Check in den Pass (die Pass-App übernimmt sie automatisch) ===================== */
-{ const PL5=passPayload; passPayload=function(b){ const p=PL5(b); if(p&&p.bike&&b){ const pp=b.parts||{}, o={}; PART_F.forEach(([k,l,u])=>{ const v=pp[k]; if(v!==''&&v!=null){ const t=String(v).trim().slice(0,60); o[k]=u&&/^[\d.,]+$/.test(t)?t+' '+u:t; } }); if(Object.keys(o).length) p.bike.parts=o; } return p; }; }
+{ const PL5=passPayload; passPayload=function(b){ const p=PL5(b); if(p&&p.bike&&b){ const pp=b.parts||{}, o={}; PART_F.forEach(([k,l,u])=>{ const v=pp[k]; if(v!==''&&v!=null){ const t=String(v).trim().slice(0,60); o[k]=u&&/^[\d.,]+$/.test(t)?t+' '+u:t; } }); if(Object.keys(o).length) p.bike.parts=o; const pl=(S.services||[]).filter(x=>x.bikeId===b.id&&x.task&&x.next).map(x=>({task:String(x.task).slice(0,60),interval:String(x.interval||'').slice(0,30),next:x.next,last:x.last||null})).slice(0,10); if(pl.length) p.plan=pl; } return p; }; }
 // Pass automatisch aktualisieren: Fitting abgeschlossen, Rad/Ausstattung geändert, Gebrauchtrad-Check, Rad-Identität
 { const SS5=CHG.sessStatus; if(SS5) CHG.sessStatus=function(el){ const r=SS5.apply(this,arguments); try{ const s=S.sessions.find(x=>x.id===(el&&el.dataset&&el.dataset.id)); const b=s&&bike(s.bikeId); if(s&&s.status==='abgeschlossen'&&b&&b.qr&&b.qr.code&&cloudReady()) setTimeout(()=>passSync(b),150); }catch(e){} return r; }; }
 ['bikeEdit','usedCheck','bikeIdent'].forEach(k=>{ const o=FORMS[k]; if(!o) return; FORMS[k]=function(f,d){ const r=o.apply(this,arguments); try{ const b=bike(f&&f.dataset&&f.dataset.id); if(b&&b.qr&&b.qr.code&&!b.qr.moved&&cloudReady()) setTimeout(()=>passPush(b,true),200); }catch(e){} return r; }; });
