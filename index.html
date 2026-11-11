@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-11.84';
+const APP_VER='2026-11-11.85';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -4875,7 +4875,7 @@ function QR_JS(){ return 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qr
 function loadScript(src){ const scriptCache=(window.__ffsc=window.__ffsc||{}); if(scriptCache[src]) return scriptCache[src]; scriptCache[src]=new Promise((res,rej)=>{ const t=document.createElement('script'); t.src=src; t.async=true; t.onload=()=>res(); t.onerror=()=>{ delete scriptCache[src]; t.remove(); rej(new Error('load')); }; document.head.appendChild(t); }); return scriptCache[src]; }
 function PeerCls(){ return window.Peer||(window.peerjs&&window.peerjs.Peer)||null; }
 async function needPeer(){ if(!PeerCls()) await loadScript(PEER_JS()); if(!PeerCls()) throw new Error('peer'); return PeerCls(); }
-function qrSvg(text){ const q=window.qrcode(0,'M'); q.addData(text); q.make(); return q.createSvgTag({cellSize:6,margin:2,scalable:true}); }
+function qrSvg(text){ const t=typeof qrText==='function'?qrText(text):text; const q=window.qrcode(0,'M'); q.addData(t,typeof qrMode==='function'?qrMode(t):'Byte'); q.make(); return q.createSvgTag({cellSize:6,margin:2,scalable:true}); }
 function camLink(id){ return location.origin+location.pathname+'#cam='+encodeURIComponent(id); }
 function peerErrText(e){ const t=e&&e.type||''; return t==='peer-unavailable'?'PC nicht erreichbar. QR-Code am PC neu öffnen.':t==='network'||t==='server-error'||t==='socket-error'?'Vermittlungs-Server nicht erreichbar. Internet prüfen.':t==='browser-incompatible'?'Dieser Browser kann keine Direktverbindung. Safari oder Chrome nutzen.':'Verbindung fehlgeschlagen ('+(t||'unbekannt')+'). Gleiches WLAN? Sonst Hotspot vom Handy nutzen.'; }
 function phoneStatus(){ if(!live.conn||!live.conn.open) return; const r=live.last; try{ live.conn.send({n:r?r.n:0,need:LIVE_N,grade:r?r.grade:'',knee:r?r.knee:null,issues:r?r.issues.slice(0,2):[],status:live.status||''}); }catch(e){} }
@@ -7277,7 +7277,11 @@ ${k.note?`<p style="margin-top:16px"><b>Hinweise:</b> ${esc(k.note)}</p>`:''}
     const i=h.lastIndexOf('<p class="m" style="margin-top:30px">'); return i<0?h:h.slice(0,i)+sec+h.slice(i); }; }
 
 // ---------- 3. QR-Fahrradpass am Rahmen – über alle FYF-Läden ----------
-const passUrl=code=>pageUrl('rad.html','c='+code);
+// Kurz-Domain für QR-Codes (z. B. 'fyf.bike'). Leer = bisheriger langer Link. Kurzer Link + Großbuchstaben = kleinerer QR-Code (alphanumerischer Modus).
+const PASS_SHORT='';
+const passUrl=code=>{ const def=!CL||!CL.url||String(CL.url).replace(/\/+$/,'')===CL_DEFAULT.url; return PASS_SHORT&&def?'https://'+PASS_SHORT+'/'+code:pageUrl('rad.html','c='+code); };
+const qrText=t=>PASS_SHORT&&String(t).toLowerCase().startsWith('https://'+PASS_SHORT.toLowerCase()+'/')?String(t).toUpperCase():String(t);
+const qrMode=t=>/^[0-9A-Z $%*+\-.\/:]+$/.test(t)?'Alphanumeric':'Byte';
 function passPayload(b){ const D=bikePassData(b); const fr=String(D.bike.frameNo||''); return {shop:D.shop,date:D.date,
   bike:{name:D.bike.name,type:D.bike.type,size:D.bike.size,year:D.bike.year,km:D.bike.km,frame:fr.length>6?fr.slice(0,3)+'•••'+fr.slice(-3):fr},
   svc:D.svc.filter(s=>s.title!=='Gebrauchtrad-Check mit Zertifikat').slice(0,60).map(s=>({date:s.date,km:s.km??null,title:s.title,parts:s.parts.slice(0,12),ins:s.ins})),
@@ -7407,13 +7411,13 @@ async function passCardOpen(b,transfer){ const w=window.open('','_blank'); if(!w
   let qr=''; try{ if(!window.qrcode) await loadScript(QR_JS()); qr=qrSvg(passUrl(b.qr.code)); }catch(e){}
   w.document.write(passCardHtml(b,b.qr.code,transfer,qr)); w.document.close(); }
 // Mini-Etikett für 18-mm-Band: QR mit niedriger Fehlerkorrektur (L = kleinstmöglich), ganze Druckpunkte je Kästchen (180 dpi, Bild doppelt so fein)
-function miniLabelCanvas(code,url){ const q=window.qrcode(0,'L'); q.addData(url); q.make(); const n=q.getModuleCount(), m=6, qz=2*m, H=n*m+2*qz, W=H+122;
+function miniLabelCanvas(code,url){ const q=window.qrcode(0,'L'); url=qrText(url); q.addData(url,qrMode(url)); q.make(); const n=q.getModuleCount(), m=6, qz=2*m, H=n*m+2*qz, W=H+122;
   const cv=document.createElement('canvas'); cv.width=W; cv.height=H; const g=cv.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H); g.fillStyle='#000';
   for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(q.isDark(r,c)) g.fillRect(qz+c*m,qz+r*m,m,m);
   g.save(); g.translate(H+40,H/2); g.rotate(-Math.PI/2); g.textAlign='center'; g.font='800 22px system-ui,-apple-system,sans-serif'; g.fillText('FYF',0,-30); g.font='700 30px ui-monospace,Menlo,monospace'; g.fillText(code.slice(0,4),0,5); g.fillText(code.slice(4),0,38); g.restore(); return cv; }
 function labelCanvas(code,url){ // 24-mm-Band: druckbare Höhe ca. 18 mm, 360 dpi → 256 px hoch, 52 mm lang
   const H=256, W=740, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const g=cv.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H);
-  const q=window.qrcode(0,'M'); q.addData(url); q.make(); const n=q.getModuleCount(), s=Math.floor((H-16)/n), o=Math.floor((H-s*n)/2); g.fillStyle='#000';
+  const q=window.qrcode(0,'M'); url=qrText(url); q.addData(url,qrMode(url)); q.make(); const n=q.getModuleCount(), s=Math.floor((H-16)/n), o=Math.floor((H-s*n)/2); g.fillStyle='#000';
   for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(q.isDark(r,c)) g.fillRect(o+c*s,o+r*s,s,s);
   const x=o*2+s*n+14; g.fillStyle='#000'; g.font='800 30px system-ui,-apple-system,sans-serif'; g.fillText('FYF FAHRRADPASS',x,62);
   g.font='700 66px ui-monospace,Menlo,monospace'; g.fillText(code,x,150); g.font='500 27px system-ui,-apple-system,sans-serif'; g.fillText('Scannen: Service-Geschichte',x,205); return cv; }
