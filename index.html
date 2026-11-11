@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-10.82';
+const APP_VER='2026-11-11.83';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2184,7 +2184,7 @@ const mainNav=()=>{ let L=MAIN_ALL.slice(); if(!modOn('werkstatt')) L=L.map(m=>m
 const moreNav=()=>MORE.map(([g,items])=>[g,g==='Bikefitting'?(modOn('fitting')||modOn('quickfit')?[['fitting','Bikefitting','fit','Fitting starten und alles dazu: Körper, Vermessung, Video, Verlauf, Berichte']]:[]):navVisible(items).filter(m=>m[0]!=='mehr')]).filter(([,items])=>items.length);
 const NAV_AREAS0=[
   ['Dashboard',[['dashboard','Dashboard','dash','Überblick, Termine, offene Aufgaben']]],
-  ['Kunden',[['kunden','Kunden','users','Kundenakten mit Rädern, Historie und Körpermaßen'],['fahrraeder','Fahrräder','bike','Alle Räder mit Einstellungen und Historie']]],
+  ['Kunden',[['kunden','Kunden','users','Kundenakten mit Rädern, Historie und Körpermaßen'],['fahrraeder','Fahrräder','bike','Alle Räder mit Einstellungen und Historie'],['passport','FYF Fahrradpass','quality','QR-Pass, Diebstahl-Abgleich, Besitzerwechsel, Gebrauchträder']]],
   ['Bikefitting',[['sitzung','Fitting','fit','Geführter Ablauf vom Ziel bis zum Ergebnis'],['verlauf','Verlauf & Vergleich','history','Sitzungen nebeneinander und über die Zeit'],['followup','Nachkontrollen','loop','Wer ist wann wieder dran?']]],
   ['Körperanalyse',[['koerper','Körperanalyse','body','Körpermaße, Beinlänge, Sitzknochen, Tests']]],
   ['Bike-Vermessung',[['vermessung','Bike-Vermessung','ruler','Aktuelle Sitzposition je Fahrrad'],['quickfit','Quick-Fit Übergabe','handover','Neues Rad in 10 Minuten einstellen und übergeben']]],
@@ -2199,7 +2199,7 @@ const NAV_AREAS0=[
 // Neuordnung: Werkstatt und Kunden vorn, Bikefitting als ein Bereich unter mehreren. Keine Funktion entfällt.
 const NAV_AREAS=(()=>{ const all=Object.fromEntries(NAV_AREAS0.flatMap(([,it])=>it).map(m=>[m[0],m])), used=new Set();
   const take=ks=>ks.filter(k=>all[k]&&!used.has(k)).map(k=>(used.add(k),all[k]));
-  const out=[['Dashboard',take(['dashboard'])],['Werkstatt & Termine',take(['werkstatt','termine','fahrwerk'])],['Kunden & Räder',take(['kunden','fahrraeder'])],
+  const out=[['Dashboard',take(['dashboard'])],['Werkstatt & Termine',take(['werkstatt','termine','fahrwerk'])],['Kunden & Räder',take(['kunden','fahrraeder','passport'])],
     ['Verkauf & Rechnungen',take(['rechnungen','lager','preise'])],
     ['Bikefitting',take(['sitzung','koerper','vermessung','quickfit','motion','verlauf','followup','berichte','ki','portal'])]];
   const rest=NAV_AREAS0.map(([g,it])=>[g,it.filter(m=>!used.has(m[0]))]).filter(([,it])=>it.length);
@@ -7351,7 +7351,7 @@ Object.assign(FORMS,{
 });
 Object.assign(ACT,{ passLookup(){ const i=document.getElementById('passCode'); passOpen(i&&i.value); } });
 CHG.passCodeKey=()=>{};
-{ const W2=VIEWS.werkstatt; VIEWS.werkstatt=()=>W2()+panel('Rad mit FYF-Fahrradpass?',`<p class="muted" style="margin:0 0 8px;font-size:13.5px">QR-Aufkleber am Rahmen mit der iPhone-Kamera scannen – oder den 8-stelligen Code hier eingeben. Du siehst die Service-Geschichte (auch von anderen Werkstätten) und kannst deine Arbeit nachtragen.</p><div class="row" style="gap:6px;flex-wrap:nowrap"><input class="input mono" id="passCode" maxlength="9" placeholder="z. B. K7QM3XPA" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;max-width:200px"><button class="btn" data-act="passLookup">Öffnen</button></div>`); }
+/* v.83: Code-Eingabe steht jetzt im Bereich FYF Fahrradpass */
 if(/^#rad=/.test(clBootHash)){ const code=decodeURIComponent(clBootHash.slice(5)); let n=0; const t=setInterval(()=>{ n++; if(cloudReady()||n>40){ clearInterval(t); go('werkstatt'); passOpen(code); } },150); }
 
 // ---------- 4. Partnerseite: welche FYF-Funktionen der Laden zeigt ----------
@@ -7580,7 +7580,7 @@ Object.assign(ACT,{ passLookupCode(el){ passOpen(el.dataset.code); }, async fram
 // Prüfung automatisch bei Annahme, neuem Rad und geänderter Rahmennummer
 { const IS=FORMS.intakeStart; FORMS.intakeStart=function(f,d){ const r=IS.apply(this,arguments); const b=bike(d.get('bid')); if(b&&b.frameNo) setTimeout(()=>frameCheck(b.frameNo,b,true),50); return r; }; }
 ['bike','bikeEdit','bikeIdent'].forEach(k=>{ const o=FORMS[k]; if(!o) return; FORMS[k]=function(f,d){ const fn=String(d.get('frameNo')||''); const r=o.apply(this,arguments); if(frameNorm(fn).length>=4){ const b=k==='bike'?S.bikes[S.bikes.length-1]:bike(f.dataset.id); setTimeout(()=>frameCheck(fn,b,false),80); } return r; }; });
-{ const W3=VIEWS.werkstatt; VIEWS.werkstatt=()=>W3()+(cloudReady()?panel('Rahmennummer prüfen',`<p class="muted" style="margin:0 0 8px;font-size:13.5px">Vor Ankauf oder Annahme: Ist das Rad in einem FYF-Fahrradpass als gestohlen gemeldet? Geprüft wird nur ein verschlüsselter Abgleich – die Nummer wird nicht gespeichert. Wird bei jeder Annahme auch automatisch geprüft.</p><div class="row" style="gap:6px;flex-wrap:nowrap"><input class="input mono" id="frameNo" maxlength="40" placeholder="Rahmennummer" autocomplete="off" autocapitalize="characters" style="max-width:240px"><button class="btn" data-act="frameLookup">Prüfen</button></div>`):''); }
+/* v.83: Rahmennummer-Prüfung steht jetzt im Bereich FYF Fahrradpass */
 
 // ---------- Quick-Fit: Position aus dem letzten Fitting übernehmen ----------
 { const QV=VIEWS.quickfit; VIEWS.quickfit=()=>{ const h=QV(); const q=ui.qf||{}, c=cust(q.cid), b=bike(q.bid); if(!c||!c.id||!b||!b.id) return h;
@@ -7595,6 +7595,28 @@ Object.assign(ACT,{ passLookupCode(el){ passOpen(el.dataset.code); }, async fram
 { const set=(n,st,d)=>{ const x=FEATURES.find(f=>f[0]===n); if(x){ x[2]=st; if(d) x[1]=d; } };
   FEATURES.push(['Diebstahl-Abgleich','Bei Annahme, neuem Rad und Rahmennummer-Änderung automatisch; Werkstatt-Feld „Rahmennummer prüfen“. Nur Hash, keine Nummer gespeichert (Datenbank Stand 13)',1],
     ['Rad selbst registrieren','Besitzer legt kostenlos einen Pass an (rad.html), bekommt Teil II, druckt den Aufkleber selbst; Service bei FYF-Werkstatt buchen mit Pass-Code. Aufkleber-Versand 4,90 € vorbereitet, erst mit Gewerbe/Impressum',2]); }
+
+/* ===================== v.83 Eigener Bereich „FYF Fahrradpass“ ===================== */
+VIEWS.passport=()=>{ const P=S.bikes.filter(b=>b.qr&&b.qr.code), act=P.filter(b=>!b.qr.moved), pub=act.filter(b=>b.qr.vis==='public').length, stol=act.filter(b=>b.qr.stolen), sale=products().filter(p=>String(p.id).startsWith('used-')), none=S.bikes.filter(b=>!(b.qr&&b.qr.code));
+  const base=location.origin+location.pathname.replace(/[^/]*$/,''), cl=cloudReady();
+  const K=(n,l)=>`<div class="kpi"><div class="k">${l}</div><div class="v">${n}</div></div>`;
+  return `${head('FYF Fahrradpass','Der digitale Lebenslauf jedes Rads: QR-Aufkleber, Service-Geschichte, Diebstahl-Abgleich, Besitzerwechsel. Für Läden und Radfahrer kostenlos.')}
+  ${cl?'':`<div class="notice">${ic('info')}<span>Der Fahrradpass braucht die Cloud-Speicherung (Mehr → Rolle und Datenspeicherung).</span></div>`}
+  <div class="kpis">${K(act.length,'Pässe aktiv')}${K(pub,'öffentlich sichtbar')}${K(stol.length,'als gestohlen gemeldet')}${K(sale.length,'Gebrauchträder angeboten')}</div>
+  ${stol.length?panel('Als gestohlen gemeldet',`<div class="list">${stol.map(b=>`<div class="li click" data-act="openBike" data-id="${b.id}"><div class="grow"><div class="t">${esc(bikeName(b))}</div><div class="sub">${esc((cust(b.customerId)||{}).name||'')} · ${esc(b.qr.code)}</div></div><span class="chip warn">gestohlen</span></div>`).join('')}</div>`):''}
+  ${panel('Rad scannen oder Code eingeben',`<p class="muted" style="margin:0 0 8px;font-size:13.5px">QR-Aufkleber mit der iPhone-Kamera scannen – oder den 8-stelligen Code eingeben. Du siehst die Geschichte (auch von anderen Werkstätten), trägst Arbeit nach oder übernimmst den Pass mit Teil II.</p><div class="row" style="gap:6px;flex-wrap:nowrap"><input class="input mono" id="passCode" maxlength="9" placeholder="z. B. K7QM3XPA" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;max-width:200px"><button class="btn" data-act="passLookup">Öffnen</button></div>`)}
+  ${cl?panel('Rahmennummer prüfen (Diebstahl-Abgleich)',`<p class="muted" style="margin:0 0 8px;font-size:13.5px">Vor Ankauf oder Annahme. Läuft bei jeder Annahme auch automatisch. Verglichen wird nur ein verschlüsselter Wert – die Nummer wird nicht gespeichert.</p><div class="row" style="gap:6px;flex-wrap:nowrap"><input class="input mono" id="frameNo" maxlength="40" placeholder="Rahmennummer" autocomplete="off" autocapitalize="characters" style="max-width:240px"><button class="btn" data-act="frameLookup">Prüfen</button></div>`):''}
+  ${panel('Pass für ein Rad anlegen',none.length?`<div class="row" style="gap:6px;flex-wrap:nowrap"><select class="input" id="ppNew" style="max-width:340px">${none.map(b=>`<option value="${b.id}">${esc(bikeName(b))} · ${esc((cust(b.customerId)||{}).name||'')}</option>`).join('')}</select><button class="btn primary" data-act="ppNew">Anlegen</button></div><p class="faint" style="margin:6px 0 0;font-size:12.5px">Danach: Aufkleber oder Etikett drucken, Fahrradschein (Teil I + II) mitgeben.</p>`:'<span class="muted">Alle Räder haben einen Pass.</span>')}
+  ${panel(`Pässe deines Ladens (${P.length})`,P.length?`<div class="list">${P.map(b=>`<div class="li click" data-act="qrPass" data-id="${b.id}"><div class="grow"><div class="t">${esc(bikeName(b))}</div><div class="sub">${esc((cust(b.customerId)||{}).name||'')} · <span class="mono">${esc(b.qr.code)}</span>${b.qr.owner>1?' · '+b.qr.owner+'. Besitzer':''}</div></div>${b.qr.moved?'<span class="chip nodot">übergeben</span>':b.qr.stolen?'<span class="chip warn">gestohlen</span>':`<span class="chip nodot">${b.qr.vis==='public'?'öffentlich':'nur Werkstätten'}</span>`}</div>`).join('')}</div>`:'<span class="muted">Noch keine Pässe.</span>')}
+  ${sale.length?panel('Gebrauchträder mit Pass im Angebot',`<div class="list">${sale.map(p=>{ const b=bike(p.bikeId)||{}; return `<div class="li click" data-act="usedSale" data-id="${esc(p.bikeId||'')}"><div class="grow"><div class="t">${esc(p.name)}</div><div class="sub">${esc(p.note||'')}</div></div><b>${eur(p.price)}</b></div>`; }).join('')}</div>`):''}
+  ${panel('Für Radfahrer',`<p class="muted" style="margin:0 0 8px;font-size:13.5px">Radfahrer registrieren ihr Rad selbst kostenlos und buchen darüber Service bei dir. Den Link kannst du auf Flyer, Website oder Instagram setzen.</p><div class="row" style="gap:6px;flex-wrap:wrap"><a class="btn sm" href="${esc(base+'rad.html')}" target="_blank" rel="noopener">Seite „Rad registrieren“ öffnen</a><button class="btn sm ghost" data-act="ppCopy">Link kopieren</button></div>`)}`; };
+Object.assign(ACT,{ ppNew(){ const v=(document.getElementById('ppNew')||{}).value; if(v) ACT.qrPass({dataset:{id:v}}); },
+  ppCopy(){ const u=location.origin+location.pathname.replace(/[^/]*$/,'')+'rad.html'; try{ navigator.clipboard.writeText(u).then(()=>toast('Link kopiert'),()=>toast('Kopieren nicht möglich',true)); }catch(e){ toast('Kopieren nicht möglich',true); } } });
+TITLES.passport='FYF Fahrradpass'; AREA_OF.passport='Kunden & Räder';
+// Werkstatt: kurzer Verweis statt doppelter Felder
+{ const W4=VIEWS.werkstatt; VIEWS.werkstatt=()=>W4()+panel('FYF Fahrradpass',`<p class="muted" style="margin:0 0 8px;font-size:13.5px">QR-Code eines Rads öffnen, Rahmennummer auf Diebstahl prüfen, Pass anlegen.</p><button class="btn sm" data-nav="passport">${ic('quality')} Zum Fahrradpass</button>`); }
+// Dashboard: Kachel
+{ const FT=FEATURES.find(f=>f[0]==='BikePassport'); if(FT){ FT[1]='Digitale Akte je Fahrrad – jetzt als FYF Fahrradpass mit eigenem Bereich'; } }
 
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
