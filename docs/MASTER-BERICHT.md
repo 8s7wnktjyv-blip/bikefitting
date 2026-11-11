@@ -38,6 +38,7 @@ Alle Änderungen liegen auf dem Git-Branch **`master-auftrag`** – **nicht live
 8. Händler-Software: **Teil II nach Eigentumsprüfung neu ausstellen** im Bereich FYF Fahrradpass.
 9. Datenbank: `funde.sql` erweitert (siehe 7.).
 10. Textfehler im KI-Assistenten behoben („… ist integration nötig“).
+11. **Hersteller-QR am Rahmen** (z. B. Canyon, enthält die Rahmennummer als Text): Beim Registrieren „Rahmennummer per QR scannen“; unter „Rad prüfen“ findet der Scan des Hersteller-QR (oder die eingetippte Rahmennummer) den passenden FYF-Pass – Diebstahl-Check auch ohne FYF-Aufkleber. Neue Datenbank-Funktion `pass_find_frame` (nur Hash wird übertragen).
 
 Davor heute bereits live (main): QR-Scanner, Fundmeldung, Kauf-Check + Kaufvertrag, Besitzer-Code merken, Pass-Vollständigkeit, Sichern/Wiederherstellen, Garage teilen, automatische Übernahme von Werkstatt-/Fitting-Daten, Besitzer-Vollansicht.
 
@@ -87,7 +88,7 @@ Davor heute bereits live (main): QR-Scanner, Fundmeldung, Kauf-Check + Kaufvertr
 
 ## 7. Datenbankänderungen (Stand 14, Datei `docs/supabase/funde.sql`, nur ergänzend)
 - Tabelle `bike_pass_seen` (Fundmeldungen; RLS an, kein direkter Zugriff) + Spalte `contact`
-- Funktionen: `pass_seen_add` (mit optionalem Kontakt), `pass_seen_list`, `pass_frame_match`, `pass_get_owner`, `pass_owner_reissue`
+- Funktionen: `pass_seen_add` (mit optionalem Kontakt), `pass_seen_list`, `pass_frame_match`, `pass_get_owner`, `pass_owner_reissue`, `pass_find_frame`
 - `fyf_schema()` → 14. Keine Daten gelöscht, nichts umbenannt, rückwärtskompatibel.
 
 ## 8. Notwendige manuelle Schritte

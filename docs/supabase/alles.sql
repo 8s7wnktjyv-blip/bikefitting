@@ -1589,6 +1589,20 @@ end $$;
 revoke all on function pass_owner_reissue(uuid, text, text, text) from public, anon;
 grant execute on function pass_owner_reissue(uuid, text, text, text) to authenticated;
 
+-- Pass über die Rahmennummer finden (z. B. Hersteller-QR am Rahmen wie bei Canyon). Übertragen wird nur der Hash.
+-- Gibt nur Pass-Code und Diebstahl-Status zurück; was danach sichtbar ist, regelt wie immer pass_get.
+create or replace function pass_find_frame(p_fh text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare k record;
+begin
+  if coalesce(p_fh, '') !~ '^[0-9a-f]{64}$' then return jsonb_build_object('error', 'FYF_BAD_DATA'); end if;
+  select code, coalesce(owner_stolen, stolen) as st into k from bike_passes where frame_hash = p_fh and withdrawn_at is null order by coalesce(owner_stolen, stolen) desc, updated_at desc limit 1;
+  if k.code is null then return jsonb_build_object('found', false); end if;
+  return jsonb_build_object('found', true, 'code', k.code, 'stolen', k.st);
+end $$;
+revoke all on function pass_find_frame(text) from public;
+grant execute on function pass_find_frame(text) to anon, authenticated;
+
 -- ===================== Stand der Datenbank (für die Prüfung in der App) =====================
 create or replace function fyf_schema() returns int language sql immutable as $$ select 14 $$;
 grant execute on function fyf_schema() to anon, authenticated;
