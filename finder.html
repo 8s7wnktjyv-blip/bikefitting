@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>FYF-Partner finden</title>
+<link rel="manifest" href="pass.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FYF Pass">
 <meta name="description" content="FYF-Partnerwerkstätten: Bikefitting, Werkstatt mit Live-Status, QR-Fahrradpass und Gebrauchtrad-Check. Fahrradpass-Code prüfen, Anfrage direkt an den Laden.">
 <style>
 :root{--bg:#f7f3ee;--card:#fffdf9;--ink:#1d2a30;--muted:#5f6b70;--line:#e5ddd2;--acc:#d9612c;--ok:#1d6b35}
@@ -26,6 +30,10 @@ label{display:block;font-size:14px;margin:10px 0 4px}
 footer{margin-top:30px;font-size:13px}footer a{color:var(--muted)}
 a{color:var(--acc)}
 .slotw{display:flex;gap:10px;overflow-x:auto;padding:4px 0 8px}.slotd{display:flex;flex-direction:column;gap:6px;min-width:76px}.slot{font:inherit;font-weight:600;padding:8px 0;border-radius:10px;border:1px solid var(--line,#ddd);background:transparent;color:inherit;cursor:pointer}.slot[aria-pressed=true]{background:var(--acc,#d9612c);color:#fff;border-color:transparent}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:50}
+.tabs a{flex:1;text-align:center;font-size:11.5px;font-weight:600;color:var(--muted);text-decoration:none;padding:4px 0;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabs a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs a.on{color:var(--acc)}body{padding-bottom:72px}
 </style>
 </head>
 <body>
@@ -43,6 +51,14 @@ const hp=new URLSearchParams((location.hash||'').slice(1));
 let CFG=DEFAULT; try{ if(hp.get('cfg')){ const c=JSON.parse(unb64u(hp.get('cfg'))); if(/^https:\/\/[a-z0-9.-]+$|^http:\/\/localhost(:\d+)?$/.test(c.u)&&c.k&&!/^sb_secret_/.test(c.k)) CFG=c; } }catch(e){}
 const api=async(path,opt={})=>{ const r=await fetch(CFG.u+path,{...opt,headers:{apikey:CFG.k,'Content-Type':'application/json',...(opt.headers||{})}}); const t=await r.text(); let j=null; try{ j=t?JSON.parse(t):null; }catch(e){} if(!r.ok) throw new Error((j&&(j.message||j.msg))||('Fehler '+r.status)); return j; };
 const app=document.getElementById('app');
+// Untere Leiste der App „FYF Pass“ (gleich in rad.html und finder.html)
+function tabs(on){ const c=(()=>{ const x=new URLSearchParams((location.hash||'').slice(1)).get('cfg'); return x?'&cfg='+x:''; })();
+  const I={bike:'<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-8h5l3 8M10 8l2 8h-6M14 5h3"/>',scan:'<path d="M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3M7 12h10"/>',shop:'<path d="M4 10l1.5-5h13L20 10M5 10v9h14v-9M9 19v-5h6v5M4 10h16"/>',tag:'<path d="M3 12V4h8l9 9-8 8-9-9z"/><circle cx="7.5" cy="7.5" r="1.3"/>'};
+  const T=(k,href,icon,label)=>`<a href="${href}" class="${on===k?'on':''}"><svg viewBox="0 0 24 24">${I[icon]}</svg>${label}</a>`;
+  let el=document.getElementById('tabs'); if(!el){ el=document.createElement('nav'); el.id='tabs'; el.className='tabs'; el.setAttribute('aria-label','FYF Pass'); document.body.appendChild(el); }
+  el.innerHTML=T('meine','rad.html#meine'+c,'bike','Meine Räder')+T('pruefen','rad.html#pruefen'+c,'scan','Rad prüfen')+T('werk','finder.html#w=1'+c,'shop','Werkstätten')+T('markt','finder.html#markt=1'+c,'tag','Marktplatz');
+  el.querySelectorAll('a').forEach(x=>x.onclick=e=>{ if(x.href===location.href){ e.preventDefault(); (new URLSearchParams((location.hash||'').slice(1)).get('markt')?market():list()); } }); }
+
 const foot=`<footer class="muted"><a href="${LEGAL.impressum}">Impressum</a> · <a href="${LEGAL.datenschutz}">Datenschutz</a> · Angaben der Händler ohne Gewähr. Preise inkl. MwSt.; Kauf und Bezahlung direkt beim Händler.</footer>`;
 let ALL=[], USED=[], Q={q:'',svc:'',feat:''};
 const PASS=(()=>{ const c=String(new URLSearchParams((location.hash||'').slice(1)).get('pass')||'').toUpperCase(); return /^[A-HJ-NP-Z2-9]{8}$/.test(c)?c:''; })();
@@ -51,7 +67,7 @@ const FEAT={fitting:'Bikefitting mit FYF',pass:'QR-Fahrradpass',status:'Werkstat
 const featChips=x=>(x.features||[]).filter(k=>FEAT[k]).map(k=>`<span class="chip f">${esc(FEAT[k])}</span>`).join('');
 const cfgQ=()=>{ const c=new URLSearchParams((location.hash||'').slice(1)).get('cfg'); return c?'&cfg='+c:''; };
 const slotsOf=x=>{ const t=new Date().toISOString().slice(0,10); return (Array.isArray(x.slots)?x.slots:[]).filter(d=>d&&d.d>t&&Array.isArray(d.t)&&d.t.length).slice(0,10); };
-function setHash(d){ const h=new URLSearchParams((location.hash||'').slice(1)); if(d) h.set('d',d); else h.delete('d'); history.replaceState(null,'','#'+h.toString()); }
+function setHash(d,m){ const h=new URLSearchParams((location.hash||'').slice(1)); if(d) h.set('d',d); else h.delete('d'); if(m) h.set('markt','1'); else h.delete('markt'); h.delete('w'); history.replaceState(null,'','#'+h.toString()); }
 async function start(){
   if(!CFG.u||!CFG.k){ app.innerHTML=`<h1>FYF-Partner finden</h1><div class="card"><p>Diese Seite ist noch nicht eingerichtet.</p></div>${foot}`; return; }
   const d=new URLSearchParams((location.hash||'').slice(1)).get('d');
@@ -59,15 +75,16 @@ async function start(){
   try{ try{ ALL=await api(`/rest/v1/dealer_profiles?published=eq.true&select=${F},slots,features&order=name`)||[]; }catch(eF){ try{ ALL=await api(`/rest/v1/dealer_profiles?published=eq.true&select=${F},slots&order=name`)||[]; }catch(e0){ ALL=await api(`/rest/v1/dealer_profiles?published=eq.true&select=${F}&order=name`)||[]; } } }
   catch(e){ app.innerHTML=`<h1>FYF-Partner finden</h1><div class="card note">Gerade nicht erreichbar. Bitte später noch einmal.</div>${foot}`; return; }
   try{ USED=await api(`/rest/v1/public_products?cat=eq.Gebrauchtrad&select=slug,id,name,price,note&order=price`)||[]; }catch(e){ USED=[]; }
-  if(d) return dealer(d); list(); }
-function list(){ setHash(''); document.title='FYF-Partner finden';
+  if(d) return dealer(d); if(new URLSearchParams((location.hash||'').slice(1)).get('markt')) return market(); list(); }
+window.addEventListener('hashchange',()=>{ const h=new URLSearchParams((location.hash||'').slice(1)); if(h.get('markt')&&!h.get('d')) market(); else if(h.get('w')) list(); });
+function list(){ setHash(''); tabs('werk'); document.title='FYF-Partner finden';
   const svcs=[...new Set(ALL.flatMap(x=>x.services||[]))].sort(); const q=Q.q.toLowerCase().trim();
   const L=ALL.filter(x=>(!Q.feat||(x.features||[]).includes(Q.feat))&&(!Q.svc||(x.services||[]).includes(Q.svc))&&(!q||[x.name,x.city,x.zip].join(' ').toLowerCase().includes(q)||String(x.zip||'').startsWith(q)));
   const fk=Object.keys(FEAT).filter(k=>ALL.some(x=>(x.features||[]).includes(k)));
   app.innerHTML=`<p class="muted small" style="margin:0;letter-spacing:.1em;font-weight:700">FYF – FIT YOUR FRAME</p><h1>FYF-Partner finden</h1><p class="muted">Fahrradläden und Werkstätten, die mit FYF arbeiten: Bikefitting, Werkstatt mit Live-Status, QR-Fahrradpass und Gebrauchtrad-Check. Anfrage direkt an den Laden – ohne Konto.</p>
    ${PASS?`<div class="card" style="border:2px solid var(--acc,#d9612c)"><b>Service für dein Rad (Fahrradpass ${PASS})</b><p class="muted small" style="margin:4px 0 0">Wähle eine Werkstatt. Der Pass-Code geht mit deiner Anfrage mit – die Werkstatt sieht sofort die Geschichte deines Rads.</p></div>`:''}
    <div class="card"><h2>Gebrauchtes Rad? Fahrradpass prüfen</h2><p class="muted small" style="margin:0 0 8px">Code vom FYF-Aufkleber am Rahmen eingeben: Services, neue Teile, Gebrauchtrad-Check und Diebstahl-Meldung.</p><form id="pc" class="row"><input id="pcc" maxlength="9" placeholder="z. B. K7QM3XPA" autocomplete="off" autocapitalize="characters" style="flex:1 1 180px;width:auto;text-transform:uppercase;font-family:ui-monospace,monospace;letter-spacing:.08em" aria-label="Fahrradpass-Code"><button>Prüfen</button></form></div>
-   ${USED.filter(u=>passOf(u.note)&&ALL.some(d=>d.slug===u.slug)).length?`<div class="card"><h2>Gebrauchträder mit Fahrradpass</h2><p class="muted small" style="margin:0 0 6px">Angeboten von FYF-Werkstätten. Die Geschichte jedes Rads ist im Fahrradpass einsehbar. Bezahlung und Übergabe direkt mit dem Laden.</p>${USED.filter(u=>passOf(u.note)&&ALL.some(d=>d.slug===u.slug)).slice(0,30).map(u=>{ const d=ALL.find(x=>x.slug===u.slug); return `<div class="prod"><span><b>${esc(u.name)}</b><br><span class="muted small">${esc(String(u.note||'').replace(/^Fahrradpass [A-Z0-9]{8}( · )?/,''))}</span><br><span class="small">${esc(d.name)}${d.city?' · '+esc(d.city):''}</span></span><span style="text-align:right;white-space:nowrap"><b>${eur(u.price)}</b><br><a class="small" href="rad.html#c=${passOf(u.note)}${cfgQ()}">Fahrradpass</a> · <a href="#" class="small" data-u="${esc(u.slug)}" data-up="${esc(u.id)}">Anfragen</a></span></div>`; }).join('')}</div>`:''}
+   ${USED.some(u=>ALL.some(d=>d.slug===u.slug))?`<div class="card"><h2>Gebrauchträder mit Fahrradpass</h2><p class="muted small" style="margin:0 0 8px">${USED.filter(u=>ALL.some(d=>d.slug===u.slug)).length} Räder von FYF-Werkstätten – mit nachvollziehbarer Geschichte.</p><a class="btn" href="#markt=1${cfgQ()}">Zum Marktplatz</a></div>`:''}
    ${fk.length?`<div class="row" style="margin:4px 0">${['',...fk].map(k=>`<button class="${Q.feat===k?'':'btn ghost'}" style="padding:7px 12px;font-size:14px" data-f="${k}">${k?esc(FEAT[k]):'Alle Partner'}</button>`).join('')}</div>`:''}
    <div class="card"><div class="row"><div style="flex:2 1 220px"><label for="q">Ort oder PLZ</label><input id="q" value="${esc(Q.q)}" placeholder="z. B. Erlangen oder 910" autocomplete="postal-code"></div>
    <div style="flex:1 1 180px"><label for="s">Leistung</label><select id="s"><option value="">Alle</option>${svcs.map(s=>`<option ${s===Q.svc?'selected':''}>${esc(s)}</option>`).join('')}</select></div></div></div>
@@ -80,7 +97,21 @@ function list(){ setHash(''); document.title='FYF-Partner finden';
   app.querySelectorAll('[data-u]').forEach(a=>a.onclick=async e=>{ e.preventDefault(); await dealer(a.dataset.u); const pp=document.getElementById('pp'); if(pp){ document.getElementById('t').value='Produkt'; pp.value=a.dataset.up; document.getElementById('form').scrollIntoView(); } });
   document.getElementById('pc').onsubmit=e=>{ e.preventDefault(); const c=String(document.getElementById('pcc').value||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if(c) location.href='rad.html#c='+c+cfgQ(); };
   app.querySelectorAll('[data-d]').forEach(a=>a.onclick=e=>{ e.preventDefault(); dealer(a.dataset.d); }); }
-async function dealer(slug){ const x=ALL.find(d=>d.slug===slug); if(!x){ list(); return; } setHash(slug); document.title=x.name+' – '+(x.city||''); scrollTo(0,0);
+// ---------- Marktplatz: Gebrauchträder mit Pass und Angebote aller FYF-Läden (gleiche Produktdaten wie in den Profilen) ----------
+let MKT=null, MQ={q:'',c:''};
+async function market(){ setHash('',1); tabs('markt'); document.title='FYF Marktplatz'; scrollTo(0,0);
+  if(!MKT){ app.innerHTML='<p class="muted">Lädt …</p>'; try{ MKT=(await api(`/rest/v1/public_products?select=slug,id,cat,name,price,note&order=name`)||[]).filter(p=>ALL.some(d=>d.slug===p.slug)); }catch(e){ app.innerHTML=`<h1>Marktplatz</h1><div class="card note">Gerade nicht erreichbar.</div>${foot}`; return; } }
+  const cats=[...new Set(MKT.map(p=>p.cat||'Sonstiges'))].sort((a,b)=>(a==='Gebrauchtrad'?-1:b==='Gebrauchtrad'?1:a.localeCompare(b)));
+  const q=MQ.q.toLowerCase(), L=MKT.filter(p=>(!MQ.c||(p.cat||'Sonstiges')===MQ.c)&&(!q||(p.name+' '+(p.note||'')+' '+(p.cat||'')).toLowerCase().includes(q))).sort((a,b)=>(a.cat==='Gebrauchtrad'?0:1)-(b.cat==='Gebrauchtrad'?0:1)||Number(a.price)-Number(b.price));
+  app.innerHTML=`<p class="muted small" style="margin:0;letter-spacing:.1em;font-weight:700">FYF – FIT YOUR FRAME</p><h1>Marktplatz</h1><p class="muted">Räder, Teile und Leistungen von FYF-Werkstätten. Gebrauchträder mit Fahrradpass zeigen ihre ganze Geschichte. Kauf und Bezahlung direkt beim Laden – FYF nimmt kein Geld entgegen.</p>
+   <div class="card"><input id="mq" placeholder="Suchen, z. B. Gravel, Sattel, Inspektion" value="${esc(MQ.q)}" aria-label="Suchen">
+   <div class="row" style="margin-top:8px">${['',...cats].map(c=>`<button class="${MQ.c===c?'':'btn ghost'}" style="padding:6px 12px;font-size:14px" data-c="${esc(c)}">${c?esc(c==='Gebrauchtrad'?'Gebrauchträder mit Pass':c):'Alles'}</button>`).join('')}</div></div>
+   <div class="card">${L.length?L.map(p=>{ const d=ALL.find(x=>x.slug===p.slug)||{}, pc=passOf(p.note); return `<div class="prod"><span><b>${esc(p.name)}</b>${pc?' <span class="chip ok">mit Fahrradpass</span>':''}<br><span class="muted small">${esc(String(p.note||'').replace(/^Fahrradpass [A-Z0-9]{8}( · )?/,''))}</span><br><span class="small">${esc(d.name||'')}${d.city?' · '+esc(d.city):''}</span></span><span style="text-align:right;white-space:nowrap"><b>${eur(p.price)}</b><br>${pc?`<a class="small" href="rad.html#c=${pc}${cfgQ()}">Fahrradpass</a> · `:''}<a href="#" class="small" data-u="${esc(p.slug)}" data-up="${esc(p.id)}">Anfragen</a></span></div>`; }).join(''):'<p class="muted" style="margin:0">Keine Angebote gefunden.</p>'}</div>
+   <p class="muted small">Angebote stammen von den Läden selbst. Bei Fragen zu Zustand, Preis und Abholung bitte direkt den Laden fragen.</p>${foot}`;
+  const mq=document.getElementById('mq'); mq.oninput=()=>{ MQ.q=mq.value; clearTimeout(window.__mt); window.__mt=setTimeout(()=>{ market(); const n=document.getElementById('mq'); n.focus(); n.setSelectionRange(n.value.length,n.value.length); },250); };
+  app.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ MQ.c=b.dataset.c; market(); });
+  app.querySelectorAll('[data-u]').forEach(a=>a.onclick=async e=>{ e.preventDefault(); await dealer(a.dataset.u); const pp=document.getElementById('pp'); if(pp){ document.getElementById('t').value='Produkt'; pp.value=a.dataset.up; document.getElementById('form').scrollIntoView(); } }); }
+async function dealer(slug){ const x=ALL.find(d=>d.slug===slug); if(!x){ list(); return; } setHash(slug); tabs('werk'); document.title=x.name+' – '+(x.city||''); scrollTo(0,0);
   let P=[]; try{ P=await api(`/rest/v1/public_products?slug=eq.${encodeURIComponent(slug)}&select=id,cat,name,price,note&order=cat,name`)||[]; }catch(e){}
   const pre=new URLSearchParams((location.hash||'').slice(1)).get('p')||'';
   app.innerHTML=`<p><a href="#" id="back">← Alle Läden</a></p><h1>${esc(x.name)}</h1>
@@ -112,6 +143,7 @@ async function dealer(slug){ const x=ALL.find(d=>d.slug===slug); if(!x){ list();
       f.innerHTML='<p><b>Danke!</b> Deine Anfrage ist beim Laden angekommen. Er meldet sich bei dir.</p>'; }
     catch(err){ const t=String(err.message); m.textContent=/FYF_RATE/.test(t)?'Zu viele Anfragen. Bitte später noch einmal oder direkt anrufen.':/FYF_BAD_DATA|FYF_TOO_LONG/.test(t)?'Bitte Name, Kontakt und Nachricht prüfen.':'Senden hat nicht geklappt. Bitte später noch einmal oder direkt anrufen.'; b.disabled=false; } }; }
 start();
+try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); }catch(e){}
 </script>
 </body>
 </html>

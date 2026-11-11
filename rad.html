@@ -28,6 +28,10 @@ button,.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:11p
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 a{color:var(--acc)}
 .brand{font-weight:800;letter-spacing:.08em;font-size:13px}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:50}
+.tabs a{flex:1;text-align:center;font-size:11.5px;font-weight:600;color:var(--muted);text-decoration:none;padding:4px 0;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabs a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs a.on{color:var(--acc)}body{padding-bottom:72px}
 </style>
 </head>
 <body>
@@ -43,11 +47,19 @@ const unb64u=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,
 const hp=new URLSearchParams((location.hash||'').slice(1)); const CF=hp.get('cfg');
 let CFG=DEFAULT; try{ if(CF){ const c=JSON.parse(unb64u(CF)); if(/^https:\/\/[a-z0-9.-]+$|^http:\/\/localhost(:\d+)?$/.test(c.u)&&c.k&&!/^sb_secret_/.test(c.k)) CFG=c; } }catch(e){}
 const app=document.getElementById('app');
+// Untere Leiste der App „FYF Pass“ (gleich in rad.html und finder.html)
+function tabs(on){ const c=(()=>{ const x=new URLSearchParams((location.hash||'').slice(1)).get('cfg'); return x?'&cfg='+x:''; })();
+  const I={bike:'<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-8h5l3 8M10 8l2 8h-6M14 5h3"/>',scan:'<path d="M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3M7 12h10"/>',shop:'<path d="M4 10l1.5-5h13L20 10M5 10v9h14v-9M9 19v-5h6v5M4 10h16"/>',tag:'<path d="M3 12V4h8l9 9-8 8-9-9z"/><circle cx="7.5" cy="7.5" r="1.3"/>'};
+  const T=(k,href,icon,label)=>`<a href="${href}" class="${on===k?'on':''}"><svg viewBox="0 0 24 24">${I[icon]}</svg>${label}</a>`;
+  let el=document.getElementById('tabs'); if(!el){ el=document.createElement('nav'); el.id='tabs'; el.className='tabs'; el.setAttribute('aria-label','FYF Pass'); document.body.appendChild(el); }
+  el.innerHTML=T('meine','rad.html#meine'+c,'bike','Meine Räder')+T('pruefen','rad.html#pruefen'+c,'scan','Rad prüfen')+T('werk','finder.html#w=1'+c,'shop','Werkstätten')+T('markt','finder.html#markt=1'+c,'tag','Marktplatz');
+  el.querySelectorAll('a').forEach(x=>x.onclick=e=>{ if(x.href===location.href){ e.preventDefault(); route(); } }); }
+
 const norm=c=>String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const head=`<p class="brand">FYF · FAHRRADPASS</p>`;
 function askForm(err){
-  const my=myBikesHtml();
-  app.innerHTML=`${head}${my?`<h1>FYF Pass</h1>${my}<h2 style="margin:22px 0 6px">Anderes Rad prüfen</h2>`:'<h1>Geschichte eines Fahrrads prüfen</h1>'}<p class="muted">Vor dem Kauf eines gebrauchten Rads: Code vom FYF-Aufkleber am Rahmen eingeben oder den QR-Code mit der Kamera scannen. Du siehst Services, neue Teile, den Gebrauchtrad-Check der Werkstatt – und ob das Rad als gestohlen gemeldet ist.</p>
+  const chk=/pruefen/.test(location.hash), my=chk?'':myBikesHtml();
+  app.innerHTML=`${head}${chk?'<h1>Geschichte eines Fahrrads prüfen</h1>':`<h1>FYF Pass</h1>${my||'<div class="card"><b>Dein digitaler Fahrradpass</b><p class="muted small" style="margin:4px 0 0">Registriere dein Rad unten kostenlos. Es erscheint dann hier unter „Meine Räder“ – mit QR-Code zum Vorzeigen in der Werkstatt.</p></div>'}<h2 style="margin:22px 0 6px">Rad prüfen</h2>`}<p class="muted">Vor dem Kauf eines gebrauchten Rads: Code vom FYF-Aufkleber am Rahmen eingeben oder den QR-Code mit der Kamera scannen. Du siehst Services, neue Teile, den Gebrauchtrad-Check der Werkstatt – und ob das Rad als gestohlen gemeldet ist.</p>
    <div class="card"><form id="f"><input id="c" maxlength="9" placeholder="z. B. K7QM3XPA" autocomplete="off" autocapitalize="characters" aria-label="Fahrradpass-Code" required><button>Prüfen</button></form>${err?`<p style="color:var(--bad);margin:8px 0 0">${esc(err)}</p>`:''}</div>
    <div class="card"><h2>Eigenes Rad registrieren – kostenlos</h2><p class="muted small" style="margin:0 0 10px">Dein Rad bekommt einen FYF-Fahrradpass mit QR-Code. Jede FYF-Werkstatt trägt Services ein, du kannst es als gestohlen melden, und beim Verkauf gibst du die Geschichte einfach weiter. Ohne Konto, ohne Namen.</p><button class="btn" id="regb" type="button">Rad registrieren</button></div>
    <p><a href="finder.html${CF?'#cfg='+esc(CF):''}">FYF-Partnerwerkstätten finden</a></p>`;
@@ -158,7 +170,7 @@ function myBikesHtml(){ const l=mine(); if(!l.length) return '';
 function installHint(){ if(standalone()) return ''; return `<div class="card"><b>Als App aufs iPhone</b><p class="muted small" style="margin:4px 0 0">${ios()?'In Safari unten auf <b>Teilen</b> (Quadrat mit Pfeil) → <b>Zum Home-Bildschirm</b>. Dann hast du „FYF Pass“ wie eine App.':'Im Browser-Menü <b>App installieren</b> bzw. <b>Zum Startbildschirm</b> wählen.'}</p></div>`; }
 async function walletCard(code,name){ const url=location.origin+location.pathname+'#c='+code+(CF?'&cfg='+CF:''); let qr=''; try{ await loadQR(); const q=window.qrcode(0,'M'); q.addData(url); q.make(); qr=q.createSvgTag({cellSize:4,margin:1,scalable:true}); }catch(e){}
   return `<div class="card" style="background:#1f2a30;color:#fff;border:0"><div style="display:flex;gap:14px;align-items:center"><div style="width:96px;height:96px;background:#fff;border-radius:10px;padding:5px;flex:none">${qr||'<span style="color:#555;font-size:11px">QR braucht Internet</span>'}</div><div style="min-width:0"><div style="font-size:11px;letter-spacing:.14em;font-weight:800;color:#f07a45">FYF FAHRRADPASS</div><div style="font-weight:700;font-size:18px;margin:2px 0">${esc(name||'Fahrrad')}</div><div style="font:700 20px ui-monospace,monospace;letter-spacing:.08em">${code}</div><div style="font-size:12px;opacity:.75;margin-top:4px">In der Werkstatt vorzeigen</div></div></div></div>`; }
-function route(){ const h=new URLSearchParams((location.hash||'').slice(1)); const c=norm(h.get('c')); if(c) show(c); else askForm(''); }
+function route(){ const h=new URLSearchParams((location.hash||'').slice(1)); const c=norm(h.get('c')); tabs(c?(mine().some(m=>m.code===c)?'meine':'pruefen'):(/pruefen/.test(location.hash)?'pruefen':'meine')); if(c) show(c); else askForm(''); }
 window.addEventListener('hashchange',route); route();
 try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); }catch(e){}
 </script>
