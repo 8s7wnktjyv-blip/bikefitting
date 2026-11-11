@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-11.95';
+const APP_VER='2026-11-11.96';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -6562,7 +6562,9 @@ function importHtml(){ const pv=ui.impPreview;
 
 /* ---------- Händlerprofil, Anfragen, Marketing ---------- */
 let NET={at:0,profile:null,inq:[],plat:null,err:'',busy:false};
-const SERVICES=['Bikefitting','Quick-Fit Übergabe','Werkstatt','E-Bike-Service','Fahrwerk-Service','Verkauf Neuräder','Gebrauchträder','Leasing/Dienstrad'];
+// Leistungen des Ladens – gruppiert. Die Pass-App zeigt „Bikefitting“-Leistungen bei „Bikefitting buchen“, „Werkstatt“-Leistungen bei „Service buchen“.
+const SVC_GROUPS=[['Bikefitting',['Bikefitting','Erstfitting Rennrad/Gravel','Zeitfahr-/Triathlon-Fitting','Nachkontrolle Fitting','Sattel- & Schuhanalyse','Cleat-Einstellung','Quick-Fit Übergabe']],['Werkstatt',['Werkstatt','Inspektion','Reparatur','E-Bike-Service','Fahrwerk-Service','Laufradbau','Tubeless-Service','Gebrauchtrad-Check','Hol- & Bringservice','Leasing/Dienstrad']],['Verkauf',['Verkauf Neuräder','Gebrauchträder']]];
+const SERVICES=SVC_GROUPS.flatMap(g=>g[1]);
 function finderLink(slug){ const base=location.origin+location.pathname.replace(/[^/]*$/,''); return base+'finder.html#cfg='+b64u(JSON.stringify({u:clBase(),k:CL.key}))+(slug?'&d='+encodeURIComponent(slug):''); }
 async function netLoad(){ if(!cloudReady()||NET.busy) return; NET.busy=true;
   try{ const p=await clApi(`/rest/v1/dealer_profiles?tenant_id=eq.${encodeURIComponent(CL.tenant)}&select=*`,{method:'GET'}); NET.profile=(p&&p[0])||null;
@@ -6594,7 +6596,7 @@ VIEWS.netz = () => { if(!cloudReady()) return head('Händlerprofil & Anfragen','
     <div class="field"><label for="pf_w">Website</label><input class="input" id="pf_w" name="web" value="${esc(p.web||'')}" inputmode="url"></div>
     <div class="field wide"><label for="pf_h">Öffnungszeiten</label><input class="input" id="pf_h" name="hours" value="${esc(p.hours||'')}" maxlength="500" placeholder="Mo–Fr 9–18, Sa 9–14"></div>
     <div class="field wide"><label for="pf_a">Über uns</label><textarea class="input" id="pf_a" name="about" rows="4" maxlength="1500">${esc(p.about||'')}</textarea></div>
-    <div class="field wide"><span class="label">Leistungen</span><div class="row" style="gap:10px;flex-wrap:wrap">${SERVICES.map(s=>`<label class="row" style="gap:6px;flex-wrap:nowrap"><input type="checkbox" name="svc" value="${esc(s)}" ${(p.services||[]).includes(s)?'checked':''}>${esc(s)}</label>`).join('')}</div></div>
+    <div class="field wide"><span class="label">Leistungen</span><p class="faint" style="font-size:12.5px;margin:2px 0 6px">Kunden sehen in der Pass-App bei „Bikefitting buchen“ deine Fitting-Leistungen und bei „Service buchen“ deine Werkstatt-Leistungen.</p>${SVC_GROUPS.map(([g,L])=>`<div style="margin:8px 0 2px;font-weight:700;font-size:13px">${g}</div><div class="row" style="gap:10px;flex-wrap:wrap">${L.map(s=>`<label class="row" style="gap:6px;flex-wrap:nowrap"><input type="checkbox" name="svc" value="${esc(s)}" ${(p.services||[]).includes(s)?'checked':''}>${esc(s)}</label>`).join('')}</div>`).join('')}${(p.services||[]).filter(s=>!SERVICES.includes(s)).map(s=>`<input type="hidden" name="svc" value="${esc(s)}">`).join('')}</div>
     <label class="row wide" style="gap:8px;flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" name="published" ${p.published?'checked':''} style="margin-top:4px"><span>Profil öffentlich zeigen<br><span class="muted" style="font-size:13px">Sichtbar sind nur die Felder oben und Produkte, die du unter „Öffentliche Produkte“ freigibst.</span></span></label>
     <div class="wide"><button class="btn primary" type="submit">Speichern</button></div></form>`):''}
   ${panel(`Öffentliche Produkte (${pub.length})`,`<div class="stack"><p class="muted" style="margin:0;font-size:13.5px">Freigegebene Produkte erscheinen mit Preis (inkl. MwSt.) auf deiner Profilseite. Kunden können dazu eine Anfrage schicken – keine Bestellung, keine Bezahlung.</p>
@@ -7366,6 +7368,9 @@ CHG.featSet=el=>{ S.shop=S.shop||{}; const on=new Set(featOn()); if(el.checked) 
 { const NV=VIEWS.netz; VIEWS.netz=()=>{ const h=NV(); if(!cloudReady()) return h; const fo=featOn();
     return h+panel('Auf der FYF-Partnerseite zeigen',`<p class="muted" style="margin:0 0 8px;font-size:13.5px">Kunden finden dich in der FYF-Händlersuche und sehen, was du anbietest. Sie können dort auch einen Fahrradpass-Code prüfen.</p>${FEAT_LIST.map(([k,l])=>`<label class="row" style="gap:8px;flex-wrap:nowrap"><input type="checkbox" data-change="featSet" data-k="${k}" ${fo.includes(k)?'checked':''}><span>${esc(l)}</span></label>`).join('')}<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><a class="btn sm ghost" href="${esc(location.origin+location.pathname.replace(/[^/]*$/,'')+'finder.html')}" target="_blank" rel="noopener">Partnerseite ansehen</a></div>`); }; }
 { const o=FORMS.profileSave; if(o) FORMS.profileSave=async function(f,d){ const r=await o.call(this,f,d); featPublish(true); return r; }; }
+// Merkmale (z. B. Bikefitting) einmal je Version automatisch an die Partnerseite senden – sonst fehlt der Laden bei „Bikefitting buchen“
+{ let tries=0; const featAuto=async()=>{ tries++; try{ if(!cloudReady()) return; S.shop=S.shop||{}; if(S.shop.featSync===APP_VER) return; if(!needDb(10,true)){ if(tries<8) setTimeout(featAuto,4000); return; }
+    await clApi('/rest/v1/rpc/profile_features',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_features:featOn()})}); S.shop.featSync=APP_VER; save(); }catch(e){ if(tries<8) setTimeout(featAuto,6000); } }; setTimeout(featAuto,3000); }
 
 FEATURES.push(['Live-Status für Kunden','Link wie eine Paketverfolgung, aktualisiert sich bei jedem Statuswechsel (Datenbank Stand 10)',2],['Gebrauchtrad-Check','Checkliste, Gesamtzustand, Zertifikat zum Drucken, Abrechnung als Auftrag',1],['QR-Fahrradpass','Aufkleber am Rahmen, Sichtbarkeit wählt der Besitzer, Diebstahl-Warnung, andere geprüfte FYF-Läden tragen nach (Datenbank Stand 10)',2],['Partnerseite','Händlersuche zeigt Bikefitting, QR-Pass, Live-Status, Gebrauchtrad-Check; Fahrradpass-Code prüfen',2]);
 
