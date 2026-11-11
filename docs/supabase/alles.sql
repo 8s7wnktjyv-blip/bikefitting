@@ -1534,6 +1534,29 @@ revoke all on function pass_seen_list(text, text) from public;
 revoke all on function pass_frame_match(text, text) from public;
 grant execute on function pass_seen_add(text, text, numeric, numeric, int), pass_seen_list(text, text), pass_frame_match(text, text) to anon, authenticated;
 
+-- Besitzer sieht seinen Pass immer vollständig (auch bei „Nur Werkstätten“) – mit dem Code von Karte Teil II
+create or replace function pass_get_owner(p_code text, p_transfer text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare k record; c text := upper(regexp_replace(coalesce(p_code, ''), '[^A-Za-z0-9]', '', 'g')); t text := upper(regexp_replace(coalesce(p_transfer, ''), '[^A-Za-z0-9]', '', 'g')); sh text;
+begin
+  select * into k from bike_passes where code = c;
+  if k.code is null or k.withdrawn_at is not null then return jsonb_build_object('error', 'FYF_NOT_FOUND'); end if;
+  if k.owner_fails >= 10 and k.owner_fail_at > now() - interval '1 day' then return jsonb_build_object('error', 'FYF_RATE'); end if;
+  if k.transfer_hash is null or encode(sha256(convert_to(t, 'UTF8')), 'hex') <> k.transfer_hash then
+    update bike_passes set owner_fails = case when owner_fail_at > now() - interval '1 day' then owner_fails + 1 else 1 end, owner_fail_at = now() where code = c;
+    return jsonb_build_object('error', 'FYF_BAD_TRANSFER');
+  end if;
+  select name into sh from tenants where id = k.tenant_id;
+  return k.payload || jsonb_build_object('shop', coalesce(k.payload->'shop', '{}'::jsonb) || jsonb_build_object('name', coalesce(nullif(k.payload->'shop'->>'name', ''), sh)),
+    'code', c, 'limited', false, 'owner_view', true, 'stolen', coalesce(k.owner_stolen, k.stolen), 'visibility', coalesce(k.owner_vis, k.visibility), 'updated_at', k.updated_at, 'created_at', k.created_at,
+    'owner_no', k.owner_no, 'owner_since', k.owner_since, 'withdrawn', false, 'self', k.tenant_id is null,
+    'entries', coalesce((select jsonb_agg(jsonb_build_object('id', e.id, 'shop', e.shop, 'kind', e.kind, 'text', e.body, 'km', e.km, 'date', e.done_on,
+                           'trust', e.trust, 'receipt', e.receipt, 'corrects', e.corrects, 'at', e.created_at) order by e.done_on desc, e.id desc)
+                         from bike_pass_entries e where e.code = c), '[]'::jsonb));
+end $$;
+revoke all on function pass_get_owner(text, text) from public;
+grant execute on function pass_get_owner(text, text) to anon, authenticated;
+
 -- ===================== Stand der Datenbank (für die Prüfung in der App) =====================
 create or replace function fyf_schema() returns int language sql immutable as $$ select 14 $$;
 grant execute on function fyf_schema() to anon, authenticated;

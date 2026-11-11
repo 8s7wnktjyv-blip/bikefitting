@@ -7634,6 +7634,9 @@ TITLES.passport='FYF Fahrradpass'; AREA_OF.passport='Kunden & Räder';
 
 /* ===================== v.94 Fahrradpass: Ausstattung aus der Werkstatt + Akku-Werte vom Check in den Pass (die Pass-App übernimmt sie automatisch) ===================== */
 { const PL5=passPayload; passPayload=function(b){ const p=PL5(b); if(p&&p.bike&&b){ const pp=b.parts||{}, o={}; PART_F.forEach(([k,l,u])=>{ const v=pp[k]; if(v!==''&&v!=null){ const t=String(v).trim().slice(0,60); o[k]=u&&/^[\d.,]+$/.test(t)?t+' '+u:t; } }); if(Object.keys(o).length) p.bike.parts=o; } return p; }; }
+// Pass automatisch aktualisieren: Fitting abgeschlossen, Rad/Ausstattung geändert, Gebrauchtrad-Check, Rad-Identität
+{ const SS5=CHG.sessStatus; if(SS5) CHG.sessStatus=function(el){ const r=SS5.apply(this,arguments); try{ const s=S.sessions.find(x=>x.id===(el&&el.dataset&&el.dataset.id)); const b=s&&bike(s.bikeId); if(s&&s.status==='abgeschlossen'&&b&&b.qr&&b.qr.code&&cloudReady()) setTimeout(()=>passSync(b),150); }catch(e){} return r; }; }
+['bikeEdit','usedCheck','bikeIdent'].forEach(k=>{ const o=FORMS[k]; if(!o) return; FORMS[k]=function(f,d){ const r=o.apply(this,arguments); try{ const b=bike(f&&f.dataset&&f.dataset.id); if(b&&b.qr&&b.qr.code&&!b.qr.moved&&cloudReady()) setTimeout(()=>passPush(b,true),200); }catch(e){} return r; }; });
 { const BPD5=bikePassData; bikePassData=function(b){ const P=BPD5(b); P.checks=(b.usedChecks||[]).map(k=>({date:k.date,grade:k.grade,km:k.km,note:k.note,bat:k.bat,cycles:k.cycles,chain:k.chain})).reverse(); return P; }; }
 
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
