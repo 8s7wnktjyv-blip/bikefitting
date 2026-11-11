@@ -93,7 +93,7 @@ a{color:var(--ink);text-underline-offset:3px}
 .garage{display:grid;gap:14px}
 .bikecard{display:block;text-decoration:none;color:var(--ink);background:var(--card);border-radius:26px;overflow:hidden;box-shadow:var(--sh);position:relative}
 .bikepic{aspect-ratio:16/10;background:linear-gradient(180deg,#ededea,#f8f8f6);display:grid;place-items:center;overflow:hidden;position:relative}
-.bikepic img{width:100%;height:100%;object-fit:cover}.bikepic svg{width:78%;height:auto}
+.bikepic img{width:100%;height:100%;object-fit:cover;background:#fff}.bikepic svg{width:90%;height:auto;max-height:92%}
 .bikecard .meta{padding:14px 18px 16px}.bikecard .bk-name{font-weight:800;font-size:21px;letter-spacing:-.02em;line-height:1.15}.bikecard .bk-sub{font-size:13px;color:var(--muted);margin-top:2px}
 .status{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:650;color:var(--ok)}.status i{width:8px;height:8px;border-radius:50%;background:currentColor}.status.bad{color:var(--bad)}.status.warn{color:#c76a10}
 .hero{border-radius:28px;overflow:hidden;background:var(--card);box-shadow:var(--sh);margin:6px 0 12px}
@@ -117,6 +117,9 @@ details.more{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);
 "use strict";
 // Öffentliche Ansicht eines FYF-Fahrradpasses (QR-Aufkleber am Rahmen). Zeigt nur, was der Besitzer freigegeben hat. Keine Daten über den Besitzer.
 const DEFAULT={u:'https://tyfilehmrnibtoalwflf.supabase.co',k:'sb_publishable_DUIWZF8H-BD-HaBUMvTg-A_pbpz1mgT'}; // öffentlicher Schlüssel, kein Geheimnis
+// Aufkleber-Bestellung. Leer = Knopf ausgeblendet. Stripe-Bezahl-Links (buy.stripe.com/…) eintragen, sobald Gewerbe, Impressum und Stripe-Konto stehen.
+const ORDER=Object.assign({one:'',two:'',price1:'4,90 €',price2:'7,90 €',mail:'',whatsapp:''},window.FYF_ORDER||{});
+const orderOn=()=>!!(ORDER.one||ORDER.two||ORDER.mail||ORDER.whatsapp);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fd=s=>{ if(!s) return ''; const [y,m,d]=String(s).slice(0,10).split('-'); return `${d}.${m}.${y}`; };
 const num=v=>Number(v).toLocaleString('de-DE');
@@ -159,11 +162,11 @@ function askForm(err){
      ${helpBox('Was sehe ich?','Service, Reparaturen, neue Teile, Gebrauchtrad-Check und ob das Rad als gestohlen gemeldet ist. Fehlt eine Meldung, ist das kein Beweis.')}`;
   } else {
     const l=mine();
-    app.innerHTML=`${head}<h1>Garage</h1>${l.length?`<div class="garage">${l.map(m=>{ const [cls,txt]=bikeStatus(m.code); const c=cacheGet(m.code), t=c&&c.p&&c.p.bike&&c.p.bike.type; return `<a class="bikecard" href="#c=${m.code}${CF?'&cfg='+CF:''}">${bikePic(m.code,t)}<div class="meta"><div class="bk-name">${esc(m.name)}</div><div class="status ${cls}" style="margin-top:6px"><i></i>${esc(txt)}</div></div></a>`; }).join('')}</div>
+    app.innerHTML=`${head}<h1>Garage</h1>${l.length?`<div class="garage">${l.map(m=>{ const [cls,txt]=bikeStatus(m.code); const c=cacheGet(m.code), t=(c&&c.p&&c.p.bike&&c.p.bike.type)||m.type; return `<a class="bikecard" href="#c=${m.code}${CF?'&cfg='+CF:''}">${bikePic(m.code,t)}<div class="meta"><div class="bk-name">${esc(m.name)}</div><div class="status ${cls}" style="margin-top:6px"><i></i>${esc(txt)}</div></div></a>`; }).join('')}</div>
       <p style="margin:18px 0 0"><button class="btn block ghost" id="regb" type="button">+ Rad hinzufügen</button></p>`
      :`<div class="empty">${bikePic('','Gravel')}<h2 style="margin:0 0 6px">Dein Rad. Seine Geschichte.</h2><p class="muted" style="margin:0 0 18px">Kostenlos registrieren – ohne Konto, ohne Namen.</p><button class="btn block" id="regb" type="button">Rad registrieren</button><p style="margin:12px 0 0"><a href="#pruefen${CF?'&cfg='+CF:''}">Ich habe schon einen Code</a></p></div>`}
      ${err?`<p style="color:var(--bad)">${esc(err)}</p>`:''}
-     <p class="muted small" style="text-align:center;margin:22px 0 0">${standalone()?'':(ios()?'Tipp: Teilen → „Zum Home-Bildschirm“ · ':'')}<a href="#" id="rintro" style="color:inherit">So funktioniert’s</a></p>`;
+     <p class="muted small" style="text-align:center;margin:22px 0 0">${standalone()?'':(ios()?'Tipp: Teilen → „Zum Home-Bildschirm“ · ':'')}<a href="#" id="rintro" style="color:inherit">So funktioniert’s</a></p><p class="muted small" style="text-align:center;margin:6px 0 0"><a href="impressum.html" style="color:inherit">Impressum</a> · <a href="datenschutz.html" style="color:inherit">Datenschutz</a></p>`;
   }
   const rb=document.getElementById('regb'); if(rb) rb.onclick=()=>regForm();
   const ri=document.getElementById('rintro'); if(ri) ri.onclick=e=>{ e.preventDefault(); intro(true); };
@@ -180,10 +183,10 @@ async function show0(code){ window.__P=null; window.__OFF=null;
   const alarm=p.stolen?`<div class="alarm">Dieses Rad ist als gestohlen gemeldet. Bitte nicht kaufen und die Polizei oder die Werkstatt ${esc(sh.name||'')} informieren${sh.phone?' ('+esc(sh.phone)+')':''}.</div>`:'';
   const shopLine=p.self&&!sh.name?`<p class="muted small" style="margin:0">Vom Besitzer selbst registriert – noch von keiner Werkstatt betreut.</p>`:`<p class="muted small" style="margin:0">Pass geführt von <b>${esc(sh.name||'einer FYF-Werkstatt')}</b>${sh.addr?' · '+esc(sh.addr):''}${tel}</p>`;
   const mineIt=mine().some(m=>m.code===code), svc=`finder.html#pass=${code}${CF?'&cfg='+esc(CF):''}`;
-  const sub=esc([b.type,b.size&&('Gr. '+b.size),b.year].filter(Boolean).join(' · '));
+  const sub=esc([b.type||mineType(code),b.size&&('Gr. '+b.size),b.year].filter(Boolean).join(' · '));
   const statusLine=p.stolen?'<div class="status bad"><i></i>Als gestohlen gemeldet</div>':`<div class="status"><i></i>Keine Diebstahlmeldung in FYF</div>`;
-  const heroH=`<div class="hero"><div style="position:relative">${bikePic(mineIt?code:'',b.type)}${mineIt?'<button class="btn photo-btn" id="photo" type="button">Foto</button><input type="file" id="photoIn" accept="image/*" hidden>':''}</div><div class="meta"><h1 style="margin:0 0 4px;font-size:28px">${esc(b.name||'Fahrrad')}</h1><div class="muted small" style="margin-bottom:8px">${sub}</div>${statusLine}</div></div>`;
-  const acts=`<div class="actions">${mineIt?`<button class="btn" id="qrShow" type="button">QR zeigen</button>`:`<button class="btn" id="addMine" type="button">In Garage</button>`}<a class="btn ghost" href="${svc}">Service buchen</a></div>`;
+  const heroH=`<div class="hero"><div style="position:relative">${bikePic(mineIt?code:'',b.type||mineType(code))}${mineIt?'<button class="btn photo-btn" id="photo" type="button">Foto</button>':''}</div><div class="meta"><h1 style="margin:0 0 4px;font-size:28px">${esc(b.name||'Fahrrad')}</h1><div class="muted small" style="margin-bottom:8px">${sub}</div>${statusLine}</div></div>`;
+  const acts=`<div class="actions">${mineIt?`<button class="btn" id="qrShow" type="button">QR zeigen</button>`:`<button class="btn" id="addMine" type="button">In Garage</button>`}<a class="btn ghost" href="${svc}">Service buchen</a></div>`+(mineIt&&orderOn()?`<button class="btn block ghost" id="orderBtn" type="button" style="margin:-2px 0 12px">Aufkleber bestellen</button>`:'');
   const infoBox=`<details class="more"><summary>Details zum Rad</summary><div>${b.frame?`<p style="margin:0 0 6px">Rahmennummer (gekürzt): <b style="font-family:ui-monospace,monospace">${esc(b.frame)}</b></p>`:''}${b.color?`<p style="margin:0 0 6px">Farbe: ${esc(b.color)}</p>`:''}${b.bat?`<p style="margin:0 0 6px">Akku (gekürzt): <b style="font-family:ui-monospace,monospace">${esc(b.bat)}</b></p>`:''}${b.batPass?`<p style="margin:0 0 6px"><a href="${esc(b.batPass)}" target="_blank" rel="noopener nofollow">Batteriepass des Herstellers</a></p>`:''}${shopLine}<p class="muted small" style="margin:8px 0 0">Code ${code}${p.created_at?' · Pass seit '+fd(p.created_at):''}. Einträge stammen von den Werkstätten. Keine Daten über Besitzer. Fehlt eine Diebstahlmeldung, ist das kein Beweis.</p><p class="small" style="margin:8px 0 0"><a href="index.html#rad=${code}">Ich bin Werkstatt</a></p></div></details>`;
   const ownHost=`<details class="more" id="ownd"><summary>Besitzer-Einstellungen</summary><div id="ownhost"></div></details>`;
   if(p.withdrawn&&p.limited){ app.innerHTML=`${head}${heroH}${alarm}<div class="card">Dieser Pass wurde vom Laden zurückgezogen.</div>${infoBox}`; return; }
@@ -207,19 +210,20 @@ const mask=v=>{ v=String(v||''); return v.length>6?v.slice(0,3)+'•••'+v.sl
 const fld=(id,l,attrs='')=>`<label for="${id}" class="small" style="display:block;margin:10px 0 4px">${l}</label><input id="${id}" ${attrs} style="width:100%;font:inherit;letter-spacing:0;text-transform:none;font-weight:400">`;
 function regForm(err){ app.innerHTML=`${head}<h1>Rad registrieren</h1><p class="muted" style="margin:-6px 0 6px">Kostenlos. Ohne Name und Adresse.</p>
   <div class="card"><form id="rg" style="display:block">${fld('rb','Marke *','required maxlength="40" autocomplete="off"')}${fld('rm','Modell *','required maxlength="60" autocomplete="off"')}
-   <label for="rt" class="small" style="display:block;margin:10px 0 4px">Art</label><select id="rt" style="width:100%">${['Rennrad','Gravel','MTB','E-Bike','Trekking','Stadtrad','Lastenrad','Kinderrad','Sonstiges'].map(x=>`<option>${x}</option>`).join('')}</select>
+   <label for="rt" class="small" style="display:block;margin:10px 0 4px">Art</label><select id="rt" style="width:100%">${BIKE_CATS.map(([g,l])=>`<optgroup label="${g}">${l.map(x=>`<option>${x}</option>`).join('')}</optgroup>`).join('')}</select><div id="rtPrev" class="bikepic" style="margin-top:10px;border-radius:18px"></div>
    ${fld('rs','Rahmengröße','maxlength="12"')}${fld('ry','Baujahr','type="number" min="1950" max="2100" inputmode="numeric"')}${fld('rc','Farbe','maxlength="40"')}
    ${fld('rf','Rahmennummer * (meist unten am Tretlager)','required minlength="4" maxlength="40" autocomplete="off" autocapitalize="characters" style="font-family:ui-monospace,monospace"')}${fld('rk','Kilometerstand','type="number" min="0" inputmode="numeric"')}
    <label style="display:flex;gap:8px;align-items:flex-start;margin:14px 0 0;font-size:14px"><input type="checkbox" id="rx" required style="flex:none;width:auto;margin-top:4px"><span>Das Rad gehört mir. Ich habe die <a href="datenschutz.html" target="_blank">Datenschutzhinweise</a> gelesen.</span></label>
    <div style="display:none"><input id="rw" tabindex="-1" autocomplete="off"></div>
    <p style="margin:16px 0 0"><button class="btn block">Registrieren</button></p><p style="text-align:center;margin:10px 0 0"><a href="#" id="rgx" class="small">Abbrechen</a></p>${err?`<p style="color:var(--bad)">${esc(err)}</p>`:''}</form></div>`;
   document.getElementById('rgx').onclick=e=>{ e.preventDefault(); askForm(''); };
+  const rt=document.getElementById('rt'), rp=document.getElementById('rtPrev'); const upd=()=>{ rp.innerHTML=bikeArt(rt.value); }; rt.onchange=upd; upd();
   document.getElementById('rg').onsubmit=async e=>{ e.preventDefault(); if(document.getElementById('rw').value) return; const g=id=>document.getElementById(id).value.trim();
     if(frameNorm(g('rf')).length<4) return regForm('Bitte die Rahmennummer eingeben.');
     const bike={name:(g('rb')+' '+g('rm')).trim(),type:g('rt'),size:g('rs'),year:g('ry')?Number(g('ry')):'',color:g('rc'),frame:mask(frameNorm(g('rf'))),km:g('rk')?Number(g('rk')):null};
     let r; try{ const fh=await frameHash(g('rf')); const x=await fetch(CFG.u+'/rest/v1/rpc/pass_register',{method:'POST',headers:{apikey:CFG.k,'Content-Type':'application/json'},body:JSON.stringify({p_payload:{bike,date:new Date().toISOString().slice(0,10)},p_fh:fh})}); if(!x.ok) throw 0; r=await x.json(); }catch(x){ return regForm('Gerade nicht erreichbar. Bitte später erneut versuchen.'); }
     if(!r||r.error) return regForm(r&&r.error==='FYF_FRAME_EXISTS'?'Für diese Rahmennummer gibt es schon einen FYF-Fahrradpass. Hast du das Rad gekauft? Lass dir vom Verkäufer die Karte „Teil II“ geben und gehe damit in eine FYF-Werkstatt.':r&&r.error==='FYF_RATE'?'Heute sind sehr viele Registrierungen eingegangen. Bitte morgen erneut versuchen.':'Bitte die Eingaben prüfen.');
-    mineAdd(r.code,bike.name); regDone(r.code,r.transfer,bike); }; }
+    mineAdd(r.code,bike.name,bike.type); regDone(r.code,r.transfer,bike); }; }
 function loadQR(){ return window.qrcode?Promise.resolve():new Promise((ok,no)=>{ const s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'; s.onload=ok; s.onerror=no; document.head.appendChild(s); }); }
 async function regDone(code,transfer,bike){ const url=location.origin+location.pathname+'#c='+code+(CF?'&cfg='+CF:''); let qr=''; try{ await loadQR(); const q=window.qrcode(0,'M'); q.addData(url); q.make(); qr=q.createSvgTag({cellSize:4,margin:1,scalable:true}); }catch(e){}
   const tr=transfer.replace(/(.{4})(?=.)/g,'$1-');
@@ -227,8 +231,9 @@ async function regDone(code,transfer,bike){ const url=location.origin+location.p
    <p style="margin:12px 0 0"><b>Übergabe-Code (Teil II):</b></p><p style="font:700 20px ui-monospace,monospace;letter-spacing:.06em;border:2px dashed var(--line);border-radius:10px;padding:8px 12px;display:inline-block;margin:6px 0">${tr}</p>
    <p class="small" style="margin:0;color:var(--bad)"><b>Wird nur jetzt angezeigt</b> – drucken oder Foto machen. Brauchst du für Einstellungen und Verkauf.</p>
    <p style="margin:14px 0 0"><button class="btn block" id="prt">Schein + Aufkleber drucken</button></p></div>
-   <p class="muted small" style="text-align:center">Aufkleber auf Papier drucken und mit klarem Klebeband überkleben – oder in einer FYF-Werkstatt machen lassen.</p>
+   ${orderOn()?`<p><button class="btn block" id="orderReg" type="button">Wetterfesten Aufkleber bestellen</button></p><p class="muted small" style="text-align:center">Oder selbst drucken und mit klarem Klebeband überkleben.</p>`:`<p class="muted small" style="text-align:center">Aufkleber auf Papier drucken und mit klarem Klebeband überkleben – oder in einer FYF-Werkstatt machen lassen.</p>`}
    <p><a class="btn block ghost" href="#c=${code}${CF?'&cfg='+CF:''}">Zu meinem Rad</a></p>`;
+  const orr=document.getElementById('orderReg'); if(orr) orr.onclick=()=>orderSheet(code,bike.name);
   document.getElementById('prt').onclick=()=>{ const w=window.open('','_blank'); if(!w) return alert('Bitte Pop-ups erlauben');
     const one=`<div class="st"><div class="q">${qr}</div><div><b>FYF Fahrradpass</b><div class="c">${code}</div><div class="m">Scannen: Geschichte des Rads</div></div></div>`;
     w.document.write(`<!doctype html><html lang="de"><meta charset="utf-8"><title>Fahrradschein ${code}</title><style>body{font-family:system-ui,sans-serif;color:#1d2a30;margin:16px}.card{width:85.6mm;height:54mm;border:1px solid #bbb;border-radius:3.2mm;padding:3.5mm;box-sizing:border-box;position:relative;margin:0 0 6mm}.t{font-size:7pt;letter-spacing:.12em;font-weight:800;color:#d9612c}.n{font-size:12pt;font-weight:700;margin:1mm 0}.r{font-size:7.5pt}.qq{position:absolute;right:3mm;top:3mm;width:24mm;height:24mm}.qq svg,.q svg{width:100%;height:100%}.c{font:700 15px ui-monospace,monospace;letter-spacing:.08em}.tr{font:700 13pt ui-monospace,monospace;border:1.5px dashed #1d2a30;border-radius:2mm;padding:1.5mm 2mm;display:inline-block;margin:1.5mm 0}.m{font-size:8px;color:#555}.g{display:grid;grid-template-columns:repeat(auto-fill,60mm);gap:6mm}.st{width:60mm;height:25mm;border:1px dashed #999;border-radius:3mm;display:flex;gap:2.5mm;align-items:center;padding:2mm;box-sizing:border-box}.q{width:21mm;height:21mm;flex:none}b{font-size:10px}button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:#1d2a30;color:#fff;margin-bottom:12px}@media print{button{display:none}}</style>
@@ -257,16 +262,18 @@ function ownerBox(code,r0){ const P=window.__P||{}; if(P.withdrawn) return; cons
   if(r0) panel(r0); else lock(); }
 async function show(code){ await show0(code); const P=window.__P; if(!P||!/^[A-HJ-NP-Z2-9]{8}$/.test(code)) return;
   const name=(P.bike&&P.bike.name)||'Fahrrad', isMine=mine().some(m=>m.code===code);
-  if(isMine) mineAdd(code,name);
+  if(isMine) mineAdd(code,name,P.bike&&P.bike.type);
   if(window.__OFF){ const h=app.querySelector('.hero'); if(h) h.insertAdjacentHTML('afterend',`<div class="card small">Offline – Stand vom ${fd(window.__OFF)}</div>`); }
   const am=document.getElementById('addMine'); if(am) am.onclick=()=>{ mineAdd(code,name); cacheSet(code,P); tabs('meine'); scrollTo(0,0); show(code); };
   const qs=document.getElementById('qrShow'); if(qs) qs.onclick=()=>qrSheet(code,name);
-  const pb=document.getElementById('photo'), pi=document.getElementById('photoIn'); if(pb&&pi){ pb.onclick=()=>pi.click(); pi.onchange=()=>{ const f=pi.files&&pi.files[0]; if(f) savePhoto(code,f).then(()=>show(code)); }; }
+  const ob=document.getElementById('orderBtn'); if(ob) ob.onclick=()=>orderSheet(code,name);
+  const pb=document.getElementById('photo'); if(pb) pb.onclick=()=>photoMenu(code);
   if(!window.__OFF&&!P.withdrawn&&document.getElementById('ownhost')) ownerBox(code); }
 // ---------- App „FYF Pass“: Meine Räder (nur auf diesem Gerät), digitaler Pass mit QR, offline lesbar ----------
 const LS=k=>{ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(e){ return null; } }, LSset=(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
 const mine=()=>LS('fyfpass:mine')||[];
-const mineAdd=(code,name)=>{ const l=mine().filter(m=>m.code!==code); l.unshift({code,name:String(name||'Fahrrad').slice(0,80),at:new Date().toISOString().slice(0,10)}); LSset('fyfpass:mine',l.slice(0,20)); };
+const mineAdd=(code,name,type)=>{ const old=mine().find(m=>m.code===code)||{}; const l=mine().filter(m=>m.code!==code); l.unshift({code,name:String(name||'Fahrrad').slice(0,80),type:String(type||old.type||'').slice(0,60),at:old.at||new Date().toISOString().slice(0,10)}); LSset('fyfpass:mine',l.slice(0,20)); };
+const mineType=code=>(mine().find(m=>m.code===code)||{}).type||'';
 const mineDel=code=>{ LSset('fyfpass:mine',mine().filter(m=>m.code!==code)); try{ localStorage.removeItem('fyfpass:c:'+code); localStorage.removeItem('fyfpass:img:'+code); }catch(e){} };
 const cacheGet=code=>LS('fyfpass:c:'+code), cacheSet=(code,p)=>LSset('fyfpass:c:'+code,{p,at:new Date().toISOString()});
 const standalone=()=>window.navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
@@ -275,19 +282,120 @@ function installHint(){ if(standalone()) return ''; return `<div class="card"><b
 function bikeStatus(code){ const c=cacheGet(code); if(!c||!c.p) return ['','Pass aktiv']; const P=c.p; if(P.stolen) return ['bad','Als gestohlen gemeldet']; if(P.withdrawn) return ['warn','Pass zurückgezogen'];
   const last=(P.entries||[]).filter(e=>e.kind!=='Registrierung').map(e=>e.date).sort().pop(); if(!last) return ['warn','Noch kein Service eingetragen']; const days=Math.round((Date.now()-new Date(last))/864e5); return days>365?['warn',`Letzter Service vor ${Math.round(days/30)} Monaten`]:['',`Gepflegt · Service ${fd(last)}`]; }
 // Rad-Zeichnung je Art (eigene Grafik) oder eigenes Foto (nur auf diesem Gerät)
-function bikeSvg(type){ const t=String(type||'').toLowerCase(); const mtb=/mtb|mountain/.test(t), eb=/e-bike|pedelec/.test(t), city=/stadt|trekking|city|lasten|kinder/.test(t), grav=/gravel/.test(t);
-  const tire=mtb?9:grav?7:eb?7:5, bar=mtb||city||eb?'M128 30l4-12h10':'M128 30l6-14h8q8 0 8 7q0 6-8 7';
-  return `<svg viewBox="0 0 220 130" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="52" cy="88" r="32" stroke="#1b1f22" stroke-width="${tire}"/><circle cx="168" cy="88" r="32" stroke="#1b1f22" stroke-width="${tire}"/><circle cx="52" cy="88" r="3" fill="#1b1f22"/><circle cx="168" cy="88" r="3" fill="#1b1f22"/>
-   <path d="M52 88L84 40h46l38 48M84 40l24 48H52M108 88l22-48M130 40l-2-10${mtb?'M134 50l30 38':''}" stroke="#1b1f22" stroke-width="5"/><path d="${bar}" stroke="#1b1f22" stroke-width="5"/><path d="M76 30h20" stroke="#e8601c" stroke-width="6"/><path d="M84 40l-4-10" stroke="#1b1f22" stroke-width="4"/>
-   ${eb?'<rect x="88" y="52" width="26" height="11" rx="3" transform="rotate(-62 101 57)" fill="#e8601c"/>':''}${city?'<path d="M22 74q30-26 60-6M136 64q32-12 64 12" stroke="#9aa0a4" stroke-width="3"/>':''}<circle cx="108" cy="88" r="6" fill="#e8601c"/></svg>`; }
+function bikeArt(type){
+  const t=String(type||'').toLowerCase();
+  const K=/zeitfahr|triathlon|\btt\b/.test(t)?'tt':/fully|enduro|downhill|trail/.test(t)?'fully':/mtb|mountain|hardtail/.test(t)?'mtb':/gravel|cross/.test(t)?'gravel':/lasten|cargo/.test(t)?'city':/stadt|urban|city|trekking|falt|kinder/.test(t)?'city':'road';
+  const eb=/e-|pedelec|elektro/.test(t), aero=/aero/.test(t);
+  const P=(x,y)=>[x,y], lerp=(a,b,f)=>[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f], L=(a,b)=>`M${a[0].toFixed(1)} ${a[1].toFixed(1)}L${b[0].toFixed(1)} ${b[1].toFixed(1)}`;
+  const geo={road:{wb:990,cs:410,bbd:72,st:530,sa:73.5,stack:560,reach:390,ht:150,tire:26,rim:aero?44:28,fork:'rigid',bar:'drop',tt:-6},
+    tt:{wb:1000,cs:405,bbd:70,st:500,sa:78,stack:520,reach:420,ht:110,tire:24,rim:66,fork:'rigid',bar:'aero',tt:0},
+    gravel:{wb:1030,cs:430,bbd:72,st:520,sa:73,stack:590,reach:385,ht:160,tire:40,rim:26,fork:'rigid',bar:'flare',tt:-10},
+    mtb:{wb:1170,cs:435,bbd:55,st:430,sa:74,stack:630,reach:450,ht:110,tire:58,rim:26,fork:'susp',bar:'flat',tt:-24},
+    fully:{wb:1220,cs:440,bbd:30,st:420,sa:76,stack:635,reach:470,ht:115,tire:60,rim:26,fork:'susp',bar:'flat',tt:-26},
+    city:{wb:1100,cs:450,bbd:65,st:500,sa:71,stack:660,reach:360,ht:200,tire:40,rim:22,fork:'rigid',bar:'city',tt:-34}}[K];
+  const R=345, ra=P(260,700), fa=P(260+geo.wb,700), bb=P(260+Math.sqrt(geo.cs*geo.cs-geo.bbd*geo.bbd),700+geo.bbd);
+  const sa=geo.sa*Math.PI/180, stTop=P(bb[0]-geo.st*Math.cos(sa),bb[1]-geo.st*Math.sin(sa));
+  const htTop=P(bb[0]+geo.reach,bb[1]-geo.stack), ha=(K==='mtb'||K==='fully'?66:K==='city'?70:72.5)*Math.PI/180, htBot=P(htTop[0]+geo.ht*Math.cos(ha),htTop[1]+geo.ht*Math.sin(ha));
+  const ttEnd=lerp(htTop,htBot,.15), ttStart=K==='city'?lerp(bb,stTop,.62):lerp(bb,stTop,.96), dtEnd=lerp(htTop,htBot,.85), ssTop=lerp(bb,stTop,K==='fully'?.8:.9);
+  const post=P(stTop[0]-(K==='tt'?150:200)*Math.cos(sa),stTop[1]-(K==='tt'?150:200)*Math.sin(sa));
+  const C={tube:'#2b3035',hi:'#59626a',tire:'#1b1e21',rim:'#3a4248',spoke:'#9aa3a9',acc:'#e8601c',metal:'#7c858c'};
+  const tube=(a,b,w)=>`<path d="${L(a,b)}" stroke="${C.tube}" stroke-width="${w}" stroke-linecap="round"/><path d="${L(a,b)}" stroke="${C.hi}" stroke-width="${Math.max(2,w*.18)}" stroke-linecap="round" transform="translate(0 -${(w*.22).toFixed(1)})" opacity=".55"/>`;
+  const wheel=(c)=>{ const r=R-geo.tire/2, ri=r-geo.tire/2-geo.rim/2; let sp=''; for(let i=0;i<24;i++){ const a=i*Math.PI/12, b=a+(i%2?.18:-.18); sp+=`<path d="M${(c[0]+Math.cos(b)*14).toFixed(1)} ${(c[1]+Math.sin(b)*14).toFixed(1)}L${(c[0]+Math.cos(a)*(ri-geo.rim/2)).toFixed(1)} ${(c[1]+Math.sin(a)*(ri-geo.rim/2)).toFixed(1)}"/>`; }
+    return `<g><circle cx="${c[0]}" cy="${c[1]}" r="${r}" fill="none" stroke="${C.tire}" stroke-width="${geo.tire}"/>${geo.tire>34?`<circle cx="${c[0]}" cy="${c[1]}" r="${r+geo.tire/2-3}" fill="none" stroke="#2e3337" stroke-width="5" stroke-dasharray="7 9"/>`:''}<circle cx="${c[0]}" cy="${c[1]}" r="${ri}" fill="none" stroke="${C.rim}" stroke-width="${geo.rim}"/>${geo.rim>50?`<circle cx="${c[0]}" cy="${c[1]}" r="${ri}" fill="none" stroke="${C.acc}" stroke-width="5" stroke-dasharray="40 ${(2*Math.PI*ri/2-40).toFixed(0)}"/>`:''}<g stroke="${C.spoke}" stroke-width="2.2" opacity=".75">${geo.rim>70?'':sp}</g><circle cx="${c[0]}" cy="${c[1]}" r="17" fill="${C.metal}"/><circle cx="${c[0]}" cy="${c[1]}" r="6" fill="${C.tube}"/></g>`; };
+  // Antrieb
+  const ring=`<circle cx="${bb[0]}" cy="${bb[1]}" r="${K==='mtb'||K==='fully'?62:88}" fill="none" stroke="${C.metal}" stroke-width="10"/><circle cx="${bb[0]}" cy="${bb[1]}" r="${K==='mtb'||K==='fully'?62:88}" fill="none" stroke="${C.tube}" stroke-width="3" stroke-dasharray="4 6"/>`;
+  const crankEnd=P(bb[0]+120,bb[1]+110), pedal=`<rect x="${crankEnd[0]-26}" y="${crankEnd[1]-7}" width="52" height="14" rx="5" fill="${C.tube}"/>`;
+  const chain=`<path d="M${bb[0]} ${bb[1]-(K==='mtb'||K==='fully'?62:88)}L${ra[0]} ${ra[1]-46}M${bb[0]} ${bb[1]+(K==='mtb'||K==='fully'?62:88)}L${ra[0]+10} ${ra[1]+50}" stroke="#4a5258" stroke-width="5"/><circle cx="${ra[0]}" cy="${ra[1]}" r="46" fill="none" stroke="${C.metal}" stroke-width="8"/><path d="M${ra[0]+8} ${ra[1]+40}l-6 62l26 8" stroke="${C.tube}" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  // Gabel
+  const forkTop=htBot; let fork;
+  if(geo.fork==='susp'){ const crown=lerp(forkTop,fa,.08), mid=lerp(forkTop,fa,.5); fork=`${tube(forkTop,crown,30)}<path d="${L(crown,mid)}" stroke="#c9cfd3" stroke-width="20" stroke-linecap="round"/><path d="${L(mid,fa)}" stroke="${C.tube}" stroke-width="30" stroke-linecap="round"/><path d="${L(lerp(mid,fa,.05),lerp(mid,fa,.3))}" stroke="${C.acc}" stroke-width="6"/>`; }
+  else fork=`<path d="M${forkTop[0]} ${forkTop[1]}Q${(forkTop[0]+fa[0])/2+(K==='tt'?4:14)} ${(forkTop[1]+fa[1])/2} ${fa[0]} ${fa[1]}" stroke="${C.tube}" stroke-width="${K==='tt'?30:22}" fill="none" stroke-linecap="round"/>`;
+  // Cockpit
+  const stemEnd=P(htTop[0]+(K==='city'?40:105),htTop[1]-(K==='city'?70:(K==='tt'?-6:14))); let cockpit=`<path d="${L(lerp(htTop,htBot,-.15),htTop)}" stroke="${C.tube}" stroke-width="20" stroke-linecap="round"/>${tube(lerp(htTop,htBot,-.1),stemEnd,18)}`;
+  if(geo.bar==='drop'||geo.bar==='flare'){ const s=stemEnd; cockpit+=`<path d="M${s[0]} ${s[1]}h40q58 0 58 62q0 64-48 74h-26" stroke="${C.tube}" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M${s[0]+44} ${s[1]-2}q6 -26 22 -30l10 4q-6 22 -10 42" fill="${C.tube}"/>`; }
+  else if(geo.bar==='aero'){ const s=stemEnd; cockpit+=`<path d="M${s[0]} ${s[1]}h24q30 0 36 26" stroke="${C.tube}" stroke-width="16" fill="none" stroke-linecap="round"/><path d="M${s[0]-30} ${s[1]-22}h190q22 0 26-16" stroke="${C.tube}" stroke-width="11" fill="none" stroke-linecap="round"/><rect x="${s[0]-40}" y="${s[1]-40}" width="54" height="16" rx="7" fill="#3a4248"/>`; }
+  else if(geo.bar==='city'){ const s=stemEnd; cockpit+=`<path d="M${s[0]} ${s[1]}q-10 -30 -70 -40" stroke="${C.tube}" stroke-width="14" fill="none" stroke-linecap="round"/><rect x="${s[0]-100}" y="${s[1]-52}" width="50" height="20" rx="9" fill="#3a4248"/>`; }
+  else { const s=stemEnd; cockpit+=`<path d="M${s[0]-14} ${s[1]-18}l-22 -16" stroke="${C.tube}" stroke-width="14" stroke-linecap="round"/><rect x="${s[0]-58}" y="${s[1]-44}" width="40" height="18" rx="8" fill="#3a4248"/>`; }
+  // Sattel
+  const sw=K==='tt'?140:190, sx=post[0]-(K==='tt'?60:96);
+  const saddle=K==='city'?`<path d="M${post[0]-70} ${post[1]-4}q50 -26 120 -10q14 6 0 18q-60 6 -120 4z" fill="${C.tube}"/>`:`<path d="M${sx} ${post[1]-6}q${sw/2} -24 ${sw} -6q12 6 2 14q-${sw/2} 8 -${sw+2} 2z" fill="${C.tube}"/><path d="M${post[0]-60} ${post[1]-14}h70" stroke="${C.acc}" stroke-width="5" stroke-linecap="round"/>`;
+  // Rahmen
+  let frame='';
+  if(K==='fully'){ const piv=lerp(bb,stTop,.18), rock=lerp(bb,stTop,.62), shockA=lerp(ttStart,ttEnd,.32);
+    frame+=tube(bb,dtEnd,44)+tube(ttStart,ttEnd,32)+tube(bb,stTop,30)+tube(piv,ra,24)+tube(ra,rock,20)+`<path d="${L(rock,shockA)}" stroke="#c9cfd3" stroke-width="22" stroke-linecap="round"/><path d="${L(lerp(rock,shockA,.15),lerp(rock,shockA,.55))}" stroke="${C.acc}" stroke-width="26" stroke-linecap="round"/><circle cx="${piv[0]}" cy="${piv[1]}" r="11" fill="${C.metal}"/><circle cx="${rock[0]}" cy="${rock[1]}" r="11" fill="${C.metal}"/>`; }
+  else { frame+=tube(bb,dtEnd,K==='tt'||aero?40:(K==='mtb'?40:32))+tube(ttStart,ttEnd,K==='tt'?30:26)+tube(bb,stTop,K==='tt'?32:26)+tube(bb,ra,18)+tube(ra,ssTop,14); }
+  frame+=tube(htTop,htBot,36);
+  if(eb){ const b1=lerp(bb,dtEnd,.18), b2=lerp(bb,dtEnd,.78); frame+=`<path d="${L(b1,b2)}" stroke="#20252a" stroke-width="58" stroke-linecap="round"/><path d="${L(lerp(b1,b2,.05),lerp(b1,b2,.3))}" stroke="${C.acc}" stroke-width="10" stroke-linecap="round"/><rect x="${bb[0]-58}" y="${bb[1]-50}" width="116" height="96" rx="26" fill="#20252a"/>`; }
+  else frame+=`<path d="${L(lerp(bb,dtEnd,.55),lerp(bb,dtEnd,.75))}" stroke="${C.acc}" stroke-width="${K==='tt'||aero||K==='mtb'||K==='fully'?14:10}" stroke-linecap="round"/>`;
+  const postL=`<path d="${L(stTop,post)}" stroke="${C.metal}" stroke-width="${K==='tt'?20:15}" stroke-linecap="round"/>`;
+  let extra='';
+  if(K==='city'){ extra+=`<path d="M${ra[0]-R+10} ${ra[1]-40}A${R+14} ${R+14} 0 0 1 ${ra[0]+R-60} ${ra[1]-150}" stroke="#5b646b" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M${fa[0]-R+40} ${fa[1]-140}A${R+14} ${R+14} 0 0 1 ${fa[0]+R-10} ${fa[1]-40}" stroke="#5b646b" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M${ra[0]-170} ${ra[1]-R-30}H${ssTop[0]+10}M${ra[0]-120} ${ra[1]-R-30}L${ra[0]} ${ra[1]}" stroke="${C.tube}" stroke-width="10" stroke-linecap="round"/>`; }
+  const x0=ra[0]-R-24, x1=fa[0]+R+24, y0=Math.min(post[1]-40,htTop[1]-110,stemEnd[1]-80), y1=ra[1]+R+40;
+  return `<svg viewBox="${x0.toFixed(0)} ${y0.toFixed(0)} ${(x1-x0).toFixed(0)} ${(y1-y0).toFixed(0)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Zeichnung ${esc(type||'Fahrrad')}" fill="none"><ellipse cx="${(ra[0]+fa[0])/2}" cy="${ra[1]+R+12}" rx="${(fa[0]-ra[0])/2+R*.7}" ry="22" fill="#000" opacity=".07"/>${wheel(ra)}${wheel(fa)}${extra}${chain}${frame}${fork}${postL}${saddle}${cockpit}${ring}<path d="${L(bb,crankEnd)}" stroke="${C.tube}" stroke-width="18" stroke-linecap="round"/>${pedal}<circle cx="${bb[0]}" cy="${bb[1]}" r="18" fill="${C.metal}"/></svg>`;
+}
+const bikeSvg=bikeArt;
+const BIKE_CATS=[['Rennrad',['Rennrad – Endurance','Rennrad – Aero','Rennrad – Race / Leichtbau','Zeitfahrrad / Triathlon']],['Gravel & Cross',['Gravel','Cyclocross']],['Mountainbike',['MTB – Hardtail','MTB – Fully (XC / Trail)','MTB – Fully (Enduro / Downhill)']],['E-Bike',['E-MTB – Hardtail','E-MTB – Fully','E-Rennrad / E-Gravel','E-Bike – Trekking / City','E-Lastenrad']],['Alltag',['Trekking','Stadtrad / Urban','Faltrad','Lastenrad','Kinder- / Jugendrad']],['Sonstiges',['BMX / Dirt','Sonstiges']]];
 const photoGet=code=>{ try{ return code?localStorage.getItem('fyfpass:img:'+code):null; }catch(e){ return null; } };
 function bikePic(code,type){ const ph=photoGet(code); return `<div class="bikepic">${ph?`<img src="${ph}" alt="Foto des Rads">`:bikeSvg(type)}</div>`; }
 function savePhoto(code,file){ return new Promise(ok=>{ const img=new Image(), u=URL.createObjectURL(file); img.onload=()=>{ const W=1000, sc=Math.min(1,W/img.width), cv=document.createElement('canvas'); cv.width=Math.round(img.width*sc); cv.height=Math.round(img.height*sc); cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height); let d=cv.toDataURL('image/jpeg',.75); try{ localStorage.setItem('fyfpass:img:'+code,d); }catch(e){ try{ d=cv.toDataURL('image/jpeg',.5); localStorage.setItem('fyfpass:img:'+code,d); }catch(x){ alert('Speicher voll – Foto konnte nicht gespeichert werden.'); } } URL.revokeObjectURL(u); ok(); }; img.onerror=()=>ok(); img.src=u; }); }
+/* v.92 Foto-Editor: verschieben, zoomen, Hintergrund weiß (freigestellte iPhone-Bilder) */
+const IMGO='fyfpass:imgo:';
+function loadImg(src){ return new Promise((ok,no)=>{ const i=new Image(); i.onload=()=>ok(i); i.onerror=no; i.src=src; }); }
+function fileToImg(file){ const u=URL.createObjectURL(file); return loadImg(u).finally(()=>setTimeout(()=>URL.revokeObjectURL(u),500)); }
+// Original verkleinern; bei Transparenz (freigestelltes Motiv) PNG behalten
+function normImg(img){ const M=1400, sc=Math.min(1,M/Math.max(img.width,img.height)), cv=document.createElement('canvas'); cv.width=Math.max(1,Math.round(img.width*sc)); cv.height=Math.max(1,Math.round(img.height*sc)); const g=cv.getContext('2d'); g.drawImage(img,0,0,cv.width,cv.height);
+  let d; try{ d=g.getImageData(0,0,cv.width,cv.height).data; }catch(e){ return {cv,alpha:false,box:null}; }
+  let n=0,x0=cv.width,y0=cv.height,x1=-1,y1=-1; for(let y=0;y<cv.height;y++) for(let x=0;x<cv.width;x++){ const a=d[(y*cv.width+x)*4+3]; if(a<250) n++; if(a>24){ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; } }
+  const alpha=n>cv.width*cv.height*0.02&&x1>x0; return {cv,alpha,box:alpha?[x0,y0,x1-x0+1,y1-y0+1]:null}; }
+async function pasteImg(){ if(!(navigator.clipboard&&navigator.clipboard.read)) throw new Error('nope'); const items=await navigator.clipboard.read(); for(const it of items){ const t=it.types.find(x=>x.startsWith('image/')); if(t) return await it.getType(t); } throw new Error('kein Bild'); }
+function photoMenu(code){ const has=!!photoGet(code), el=document.createElement('div'); el.className='sheet';
+  el.innerHTML=`<div><div style="font-size:20px;font-weight:800;margin-bottom:14px">Foto</div><div style="display:grid;gap:10px"><button class="btn block" data-a="pick" type="button">Foto wählen</button><button class="btn ghost block" data-a="paste" type="button">Freigestelltes Rad einfügen</button>${has?'<button class="btn ghost block" data-a="edit" type="button">Zuschneiden</button><button class="btn ghost block" data-a="del" type="button" style="color:#b3261e">Foto entfernen</button>':''}<details class="more" style="text-align:left"><summary>Hintergrund entfernen – so geht’s</summary><ol class="muted small" style="margin:8px 0 0;padding-left:20px;line-height:1.55"><li>Foto in der iPhone-App <b>Fotos</b> öffnen.</li><li>Lange auf das Rad drücken, bis es leuchtet.</li><li><b>Kopieren</b> tippen.</li><li>Hier <b>Freigestelltes Rad einfügen</b> tippen.</li></ol><p class="muted small" style="margin:6px 0 0">Das Rad steht dann auf weißem Hintergrund. Alternativ: statt Kopieren „Teilen → Bild sichern“ und dann „Foto wählen“.</p></details><button class="btn ghost block" data-a="x" type="button">Abbrechen</button></div><input type="file" accept="image/*" hidden></div>`;
+  document.body.appendChild(el); const fi=el.querySelector('input'), close=()=>el.remove();
+  el.onclick=async e=>{ if(e.target===el) return close(); const a=e.target.closest('[data-a]'); if(!a) return; const k=a.dataset.a;
+    if(k==='x') return close(); if(k==='pick') return fi.click();
+    if(k==='del'){ try{ localStorage.removeItem('fyfpass:img:'+code); localStorage.removeItem(IMGO+code); }catch(x){} close(); return show(code); }
+    if(k==='edit'){ const src=(()=>{ try{ return localStorage.getItem(IMGO+code)||photoGet(code); }catch(x){ return photoGet(code); } })(); close(); try{ photoEditor(code,await loadImg(src)); }catch(x){} return; }
+    if(k==='paste'){ try{ const b=await pasteImg(); close(); photoEditor(code,await fileToImg(b),true); }catch(x){ a.textContent='Kein Bild in der Zwischenablage'; setTimeout(()=>a.textContent='Freigestelltes Rad einfügen',2200); } } };
+  fi.onchange=async()=>{ const f=fi.files&&fi.files[0]; if(!f) return; close(); try{ photoEditor(code,await fileToImg(f),true); }catch(x){ alert('Bild konnte nicht geladen werden.'); } }; }
+function photoEditor(code,img,isNew){ const N=normImg(img), src=N.cv, W=1200, H=900, el=document.createElement('div'); el.className='sheet';
+  el.innerHTML=`<div><div style="font-size:20px;font-weight:800">Zuschneiden</div><p class="muted small" style="margin:4px 0 12px">Verschieben mit dem Finger, zoomen mit zwei Fingern oder dem Regler.</p><canvas class="pedc" width="${W}" height="${H}" style="width:100%;aspect-ratio:4/3;border-radius:20px;touch-action:none;background:#fff;box-shadow:var(--sh);cursor:grab"></canvas><input class="pedz" type="range" min="0" max="1000" value="0" style="width:100%;margin:14px 0 6px" aria-label="Zoom"><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:12px"><button class="btn ghost" style="padding:9px 16px;font-size:14px" data-a="auto" type="button">${N.alpha?'Rad zentrieren':'Ganzes Bild'}</button>${N.alpha?'<span class="muted small" style="align-self:center">✓ Hintergrund weiß</span>':''}</div><div style="display:flex;gap:10px"><button class="btn ghost" data-a="x" type="button" style="flex:1">Abbrechen</button><button class="btn" data-a="ok" type="button" style="flex:1">Übernehmen</button></div></div>`;
+  document.body.appendChild(el); const cv=el.querySelector('canvas'), g=cv.getContext('2d'), z=el.querySelector('.pedz');
+  const sMin=Math.min(W/src.width,H/src.height)*0.6, sMax=Math.max(W/src.width,H/src.height)*4; let s,ox,oy;
+  const fit=()=>{ if(N.box){ const [bx,by,bw,bh]=N.box; s=Math.min(W*0.92/bw,H*0.86/bh); ox=W/2-(bx+bw/2)*s; oy=H*0.53-(by+bh/2)*s; } else { s=Math.max(W/src.width,H/src.height); ox=(W-src.width*s)/2; oy=(H-src.height*s)/2; } s=Math.min(sMax,Math.max(sMin,s)); sync(); draw(); };
+  const toZ=v=>Math.log(v/sMin)/Math.log(sMax/sMin)*1000, fromZ=v=>sMin*Math.pow(sMax/sMin,v/1000);
+  const sync=()=>{ z.value=String(Math.round(toZ(s))); };
+  const draw=()=>{ g.fillStyle='#fff'; g.fillRect(0,0,W,H); g.imageSmoothingQuality='high'; g.drawImage(src,ox,oy,src.width*s,src.height*s); };
+  const zoomAt=(ns,cx,cy)=>{ ns=Math.min(sMax,Math.max(sMin,ns)); ox=cx-(cx-ox)*ns/s; oy=cy-(cy-oy)*ns/s; s=ns; draw(); };
+  const pt=e=>{ const r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]; };
+  const P=new Map(); let last=null;
+  cv.onpointerdown=e=>{ cv.setPointerCapture(e.pointerId); P.set(e.pointerId,pt(e)); last=null; };
+  cv.onpointermove=e=>{ if(!P.has(e.pointerId)) return; const prev=P.get(e.pointerId), cur=pt(e); P.set(e.pointerId,cur);
+    if(P.size===1){ ox+=cur[0]-prev[0]; oy+=cur[1]-prev[1]; draw(); }
+    else if(P.size===2){ const [a,b]=[...P.values()], d=Math.hypot(a[0]-b[0],a[1]-b[1]), m=[(a[0]+b[0])/2,(a[1]+b[1])/2]; if(last){ ox+=m[0]-last.m[0]; oy+=m[1]-last.m[1]; zoomAt(s*d/last.d,m[0],m[1]); sync(); } last={d,m}; } };
+  cv.onpointerup=cv.onpointercancel=e=>{ P.delete(e.pointerId); last=null; };
+  cv.onwheel=e=>{ e.preventDefault(); const [x,y]=pt(e); zoomAt(s*Math.exp(-e.deltaY*0.0015),x,y); sync(); };
+  z.oninput=()=>zoomAt(fromZ(+z.value),W/2,H/2);
+  el.onclick=e=>{ const a=e.target.closest('[data-a]'); if(!a) return; const k=a.dataset.a; if(k==='x') return el.remove(); if(k==='auto') return fit();
+    if(k==='ok'){ draw(); let ok=false; for(const q of [.8,.6,.45]){ try{ localStorage.setItem('fyfpass:img:'+code,cv.toDataURL('image/jpeg',q)); ok=true; break; }catch(x){} }
+      if(!ok){ alert('Speicher voll – Foto konnte nicht gespeichert werden.'); return; }
+      if(isNew){ try{ localStorage.removeItem(IMGO+code); localStorage.setItem(IMGO+code,N.alpha?src.toDataURL('image/png'):src.toDataURL('image/jpeg',.8)); }catch(x){ try{ localStorage.removeItem(IMGO+code); }catch(y){} } }
+      el.remove(); show(code); } };
+  fit(); }
 async function qrSheet(code,name){ const url=location.origin+location.pathname+'#c='+code+(CF?'&cfg='+CF:''); let qr=''; try{ await loadQR(); const q=window.qrcode(0,'M'); q.addData(url); q.make(); qr=q.createSvgTag({cellSize:4,margin:1,scalable:true}); }catch(e){}
   const el=document.createElement('div'); el.className='sheet'; el.innerHTML=`<div><div class="muted small" style="font-weight:700;letter-spacing:.14em">FYF FAHRRADPASS</div><div style="font-size:22px;font-weight:800;margin-top:4px">${esc(name)}</div><div class="qrbig">${qr||'<span class="muted small">QR braucht Internet</span>'}</div><div style="font:700 24px ui-monospace,Menlo,monospace;letter-spacing:.14em">${code}</div><p class="muted small" style="margin:6px 0 18px">In der Werkstatt vorzeigen</p><button class="btn block" type="button">Fertig</button></div>`;
   document.body.appendChild(el); el.onclick=e=>{ if(e.target===el||e.target.tagName==='BUTTON') el.remove(); }; }
+function orderSheet(code,name){ const ref=encodeURIComponent(code), msg=encodeURIComponent(`Hallo, ich möchte einen FYF-Aufkleber für mein Rad „${name}“ bestellen. Fahrradpass-Code: ${code}`);
+  const link=u=>u+(u.includes('?')?'&':'?')+'client_reference_id='+ref;
+  const el=document.createElement('div'); el.className='sheet'; el.innerHTML=`<div style="text-align:left"><div class="muted small" style="font-weight:700;letter-spacing:.14em;text-align:center">FYF AUFKLEBER</div><div style="font-size:22px;font-weight:800;margin:4px 0 2px;text-align:center">Wetterfest, klein, für deinen Rahmen</div><p class="muted small" style="text-align:center;margin:0 0 16px">Mit deinem QR-Code ${code} – Versand per Brief.</p>
+    <div style="display:grid;gap:10px">${ORDER.one?`<a class="btn block" href="${esc(link(ORDER.one))}" target="_blank" rel="noopener">1 Aufkleber · ${esc(ORDER.price1)}</a>`:''}${ORDER.two?`<a class="btn block ghost" href="${esc(link(ORDER.two))}" target="_blank" rel="noopener">2er-Set · ${esc(ORDER.price2)}</a>`:''}
+    ${!ORDER.one&&!ORDER.two&&ORDER.whatsapp?`<a class="btn block" href="https://wa.me/${esc(String(ORDER.whatsapp).replace(/\D/g,''))}?text=${msg}" target="_blank" rel="noopener">Per WhatsApp anfragen</a>`:''}${!ORDER.one&&!ORDER.two&&ORDER.mail?`<a class="btn block ghost" href="mailto:${esc(ORDER.mail)}?subject=${encodeURIComponent('FYF-Aufkleber '+code)}&body=${msg}">Per E-Mail anfragen</a>`:''}</div>
+    ${ORDER.one||ORDER.two?`<p class="muted small" style="margin:12px 0 0">Bezahlung sicher über Stripe (Karte, Apple Pay). Bitte im Bestellformular den Code <b>${code}</b> angeben, falls danach gefragt wird.</p>`:''}
+    <p class="small" style="margin:12px 0 16px;text-align:center"><a href="kauf.html" target="_blank">Bestellinfos</a> · <a href="impressum.html" target="_blank">Impressum</a> · <a href="datenschutz.html" target="_blank">Datenschutz</a></p><button class="btn block ghost" type="button">Schließen</button></div>`;
+  document.body.appendChild(el); el.onclick=e=>{ if(e.target===el||e.target.tagName==='BUTTON') el.remove(); }; }
+function thanksSheet(){ const el=document.createElement('div'); el.className='sheet'; el.innerHTML=`<div><svg class="okcheck" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30"/><path d="M19 33l9 9 17-19"/></svg><div style="font-size:22px;font-weight:800">Danke für deine Bestellung!</div><p class="muted" style="margin:6px 0 18px">Dein Aufkleber geht in den nächsten Werktagen per Brief raus.</p><button class="btn block" type="button">Fertig</button></div>`; document.body.appendChild(el); el.onclick=e=>{ if(e.target===el||e.target.tagName==='BUTTON') el.remove(); }; }
 function route(){ scrollTo(0,0); const h=new URLSearchParams((location.hash||'').slice(1)); const c=norm(h.get('c')); tabs(c?(mine().some(m=>m.code===c)?'meine':'pruefen'):(/pruefen/.test(location.hash)?'pruefen':'meine')); if(c) show(c); else askForm(''); }
 window.addEventListener('hashchange',route); route();
+if(/(^|[#&])bestellt=1/.test(location.hash)) thanksSheet();
 if(!new URLSearchParams((location.hash||'').slice(1)).get('c')) intro();
 try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); }catch(e){}
 </script>
