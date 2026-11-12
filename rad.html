@@ -985,6 +985,60 @@ function orderSheet(code,name){ const ref=encodeURIComponent(code), msg=encodeUR
     <p class="small" style="margin:12px 0 16px;text-align:center"><a href="kauf.html" target="_blank">Bestellinfos</a> · <a href="impressum.html" target="_blank">Impressum</a> · <a href="datenschutz.html" target="_blank">Datenschutz</a></p><button class="btn block ghost" type="button">Schließen</button></div>`;
   document.body.appendChild(el); el.onclick=e=>{ if(e.target===el||e.target.tagName==='BUTTON') el.remove(); }; }
 function thanksSheet(){ const el=document.createElement('div'); el.className='sheet'; el.innerHTML=`<div><svg class="okcheck" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30"/><path d="M19 33l9 9 17-19"/></svg><div style="font-size:22px;font-weight:800">Danke für deine Bestellung!</div><p class="muted" style="margin:6px 0 18px">Dein Aufkleber geht in den nächsten Werktagen per Brief raus.</p><button class="btn block" type="button">Fertig</button></div>`; document.body.appendChild(el); el.onclick=e=>{ if(e.target===el||e.target.tagName==='BUTTON') el.remove(); }; }
+/* ===== v.99 Dienstrad / Leasing: Inspektion jedes Jahr, Leasingende, Termin bei FYF-Werkstatt ===== */
+const LEASE_PROV=['JobRad','BusinessBike','Bikeleasing-Service','Lease a Bike','Company Bike','Linexo','Eurorad','mein-dienstrad','Deutsche Dienstrad','Anderer Anbieter'];
+// Werte der Werkstatt (aus dem Pass) + eigene Eingaben; eigene Eingaben gehen vor
+function leaseOf(code){ const sh=Pof(code).lease||null, own=X(code).lease||null; if(!sh&&!own) return null;
+  const o={...(sh||{}),...Object.fromEntries(Object.entries(own||{}).filter(([k,v])=>v!==''&&v!=null))}; if(!o.provider) return null; o.fromShop=!!sh; o.shopName=((Pof(code).shop||{}).name)||''; return o; }
+function leaseState(code){ const l=leaseOf(code); if(!l) return null; const S=shopData(code).svc.insp, own=(X(code).svc||{}).insp;
+  const last=[l.lastInsp,S&&S.d,own&&own.d].filter(Boolean).sort().pop()||'';
+  const months=Number(l.months)||36, end=l.end||(l.start?addMonths(l.start,months):'');
+  let next=''; if(last) next=addMonths(last,12); else if(l.start){ next=addMonths(l.start,12); }
+  const days=d=>d?Math.round((new Date(d)-new Date(today()))/864e5):null; const dn=days(next), de=days(end);
+  const st=(dn==null||(end&&next>end))?'ok':dn<0?'due':dn<=30?'soon':'ok', est=de==null?'ok':de<0?'ok':de<=60?'soon':'ok';
+  return {...l,last,next,end,dn,de,st,est,ended:de!=null&&de<0}; }
+function leaseItems(code){ const s=leaseState(code); if(!s||s.ended) return []; const out=[];
+  if(s.next&&!(s.end&&s.next>s.end)) out.push({t:`Dienstrad-Inspektion (${s.provider})`,due:s.next,next:s.next,days:s.dn,st:s.st,lease:true});
+  if(s.end&&s.est==='soon') out.push({t:`Leasingende (${s.provider}): übernehmen oder zurückgeben`,due:s.end,next:s.end,days:s.de,st:'soon',lease:true});
+  return out; }
+{ const SS9=svcSummary; svcSummary=function(code){ const r=SS9(code); try{ const li=leaseItems(code); r.due=r.due.concat(li.filter(i=>i.st==='due')); r.soon=r.soon.concat(li.filter(i=>i.st==='soon')); r.lease=li; }catch(e){} return r; }; }
+function leaseCard(code,compact){ const s=leaseState(code); if(!s) return compact?'':`<div class="card"><b>Dienstrad / Leasing?</b><p class="muted small" style="margin:2px 0 8px">Ist das Rad über den Arbeitgeber geleast (z. B. JobRad, BusinessBike)? Dann erinnert dich der Pass an die jährliche Inspektion und an das Leasingende.</p><button class="btn ghost block" type="button" data-lease-open>Leasing eintragen</button></div>`;
+  const cls=s.st==='due'?'bad':s.st==='soon'?'warn':'muted';
+  return `<div class="card svc svc-${s.st}"><div class="small" style="font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ok)">Dienstrad · ${esc(s.provider)}${s.fromShop&&s.shopName?' · von '+esc(s.shopName):''}</div>
+   <div class="kv"><span>Nächste Inspektion</span><b class="${cls}">${s.next&&s.end&&s.next>s.end?'keine mehr vor Leasingende':s.next?fd(s.next)+(s.dn<0?' · überfällig':s.dn<=30?' · bald':''):'Übergabedatum fehlt'}</b></div>
+   ${s.last?`<div class="kv"><span>Letzte Inspektion</span><b>${fd(s.last)}</b></div>`:''}${s.end?`<div class="kv"><span>Leasingende</span><b class="${s.est==='soon'?'warn':''}">${fd(s.end)}</b></div>`:''}${s.pack?`<div class="kv"><span>Service-Paket</span><b>${esc(s.pack)}</b></div>`:''}
+   <div style="display:grid;gap:8px;margin-top:10px"><a class="btn" href="finder.html#pass=${code}&want=service&lease=${encodeURIComponent(s.provider)}${CF?'&cfg='+esc(CF):''}">Inspektion bei einer FYF-Werkstatt buchen</a>${compact?'':`<button class="btn ghost" type="button" data-lease-open>Leasing-Daten ändern</button>`}</div></div>`; }
+function toolLease(code){ const name=bikeName(code); page('Dienstrad / Leasing','',(r)=>{ const draw=()=>{ const own=X(code).lease||{}, sh=Pof(code).lease||{}, s=leaseState(code), v=k=>own[k]??sh[k]??'';
+    r.innerHTML=`${s?leaseCard(code,true):''}
+     <div class="card"><b>Leasing-Daten</b><p class="muted small" style="margin:2px 0 4px">Stehen in deinem Überlassungsvertrag oder im Portal deines Anbieters. Die Vertragsnummer bleibt nur auf deinem Handy.</p>
+      ${sel('lsP','Leasinganbieter',[['','– kein Dienstrad –'],...LEASE_PROV.map(p=>[p,p])],v('provider'))}
+      ${inp('lsS','Übergabe des Rads (Leasingbeginn)',v('start'),'type="date"')}
+      ${sel('lsM','Laufzeit',[['36','36 Monate'],['24','24 Monate'],['48','48 Monate']],String(v('months')||'36'))}
+      ${inp('lsE','Leasingende (falls bekannt, sonst berechnet)',v('end'),'type="date"')}
+      ${inp('lsL','Letzte Inspektion',v('lastInsp'),'type="date"')}
+      ${sel('lsV','Service-Paket',[['unbekannt','weiß ich nicht'],['Inspektion enthalten','Inspektion enthalten'],['Vollservice','Vollservice / Verschleiß enthalten'],['ohne Service','ohne Service']],v('pack')||'unbekannt')}
+      ${inp('lsC','Vertrags- oder Nutzernummer (optional)',own.contract||'','autocomplete="off"')}
+      <button class="btn block" id="lsSave" type="button" style="margin-top:14px">Speichern</button>
+      ${s?`<div style="display:grid;gap:8px;margin-top:10px">${s.next?'<button class="btn ghost" id="lsCal" type="button">Inspektion in den Kalender</button>':''}${s.end?'<button class="btn ghost" id="lsCalE" type="button">Leasingende in den Kalender</button>':''}</div>`:''}</div>
+     <details class="help card"><summary><b>So läuft die Inspektion beim Dienstrad</b></summary><div class="small">
+      <p>Viele Leasingverträge sehen eine Inspektion pro Jahr vor. Ob sie im Vertrag enthalten ist, steht in deinem Vertrag oder im Portal deines Anbieters.</p>
+      <ul><li>Der Pass erinnert dich rechtzeitig vor der Inspektion und vor dem Leasingende.</li><li>Termin über <b>Inspektion buchen</b> bei einer FYF-Werkstatt anfragen – Anbieter und Pass-Code gehen automatisch mit.</li><li>Die Werkstatt prüft deinen Vertrag und rechnet mit dem Leasinganbieter ab. Die erledigte Inspektion steht danach in deinem Pass.</li><li>Am Leasingende hilft die Servicegeschichte beim Übernehmen oder Zurückgeben.</li></ul></div></details>`;
+    const b=r.querySelector('[data-lease-open]'); if(b) b.onclick=()=>r.querySelector('#lsP').focus();
+    r.querySelector('#lsSave').onclick=()=>{ const p=val(r,'lsP'); const o=X(code); if(!p&&!sh.provider){ delete o.lease; Xset(code,o); toast('Kein Dienstrad'); return draw(); }
+      o.lease={provider:p||sh.provider||'',start:val(r,'lsS'),months:val(r,'lsM'),end:val(r,'lsE'),lastInsp:val(r,'lsL'),pack:val(r,'lsV'),contract:val(r,'lsC').slice(0,40)}; Xset(code,o); toast('Gespeichert'); draw(); };
+    const c=r.querySelector('#lsCal'); if(c) c.onclick=()=>calAdd({date:s.st==='due'?today():s.next,title:`Dienstrad-Inspektion – ${name}`,text:`Leasing: ${s.provider}. Termin bei einer FYF-Werkstatt buchen.\n`+passLink(code)},'FYF-lease');
+    const ce=r.querySelector('#lsCalE'); if(ce) ce.onclick=()=>calAdd({date:addMonths(s.end,-2),title:`Leasingende in 2 Monaten – ${name}`,text:`Leasing ${s.provider} endet am ${fd(s.end)}. Übernehmen oder zurückgeben? Vorher Inspektion bzw. Zustandscheck.\n`+passLink(code)},'FYF-leaseend'); };
+    draw(); }); }
+TOOLFN.lease=toolLease;
+{ const TH9=toolsHtml; toolsHtml=function(code){ const h=TH9(code); const s=leaseState(code); if(!s) return h;
+    const sub=s.st==='due'?'<span class="bad">Inspektion fällig</span>':s.st==='soon'?'<span class="warn">Inspektion bald</span>':s.est==='soon'?'<span class="warn">Leasingende bald</span>':s.next?'Inspektion '+fd(s.next):esc(s.provider);
+    const tile=`<button class="tool" data-tool="lease" type="button"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg></span><span class="tl">Dienstrad</span><span class="ts">${sub}</span></button>`;
+    return h.replace('<button class="tool" data-tool="sell"',tile+'<button class="tool" data-tool="sell"'); }; }
+{ const TS9=toolService; toolService=function(code){ TS9(code); const pg=[...document.querySelectorAll('.tpage')].pop(), body=pg&&pg.querySelector('.tp-body'); if(!body) return;
+    const add=()=>{ if(body.querySelector('[data-leasebox]')) return; const d=document.createElement('div'); d.setAttribute('data-leasebox',''); d.innerHTML=leaseCard(code,false); body.insertBefore(d,body.children[1]||null); d.querySelectorAll('[data-lease-open]').forEach(b=>b.onclick=()=>toolLease(code)); };
+    add(); new MutationObserver(add).observe(body,{childList:true}); }; }
+TOOLFN.svc=toolService;
+GUIDE.splice(6,0,['Dienstrad & Leasing','<p>Ist dein Rad über den Arbeitgeber geleast (JobRad, BusinessBike, Bikeleasing-Service, Lease a Bike …)? Unter <b>Service → Leasing eintragen</b> Anbieter, Übergabedatum und Laufzeit eintragen.</p><ul><li>Der Pass erinnert dich an die <b>jährliche Inspektion</b> und <b>2 Monate vor Leasingende</b>.</li><li><b>Inspektion buchen</b> öffnet FYF-Werkstätten – Anbieter und Pass-Code stehen schon in der Anfrage.</li><li>Hat eine FYF-Werkstatt dein Dienstrad eingetragen, stehen die Daten automatisch im Pass.</li><li>Die Vertragsnummer bleibt nur auf deinem Handy.</li></ul><p class="muted">Ob die Inspektion in deinem Vertrag enthalten ist, steht im Vertrag bzw. im Portal deines Anbieters. Abgerechnet wird zwischen Werkstatt und Leasinganbieter.</p>']);
 function route(){ scrollTo(0,0); document.querySelectorAll('.sheet,.tpage,.scanner').forEach(e=>{ if(e.querySelector('video')&&e.querySelector('video').srcObject) e.querySelector('video').srcObject.getTracks().forEach(t=>t.stop()); e.remove(); }); document.body.style.overflow=''; const h=new URLSearchParams((location.hash||'').slice(1)); const c=norm(h.get('c')); if(h.get('import')){ tabs('meine'); askForm(''); importSheet(String(h.get('import')).split(/[.,]/)); return; } if(h.get('claim')){ const [cc,tk]=String(h.get('claim')).split('.'); tabs('meine'); askForm(''); claimSheet(norm(cc),String(tk||'')); return; } tabs(c?(mine().some(m=>m.code===c)?'meine':'pruefen'):(/pruefen/.test(location.hash)?'pruefen':'meine')); if(c) show(c); else askForm(''); }
 window.addEventListener('hashchange',route); route();
 if(/(^|[#&])bestellt=1/.test(location.hash)) thanksSheet();

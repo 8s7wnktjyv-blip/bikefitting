@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-11.98';
+const APP_VER='2026-11-12.99';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -7746,8 +7746,13 @@ async function visCheck(){ const I=[]; const FIT=/fitting|cleat|sattel.*analyse|
 Object.assign(ACT,{ visCheck(){ visCheck(); } });
 { const NV7=VIEWS.netz; VIEWS.netz=()=>{ const h=NV7(); const V=ui.vis; const p=panel('Bin ich auf der Partnerseite zu finden?',`<p class="faint" style="margin:0 0 8px">Prüft, ob Kunden deinen Laden in der FYF-Händlersuche und in der Pass-App sehen – und was fehlt.</p><button class="btn primary" data-act="visCheck">Sichtbarkeit prüfen</button>${V?`<div style="margin-top:10px">${V.map(([s,t,d])=>`<div class="row" style="gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);flex-wrap:nowrap"><span class="chip ${s==='ok'?'c-ok':s==='bad'?'c-bad':s==='warn'?'c-warn':'c-info'}">${s==='ok'?'ok':s==='bad'?'fehlt':s==='warn'?'prüfen':'…'}</span><div><b>${esc(t)}</b>${d?`<div class="faint" style="font-size:13px">${esc(d)}</div>`:''}</div></div>`).join('')}${ui.visLink?`<p style="margin:10px 0 0"><a class="btn sm" href="${esc(ui.visLink)}" target="_blank" rel="noopener">So sehen Kunden deinen Laden</a></p>`:''}</div>`:''}`); const i=h.indexOf('</div>',h.indexOf('pagehead')); return i<0?p+h:h.slice(0,i+6)+p+h.slice(i+6); }; }
 
+/* ===================== v.99 Dienstrad/Leasing in den Bike-Pass übertragen (ohne Vertragsnummer) ===================== */
+{ const PL9=passPayload; passPayload=function(b){ const p=PL9(b); const l=b&&b.lease; if(p&&l&&l.provider){ p.lease={provider:String(l.provider).slice(0,40),start:l.start||'',end:l.end||'',lastInsp:l.lastInsp||'',pack:String(l.pack||'').slice(0,40),next:leaseNext(b)||''}; } return p; }; }
+{ const o=FORMS.bikeLease; if(o) FORMS.bikeLease=function(f,d){ const r=o.apply(this,arguments); try{ const b=bike(f&&f.dataset&&f.dataset.id); if(b&&b.qr&&b.qr.code&&!b.qr.moved&&cloudReady()) setTimeout(()=>passPush(b,true),200); }catch(e){} return r; }; }
+{ const N9=ACT.woNext; ACT.woNext=function(el){ const r=N9.apply(this,arguments); try{ const w=S.workshop.find(x=>x.id===(el&&el.dataset&&el.dataset.id)); const b=w&&bike(w.bikeId); if(w&&w.lease&&w.status==='Übergeben'&&b&&b.qr&&b.qr.code&&!b.qr.moved&&cloudReady()) setTimeout(()=>passPush(b,true),250); }catch(e){} return r; }; }
+
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
-window.__fitframe={storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
+window.__fitframe={passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess};
 })();
 </script>
 </body>
