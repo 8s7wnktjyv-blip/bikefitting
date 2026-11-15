@@ -13,9 +13,14 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FYF">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..800&family=Figtree:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="preload" href="fonts/figtree.woff" as="font" type="font/woff" crossorigin>
+<style>
+/* Schriften liegen auf dem eigenen Server (keine Verbindung zu Google, DSGVO). Lizenz: SIL OFL, siehe fonts/OFL-*.txt */
+@font-face{font-family:"Figtree";src:url(fonts/figtree.woff) format("woff");font-weight:300 900;font-display:swap}
+@font-face{font-family:"Archivo";src:url(fonts/archivo.woff) format("woff");font-weight:100 900;font-stretch:62% 125%;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url(fonts/plexmono-400.woff) format("woff");font-weight:400;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url(fonts/plexmono-500.woff) format("woff");font-weight:500;font-display:swap}
+</style>
 <style>
 /* Layout: freundliche Werkbank – helle Karten auf warmem Grund, 5 Hauptbereiche, Fitting als geführter Ablauf in Schritten */
 :root{
@@ -5103,7 +5108,7 @@ function loadPoseFull(){
   poseFullPromise.catch(()=>{ poseFullPromise=null; }); return poseFullPromise; }
 /* ---------- Handy als Kamera: Video direkt vom iPhone zum PC (WebRTC), nichts wird gespeichert ---------- */
 function PEER_JS(){ return 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'; }
-function QR_JS(){ return 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'; }
+function QR_JS(){ return new URL('vendor/qrcode-generator-1.4.4.js',location.href).href; }
 function loadScript(src){ const scriptCache=(window.__ffsc=window.__ffsc||{}); if(scriptCache[src]) return scriptCache[src]; scriptCache[src]=new Promise((res,rej)=>{ const t=document.createElement('script'); t.src=src; t.async=true; t.onload=()=>res(); t.onerror=()=>{ delete scriptCache[src]; t.remove(); rej(new Error('load')); }; document.head.appendChild(t); }); return scriptCache[src]; }
 function PeerCls(){ return window.Peer||(window.peerjs&&window.peerjs.Peer)||null; }
 async function needPeer(){ if(!PeerCls()) await loadScript(PEER_JS()); if(!PeerCls()) throw new Error('peer'); return PeerCls(); }
