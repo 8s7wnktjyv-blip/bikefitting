@@ -1958,7 +1958,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-15.111';
+const APP_VER='2026-11-15.112';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -8506,6 +8506,36 @@ Object.assign(FORMS,{ async visQuick(f,d){ const p=Object.assign({},NET.profile|
     try{ let r; try{ r=await clApi('/rest/v1/rpc/save_profile',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p:q})}); }catch(e){ if(/SLUG_TAKEN/.test(String(e&&e.message)+netErr(e))){ q.slug=(q.slug+'-'+Math.random().toString(36).slice(2,6)).slice(0,60); r=await clApi('/rest/v1/rpc/save_profile',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p:q})}); } else throw e; }
       audit('Händlerprofil veröffentlicht (Dashboard)'); closeDrawer(); NET.at=0; await netLoad(); render(); toast('Veröffentlicht – Kunden finden dich jetzt in der Pass-App'); }
     catch(e){ toast(e.offline?'Keine Verbindung':netErr(e),true); } } });
+/* ===================== v.112 Barcode-Scanner (Lager, Wareneingang, Werkstattauftrag) – Foto vom Barcode, Erkennung im Gerät ===================== */
+let QG_P=null; const qgLoad=()=>QG_P||(QG_P=new Promise((ok,no)=>{ if(window.Quagga) return ok(window.Quagga); const s=document.createElement('script'); s.src=new URL('vendor/quagga2.min.js',location.href).href; s.onload=()=>ok(window.Quagga); s.onerror=()=>{ QG_P=null; no(new Error('lib')); }; document.head.appendChild(s); }));
+const fileUrl=f=>new Promise((ok,no)=>{ const r=new FileReader(); r.onload=()=>ok(r.result); r.onerror=no; r.readAsDataURL(f); });
+async function decodeBarcode(file){ try{ if('BarcodeDetector' in window){ const bd=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']}); const bm=await createImageBitmap(file); const r=await bd.detect(bm); if(r&&r[0]&&r[0].rawValue) return r[0].rawValue; } }catch(e){}
+  const Q=await qgLoad(), src=await fileUrl(file);
+  for(const [locate,size] of [[true,1280],[false,1280],[true,800],[false,800],[true,1600]]){ const v=await new Promise(ok=>{ try{ Q.decodeSingle({src,numOfWorkers:0,locate,inputStream:{size},decoder:{readers:['ean_reader','ean_8_reader','upc_reader','upc_e_reader','code_128_reader','code_39_reader']}},res=>ok(res&&res.codeResult&&res.codeResult.code||null)); }catch(e){ ok(null); } }); if(v) return v; }
+  return null; }
+function scanPhoto(){ return new Promise(ok=>{ const i=document.createElement('input'); i.type='file'; i.accept='image/*'; i.setAttribute('capture','environment'); i.style.display='none'; document.body.appendChild(i);
+  i.onchange=async()=>{ const f=i.files&&i.files[0]; i.remove(); if(!f) return ok(null); toast('Barcode wird gelesen …'); let c=null; try{ c=await decodeBarcode(f); }catch(e){ toast('Scanner konnte nicht geladen werden',true); return ok(null); } if(!c) toast('Kein Barcode erkannt – näher ran, gerade halten, gutes Licht. Oder Nummer eintippen.',true); ok(c?String(c).trim():null); };
+  i.click(); }); }
+window.__scan={decodeBarcode,qgLoad};
+const invByCode=c=>{ const n=String(c||'').trim(); return S.inventory.find(x=>x.ean&&String(x.ean)===n)||S.inventory.find(x=>x.sku===n)||null; };
+const scanBtn=(act,extra='')=>`<button class="btn sm" type="button" data-act="${act}" ${extra}>${ic('search')}Barcode scannen</button>`;
+Object.assign(ACT,{
+  async scanStock(){ const c=await scanPhoto(); if(!c) return; const x=invByCode(c); if(x){ goodsInDrawer(); const sel=document.getElementById('gi_a'); if(sel){ sel.value=x.sku; } toast(`${x.name} – Bestand ${x.stock}`); }
+    else { itemDrawer(''); setTimeout(()=>{ const e=document.getElementById('i_ean'), s=document.getElementById('i_sku'); if(e) e.value=c; if(s&&!s.value) s.value=c; const n=document.getElementById('i_name'); if(n) n.focus(); },60); toast('Neuer Artikel – Barcode übernommen'); } },
+  async scanInto(el){ const c=await scanPhoto(); if(!c) return; const t=el.dataset.target;
+    if(t==='ean'){ const e=document.getElementById('i_ean'); if(e) e.value=c; const s=document.getElementById('i_sku'); if(s&&!s.value&&!s.readOnly) s.value=c; toast('Barcode übernommen'); return; }
+    const x=invByCode(c); if(!x){ toast(`Barcode ${c} ist keinem Artikel zugeordnet. Unter Lager einmal anlegen.`,true); return; }
+    if(t==='gi'){ const sel=document.getElementById('gi_a'); if(sel) sel.value=x.sku; toast(x.name); }
+    if(t==='wo'){ const pt=document.getElementById('p_t'), pk=document.getElementById('p_k'), pp=document.getElementById('p_p'); if(pt) pt.value=x.name; if(pk) pk.value='Teil'; if(pp&&!pp.value) pp.value=x.price||''; toast(`${x.name} – ${eur(x.price||0)}`); } }
+});
+{ const FI=FORMS.item; FORMS.item=function(f,data){ const ean=String(data.get('ean')||'').trim().replace(/\s+/g,''); if(ean){ const other=S.inventory.find(i=>i.ean===ean&&i.sku!==(f.dataset.sku||String(data.get('sku')).trim())); if(other){ toast(`Dieser Barcode gehört schon zu „${other.name}“`,true); return; } } const r=FI.apply(this,arguments); const it=S.inventory.find(i=>i.sku===(f.dataset.sku||String(data.get('sku')).trim())); if(it){ if(ean) it.ean=ean; else delete it.ean; save(); } return r; }; }
+// Felder und Knöpfe in vorhandene Formulare einsetzen
+new MutationObserver(()=>{ try{
+  const fi=document.querySelector('form[data-form="item"]'); if(fi&&!fi.querySelector('#i_ean')){ const sku=fi.dataset.sku, it=sku&&S.inventory.find(i=>i.sku===sku); const d=document.createElement('div'); d.className='field wide'; d.innerHTML=`<label for="i_ean">EAN / Barcode</label><div class="row" style="gap:6px;flex-wrap:nowrap"><input class="input mono" id="i_ean" name="ean" inputmode="numeric" maxlength="40" value="${esc(it&&it.ean||'')}" placeholder="vom Etikett"><button class="btn sm" type="button" data-act="scanInto" data-target="ean">${ic('search')}Scannen</button></div>`; const nm=fi.querySelector('#i_name'); (nm?nm.closest('.field'):fi.firstElementChild).after(d); }
+  const gi=document.querySelector('form[data-form="goodsIn"]'); if(gi&&!gi.querySelector('[data-target="gi"]')){ const a=gi.querySelector('#gi_a'); if(a) a.closest('.field').insertAdjacentHTML('beforeend',`<div style="margin-top:6px">${scanBtn('scanInto','data-target="gi"')}</div>`); }
+  document.querySelectorAll('form[data-form="woPos"]').forEach(f=>{ if(f.querySelector('[data-target="wo"]')) return; const pt=f.querySelector('#p_t'); if(pt) pt.closest('.field').insertAdjacentHTML('beforeend',`<div style="margin-top:6px">${scanBtn('scanInto','data-target="wo"')}</div>`); });
+  document.querySelectorAll('button[data-act="goodsIn"]').forEach(b=>{ if(b.nextElementSibling&&b.nextElementSibling.dataset.act==='scanStock') return; if(b.closest('form')) return; b.insertAdjacentHTML('afterend',`<button class="btn" data-act="scanStock">${ic('search')} Barcode scannen</button>`); });
+}catch(e){} }).observe(document.body,{childList:true,subtree:true});
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();

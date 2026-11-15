@@ -1,7 +1,7 @@
 // FYF Offline-Speicher. Immer zuerst das Netz (damit Updates sofort ankommen), ohne Netz die letzte gespeicherte Version.
 // Nur Dateien dieser Seite – Anfragen an Supabase und andere Server werden nie zwischengespeichert.
-const CACHE = 'fyf-app-v1-p37';
-const CORE = ['./', './index.html', './manifest.webmanifest', './rad.html', './pass.webmanifest', './finder.html', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './vendor/html2canvas-1.4.1.min.js', './fonts/figtree.woff', './fonts/archivo.woff', './fonts/plexmono-400.woff', './fonts/plexmono-500.woff', './vendor/qrcode-generator-1.4.4.js', './vendor/jsQR-1.4.0.js'];
+const CACHE = 'fyf-app-v1-p38';
+const CORE = ['./', './index.html', './manifest.webmanifest', './rad.html', './pass.webmanifest', './finder.html', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './vendor/html2canvas-1.4.1.min.js', './vendor/quagga2.min.js', './fonts/figtree.woff', './fonts/archivo.woff', './fonts/plexmono-400.woff', './fonts/plexmono-500.woff', './vendor/qrcode-generator-1.4.4.js', './vendor/jsQR-1.4.0.js'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
