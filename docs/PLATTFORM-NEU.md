@@ -32,7 +32,8 @@ Stand 15.11.2026. Grundlage: Arbeitsauftrag „vollständige Plattformweiterentw
 | `app/` Grundgerüst (TypeScript/React, Build mit esbuild) | Fertig. Anmeldung mit E-Mail-Code, Laden aus `memberships`, Modul-Navigation, Cockpit liest Kennzahlen aus dem bisherigen Speicher (nur lesen) |
 | Design | Alle Farben und Bausteine werden beim Build aus `index.html` übernommen. Schriften liegen lokal in `app/public/fonts` (OFL-Lizenz), keine Google-Server mehr |
 | Sicherheit | Content-Security-Policy, keine Fremdskripte, nur öffentlicher Schlüssel |
-| Module B–J | Noch **nicht** übertragen. Die neue App zeigt das ehrlich an und verlinkt in die bisherige App |
+| Modul Kunden (B) | In der neuen App: Liste, Suche, Filter Privat/Firma, Kundenakte mit Ansprechpartnern, Wiedervorlagen, Rädern, Aufträgen. **Nur lesen** aus dem bisherigen Speicher (Stand 15.11.2026) |
+| Module C–J | Noch **nicht** übertragen. Die neue App zeigt das ehrlich an und verlinkt in die bisherigen App |
 | Datenbank `docs/supabase/migrations/20270101_01_plattform_kern.sql` | Entwurf. Lokal mit Postgres 16 getestet (zweimal einspielbar, Rechte geprüft). In Supabase **noch nicht eingespielt** |
 | Typprüfung (tsc) | Noch nicht möglich, weil die React-Typdefinitionen hier fehlen. esbuild baut ohne Typprüfung. |
 

@@ -7,7 +7,7 @@ export type Mod = { id: string; label: string; area: string; status: ModStatus; 
 
 export const MODULES: Mod[] = [
   { id: 'cockpit', label: 'Cockpit', area: 'A', status: 'neu', note: 'Grundgerüst: Anmeldung, Laden, Stand der Übertragung' },
-  { id: 'kunden', label: 'Kunden', area: 'B', status: 'alt', legacy: 'kunden', note: 'Kundenakte, Einwilligungen, Auskunft, Löschen' },
+  { id: 'kunden', label: 'Kunden', area: 'B', status: 'neu', legacy: 'kunden', note: 'Liste, Suche, Firmen, Ansprechpartner, Wiedervorlagen, Räder, Aufträge – vorerst nur lesen' },
   { id: 'pass', label: 'Fahrradpass', area: 'C', status: 'alt', legacy: 'fahrraeder', note: 'Läuft auf eigenen Tabellen und bleibt erhalten' },
   { id: 'werkstatt', label: 'Werkstatt', area: 'D', status: 'alt', legacy: 'werkstatt', note: 'Annahme, Aufträge, Kostenvoranschlag, Checklisten, Preisliste' },
   { id: 'fitting', label: 'Bikefitting', area: 'E', status: 'alt', legacy: 'sitzung', note: 'Wird als letztes übertragen, Ablauf bleibt gleich' },

@@ -31,3 +31,6 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body)}
   .np-brand{display:none}.np-foot{flex-direction:row;margin:0;padding:0}
   .np-nav{white-space:nowrap}
 }
+.np-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.np-tools .input{flex:1;min-width:200px}
+.np-seg{display:flex;gap:6px}.np-row{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:12px 16px;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;font:inherit;cursor:pointer}
+.np-grow{flex:1;min-width:0}.np-chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.np-gap{gap:14px;display:flex;flex-direction:column}.np-h2{margin:0 0 8px}

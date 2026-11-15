@@ -79,3 +79,16 @@ export async function legacyCounts(tenant: string) {
   const n = (x: unknown) => (Array.isArray(x) ? x.length : 0);
   return { version: r.version as number, updated: r.updated_at as string, customers: n(r.customers), bikes: n(r.bikes), workshop: n(r.workshop), invoices: n(r.invoices) };
 }
+
+// Bisheriger Speicher: Kunden, Räder, Aufträge, Rechnungen lesen (nur lesen, bis die Tabellen aktiv sind)
+export type LegacyCustomer = { id: string; name: string; email?: string; phone?: string; kind?: string; company?: string; vatId?: string; address?: string;
+  contacts?: { name?: string; role?: string; phone?: string; email?: string }[]; wv?: { id: string; due: string; text: string; done?: string }[]; consent?: boolean; since?: string; discipline?: string; invAddr?: { company?: string } };
+export type LegacyBike = { id: string; customerId: string; brand?: string; model?: string; type?: string; size?: string; qr?: { code?: string } };
+export type LegacyWO = { id: string; customerId: string; bikeId?: string; title: string; status: string; due?: string };
+export type LegacyInvoice = { id: string; no?: string; customerId?: string; date?: string; type?: string };
+export async function legacyData(tenant: string) {
+  const rows = await select<any>('tenant_state', `tenant_id=eq.${encodeURIComponent(tenant)}&select=version,updated_at,customers:data->customers,bikes:data->bikes,workshop:data->workshop,invoices:data->invoices`);
+  const r = rows[0]; if (!r) return null;
+  const a = <T,>(x: unknown) => (Array.isArray(x) ? (x as T[]) : []);
+  return { version: r.version as number, customers: a<LegacyCustomer>(r.customers), bikes: a<LegacyBike>(r.bikes), workshop: a<LegacyWO>(r.workshop), invoices: a<LegacyInvoice>(r.invoices) };
+}

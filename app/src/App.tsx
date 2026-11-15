@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { loadSession, sendCode, verifyCode, logout, myMemberships, legacyCounts, Membership } from './lib/api';
 import { MODULES, STATUS_TEXT, Mod } from './modules/registry';
+import Kunden from './modules/Kunden';
 
 const LEGACY_APP = '../index.html';
 const chip = (s: Mod['status']) => (s === 'neu' ? 'c-ok' : s === 'alt' ? 'c-acc' : 'c-bad');
@@ -83,7 +84,7 @@ export default function App() {
         {err ? <div className="notice"><span>{err}</span></div> :
           mem === null ? <p className="muted">Lade …</p> :
             !m ? <div className="panel np-pad"><h2>Noch kein Laden</h2><p>Dein Konto gehört noch zu keinem Laden. Bitte zuerst in der bisherigen App unter „Mehr → Cloud-Speicherung“ einrichten oder dich einladen lassen.</p><a className="btn primary" href={LEGACY_APP}>Zur bisherigen App</a></div> :
-              mod.id === 'cockpit' ? <Cockpit m={m} /> : <ModPage mod={mod} />}
+              mod.id === 'cockpit' ? <Cockpit m={m} /> : mod.id === 'kunden' ? <Kunden tenant={m.tenant_id} legacyApp={LEGACY_APP} /> : <ModPage mod={mod} />}
       </main>
     </div>
   );
