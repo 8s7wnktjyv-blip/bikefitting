@@ -594,7 +594,7 @@ function toolService(code){ const name=bikeName(code);
     r.querySelector('#skb').onclick=()=>{ const v=dnum(val(r,'sk')); if(v==null||v<0) return toast('Bitte km eingeben'); const o=X(code); o.km=Math.round(v); o.kmAt=today(); o.kmLog=(o.kmLog||[]).concat([{d:today(),km:o.km,src:'manuell'}]).slice(-300); Xset(code,o); toast('Gespeichert'); render(r); };
     r.querySelectorAll('[data-done]').forEach(b=>b.onclick=()=>{ const o=X(code); o.svc=o.svc||{}; o.svc[b.dataset.done]={d:today(),km:curKm(code)}; Xset(code,o); toast('Erledigt eingetragen'); render(r); });
     r.querySelectorAll('[data-cal]').forEach(b=>b.onclick=()=>{ const i=s.find(z=>z.k===b.dataset.cal); calAdd({date:i.st==='due'?today():i.due,title:`${i.t} – ${name}`,text:i.h+'\n'+passLink(code)},'FYF-'+i.k); });
-    r.querySelector('#calAll').onclick=()=>icsFile(s.map(i=>({date:i.st==='due'?today():i.due,title:`${i.t} – ${name}`,text:i.h+'\n'+passLink(code)})),'FYF-Erinnerungen'); };
+    r.querySelector('#calAll').onclick=()=>icsFile(calEvents(code),'FYF-Erinnerungen'); };
   page('Service',``,(r)=>render(r)); }
 
 // ---------- 2) Sitzposition ----------
@@ -1556,6 +1556,14 @@ function wsHtml(P){ const L=(P.workshop||[]).filter(w=>w&&w.status&&w.status!=='
       ${st==='Wartet auf Teile'?'<p class="muted small" style="margin:6px 0 0">Es fehlen noch Teile. Der Laden meldet sich, sobald sie da sind.</p>':''}</div>`; }).join(''); }
 { const SHw=show; show=async function(code){ const r=await SHw.apply(this,arguments); try{ const P=Pof(code); if(!mine().some(m=>m.code===code)||document.querySelector('[data-ws]')) return r; const h=wsHtml(P); if(!h) return r; const a=document.querySelector('#app .hero'); if(a) a.insertAdjacentHTML('afterend',h); }catch(e){} return r; }; }
 GUIDE.push(['Werkstatt-Status','<p>Ist dein Rad in einer FYF-Werkstatt, siehst du oben auf der Radseite den Stand: angenommen, in Arbeit, abholbereit – und ob der Laden auf deine Freigabe wartet. Das sieht nur, wer den Besitzer-Code (Teil II) auf dem Handy hat.</p>']);
+/* ===== Kalender: alle Erinnerungen (Richtwerte + Plan der Werkstatt), auch für alle Räder auf einmal ===== */
+function calEvents(code){ const name=bikeName(code), link=passLink(code);
+  return [...svcState(code).map(i=>({date:i.st==='due'?today():i.due,title:`${i.t} – ${name}`,text:i.h+'\n'+link})),
+          ...shopPlan(code).map(i=>({date:i.st==='due'?today():i.next,title:`${i.t} – ${name} (Plan der Werkstatt)`,text:'Von deiner Werkstatt geplant.'+(i.interval?' Intervall: '+i.interval+'.':'')+'\n'+link}))]; }
+{ const DU2=dataUi; dataUi=function(){ DU2.apply(this,arguments); const h=document.getElementById('dataHost'); if(!h||!mine().length||h.querySelector('[data-calg]')) return; const all=mine().flatMap(m=>{ try{ return calEvents(m.code); }catch(e){ return []; } }); if(!all.length) return;
+  const due=all.filter(e=>e.date<=today()).length; const d=document.createElement('div'); d.className='card'; d.setAttribute('data-calg',''); d.style.marginTop='12px';
+  d.innerHTML=`<b>Erinnerungen</b><p class="muted small" style="margin:4px 0 10px">${all.length} Termine für ${mine().length} Rad/Räder${due?`, davon ${due} jetzt fällig`:''}. Einmal in den Kalender – das iPhone erinnert dich dann am Tag um 9 Uhr.</p><button class="btn ghost block" type="button">Alle in den Kalender</button>`;
+  d.querySelector('button').onclick=()=>icsFile(all,'FYF-Erinnerungen-Garage'); const va=h.firstElementChild; if(va) va.after(d); else h.prepend(d); }; }
 function route(){ scrollTo(0,0); document.querySelectorAll('.sheet,.tpage,.scanner').forEach(e=>{ if(e.querySelector('video')&&e.querySelector('video').srcObject) e.querySelector('video').srcObject.getTracks().forEach(t=>t.stop()); e.remove(); }); document.body.style.overflow=''; const h=new URLSearchParams((location.hash||'').slice(1)); const c=norm(h.get('c')); if(h.get('import')){ tabs('meine'); askForm(''); importSheet(String(h.get('import')).split(/[.,]/)); return; } if(h.get('claim')){ const [cc,tk]=String(h.get('claim')).split('.'); tabs('meine'); askForm(''); claimSheet(norm(cc),String(tk||'')); return; } tabs(c?(mine().some(m=>m.code===c)?'meine':'pruefen'):(/pruefen/.test(location.hash)?'pruefen':'meine')); if(c) show(c); else askForm(''); }
 window.addEventListener('hashchange',route); route();
 if(/(^|[#&])bestellt=1/.test(location.hash)) thanksSheet();
