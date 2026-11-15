@@ -13,9 +13,14 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FYF">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..800&family=Figtree:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="preload" href="fonts/figtree.woff" as="font" type="font/woff" crossorigin>
+<style>
+/* Schriften liegen auf dem eigenen Server (keine Verbindung zu Google, DSGVO). Lizenz: SIL OFL, siehe fonts/OFL-*.txt */
+@font-face{font-family:"Figtree";src:url(fonts/figtree.woff) format("woff");font-weight:300 900;font-display:swap}
+@font-face{font-family:"Archivo";src:url(fonts/archivo.woff) format("woff");font-weight:100 900;font-stretch:62% 125%;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url(fonts/plexmono-400.woff) format("woff");font-weight:400;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url(fonts/plexmono-500.woff) format("woff");font-weight:500;font-display:swap}
+</style>
 <style>
 /* Layout: freundliche Werkbank – helle Karten auf warmem Grund, 5 Hauptbereiche, Fitting als geführter Ablauf in Schritten */
 :root{
@@ -868,7 +873,7 @@ const MK = {
   pelvisRock:{label:'Becken kippt (von vorn)',unit:'°',group:'Bewegung',def:'Seitliches Kippen der Hüfte pro Umdrehung'}
 };
 const REQUIRED = ['saddleHeight','saddleSetback','reach','drop','crankLength','cleatFore']; // Kurbel meist vom Hersteller
-const METHODS = ['Maßband','Laser-Wasserwaage','Digitaler Winkelmesser','Goniometer','2D-Video (unkalibriert)','2D-Video (kalibriert)','2D-Video live (automatisch)','Herstellerangabe','Berechnet','CleatLab (Prototyp, nicht validiert)'];
+const METHODS = ['Maßband','Laser-Wasserwaage','Digitaler Winkelmesser','Goniometer','2D-Video (unkalibriert)','2D-Video (kalibriert)','2D-Video live (automatisch)','2D-Foto mit Messzeichen (Beta)','Herstellerangabe','Berechnet','CleatLab (Prototyp, nicht validiert)'];
 const SOURCES = ['gemessen','vom Hersteller','manuell eingegeben','berechnet','geschätzt'];
 const mv = (key,value,method,source,unc) => ({key,value,method,source:source||'gemessen',unc:unc??null,time:''});
 
@@ -1727,7 +1732,13 @@ const GEO=[
   ['56',565,392,559,524,73.5,72.3,165,410,1000,69,797,110,410,172.5],['58',584,401,574,545,73.5,72.3,184,410,1015,69,817,110,410,175],['61',608,409,589,574,73.5,72.3,210,410,1030,69,843,120,430,175]]},
  {id:'focus-izalco-max',brand:'Focus',model:'Izalco Max',year:2025,type:'Rennrad',src:'https://www.focus-bikes.com/int/izalco-max-8-9',rows:[
   ['XXS',500,370,505,455,75,70,90,410,975,72,746,80,380,165],['XS',513,375,517,475,74.5,71,100,410,976,72,762,90,380,165],['S',531,378,530,495,74,72,115,410,975,72,778,100,380,170],['M',552,380,543,515,73.5,72.5,135,410,979,72,795,110,400,170],
-  ['L',571,399,568,535,73.5,72.5,155,410,1004,72,814,110,400,170],['XL',592,401,582,555,73,73,175,410,1008,72,835,120,420,172.5],['XXL',611,420,607,585,73,73,195,410,1033,72,857,120,420,175]]}
+  ['L',571,399,568,535,73.5,72.5,155,410,1004,72,814,110,400,170],['XL',592,401,582,555,73,73,175,410,1008,72,835,120,420,172.5],['XXL',611,420,607,585,73,73,195,410,1033,72,857,120,420,175]]},
+ {id:'bxt-gravel-135',brand:'BXT',model:'Gravel 135 (Rahmen)',year:2025,type:'Gravel',src:'https://bikeinsights.com/bikes/634540af519a28001cd467b9-bxt-bxt-gravel-135',note:'Quelle: Bike Insights (Nutzerdaten, keine Herstellerseite). Nur Rahmen: Vorbau und Lenker je nach Aufbau. Sitzrohr = Mitte–Oberkante. Bitte am eigenen Rahmen nachmessen.',rows:[
+  ['49',519,374,518,477,74.5,70,95,435,1020,71,_,_,_,170],['52',544,378,535,507,74,70,122,435,1033,71,_,_,_,170],['54',565,387,555,528,73.5,71,140,435,1039,71,_,_,_,170],['56',590,398,579,546,73,71,166,435,1059,71,_,_,_,170],['58',610,406,593,566,73,71,187,435,1074,71,_,_,_,170]]},
+ {id:'bombtrack-beyond-al',brand:'Bombtrack',model:'Beyond AL',year:2025,type:'Gravel',src:'https://www.bombtrack.com/my25/complete-bikes/beyond-al-sword',note:'Herstellerangaben (Beyond AL Sword, MY25). Größe S mit 27,5"-Laufrädern, M–XL 29". Oberrohr = horizontal. Lenker = Breite unten (Drops), Flare 25°.',rows:[
+  ['S',569,382,546,440,74,70,140,420,1040,60,775,50,420,170],['M',604,394,567,480,74,70.5,160,445,1077,74,821,50,440,170],['L',642,413,597,520,74,70.5,200,445,1109,74,859,80,440,175],['XL',670,434,626,560,74,70.5,230,445,1140,74,893,80,440,175]]},
+ {id:'radon-spire-2015',brand:'Radon',model:'Spire 7.0',year:2015,type:'Rennrad',src:'https://bikeinsights.com/bike-geometries/6599d0a4d71eb6001b3bd3da-2014-radon-bikes-spire-70-se-56cm',note:'Nur Größe 56 gefunden, Daten vom Modell 2014 (Spire 7.0 SE, Bike Insights). Ob 2015 gleich ist, ist nicht geprüft. Radon-Rahmen fallen laut TOUR eher klein aus. Andere Größen bitte am Rad messen.',rows:[
+  ['56',545,387,545,540,73.5,72.5,145,405,981,67,765,_,420,172.5]]}
 ];
 const geoAll=()=>[...GEO.map(g=>({...g,own:false})),...(S.geoCustom||[]).map(g=>({...g,own:true}))];
 const geoById=id=>geoAll().find(g=>g.id===id);
@@ -1947,7 +1958,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-15.106';
+const APP_VER='2026-11-15.108';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2387,6 +2398,7 @@ function qualityRaw(s){
     if(m.source==='geschätzt') out.push(['info',`${MK[m.key].label} (${side==='before'?'vorher':'nachher'}) ist geschätzt, keine reproduzierbare Messung`,m.method]);
     if(m.source==='gemessen' && (m.unc===null||m.unc===undefined) && !/Herstellerangabe/.test(m.method)) out.push(['info',`Messunsicherheit fehlt: ${MK[m.key].label}`,m.method]);
     if(/unkalibriert/.test(m.method)) out.push(['warn',`${MK[m.key].label}: Video nicht kalibriert, Winkel nur als Orientierung`,m.method]);
+    if(/Foto mit Messzeichen/.test(m.method)) out.push(['info',`${MK[m.key].label}: per Foto gemessen (Beta, Genauigkeit nicht geprüft) – mit Maßband gegenprüfen`,m.method]);
   }));
   Object.keys(s.after).forEach(k=>{ const b=s.before[k], a=s.after[k]; if(b && a && b.method!==a.method && !/Eingestellt nach Plan|Berechnet/.test(a.method)) out.push(['warn',`${MK[k].label}: Vorher und nachher mit unterschiedlicher Methode gemessen`,`${b.method} → ${a.method}`]); });
   if(s.status!=='geplant'&&!Object.keys(s.check||{}).length) out.push(['warn','Körpercheck nicht durchgeführt','Schritt Körpercheck']);
@@ -3537,6 +3549,7 @@ SESSTAB.ausgang0 = s => {
   return `<div class="stack">
   <p class="onlyline">Miss das Rad so, wie die Person es mitgebracht hat. ${MEASURE_NOW.length} Punkte, je mit Skizze und Anleitung.</p>
   ${trainerHtml(s)}
+  ${krPanel(s)}
   <div class="statusbox ${done===MEASURE_NOW.length?'ok':''}"><div style="flex:1;min-width:0"><b>${done===MEASURE_NOW.length?'Alle Pflichtwerte erfasst':'Noch '+(MEASURE_NOW.length-done)+' Werte offen'}</b>${mk&&fromMaker.length?`<span class="muted" style="font-size:14px">${fromMaker.length} Serienwerte vom Hersteller übernommen</span>`:''}</div><span class="num" style="font-weight:700">${done}/${MEASURE_NOW.length}</span></div>
   ${bodySetupHtml(s)}
   ${startBtn(first,done,first>=0?MK[MEASURE_NOW[first]].label:'')}
@@ -3546,6 +3559,7 @@ SESSTAB.ausgang0 = s => {
   <p class="faint" style="font-size:12.5px">✓✓ = doppelt gemessen. Die Koordinaten prüfen die anderen Werte gegen und machen die 1:1-Übertragung auf ein neues Rad möglich.</p>
   ${mk?(fromMaker.length?`<details class="more"><summary>Vom Hersteller: ${esc(mk.g.brand+' '+mk.g.model)}, ${esc(mk.r.size)}</summary><table style="margin-top:6px"><tbody>${fromMaker.map(k=>`<tr><td>${MK[k].label}</td><td class="r num">${fmtNum(s.before[k].value)} ${MK[k].unit}</td><td class="r"><button class="btn sm ghost" data-act="editMaker" data-k="${k}">Ändern</button></td></tr>`).join('')}</tbody></table><p class="faint" style="font-size:12.5px">Serienausstattung. Wurde etwas getauscht, tippe auf „Ändern“.</p></details>`:`<button class="btn" data-act="applyMaker" data-id="${s.id}">Serienwerte vom Hersteller übernehmen</button>`)
     :`<div class="statusbox"><div style="flex:1;min-width:0"><b>Kein Modell zugeordnet</b><span class="muted" style="font-size:14px">Dann übernimmt die App Vorbau, Lenker und Kurbel automatisch.</span></div><button class="btn sm" data-act="bikeGeo" data-id="${b.id}">Zuordnen</button></div>`}
+  <details class="more" ${fm.src?'open':''}><summary>Rad per Foto vermessen (Beta)</summary><div style="margin-top:10px">${fotoMessPanel(s,'before')}</div></details>
   <details class="more" ${vid.src?'open':''}><summary>Kniewinkel, Hüftwinkel und Knielot per Kamera messen</summary><div style="margin-top:10px">${vidPanel(s,'before')}</div></details>
   <details class="more" ${ui.editMaker?'open':''}><summary>Weitere Messpunkte (optional)</summary><div class="stack" style="margin-top:10px">
     ${[...(ui.editMaker?[ui.editMaker]:[]),...optional.filter(k=>k!==ui.editMaker),...fromMaker.filter(k=>k!==ui.editMaker)].map(k=>measureCard(s,'before',k,c,b)).join('')}
@@ -4236,6 +4250,7 @@ SESSTAB.anpassung = s => { if(s.plan&&ui.adjIdx!=null) return guidedHtml(s); con
   const card=x=>`<div class="card"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal;font-size:14px">${esc(x.how)}</div><details class="more" style="margin-top:4px"><summary style="font-size:13px">Warum?</summary><p class="muted" style="font-size:13.5px">${esc(x.why)}</p></details>${(()=>{ const q=pp.find(y=>y.key===x.key); return q?`<details class="more" style="margin-top:2px"><summary style="font-size:13px">Kunde will keine neuen Teile?</summary><ul class="muted" style="font-size:13.5px;margin:4px 0 0;padding-left:18px">${q.noParts.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>${q.parts.length?`<p class="muted" style="font-size:13.5px;margin-top:4px"><b>Mit Teilen:</b> ${q.parts.map(esc).join(' ')}</p>`:''}</details>`:''; })()}</div>${x.key?`<button class="btn sm primary" data-act="prepChange" data-key="${x.key}" data-v="${x.v??''}" data-reason="${esc(x.reason||x.title)}">Ändern</button>`:''}</div>`;
   return `<div class="stack">
   ${guidedHtml(s)}
+  ${krPanel(s)}
   ${checksHtml(s,true)}
   ${top.length?`<div><div class="label" style="margin-bottom:8px">Weitere Hinweise ${st('s')}</div><div class="sugg">${top.map(card).join('')}</div>${rest.length?`<details class="more" style="margin-top:8px"><summary>${rest.length} weitere Vorschläge</summary><div class="sugg" style="margin-top:8px">${rest.map(card).join('')}</div></details>`:''}</div>`:computePlan(s).steps.length?'':'<div class="statusbox"><div><b>Keine Vorschläge</b><span class="muted" style="font-size:14px">Trag Beschwerden im Schritt „Ziel“ ein oder miss den Kniewinkel.</span></div></div>'}
   <details class="more" ${ui.prepKey?'open':''}><summary>Alle Empfehlungen als Liste, selbst eintragen, Verlauf</summary><div class="stack" style="margin-top:10px">
@@ -4914,6 +4929,180 @@ function vidPanel(s,side){
     </div></div>`,st('i'));
 }
 
+/* ---------- Fitting-Fahrprogramm: Rolle (FTMS, z. B. KICKR) per Bluetooth steuern – nur Chrome am Computer ---------- */
+/* RIDE-CALC-START */
+function ftmsParse(b){ // Indoor Bike Data (0x2AD2), b = Array/Uint8Array
+  if(!b||b.length<2) return null; const f=b[0]|(b[1]<<8); let i=2; const u16=()=>{ const v=b[i]|(b[i+1]<<8); i+=2; return v; }, s16=()=>{ const v=u16(); return v>32767?v-65536:v; };
+  const o={}; if(!(f&1)){ if(i+2>b.length) return o; o.speed=u16()/100; }
+  if(f&2) i+=2; if(f&4){ if(i+2>b.length) return o; o.cad=u16()/2; } if(f&8) i+=2; if(f&16) i+=3; if(f&32) i+=2;
+  if(f&64){ if(i+2>b.length) return o; o.power=s16(); } return o; }
+function ftmsTarget(w){ const v=Math.max(0,Math.min(2000,Math.round(w))); return [0x05,v&255,(v>>8)&255]; }
+function ridePlan(messW,maxW){ const m=Math.max(50,Math.min(maxW||300,Math.round(messW||150))); const r=x=>Math.round(x/5)*5;
+  return [{n:'Einfahren',sec:300,w:r(m*0.8),k:'warm'},{n:'Messung',sec:120,w:m,k:'mess'},{n:'Ausfahren',sec:120,w:r(m*0.65),k:'cool'}]; }
+function rideAfterChange(messW){ return [{n:'Eingewöhnen nach Änderung',sec:60,w:messW,k:'warm'},{n:'Messung nach Änderung',sec:120,w:messW,k:'mess'}]; }
+function rideAvg(samples){ const ok=(samples||[]).filter(x=>x&&x.cad>20&&x.power!=null); if(!ok.length) return null;
+  const a=k=>Math.round(ok.reduce((s,x)=>s+x[k],0)/ok.length); return {power:a('power'),cad:a('cad'),n:ok.length}; }
+/* RIDE-CALC-END */
+const kr={dev:null,cp:null,on:false,power:null,cad:null,prog:null,idx:0,t:0,paused:false,timer:null,samples:[],sid:null,status:'',ctrl:false};
+function krMax(){ return Number((S.settings||{}).krMax)||300; }
+function krMess(){ return Number((S.settings||{}).krMess)||150; }
+const krTime=sec=>`${Math.floor(sec/60)}:${String(Math.max(0,Math.floor(sec%60))).padStart(2,'0')}`;
+function krPanel(s){
+  const bt=typeof navigator!=='undefined'&&!!navigator.bluetooth; const P=kr.prog, st=P&&P[kr.idx];
+  return `<details class="more" id="krPanel" ${kr.on||ui.krOpen?'open':''}><summary>Rolle steuern: Fitting-Fahrprogramm (Beta)</summary><div class="stack" style="margin-top:10px">
+  ${!bt?`<div class="statusbox"><div style="flex:1;min-width:0"><b>Hier nicht möglich</b><span class="muted" style="font-size:14px">Webseiten dürfen auf iPhone und iPad (und in Safari) kein Bluetooth nutzen. Öffne FYF am Computer in <b>Chrome</b> (z. B. iMac) und verbinde dort die Rolle.</span></div></div>`:`
+  <p class="muted" style="font-size:14px;margin:0">Hält die Rolle auf fester Leistung (ERG), damit jede Messung vorher/nachher unter gleicher Last läuft. Gang und Trittfrequenz ändern die Watt nicht. Andere Apps (Wahoo, Zwift, MyWhoosh) vorher schließen.</p>
+  <div class="row" style="align-items:flex-end">
+    ${kr.on?`<span class="chip nodot c-ok">verbunden: ${esc(kr.dev&&kr.dev.name||'Rolle')}</span><button class="btn sm ghost" data-act="krOff">Trennen</button>`:`<button class="btn primary" data-act="krConnect">Rolle verbinden</button>`}
+    <div class="field" style="width:130px"><label for="krMess">Mess-Last (W)</label><input class="input num" id="krMess" type="number" min="50" max="${krMax()}" step="5" value="${krMess()}" data-change="krMess"></div>
+    <div class="field" style="width:130px"><label for="krMax">Höchstwert (W)</label><input class="input num" id="krMax" type="number" min="100" max="1000" step="10" value="${krMax()}" data-change="krMax"></div></div>
+  <div class="krbig" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+    <div class="statusbox" style="display:block"><span class="muted" style="font-size:13px">Leistung</span><div class="num" style="font-size:40px;font-weight:700;line-height:1.1"><span id="krW">${kr.power??'–'}</span> <span style="font-size:18px">W</span></div><span class="faint" style="font-size:13px">Soll <span id="krTgt">${st?st.w:'–'}</span> W</span></div>
+    <div class="statusbox" style="display:block"><span class="muted" style="font-size:13px">Trittfrequenz</span><div class="num" style="font-size:40px;font-weight:700;line-height:1.1"><span id="krCad">${kr.cad??'–'}</span> <span style="font-size:18px">U/min</span></div><span class="faint" style="font-size:13px" id="krStat">${esc(kr.status||'')}</span></div></div>
+  <div class="statusbox ${st&&st.k==='mess'?'ok':''}" id="krStepBox"><div style="flex:1;min-width:0"><b id="krStep">${st?esc(st.n)+(kr.paused?' · Pause':''):P?'Programm beendet':'Kein Programm aktiv'}</b><span class="muted" style="font-size:14px" id="krLeft">${st?'noch '+krTime(st.sec-kr.t)+(P[kr.idx+1]?' · danach: '+esc(P[kr.idx+1].n)+' '+P[kr.idx+1].w+' W':''):'Einfahren → Messung → Ausfahren'}</span></div></div>
+  <div class="row">
+    ${!P||!st?`<button class="btn primary" data-act="krStart" data-id="${s.id}" ${kr.on?'':'disabled'}>Programm starten</button>`:`
+    <button class="btn" data-act="krPause">${kr.paused?'Weiter':'Pause'}</button><button class="btn" data-act="krNext">Stufe überspringen</button><button class="btn sm" data-act="krAdj" data-d="-10">−10 W</button><button class="btn sm" data-act="krAdj" data-d="10">+10 W</button><button class="btn danger" data-act="krStop">Stopp</button>`}
+    <button class="btn" data-act="krChange" data-id="${s.id}" ${kr.on?'':'disabled'}>Nach Änderung messen</button></div>
+  <p class="faint" style="font-size:12.5px;margin:0">Am Ende jeder Messstufe kommen Ø Watt und Ø Trittfrequenz als Notiz ins Fitting (erscheint im Bericht). Stopp, Trennen oder Verlassen der Seite gibt die Last sofort frei. Mit echter Rolle noch nicht getestet.</p>`}
+  </div></details>`;
+}
+function krUi(){ const P=kr.prog, st=P&&P[kr.idx], g=id=>document.getElementById(id);
+  if(g('krW')) g('krW').textContent=kr.power??'–'; if(g('krCad')) g('krCad').textContent=kr.cad??'–'; if(g('krTgt')) g('krTgt').textContent=st?st.w:'–'; if(g('krStat')) g('krStat').textContent=kr.status||'';
+  if(g('krStep')) g('krStep').textContent=st?st.n+(kr.paused?' · Pause':''):P?'Programm beendet':'Kein Programm aktiv';
+  if(g('krLeft')) g('krLeft').textContent=st?'noch '+krTime(st.sec-kr.t)+(P[kr.idx+1]?' · danach: '+P[kr.idx+1].n+' '+P[kr.idx+1].w+' W':''):'';
+  const bx=g('krStepBox'); if(bx) bx.className='statusbox'+(st&&st.k==='mess'?' ok':''); }
+async function krCp(bytes){ if(!kr.cp) throw new Error('Keine Steuerung'); const v=new Uint8Array(bytes); if(kr.cp.writeValueWithResponse) await kr.cp.writeValueWithResponse(v); else await kr.cp.writeValue(v); }
+async function krSetW(w){ const v=Math.min(krMax(),Math.max(0,w)); try{ if(!kr.ctrl){ await krCp([0x00]); kr.ctrl=true; await krCp([0x07]); } await krCp(ftmsTarget(v)); kr.status=''; }catch(e){ kr.status='Last setzen fehlgeschlagen'; } krUi(); }
+async function krRelease(){ try{ if(kr.cp&&kr.ctrl){ await krCp([0x08,0x01]); await krCp([0x01]); } }catch(e){} kr.ctrl=false; }
+async function krConnect(){
+  if(!navigator.bluetooth){ toast('Bluetooth geht nur in Chrome am Computer',true); return; }
+  try{ const dev=await navigator.bluetooth.requestDevice({filters:[{services:[0x1826]}]}); kr.dev=dev; dev.addEventListener('gattserverdisconnected',()=>{ kr.on=false; kr.cp=null; kr.ctrl=false; kr.power=null; kr.cad=null; if(kr.prog) krEnd('Verbindung getrennt – Programm gestoppt'); else { kr.status='getrennt'; render(); } });
+    kr.status='verbinde …'; krUi(); const gatt=await dev.gatt.connect(); const svc=await gatt.getPrimaryService(0x1826);
+    const data=await svc.getCharacteristic(0x2AD2); await data.startNotifications(); data.addEventListener('characteristicvaluechanged',e=>{ const d=e.target.value; const r=ftmsParse(new Uint8Array(d.buffer,d.byteOffset,d.byteLength)); if(!r) return; if(r.power!=null) kr.power=r.power; if(r.cad!=null) kr.cad=Math.round(r.cad); krUi(); });
+    try{ kr.cp=await svc.getCharacteristic(0x2AD9); await kr.cp.startNotifications(); }catch(e){ kr.cp=null; }
+    kr.on=true; kr.status=kr.cp?'':'Nur Anzeige – Rolle erlaubt keine Steuerung'; ui.krOpen=true; render(); toast('Rolle verbunden'); }
+  catch(e){ if(e&&e.name==='NotFoundError') return; kr.status=''; toast('Verbindung fehlgeschlagen: '+(e&&e.message||e),true); }
+}
+function krStep(){ const P=kr.prog; if(!P) return; const st=P[kr.idx]; if(!st){ krEnd('Programm beendet'); return; }
+  if(!kr.paused){ kr.t++; if(st.k==='mess') kr.samples.push({power:kr.power,cad:kr.cad}); }
+  if(kr.t>=st.sec) krAdvance(); else krUi(); }
+function krFinishStep(){ const P=kr.prog, st=P&&P[kr.idx]; if(!st||st.k!=='mess') return; const a=rideAvg(kr.samples); const s=sess(kr.sid); if(!s||!a) return;
+  const x=`Rolle: ${st.n} bei ${st.w} W (fest) · Ø ${a.power} W · Ø ${a.cad} U/min · ${krTime(kr.t)} Min.`; (s.liveNotes=s.liveNotes||[]).push({t:nowStamp(),x}); audit(x,s.id); save(); toast('Messstufe gespeichert'); }
+function krAdvance(){ krFinishStep(); kr.idx++; kr.t=0; kr.samples=[]; const st=kr.prog[kr.idx]; if(!st){ krEnd('Programm beendet'); return; } krSetW(st.w); krUi(); }
+function krEnd(msg){ clearInterval(kr.timer); kr.timer=null; krRelease(); kr.prog=null; kr.idx=0; kr.t=0; kr.samples=[]; kr.paused=false; kr.status=msg||''; if(msg) toast(msg); render(); }
+function krRun(sid,steps){ if(!kr.on){ toast('Erst Rolle verbinden',true); return; } if(!kr.cp){ toast('Diese Rolle erlaubt keine Steuerung – nur Anzeige',true); return; }
+  kr.sid=sid; kr.prog=steps; kr.idx=0; kr.t=0; kr.samples=[]; kr.paused=false; clearInterval(kr.timer); kr.timer=setInterval(krStep,1000); krSetW(steps[0].w); render(); }
+/* ---------- Foto-Messung: Rad per Foto mit Messzeichen vermessen (Beta, nicht validiert) ---------- */
+/* FOTO-CALC-START */
+const FM_PTS=[{k:'refA',l:'Messzeichen Anfang',s:'M1'},{k:'refB',l:'Messzeichen Ende',s:'M2'},{k:'bb',l:'Tretlagermitte',s:'TL'},{k:'floor',l:'Boden direkt unter dem Tretlager',s:'B'},{k:'saddle',l:'Sattel oben, Messpunkt der Sattelhöhe (Verlängerung Sitzrohr)',s:'S'},{k:'tip',l:'Sattelspitze',s:'SP'},{k:'bar',l:'Lenker oben, direkt neben dem Vorbau',s:'L'},{k:'hood',l:'Schalthebel oben, wo die Hand aufliegt (optional)',s:'SH',opt:1},{k:'h1',l:'Waagerechte Laserlinie, Punkt links (optional)',s:'W1',opt:1},{k:'h2',l:'Waagerechte Laserlinie, Punkt rechts (optional)',s:'W2',opt:1}];
+const FM_KEYS=['saddleHeight','saddleSetback','saddleFloor','bbHeight','barFloor','barX','drop','reach','hoodFloor','hoodX','saddleToHood'];
+function fotoCalc(P,refMm,opt){
+  opt=opt||{}; const need=['refA','refB','bb','saddle','tip','bar']; if(need.some(k=>!P[k])||!(refMm>0)) return null;
+  const d=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y); const refPx=d(P.refA,P.refB); if(refPx<1) return null;
+  const sc=refMm/refPx; let th=0; if(P.h1&&P.h2&&d(P.h1,P.h2)>1){ th=Math.atan2(P.h2.y-P.h1.y,P.h2.x-P.h1.x); if(th>Math.PI/2) th-=Math.PI; if(th<-Math.PI/2) th+=Math.PI; }
+  const c=Math.cos(th), s=Math.sin(th), o=P.bb;
+  const rot=p=>{ const dx=p.x-o.x, dy=p.y-o.y; return {x:dx*c+dy*s, y:-dx*s+dy*c}; };
+  const fwd=rot(P.bar).x<0?-1:1; const X=p=>rot(p).x*sc*fwd, Y=p=>-rot(p).y*sc; const r=v=>Math.round(v);
+  const v={}, warn=[];
+  v.saddleHeight=r(d(P.bb,P.saddle)*sc);
+  v.saddleSetback=r(-X(P.tip));
+  v.barX=r(X(P.bar));
+  v.drop=r(Y(P.saddle)-Y(P.bar));
+  v.reach=r(Math.hypot(X(P.bar)-X(P.tip),(Y(P.bar)-16)-Y(P.tip)));
+  if(P.floor){ const bb=-Y(P.floor); v.bbHeight=r(bb); v.saddleFloor=r(bb+Y(P.saddle)); v.barFloor=r(bb+Y(P.bar)); if(P.hood) v.hoodFloor=r(bb+Y(P.hood)); }
+  if(P.hood){ v.hoodX=r(X(P.hood)); v.saddleToHood=r(d(P.tip,P.hood)*sc); }
+  const rotDeg=Math.round(th*180/Math.PI*10)/10;
+  if(opt.imgW&&refPx<opt.imgW*0.15) warn.push('Das Messzeichen ist im Bild klein. Näher ran oder 2-fach-Zoom, sonst wird es ungenau.');
+  if(!(P.h1&&P.h2)) warn.push('Ohne waagerechte Laserlinie muss das iPhone genau gerade stehen (vorher „Ausrichtung prüfen“).');
+  else if(Math.abs(rotDeg)>0.2) warn.push(`Das Bild war um ${String(Math.abs(rotDeg)).replace('.',',')}° schief. FYF hat es über die Laserlinie ausgeglichen.`);
+  if(v.saddleHeight<450||v.saddleHeight>1000) warn.push('Sattelhöhe unplausibel – Länge des Messzeichens und die angetippten Punkte prüfen.');
+  if(v.bbHeight!=null&&(v.bbHeight<150||v.bbHeight>450)) warn.push('Tretlagerhöhe unplausibel – Bodenpunkt prüfen.');
+  const unc=Math.max(3,Math.round((opt.tapPx||3)*sc*1.5));
+  return {sc,rotDeg,fwd,vals:v,warn,unc};
+}
+/* FOTO-CALC-END */
+const FM_METHOD='2D-Foto mit Messzeichen (Beta)';
+const fm={src:null,pts:{},order:[],skip:{},drag:null,fine:null,loupe:null,w:0,h:0,lvl:[],lvlOn:false};
+let fmImg=null;
+function fmRef(){ return Number((S.settings||{}).fmRef)||300; }
+function fmNext(){ return FM_PTS.find(p=>!fm.pts[p.k]&&!fm.skip[p.k])||null; }
+function fmCalcNow(){ const cv=document.getElementById('fmCanvas'); const tapPx=cv&&cv.clientWidth?0.5*cv.width/cv.clientWidth:1; /* nach Feinjustieren (4× langsamer) ca. ½ Bildschirmpunkt */ return fotoCalc(fm.pts,fmRef(),{imgW:fm.w,tapPx}); }
+function fotoMessPanel(s,side){
+  const nx=fmNext();
+  return `<div class="stack">
+    <p class="muted" style="font-size:14px">Ein Foto vom Rad, ohne Person. Du tippst die Punkte an, FYF rechnet bis zu ${FM_KEYS.length} Werte. <b>Beta:</b> Genauigkeit noch nicht geprüft – bitte mit dem Maßband gegenprüfen.</p>
+    <details class="more" ${fm.src?'':'open'}><summary>So machst du das Foto</summary><ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">
+      <li>Messzeichen mit bekannter Länge (z. B. Lineal 300 mm) <b>in der Mitte des Rads</b> befestigen, z. B. mit Klett am Oberrohr. Nicht seitlich daneben.</li>
+      <li>iPhone quer aufs Stativ, ca. 2 m seitlich, auf Höhe der Radmitte, genau rechtwinklig zum Rad. 2-fach-Zoom verringert Verzerrung.</li>
+      <li>„Ausrichtung prüfen“: beide Werte unter 1°. Besser noch: waagerechte Laserlinie des Kreuzlasers sichtbar im Bild.</li>
+      <li>Ganzes Rad mit Boden unter dem Tretlager im Bild. Kurbel in Verlängerung des Sitzrohrs ist nicht nötig.</li></ol></details>
+    <div class="row"><button class="btn sm" data-act="fmLevel">${ic('fit')}Ausrichtung prüfen</button><span id="fmLevel" class="chip nodot">${fm.lvlOn?'misst …':'iPhone aufs Stativ, dann tippen'}</span></div>
+    <div class="row" style="align-items:flex-end"><div class="field" style="width:170px"><label for="fmRef">Länge Messzeichen (mm)</label><input class="input num" id="fmRef" type="number" min="50" max="2000" step="0.5" inputmode="decimal" value="${fmRef()}" data-change="fmRef"></div>
+      <label class="btn" for="fmCam">${ic('camera')}Foto aufnehmen</label><input class="vh" type="file" id="fmCam" accept="image/*" capture="environment" data-change="fmFile"><label class="btn" for="fmLib">Aus Mediathek</label><input class="vh" type="file" id="fmLib" accept="image/*" data-change="fmFile"></div>
+    <div class="stack" ${fm.src?'':'hidden'}>
+      <div class="statusbox"><div style="flex:1;min-width:0"><b id="fmNext">${nx?'Tippe: '+esc(nx.l):'Alle Punkte gesetzt'}</b><span class="muted" style="font-size:13.5px">Erst grob antippen, dann den Punkt zum Feinjustieren verschieben – er bewegt sich 4× langsamer als der Finger. Die Lupe zeigt die Stelle vergrößert.</span></div></div>
+      <canvas id="fmCanvas" style="width:100%;max-width:100%;border-radius:10px;background:#000;touch-action:none;cursor:crosshair" aria-label="Foto zum Antippen der Messpunkte"></canvas>
+      <div class="row"><button class="btn sm" data-act="fmUndo">Letzten Punkt löschen</button><button class="btn sm" data-act="fmSkip" ${nx&&nx.opt?'':'hidden'} id="fmSkipBtn">Überspringen</button><button class="btn sm ghost" data-act="fmReset">Alle Punkte neu</button></div>
+      <div class="row"><select class="input" style="width:auto" id="fmSide" aria-label="Speichern als" data-change="fmSide"><option value="before">als Ausgangswert</option><option value="after" ${side==='after'?'selected':''}>als Endwert</option></select></div>
+      <div id="fmOut"></div>
+      <p class="faint" style="font-size:12.5px">Gespeichert wird als „${FM_METHOD}“ mit Unsicherheit. Vorhandene Werte werden nur ersetzt, wenn du sie anhakst. Das Foto mit den Punkten kommt als Nachweis zur Sitzung (nur mit Foto-Einwilligung, bleibt auf dem Gerät).</p>
+    </div></div>`;
+}
+function fmDraw(){
+  const cv=document.getElementById('fmCanvas'); if(!cv||!fmImg||!fm.w) return;
+  if(cv.width!==fm.w) { cv.width=fm.w; cv.height=fm.h; }
+  const ctx=cv.getContext('2d'); ctx.drawImage(fmImg,0,0,fm.w,fm.h);
+  const r=Math.max(5,fm.w/170); ctx.lineWidth=Math.max(2,fm.w/500); ctx.font=`700 ${Math.round(r*2.6)}px Figtree, sans-serif`;
+  const P=fm.pts, line=(a,b,col,dash)=>{ if(!P[a]||!P[b]) return; ctx.strokeStyle=col; ctx.setLineDash(dash?[r*2,r*1.4]:[]); ctx.beginPath(); ctx.moveTo(P[a].x,P[a].y); ctx.lineTo(P[b].x,P[b].y); ctx.stroke(); ctx.setLineDash([]); };
+  line('refA','refB','#3fb6ff'); line('bb','saddle','#ff8030'); line('h1','h2','#2fd27a',true);
+  if(P.bb){ ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.setLineDash([r,r]); ctx.beginPath(); ctx.moveTo(P.bb.x,0); ctx.lineTo(P.bb.x,fm.h); ctx.stroke(); ctx.setLineDash([]); }
+  FM_PTS.forEach(p=>{ const q=P[p.k]; if(!q) return; const col=p.k.startsWith('ref')?'#3fb6ff':p.k.startsWith('h')?'#2fd27a':'#ff8030';
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(q.x,q.y,r,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=Math.max(1.5,r/3); ctx.stroke();
+    ctx.lineWidth=4; ctx.strokeStyle='rgba(0,0,0,.7)'; ctx.strokeText(p.s,q.x+r*1.5,q.y-r*1.2); ctx.fillStyle='#fff'; ctx.fillText(p.s,q.x+r*1.5,q.y-r*1.2); ctx.lineWidth=Math.max(2,fm.w/500); });
+  if(fm.loupe){ const L=fm.loupe, R=Math.round(fm.w*0.13), z=3, cx=L.x<fm.w/2?fm.w-R-10:R+10, cy=R+10;
+    ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.clip(); ctx.fillStyle='#000'; ctx.fillRect(cx-R,cy-R,2*R,2*R);
+    const sw=fmImg.naturalWidth/fm.w; ctx.drawImage(fmImg,(L.x-R/z)*sw,(L.y-R/z)*sw,(2*R/z)*sw,(2*R/z)*sw,cx-R,cy-R,2*R,2*R);
+    ctx.strokeStyle='#ff8030'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(cx-R,cy); ctx.lineTo(cx+R,cy); ctx.moveTo(cx,cy-R); ctx.lineTo(cx,cy+R); ctx.stroke(); ctx.restore();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke(); }
+}
+function fmUpdate(){
+  const nx=fmNext(), el=document.getElementById('fmNext'); if(el) el.textContent=nx?'Tippe: '+nx.l:'Alle Punkte gesetzt';
+  const sk=document.getElementById('fmSkipBtn'); if(sk) sk.hidden=!(nx&&nx.opt);
+  const out=document.getElementById('fmOut'); if(!out) return; const s=sess(ui.sess); const R=fmCalcNow();
+  if(!R){ out.innerHTML=`<div class="empty">Ergebnisse erscheinen, sobald Messzeichen, Tretlager, Sattel, Sattelspitze und Lenker gesetzt sind.</div>`; return; }
+  const side=(document.getElementById('fmSide')||{}).value||'before'; const rec=s?s[side]:{};
+  const rows=FM_KEYS.filter(k=>R.vals[k]!=null).map(k=>{ const cur=rec&&rec[k], dv=cur?Math.round((R.vals[k]-Number(cur.value))*10)/10:null, big=dv!=null&&Math.abs(dv)>5;
+    return `<tr><td><label class="row" style="flex-wrap:nowrap;gap:8px"><input type="checkbox" class="fmChk" value="${k}" ${cur?'':'checked'}><span>${MK[k].label}</span></label></td><td class="r num"><b>${fmtNum(R.vals[k])} ${MK[k].unit}</b></td><td class="r num">${cur?fmtNum(cur.value)+' '+MK[k].unit+`<div class="faint" style="font-size:11px">${esc(cur.method)}</div>`:'–'}</td><td class="r num">${dv==null?'–':`<span class="chip nodot ${big?'c-warn':''}">${dv>0?'+':''}${fmtNum(dv)}</span>`}</td></tr>`; }).join('');
+  out.innerHTML=`${R.warn.map(w=>`<div class="statusbox"><span style="font-size:14px">${esc(w)}</span></div>`).join('')}
+    <div class="tw"><table><thead><tr><th>Messpunkt</th><th class="r">Foto</th><th class="r">Vorhanden</th><th class="r">Abweichung</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="faint" style="font-size:12.5px">Maßstab ${fmtNum(Math.round(R.sc*100)/100)} mm pro Bildpunkt · Unsicherheit ca. ±${R.unc} mm (geschätzt aus Antipp-Genauigkeit, nicht geprüft). Mehr als 5 mm Abweichung zum vorhandenen Wert: Punkte prüfen.</p>
+    <button class="btn primary" data-act="fmSave" data-id="${s?s.id:''}">Angehakte Werte übernehmen</button>`;
+}
+function wireFm(){
+  const cv=document.getElementById('fmCanvas'); if(!cv) return;
+  const pos=e=>{ const rc=cv.getBoundingClientRect(); return {x:Math.max(0,Math.min(fm.w,(e.clientX-rc.left)*cv.width/rc.width)), y:Math.max(0,Math.min(fm.h,(e.clientY-rc.top)*cv.height/rc.height))}; };
+  cv.addEventListener('pointerdown',e=>{ if(!fm.w) return; const p=pos(e); const ratio=cv.width/Math.max(1,cv.clientWidth), hit=14*ratio;
+    let best=null, bd=1e9; Object.entries(fm.pts).forEach(([k,q])=>{ const dd=Math.hypot(q.x-p.x,q.y-p.y); if(dd<bd){ bd=dd; best=k; } });
+    if(best&&bd<hit){ fm.drag=best; fm.fine={x0:p.x,y0:p.y,px:fm.pts[best].x,py:fm.pts[best].y}; } else { const nx=fmNext(); if(!nx) return; fm.drag=nx.k; fm.order.push(nx.k); fm.fine=null; fm.pts[fm.drag]=p; }
+    fm.loupe=fm.pts[fm.drag]; try{ cv.setPointerCapture(e.pointerId); }catch(err){} e.preventDefault(); fmDraw(); });
+  cv.addEventListener('pointermove',e=>{ if(!fm.drag) return; const p=pos(e); const F=fm.fine; const q=F?{x:Math.max(0,Math.min(fm.w,F.px+(p.x-F.x0)/4)),y:Math.max(0,Math.min(fm.h,F.py+(p.y-F.y0)/4))}:p; fm.pts[fm.drag]=q; fm.loupe=q; fmDraw(); });
+  const up=()=>{ if(!fm.drag) return; fm.drag=null; fm.fine=null; fm.loupe=null; fmDraw(); fmUpdate(); };
+  cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up);
+  if(fm.src){ if(fmImg&&fmImg.complete&&fm.w){ fmDraw(); fmUpdate(); } }
+}
+function fmMotion(e){
+  const el=document.getElementById('fmLevel'); if(!el){ fmLevelStop(); return; }
+  const g=e.accelerationIncludingGravity; if(!g||g.x==null) return; const n=Math.hypot(g.x,g.y,g.z); if(n<1) return;
+  fm.lvl.push([g.x,g.y,g.z]); if(fm.lvl.length>20) fm.lvl.shift(); const m=[0,1,2].map(i=>fm.lvl.reduce((a,b)=>a+b[i],0)/fm.lvl.length); const nn=Math.hypot(...m);
+  const a=Math.atan2(m[0],m[1])*180/Math.PI; let dv=((a%90)+90)%90; if(dv>45) dv-=90; const pitch=Math.asin(Math.max(-1,Math.min(1,m[2]/nn)))*180/Math.PI;
+  const ok=Math.abs(dv)<1&&Math.abs(pitch)<1.5; el.className='chip nodot '+(ok?'c-ok':'c-warn');
+  el.textContent=`gedreht ${fmtNum(Math.round(Math.abs(dv)*10)/10)}° · nach vorn/hinten ${fmtNum(Math.round(Math.abs(pitch)*10)/10)}° ${ok?'– passt':'– nachjustieren'}`;
+}
+function fmLevelStop(){ if(fm.lvlOn){ window.removeEventListener('devicemotion',fmMotion); fm.lvlOn=false; fm.lvl=[]; } }
+async function fmLevelStart(){ try{ if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){ const r=await DeviceMotionEvent.requestPermission(); if(r!=='granted'){ toast('Zugriff auf den Lagesensor wurde nicht erlaubt',true); return; } }
+  if(!fm.lvlOn){ window.addEventListener('devicemotion',fmMotion); fm.lvlOn=true; } const el=document.getElementById('fmLevel'); if(el) el.textContent='misst …';
+  setTimeout(()=>{ if(!fm.lvl.length){ const x=document.getElementById('fmLevel'); if(x) x.textContent='kein Lagesensor (nur am iPhone/iPad)'; } },1500); }catch(e){ toast('Lagesensor nicht verfügbar',true); } }
 /* --- Live-Analyse: Punkte automatisch erkennen, Mittel über viele Kurbelumdrehungen --- */
 let poseVideoPromise=null, poseFullPromise=null;
 function loadPoseFull(){
@@ -4925,7 +5114,7 @@ function loadPoseFull(){
   poseFullPromise.catch(()=>{ poseFullPromise=null; }); return poseFullPromise; }
 /* ---------- Handy als Kamera: Video direkt vom iPhone zum PC (WebRTC), nichts wird gespeichert ---------- */
 function PEER_JS(){ return 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'; }
-function QR_JS(){ return 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'; }
+function QR_JS(){ return new URL('vendor/qrcode-generator-1.4.4.js',location.href).href; }
 function loadScript(src){ const scriptCache=(window.__ffsc=window.__ffsc||{}); if(scriptCache[src]) return scriptCache[src]; scriptCache[src]=new Promise((res,rej)=>{ const t=document.createElement('script'); t.src=src; t.async=true; t.onload=()=>res(); t.onerror=()=>{ delete scriptCache[src]; t.remove(); rej(new Error('load')); }; document.head.appendChild(t); }); return scriptCache[src]; }
 function PeerCls(){ return window.Peer||(window.peerjs&&window.peerjs.Peer)||null; }
 async function needPeer(){ if(!PeerCls()) await loadScript(PEER_JS()); if(!PeerCls()) throw new Error('peer'); return PeerCls(); }
@@ -5762,7 +5951,8 @@ function afterRender(){ { const bb=document.getElementById('backBtn'); if(bb) bb
   labelTables(document.getElementById('view'));
   cancelAnimationFrame(motion.raf); motion.playing=false; motion.last=0;
   if(ui.route==='motion'){ const cv=document.getElementById('motionCanvas'); if(cv){ drawMotion(cv); } wireVid(); }
-  if(ui.route==='sitzung'){ wireVid(); changePreview(); }
+  if(ui.route==='sitzung'){ wireVid(); wireFm(); changePreview(); } else fmLevelStop();
+  if(kr.prog&&!document.getElementById('krPanel')) setTimeout(()=>krEnd('Seite verlassen – Programm gestoppt, Last freigegeben'),0);
   if(ui.focus){ const el=document.getElementById(ui.focus); if(el){ el.focus(); const v=el.value; try{el.setSelectionRange(v.length,v.length);}catch(e){} } ui.focus=null; }
 }
 
@@ -6009,6 +6199,27 @@ const ACT = {
   restoreKey(el){ try{ importJson(localStorage.getItem(el.dataset.k)); }catch(e){ toast('Sicherung nicht lesbar',true); } },
   vidMode(el){ vid.mode=el.dataset.v; vid.pts=[]; render(); },
   vidReset(){ vid.pts=[]; drawVid(); },
+  fmLevel(){ fmLevelStart(); },
+  krConnect(){ krConnect(); },
+  krOff(){ if(kr.prog) krEnd('Programm gestoppt'); krRelease().then(()=>{ try{ kr.dev&&kr.dev.gatt.disconnect(); }catch(e){} }); },
+  krStart(el){ krRun(el.dataset.id,ridePlan(krMess(),krMax())); },
+  krChange(el){ const add=rideAfterChange(Math.min(krMess(),krMax())); if(kr.prog&&kr.prog[kr.idx]){ kr.prog.splice(kr.idx+1,0,...add); toast('Eingewöhnen + Messung als nächste Stufen eingeplant'); krUi(); render(); } else krRun(el.dataset.id,add); },
+  krPause(){ if(!kr.prog) return; kr.paused=!kr.paused; if(kr.paused){ krRelease(); kr.status='Pause – Last freigegeben'; } else { const st=kr.prog[kr.idx]; if(st) krSetW(st.w); kr.status=''; } render(); },
+  krNext(){ if(kr.prog) krAdvance(); render(); },
+  krAdj(el){ const st=kr.prog&&kr.prog[kr.idx]; if(!st) return; st.w=Math.max(30,Math.min(krMax(),st.w+Number(el.dataset.d))); if(!kr.paused) krSetW(st.w); krUi(); },
+  krStop(){ krEnd('Programm gestoppt – Last freigegeben'); },
+  fmUndo(){ const k=fm.order.pop(); if(k){ delete fm.pts[k]; } else { const last=FM_PTS.slice().reverse().find(p=>fm.skip[p.k]); if(last){ delete fm.skip[last.k]; if(/^h/.test(last.k)){ delete fm.skip.h1; delete fm.skip.h2; } } } fmDraw(); fmUpdate(); },
+  fmSkip(){ const nx=fmNext(); if(nx&&nx.opt){ fm.skip[nx.k]=1; if(nx.k==='h1') fm.skip.h2=1; fmUpdate(); } },
+  fmReset(){ fm.pts={}; fm.order=[]; fm.skip={}; fmDraw(); fmUpdate(); },
+  fmSave(el){ const s=sess(el.dataset.id); if(!s) return; const R=fmCalcNow(); if(!R){ toast('Erst alle Pflichtpunkte antippen',true); return; }
+    const side=(document.getElementById('fmSide')||{}).value||'before'; const keys=[...document.querySelectorAll('.fmChk:checked')].map(x=>x.value).filter(k=>R.vals[k]!=null&&MK[k]);
+    if(!keys.length){ toast('Keinen Wert angehakt',true); return; }
+    keys.forEach(k=>{ s[side][k]={...mv(k,R.vals[k],FM_METHOD,'gemessen',R.unc),time:nowStamp(),from:'Foto-Messung'}; }); if(s.status==='geplant') s.status='in Arbeit';
+    audit(`Foto-Messung: ${keys.length} Werte übernommen (${side==='before'?'Ausgangswert':'Endwert'}): ${keys.map(k=>MK[k].label+' '+R.vals[k]+' '+MK[k].unit).join(', ')}`,s.id); save();
+    const c=cust(s.customerId), cv=document.getElementById('fmCanvas');
+    const fin=saved=>{ render(); toast(`${keys.length} Werte übernommen${saved?' · Foto als Nachweis gespeichert':''}`); };
+    if(cv&&mediaOk(c)) cv.toBlob(b=>{ if(!b) return fin(false); const id=uid('m'); mPut({id,blob:b,type:'image/jpeg'}).then(()=>{ (S.media=S.media||[]).push({id,owner:'s:'+s.id,kind:'image',name:'Foto-Messung.jpg',type:'image/jpeg',size:b.size,date:today(),note:'Foto-Messung (Rad) · '+(side==='before'?'vorher':'nachher')}); save(); fin(true); }).catch(()=>fin(false)); },'image/jpeg',0.82);
+    else fin(false); },
   vidStep(el){ if(!vidEl||!vidEl.duration) return; vid.t=Math.max(0,Math.min(vidEl.duration,vidEl.currentTime+Number(el.dataset.d)/30)); vidEl.currentTime=vid.t; const sk=document.getElementById('vidSeek'); if(sk) sk.value=Math.round(vid.t/vidEl.duration*1000); },
   vidSave(el){ const ang=vidAngle(); if(ang==null){ toast(`Bitte erst alle Punkte antippen: ${VMODES[vid.mode].pts.join(', ')}`,true); return; } const s=sess(el.dataset.id); const side=document.getElementById('vidSide').value; const key=VMODES[vid.mode].key;
     const ent={...mv(key,ang,'2D-Video (unkalibriert)','gemessen',null),time:nowStamp()}; const asCheck=key==='kneeBDC'?storeVideoKnee(s[side],ent):(s[side][key]=ent,false); if(s.status==='geplant') s.status='in Arbeit';
@@ -6373,6 +6584,13 @@ const FORMS = {
 };
 
 const CHG = {
+  fmFile(el){ const f=el.files&&el.files[0]; if(!f) return; if(fm.src) try{ URL.revokeObjectURL(fm.src); }catch(e){} fm.src=URL.createObjectURL(f); fm.pts={}; fm.order=[]; fm.skip={}; fm.w=0;
+    fmImg=new Image(); fmImg.onload=()=>{ const sc=Math.min(1,2000/Math.max(fmImg.naturalWidth,fmImg.naturalHeight)); fm.w=Math.round(fmImg.naturalWidth*sc); fm.h=Math.round(fmImg.naturalHeight*sc); fmDraw(); fmUpdate(); };
+    fmImg.onerror=()=>toast('Foto konnte nicht geladen werden',true); fmImg.src=fm.src; render(); toast('Foto geladen – jetzt die Punkte antippen'); },
+  fmRef(el){ const v=Number(el.value); if(!(v>=50&&v<=2000)){ toast('Länge zwischen 50 und 2000 mm',true); return; } S.settings=S.settings||{}; S.settings.fmRef=v; save(); fmUpdate(); },
+  fmSide(){ fmUpdate(); },
+  krMess(el){ const v=Number(el.value); if(!(v>=50&&v<=krMax())){ toast(`Mess-Last zwischen 50 und ${krMax()} W`,true); el.value=krMess(); return; } S.settings=S.settings||{}; S.settings.krMess=Math.round(v); save(); },
+  krMax(el){ const v=Number(el.value); if(!(v>=100&&v<=1000)){ toast('Höchstwert zwischen 100 und 1000 W',true); el.value=krMax(); return; } S.settings=S.settings||{}; S.settings.krMax=Math.round(v); if(krMess()>v) S.settings.krMess=Math.round(v); save(); render(); },
   async teamRole(el){ try{ await clApi('/rest/v1/rpc/set_member_role',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_user:el.dataset.u,p_role:el.value})}); audit('Team: Rolle geändert'); toast('Rolle geändert'); }catch(e){ toast(clErrText(e.message),true); } TEAM.at=0; teamLoad(); },
   invCust(el){ const c=cust(el.value); const f=el.closest('form'); if(!c||!c.id||!f) return; const a=c.invAddr||{}; const set=(n,v)=>{ const i=f.querySelector(`[name="${n}"]`); if(i&&v!=null) i.value=v; }; set('name',c.name); set('email',c.email||''); set('company',a.company||''); set('street',a.street||''); set('zip',a.zip||''); set('city',a.city||''); },
 
@@ -6445,6 +6663,7 @@ document.addEventListener('click',e=>{
   const a=e.target.closest('[data-act]'); if(a&&ACT[a.dataset.act]&&CONFIRM_ACTS.has(a.dataset.act)&&a.dataset.armed!=='1'){ e.preventDefault(); a.dataset.armed='1'; const old=a.innerHTML; a.classList.add('armed'); a.innerHTML='Wirklich löschen?'; a.setAttribute('aria-live','polite'); setTimeout(()=>{ if(a.isConnected&&a.dataset.armed==='1'){ a.dataset.armed=''; a.classList.remove('armed'); a.innerHTML=old; } },3500); return; }
   if(a&&ACT[a.dataset.act]){ e.preventDefault(); try{ ACT[a.dataset.act](a); }catch(err){ console.error(err); toast('Aktion fehlgeschlagen: '+err.message,true); } }
 });
+window.addEventListener('pagehide',()=>{ if(kr.ctrl) krRelease(); });
 document.addEventListener('submit',e=>{
   const f=e.target.closest('[data-form]'); if(!f) return; e.preventDefault(); if(!allowed(null,f.dataset.form)){ toast(`Keine Berechtigung (Rolle: ${role()})`,true); return; }
   if(f.dataset.form==='newSession' && !new FormData(f).get('bid')){ toast('Bitte zuerst ein Fahrrad für diesen Kunden anlegen',true); return; }
@@ -8008,6 +8227,99 @@ ACT.woTplAdd=function(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); con
 // Werkstatt-Ansicht: Knopf zur Preisliste
 { const VWl=VIEWS.werkstatt; VIEWS.werkstatt=function(){ const h=VWl.apply(this,arguments); return h.replace('<button class="btn sm ghost" data-act="woExportAll">','<button class="btn sm ghost" data-act="laborOpen">Preisliste & Checklisten</button><button class="btn sm ghost" data-act="woExportAll">'); }; }
 FEATURES.push(['Werkstatt-Preisliste & Checklisten','Eigene Arbeitspreise (z. B. Bremse entlüften) und Checklisten; per iPhone-Foto (Live Text) oder Datei einlesen; Leistung im Auftrag antippen; Annahme-Checkliste Schritt für Schritt',1]);
+/* ===== Teile aus Text oder Link erkennen (regelbasiert, ohne KI-Dienst, kostenlos, läuft nur im Gerät) ===== */
+const PP_KEYS=[[/sattelst(ü|ue)tze|st(ü|ue)tze|seat ?post|dropper|vario/i,'post'],[/lenkerband|bar ?tape/i,'tape'],[/lenker|handle ?bar|\bbar\b|cockpit/i,'bar'],[/vorbau|\bstem\b/i,'stem'],[/sattel|saddle/i,'saddle'],
+ [/kettenbl(a|ä)tt|chain ?ring|\bkb\b/i,'chainring'],[/kurbell(ä|a)nge/i,'crank'],[/kurbel|crank/i,'crankset'],[/kassette|cassette|ritzel/i,'cassette'],[/kette\b|\bchain\b/i,'chain'],[/schaltwerk|rear ?derailleur|\brd\b/i,'rd'],[/umwerfer|front ?derailleur/i,'fd'],
+ [/schalthebel|bremshebel|shifter|brifter|schalt-?\/?bremshebel|sti\b/i,'shifters'],[/schaltgruppe|groupset|gruppe/i,'groupset'],[/bremsscheibe|rotor|scheibe/i,'rotors'],[/bremsbel(ä|a)g|pads?\b/i,'pads'],[/bremse|brake/i,'brakes'],
+ [/laufr(ä|a)d|laufradsatz|wheel ?set|wheels?\b|felge/i,'wheels'],[/reifen|mantel|tire|tyre|pneu/i,'tires'],[/cleat/i,'cleats'],[/pedal/i,'pedals'],[/innenlager|tretlager|bottom ?bracket|\bbb\b/i,'bb'],[/federgabel|\bgabel\b|\bfork\b/i,'fork'],[/d(ä|a)mpfer|\bshock\b/i,'shock'],[/griffe?\b|grips?\b/i,'grips'],[/rahmenmaterial|carbon|alu(minium)?\b|stahl|titan/i,'material']];
+function ppNum(t){ return parseFloat(String(t).replace(',','.')); }
+function ppFromUrl(u){ try{ const x=new URL(u); const host=x.hostname.replace(/^www\./,'').split('.')[0]; const words=decodeURIComponent(x.pathname).split('/').filter(Boolean).filter(s=>!/^(de|en|de-de|en-de|p|product|produkte?|shop|c|item|dp|[a-z]{2}-[a-z]{2})$/i.test(s)&&!/^[0-9a-f-]{12,}$/i.test(s)).join(' ').replace(/[-_+]+/g,' ').replace(/\.html?$/,'').replace(/\s+/g,' ').trim(); return {text:(host.charAt(0).toUpperCase()+host.slice(1))+' '+words, host}; }catch(e){ return null; } }
+function partParse(input){ const out=[]; String(input||'').split(/\n|;|\s\+\s|\s+und\s+|\s+and\s+|,(?=\s*[A-Za-zÄÖÜäöü])/).map(s=>s.trim()).filter(Boolean).forEach(seg=>{
+  let fromLink=false; if(/^https?:\/\//i.test(seg)){ const r=ppFromUrl(seg); if(!r) return; seg=r.text; fromLink=true; }
+  const hit=PP_KEYS.find(([re])=>re.test(seg)); if(!hit) { out.push({k:'',text:seg,fromLink,n:{}}); return; } const k=hit[1]; const n={};
+  const mm=[...seg.matchAll(/(\d{1,3}(?:[.,]\d)?)\s*(mm|cm)\b/gi)].map(m=>({v:ppNum(m[1])*(m[2].toLowerCase()==='cm'?10:1)}));
+  const ang=seg.match(/([+\-−±]?\s?\d{1,2}(?:[.,]\d)?)\s*(°|grad|deg)/i); if(ang) n.angle=ppNum(ang[1].replace('−','-').replace(/\s/g,''));
+  const bare=[...seg.matchAll(/(?<![\d.,x×-])(\d{2,3}(?:[.,]\d)?)(?![\d.,x×-]|\s*(mm|cm|°|z|t\b|zähne|g\b|kg))/gi)].map(m=>ppNum(m[1]));
+  const len=mm.map(x=>x.v);
+  if(k==='bar'){ const w=len.find(v=>v>=330&&v<=820)??bare.find(v=>v>=33&&v<=48&&/cm/i.test(seg)?false:v>=330&&v<=820); if(w) n.width=w; else { const c=bare.find(v=>v>=36&&v<=46); if(c) n.width=c*10; } }
+  if(k==='stem'){ const l=len.find(v=>v>=30&&v<=150)??bare.find(v=>v>=30&&v<=150); if(l) n.length=l; }
+  if(k==='saddle'){ const w=len.find(v=>v>=120&&v<=180)??bare.find(v=>v>=120&&v<=180); if(w) n.width=w; }
+  if(k==='post'){ const o=seg.match(/(versatz|setback|offset)\D{0,6}(\d{1,2})/i)||seg.match(/(\d{1,2})\s*mm\s*(versatz|setback|offset)/i); if(o) n.setback=ppNum(o[2]&&/\d/.test(o[2])?o[2]:o[1]); const t=seg.match(/(\d{2,3})\s*mm\s*(hub|travel|drop)/i)||seg.match(/(hub|travel|drop)\D{0,6}(\d{2,3})/i); if(t) n.travel=ppNum(/\d/.test(t[1])?t[1]:t[2]); }
+  if(k==='crank'||k==='crankset'){ const c=seg.match(/(1[5-8]\d(?:[.,]5)?)\s*(mm)?/); if(c){ const v=ppNum(c[1]); if(v>=150&&v<=185) n.crank=v; } const z=seg.match(/(\d{2}(?:\s*\/\s*\d{2})?)\s*(z|t|zähne|teeth)\b/i); if(z) n.teeth=z[1].replace(/\s/g,''); }
+  if(k==='chainring'){ const z=seg.match(/(\d{2}(?:\s*\/\s*\d{2})?)\s*(z|t|zähne|teeth)?\b/i); if(z) n.teeth=z[1].replace(/\s/g,''); }
+  if(k==='cassette'){ const r=seg.match(/(\d{1,2})\s*[-–]\s*(\d{2})/); if(r) n.range=r[1]+'-'+r[2]; const f=seg.match(/(\d{1,2})\s*-?\s*(fach|speed|sp\b)/i); if(f) n.speeds=ppNum(f[1]); }
+  if(k==='tires'){ const e=seg.match(/(\d{2})\s*[-x×]\s*(622|584|559)/)||seg.match(/700\s*[x×]\s*(\d{2})\s*c?/i); if(e) n.tire=e[2]?e[1]+'-'+e[2]:e[1]+'-622'; else { const w=len.find(v=>v>=23&&v<=70); if(w) n.tire=w+' mm'; } }
+  if(k==='rotors'){ const r=[...seg.matchAll(/\b(140|160|180|200|203|220)\b/g)].map(m=>m[1]); if(r.length) n.rotor=r.join('/')+' mm'; }
+  out.push({k,text:seg.replace(/\s+/g,' ').trim(),fromLink,n}); });
+  return out; }
+const PP_LABEL={post:'Sattelstütze',tape:'Lenkerband',bar:'Lenker',stem:'Vorbau',saddle:'Sattel',chainring:'Kettenblatt',crank:'Kurbellänge',crankset:'Kurbel',cassette:'Kassette',chain:'Kette',rd:'Schaltwerk',fd:'Umwerfer',shifters:'Schalt-/Bremshebel',groupset:'Schaltgruppe',rotors:'Bremsscheiben',pads:'Bremsbeläge',brakes:'Bremsen',wheels:'Laufräder',tires:'Reifen',cleats:'Cleats',pedals:'Pedale',bb:'Innenlager',grips:'Griffe',material:'Rahmenmaterial',fork:'Gabel',shock:'Dämpfer'};
+const ppNumText=n=>[n.width&&`Breite ${n.width} mm`,n.length&&`Länge ${n.length} mm`,n.angle!=null&&`Winkel ${n.angle}°`,n.crank&&`Kurbel ${String(n.crank).replace('.',',')} mm`,n.teeth&&`${n.teeth} Z`,n.range&&n.range,n.speeds&&`${n.speeds}-fach`,n.tire&&n.tire,n.rotor&&n.rotor,n.setback!=null&&`Versatz ${n.setback} mm`,n.travel&&`Hub ${n.travel} mm`].filter(Boolean).join(' · ');
+// Wert für ein Textfeld: Bauteil-Wort entfernen, Rest behalten
+function ppValue(r){ const hit=PP_KEYS.find(([re,k])=>k===r.k); let v=r.text; if(hit&&r.k!=='material') v=v.replace(hit[0],'').replace(/^[\s:,-]+|[\s:,-]+$/g,'').replace(/\s{2,}/g,' '); if(r.k==='crank'&&r.n.crank) v=String(r.n.crank).replace('.',',')+' mm'; return v||r.text; }
+function ppHtml(rows,known){ return rows.length?`<div class="pp-rows">${rows.map((r,i)=>{ const ok=r.k&&known(r.k); return `<label class="pp-row" style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(127,127,127,.2)"><input type="checkbox" data-pp="${i}" ${ok?'checked':''} ${ok?'':'disabled'} style="width:22px;height:22px;flex:none;margin-top:2px"><span style="min-width:0"><b>${ok?esc(PP_LABEL[r.k]||r.k):'Nicht erkannt'}</b>${r.fromLink?' <span class="muted" style="font-size:12px">(aus Link-Adresse)</span>':''}<br><span>${esc(ok?ppValue(r):r.text)}</span>${ppNumText(r.n)?`<br><span class="muted" style="font-size:13px">${esc(ppNumText(r.n))}</span>`:''}</span></label>`; }).join('')}</div>`:'<p class="muted">Nichts erkannt.</p>'; }
+/* v.108 Fahrrad bearbeiten: Teile aus Text oder Link vorausfüllen (regelbasiert) */
+{ const EBp=ACT.editBike; ACT.editBike=function(el){ const r=EBp.apply(this,arguments); try{ const f=document.querySelector('#drawerBody form'); if(!f||f.querySelector('[data-ppbox]')) return r;
+  const known=k=>['bar','stem','saddle','crank','crankset','groupset','material','post','cleats','pedals'].includes(k);
+  const comp=[...f.querySelectorAll('h4')].find(h=>/Komponenten/.test(h.textContent)); const anchor=comp?comp.closest('.wide'):null; if(!anchor) return r;
+  anchor.insertAdjacentHTML('afterend',`<div class="field wide" data-ppbox><label for="ppT">Schnell eintragen: Text oder Link</label><textarea class="input" id="ppT" rows="3" placeholder="z. B. Canyon Lenker 42 cm, Vorbau 100 mm -6°, Sattel 143 mm, Kurbel 172,5"></textarea><div class="row" style="margin-top:6px"><button type="button" class="btn sm" id="ppGo">Erkennen</button><span class="faint" style="font-size:12px">Ohne KI-Dienst, nur im Gerät. Bei Links wird nur die Adresse gelesen.</span></div><div id="ppOut"></div></div>`);
+  const box=f.querySelector('[data-ppbox]');
+  box.querySelector('#ppGo').onclick=()=>{ const rows=partParse(box.querySelector('#ppT').value); const out=box.querySelector('#ppOut'); out.innerHTML=ppHtml(rows,known)+(rows.some(x=>x.k&&known(x.k))?'<button type="button" class="btn sm primary" id="ppUse" style="margin-top:8px">In die Felder übernehmen</button>':'');
+    const use=out.querySelector('#ppUse'); if(use) use.onclick=()=>{ let n=0; const set=(id,v)=>{ const i=f.querySelector('#'+id); if(i&&v!=null&&v!==''){ i.value=v; i.style.outline='3px solid var(--accent)'; n++; } };
+      out.querySelectorAll('input[data-pp]:checked').forEach(c=>{ const x=rows[Number(c.dataset.pp)], N=x.n;
+        if(x.k==='bar') set('eb_p_bar',N.width); if(x.k==='stem'){ set('eb_p_stem',N.length); if(N.angle!=null) set('eb_p_stemAngle',N.angle); }
+        if(x.k==='saddle'){ set('eb_sa',ppValue(x).replace(/\s*\d{3}\s*mm\b/i,'').trim()); set('eb_p_saddleWidth',N.width); }
+        if(x.k==='crank'||x.k==='crankset') set('eb_p_crank',N.crank); if(x.k==='groupset') set('eb_p_groupset',ppValue(x)); if(x.k==='material') set('eb_p_material',ppValue(x));
+        if(x.k==='post') set('eb_p_post',N.setback); if(x.k==='cleats'||x.k==='pedals') set('eb_p_cleats',ppValue(x)); });
+      toast(n?`${n} Feld${n===1?'':'er'} vorausgefüllt – bitte prüfen und speichern`:'Keine passenden Felder', !n); }; }; }catch(e){} return r; }; }
+FEATURES.push(['Teile schnell eintragen','Text oder Produkt-Link einfügen, Bauteil und Maße werden erkannt (regelbasiert, ohne KI-Dienst) – in Fahrradakte und Fahrradpass',2]);
+/* Marken zum Vorauswählen (Liste ohne Anspruch auf Vollständigkeit – eigene Eingabe bleibt immer möglich) */
+const FYF_BRANDS=['3T','Accell','Bergamont','BH','Bianchi','BMC','Bombtrack','Bulls','BXT','Cannondale','Canyon','Centurion','Cervélo','Chesini','Cinelli','Colnago','Conway','Corratec','Cube','De Rosa','Diamant','Diamondback','Electra','Factor','Felt','Fuji','Focus','Gazelle','Genesis','Ghost','Giant','Gudereit','Haibike','Hercules','Ibis','Kalkhoff','Kona','KTM','Lapierre','Liv','Look','Marin','Merida','Mondraker','Moustache','Niner','Nukeproof','Opus','Orbea','Pegasus','Pinarello','Pivot','Poison','Radon','Raleigh','Ribble','Ridley','Riese & Müller','Rocky Mountain','Rondo','Rose','Santa Cruz','Scott','Simplon','Sirrus','Specialized','Stevens','Storck','Surly','Tern','Time','Transition','Trek','Urban Arrow','Vitus','VSF Fahrradmanufaktur','Wilier','Winora','Yeti','YT Industries','Zemo'];
+function fyfBrandLists(models){ try{ if(!document.getElementById('fyfBrands')){ const d=document.createElement('datalist'); d.id='fyfBrands'; d.innerHTML=FYF_BRANDS.map(b=>`<option value="${b}">`).join(''); document.body.appendChild(d); }
+  let m=document.getElementById('fyfModels'); if(!m){ m=document.createElement('datalist'); m.id='fyfModels'; document.body.appendChild(m); } const L=[...new Set((models&&models()||[]).filter(Boolean))].slice(0,400); m.innerHTML=L.map(x=>`<option value="${String(x).replace(/"/g,'&quot;')}">`).join(''); }catch(e){} }
+function fyfBrandWatch(brandSel,modelSel,models){ const apply=()=>{ let n=0; document.querySelectorAll(brandSel).forEach(i=>{ if(!i.getAttribute('list')){ i.setAttribute('list','fyfBrands'); n++; } }); document.querySelectorAll(modelSel).forEach(i=>{ if(!i.getAttribute('list')){ i.setAttribute('list','fyfModels'); n++; } }); if(n) fyfBrandLists(models); };
+  apply(); new MutationObserver(apply).observe(document.body,{childList:true,subtree:true}); }
+fyfBrandWatch('#eb_b,#nb_b,#nr_b,#ng_b,[id^="ol_b"]','#eb_m,#nb_m,#nr_m,#ng_m',()=>[...GEO.map(g=>g.brand+' '+g.model).map(x=>x.split(' ').slice(1).join(' ')),...(S.bikes||[]).map(b=>b.model)]);
+/* ===================== v.109 CRM: Firmenkunden, Ansprechpartner, Anschrift, Wiedervorlagen ===================== */
+const custKind=c=>c&&(c.kind==='firma'||(!c.kind&&c.invAddr&&c.invAddr.company))?'firma':'privat';
+{ const ECk=ACT.editCustomer; ACT.editCustomer=function(el){ const r=ECk.apply(this,arguments); try{ const c=cust(el.dataset.id), f=document.querySelector('form[data-form="customerEdit"]'); if(!c||!f||f.querySelector('[data-crm]')) return r; const K=custKind(c), C=(c.contacts||[]).concat([{},{}]).slice(0,Math.max(2,(c.contacts||[]).length+1));
+  const nameField=f.querySelector('#ec_n').closest('.field');
+  nameField.insertAdjacentHTML('afterend',`<div class="field" data-crm><label for="ec_k">Kundentyp</label><select class="input" id="ec_k" name="kind"><option value="privat" ${K==='privat'?'selected':''}>Privatkunde</option><option value="firma" ${K==='firma'?'selected':''}>Geschäftskunde (Firma)</option></select></div>
+   <div class="field" data-crm-firma><label for="ec_co">Firma</label><input class="input" id="ec_co" name="company" value="${esc(c.company||(c.invAddr&&c.invAddr.company)||'')}" placeholder="z. B. Muster GmbH"></div>
+   <div class="field wide"><label for="ec_ad">Anschrift</label><input class="input" id="ec_ad" name="address" value="${esc(c.address||(c.invAddr&&c.invAddr.street?[c.invAddr.street,[c.invAddr.zip,c.invAddr.city].filter(Boolean).join(' ')].join(', '):''))}" placeholder="Straße Nr., PLZ Ort" autocomplete="street-address"></div>
+   <div class="field" data-crm-firma><label for="ec_vat">USt-IdNr.</label><input class="input mono" id="ec_vat" name="vatId" value="${esc(c.vatId||'')}" placeholder="DE123456789"></div>
+   <div class="field" data-crm-firma><label for="ec_lw">Leitweg-ID (nur Behörden)</label><input class="input mono" id="ec_lw" name="leitweg" value="${esc(c.leitweg||(c.invAddr&&c.invAddr.ref)||'')}"></div>
+   <div class="field wide" data-crm-firma><label>Ansprechpartner</label><div class="stack" style="gap:6px">${C.map((p,i)=>`<div class="row" style="gap:6px;flex-wrap:wrap"><input class="input" name="cp_n${i}" value="${esc(p.name||'')}" placeholder="Name" aria-label="Ansprechpartner ${i+1} Name" style="flex:2;min-width:140px"><input class="input" name="cp_r${i}" value="${esc(p.role||'')}" placeholder="Funktion, z. B. Fuhrpark" aria-label="Funktion" style="flex:1;min-width:120px"><input class="input" name="cp_t${i}" value="${esc(p.phone||'')}" type="tel" placeholder="Telefon" aria-label="Telefon" style="flex:1;min-width:120px"><input class="input" name="cp_e${i}" value="${esc(p.email||'')}" type="email" placeholder="E-Mail" aria-label="E-Mail" style="flex:2;min-width:160px"></div>`).join('')}</div><span class="faint" style="font-size:12px">Leere Zeilen werden ignoriert. Für mehr Ansprechpartner speichern und erneut öffnen.</span></div>`);
+  const tog=()=>{ const firm=f.querySelector('#ec_k').value==='firma'; f.querySelectorAll('[data-crm-firma]').forEach(x=>x.style.display=firm?'':'none'); }; f.querySelector('#ec_k').addEventListener('change',tog); tog(); }catch(e){} return r; }; }
+{ const CEk=FORMS.customerEdit; FORMS.customerEdit=function(f,data){ const c=cust(f.dataset.id); const before=c?JSON.stringify(c):''; const r=CEk.apply(this,arguments);
+  try{ if(c&&f.querySelector('[data-crm]')){ c.kind=data.get('kind')==='firma'?'firma':'privat'; c.address=String(data.get('address')||'').trim().slice(0,160)||undefined;
+    if(c.kind==='firma'){ c.company=String(data.get('company')||'').trim().slice(0,120)||undefined; c.vatId=String(data.get('vatId')||'').replace(/\s/g,'').toUpperCase().slice(0,20)||undefined; c.leitweg=String(data.get('leitweg')||'').trim().slice(0,46)||undefined;
+      const cs=[]; for(let i=0;i<20;i++){ if(!data.has('cp_n'+i)) break; const p={name:String(data.get('cp_n'+i)||'').trim().slice(0,80),role:String(data.get('cp_r'+i)||'').trim().slice(0,60),phone:String(data.get('cp_t'+i)||'').trim().slice(0,40),email:String(data.get('cp_e'+i)||'').trim().slice(0,120)}; if(p.name||p.phone||p.email) cs.push(p); } c.contacts=cs; }
+    else { delete c.company; delete c.vatId; delete c.leitweg; c.contacts=[]; }
+    // Rechnungsanschrift (wird von Rechnung und E-Rechnung genutzt) mitführen
+    const ia={...(c.invAddr||{})}; if(c.kind==='firma'&&c.company) ia.company=c.company; else if(c.kind!=='firma') delete ia.company; if(c.leitweg) ia.ref=c.leitweg; else delete ia.ref;
+    if(c.address&&!(ia.street&&ia.zip)){ const m=c.address.match(/^(.*?),?\s*(\d{5})\s+(.+)$/); if(m){ ia.street=m[1].trim(); ia.zip=m[2]; ia.city=m[3].trim(); } }
+    if(Object.keys(ia).length) c.invAddr=ia; else delete c.invAddr;
+    if(JSON.stringify(c)!==before) save(); } }catch(e){} return r; }; }
+// Kundenakte: Firma, Ansprechpartner, Wiedervorlagen
+{ const CDk=customerDrawer; customerDrawer=function(id,tab){ CDk(id,tab); try{ const c=cust(id), box=document.getElementById('drawerBody'); if(!c||!box||box.querySelector('[data-crmbox]')) return; const wv=(c.wv||[]).slice().sort((a,b)=>String(a.due).localeCompare(String(b.due)));
+  const open=wv.filter(x=>!x.done), done=wv.filter(x=>x.done).slice(-3);
+  const firm=custKind(c)==='firma'?`<div><span class="chip nodot c-acc">Geschäftskunde</span>${c.company?` <b>${esc(c.company)}</b>`:''}${c.vatId?` · <span class="mono">${esc(c.vatId)}</span>`:''}${c.leitweg?` · Leitweg-ID <span class="mono">${esc(c.leitweg)}</span>`:''}</div>${(c.contacts||[]).length?`<div class="list">${c.contacts.map(p=>`<div class="li" style="padding:6px 0;gap:10px;flex-wrap:wrap"><b>${esc(p.name||'–')}</b>${p.role?`<span class="faint">${esc(p.role)}</span>`:''}${p.phone?`<a href="tel:${esc(p.phone.replace(/[^\d+]/g,''))}">${esc(p.phone)}</a>`:''}${p.email?`<a href="mailto:${esc(p.email)}">${esc(p.email)}</a>`:''}</div>`).join('')}</div>`:''}`:'';
+  const h=`<div class="stack" data-crmbox style="gap:8px;margin-bottom:14px">${firm}${c.address?`<div class="faint" style="font-size:13.5px">${esc(c.address)}</div>`:''}
+   <div class="stack" style="gap:6px"><h3 style="margin:0">Wiedervorlagen${open.length?` <span class="cnt">${open.length}</span>`:''}</h3>
+    ${open.map(x=>`<div class="row" style="gap:8px;flex-wrap:nowrap;align-items:center"><span class="chip nodot ${x.due<=today()?'c-bad':''}">${fmtDate(x.due)}</span><span style="flex:1;min-width:0">${esc(x.text)}</span><button class="btn sm" data-act="wvDone" data-id="${c.id}" data-w="${x.id}">Erledigt</button></div>`).join('')||'<p class="faint" style="margin:0;font-size:13px">Keine offenen Wiedervorlagen.</p>'}
+    ${done.length?`<p class="faint" style="margin:0;font-size:12.5px">Zuletzt erledigt: ${done.map(x=>esc(x.text)).join(' · ')}</p>`:''}
+    <form class="form" data-form="wvAdd" data-id="${c.id}" style="gap:6px"><div class="field"><label for="wv_d">Wann</label><input class="input" id="wv_d" name="due" type="date" required value="${dayOff(7)}"></div><div class="field"><label for="wv_t">Was</label><input class="input" id="wv_t" name="text" required maxlength="160" placeholder="z. B. Angebot nachfassen"></div><div class="wide"><button class="btn sm" type="submit">${ic('plus')}Wiedervorlage anlegen</button></div></form></div></div>`;
+  box.insertAdjacentHTML('afterbegin',h); }catch(e){} }; }
+FORMS.wvAdd=function(f,d){ const c=cust(f.dataset.id); if(!c) return; const due=String(d.get('due')||''), text=String(d.get('text')||'').trim().slice(0,160); if(!due||!text){ toast('Datum und Text eingeben',true); return; }
+  c.wv=(c.wv||[]).concat([{id:uid('wv'),due,text,created:today()}]).slice(-100); audit(`Wiedervorlage für ${c.name}: ${text}`); save(); customerDrawer(c.id); toast('Wiedervorlage angelegt'); };
+ACT.wvDone=function(el){ const c=cust(el.dataset.id); const x=c&&(c.wv||[]).find(w=>w.id===el.dataset.w); if(!x) return; x.done=today(); save(); customerDrawer(c.id); toast('Erledigt'); };
+// Cockpit: fällige Wiedervorlagen
+{ const DBk=VIEWS.dashboard; VIEWS.dashboard=function(){ const h=DBk.apply(this,arguments); try{ const due=S.customers.flatMap(c=>(c.wv||[]).filter(w=>!w.done&&w.due<=dayOff(2)).map(w=>({c,w}))).sort((a,b)=>a.w.due.localeCompare(b.w.due)); if(!due.length) return h;
+  const p=panel(`Wiedervorlagen (${due.length})`,`<div class="list">${due.slice(0,8).map(({c,w})=>`<button class="li" type="button" data-act="openCustomer" data-id="${c.id}" style="width:100%;text-align:left;gap:10px"><span class="chip nodot ${w.due<=today()?'c-bad':''}">${fmtDate(w.due)}</span><span style="flex:1;min-width:0"><b>${esc(c.company||c.name)}</b> · ${esc(w.text)}</span></button>`).join('')}</div>`);
+  const i=h.indexOf('</div>',h.indexOf('pagehead')); return i<0?p+h:h.slice(0,i+6)+p+h.slice(i+6); }catch(e){ return h; } }; }
+// Kundenliste: Firmenname mit anzeigen und durchsuchbar
+{ const VKk=VIEWS.kunden; VIEWS.kunden=function(){ let h=VKk.apply(this,arguments); try{ S.customers.forEach(c=>{ if(custKind(c)==='firma'&&c.company){ const n='>'+esc(c.name)+'<'; if(h.includes(n)) h=h.split(n).join('>'+esc(c.name)+' · '+esc(c.company)+'<'); } }); }catch(e){} return h; }; }
+FEATURES.push(['Geschäftskunden & Wiedervorlagen','Kundentyp Firma mit USt-IdNr., Leitweg-ID und mehreren Ansprechpartnern, Anschrift; Wiedervorlagen je Kunde mit Anzeige im Cockpit',1]);
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();
