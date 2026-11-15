@@ -103,6 +103,24 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Seitenvergleich links/rechts, Test Schulterbeweglichkeit, gemeinsame Zeitleiste in der Kundenakte, Videos vorher/nachher nebeneinander (synchron, bildweise, langsam), Ansicht je Video (v.56).
 - FYF-Messset (Datenbanken → Messmittel): Inhalt des geplanten Sets, mit einem Tippen als Messmittel anlegen. Prototyp, Genauigkeit noch nicht geprüft. Konzept: `docs/KONZEPT-MESSSET.md`.
 
+## Foto-Messung (Beta, ab v.107)
+
+- Fitting → Messen → „Rad per Foto vermessen (Beta)“: Foto vom Rad ohne Person, mit einem Messzeichen bekannter Länge (z. B. Lineal 300 mm) in der Mitte des Rads.
+- Punkte antippen: Messzeichen (2), Tretlagermitte, Boden, Sattel oben, Sattelspitze, Lenker oben; optional Schalthebel und zwei Punkte auf der waagerechten Laserlinie (gleicht ein schiefes Bild aus). Gesetzte Punkte zum Feinjustieren verschieben (4× langsamer), mit Lupe.
+- FYF rechnet bis zu 11 Werte: Sattelhöhe, Sattelversatz, Sattel/Lenker/Schalthebel über Boden, Tretlagerhöhe, Lenkermitte und Schalthebel vor Tretlager, Überhöhung, Sattel–Lenker, Sattelspitze bis Schalthebel.
+- Übernommen wird nur, was angehakt ist. Vorhandene Werte sind nicht vorausgewählt; Abweichung über 5 mm wird markiert. Methode „2D-Foto mit Messzeichen (Beta)“ mit geschätzter Unsicherheit (mind. ±3 mm). Die Datenprüfung erinnert an die Gegenprüfung mit dem Maßband.
+- „Ausrichtung prüfen“ zeigt am iPhone, ob es auf dem Stativ gerade steht. Das Foto mit den Punkten wird als Nachweis zur Sitzung gespeichert (nur mit Foto-Einwilligung, nur auf dem Gerät bzw. im eigenen Cloud-Speicher).
+- **Nicht validiert:** Genauigkeit am echten Rad noch nicht geprüft. Testplan: `docs/FOTO-MESSUNG.md`. Rechnung automatisch geprüft: `node tools/test-foto-messung.mjs`.
+
+## Fitting-Fahrprogramm mit der Rolle (Beta, ab v.108)
+
+- Fitting → Messen (und Anpassen) → „Rolle steuern: Fitting-Fahrprogramm“. Verbindet per Bluetooth mit Rollen, die den Standard FTMS können (z. B. Wahoo KICKR CORE 2).
+- **Nur in Chrome am Computer** (z. B. iMac). Auf iPhone/iPad und in Safari erlauben Webseiten kein Bluetooth; FYF zeigt dort einen Hinweis.
+- Programm: Einfahren (80 % der Mess-Last) → Messung bei fester Last (Standard 150 W) → Ausfahren. „Nach Änderung messen“ plant Eingewöhnen + Messung bei derselben Last ein. Pause, Stufe überspringen, ±10 W, Stopp.
+- Großanzeige: Ist-/Soll-Watt, Trittfrequenz, Stufe, Restzeit. Am Ende jeder Messstufe kommen Ø Watt und Ø Trittfrequenz als Notiz ins Fitting (erscheint im Bericht).
+- Sicherheit: einstellbarer Höchstwert (Standard 300 W). Stopp, Pause, Trennen, Verbindungsabbruch oder Verlassen der Seite geben die Last sofort frei.
+- **Mit echter Rolle noch nicht getestet** (nur mit simulierter Rolle im Browser). Rechnung geprüft: `node tools/test-fahrprogramm.mjs`.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.
