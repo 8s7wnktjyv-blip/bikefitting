@@ -1732,7 +1732,13 @@ const GEO=[
   ['56',565,392,559,524,73.5,72.3,165,410,1000,69,797,110,410,172.5],['58',584,401,574,545,73.5,72.3,184,410,1015,69,817,110,410,175],['61',608,409,589,574,73.5,72.3,210,410,1030,69,843,120,430,175]]},
  {id:'focus-izalco-max',brand:'Focus',model:'Izalco Max',year:2025,type:'Rennrad',src:'https://www.focus-bikes.com/int/izalco-max-8-9',rows:[
   ['XXS',500,370,505,455,75,70,90,410,975,72,746,80,380,165],['XS',513,375,517,475,74.5,71,100,410,976,72,762,90,380,165],['S',531,378,530,495,74,72,115,410,975,72,778,100,380,170],['M',552,380,543,515,73.5,72.5,135,410,979,72,795,110,400,170],
-  ['L',571,399,568,535,73.5,72.5,155,410,1004,72,814,110,400,170],['XL',592,401,582,555,73,73,175,410,1008,72,835,120,420,172.5],['XXL',611,420,607,585,73,73,195,410,1033,72,857,120,420,175]]}
+  ['L',571,399,568,535,73.5,72.5,155,410,1004,72,814,110,400,170],['XL',592,401,582,555,73,73,175,410,1008,72,835,120,420,172.5],['XXL',611,420,607,585,73,73,195,410,1033,72,857,120,420,175]]},
+ {id:'bxt-gravel-135',brand:'BXT',model:'Gravel 135 (Rahmen)',year:2025,type:'Gravel',src:'https://bikeinsights.com/bikes/634540af519a28001cd467b9-bxt-bxt-gravel-135',note:'Quelle: Bike Insights (Nutzerdaten, keine Herstellerseite). Nur Rahmen: Vorbau und Lenker je nach Aufbau. Sitzrohr = Mitte–Oberkante. Bitte am eigenen Rahmen nachmessen.',rows:[
+  ['49',519,374,518,477,74.5,70,95,435,1020,71,_,_,_,170],['52',544,378,535,507,74,70,122,435,1033,71,_,_,_,170],['54',565,387,555,528,73.5,71,140,435,1039,71,_,_,_,170],['56',590,398,579,546,73,71,166,435,1059,71,_,_,_,170],['58',610,406,593,566,73,71,187,435,1074,71,_,_,_,170]]},
+ {id:'bombtrack-beyond-al',brand:'Bombtrack',model:'Beyond AL',year:2025,type:'Gravel',src:'https://www.bombtrack.com/my25/complete-bikes/beyond-al-sword',note:'Herstellerangaben (Beyond AL Sword, MY25). Größe S mit 27,5"-Laufrädern, M–XL 29". Oberrohr = horizontal. Lenker = Breite unten (Drops), Flare 25°.',rows:[
+  ['S',569,382,546,440,74,70,140,420,1040,60,775,50,420,170],['M',604,394,567,480,74,70.5,160,445,1077,74,821,50,440,170],['L',642,413,597,520,74,70.5,200,445,1109,74,859,80,440,175],['XL',670,434,626,560,74,70.5,230,445,1140,74,893,80,440,175]]},
+ {id:'radon-spire-2015',brand:'Radon',model:'Spire 7.0',year:2015,type:'Rennrad',src:'https://bikeinsights.com/bike-geometries/6599d0a4d71eb6001b3bd3da-2014-radon-bikes-spire-70-se-56cm',note:'Nur Größe 56 gefunden, Daten vom Modell 2014 (Spire 7.0 SE, Bike Insights). Ob 2015 gleich ist, ist nicht geprüft. Radon-Rahmen fallen laut TOUR eher klein aus. Andere Größen bitte am Rad messen.',rows:[
+  ['56',545,387,545,540,73.5,72.5,145,405,981,67,765,_,420,172.5]]}
 ];
 const geoAll=()=>[...GEO.map(g=>({...g,own:false})),...(S.geoCustom||[]).map(g=>({...g,own:true}))];
 const geoById=id=>geoAll().find(g=>g.id===id);
