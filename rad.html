@@ -218,7 +218,7 @@ async function show0(code){ window.__P=null; window.__OFF=null;
   const b=p.bike||{}, sh=p.shop||{};
   const tel=sh.phone?` · <a href="tel:${esc(String(sh.phone).replace(/[^\d+]/g,''))}">${esc(sh.phone)}</a>`:'';
   const alarm=p.stolen?`<div class="alarm">Dieses Rad ist als gestohlen gemeldet. Bitte nicht kaufen und die Polizei oder die Werkstatt ${esc(sh.name||'')} informieren${sh.phone?' ('+esc(sh.phone)+')':''}.</div>`:'';
-  const shopLine=p.self&&!sh.name?`<p class="muted small" style="margin:0">Vom Besitzer selbst registriert – noch von keiner Werkstatt betreut.</p>`:`<p class="muted small" style="margin:0">Pass geführt von <b>${esc(sh.name||'einer FYF-Werkstatt')}</b>${sh.addr?' · '+esc(sh.addr):''}${tel}</p>`;
+  const shopLine=p.self&&!sh.name?`<p class="muted small" style="margin:0">Vom Besitzer selbst registriert – noch von keiner Werkstatt betreut.</p>`:`<p class="muted small" style="margin:0">Pass geführt von <b>${esc(sh.name||'einer FYF-Werkstatt')}</b>${sh.addr?' · '+esc(sh.addr):''}${tel}${/^https:\/\/\S+$/.test(sh.review||'')&&mine().some(m=>m.code===code)?` · <a href="${esc(sh.review)}" target="_blank" rel="noopener nofollow">Werkstatt bewerten</a>`:''}</p>`;
   const mineIt=mine().some(m=>m.code===code), svc=`finder.html#pass=${code}&want=service${CF?'&cfg='+esc(CF):''}`;
   const sub=esc([b.type||mineType(code),b.size&&('Gr. '+b.size),b.year].filter(Boolean).join(' · '));
   const statusLine=p.stolen?'<div class="status bad"><i></i>Als gestohlen gemeldet</div>':`<div class="status"><i></i>Keine Diebstahlmeldung in FYF</div>`;
