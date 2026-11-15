@@ -868,7 +868,7 @@ const MK = {
   pelvisRock:{label:'Becken kippt (von vorn)',unit:'°',group:'Bewegung',def:'Seitliches Kippen der Hüfte pro Umdrehung'}
 };
 const REQUIRED = ['saddleHeight','saddleSetback','reach','drop','crankLength','cleatFore']; // Kurbel meist vom Hersteller
-const METHODS = ['Maßband','Laser-Wasserwaage','Digitaler Winkelmesser','Goniometer','2D-Video (unkalibriert)','2D-Video (kalibriert)','2D-Video live (automatisch)','Herstellerangabe','Berechnet','CleatLab (Prototyp, nicht validiert)'];
+const METHODS = ['Maßband','Laser-Wasserwaage','Digitaler Winkelmesser','Goniometer','2D-Video (unkalibriert)','2D-Video (kalibriert)','2D-Video live (automatisch)','2D-Foto mit Messzeichen (Beta)','Herstellerangabe','Berechnet','CleatLab (Prototyp, nicht validiert)'];
 const SOURCES = ['gemessen','vom Hersteller','manuell eingegeben','berechnet','geschätzt'];
 const mv = (key,value,method,source,unc) => ({key,value,method,source:source||'gemessen',unc:unc??null,time:''});
 
@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-15.106';
+const APP_VER='2026-11-15.107';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2387,6 +2387,7 @@ function qualityRaw(s){
     if(m.source==='geschätzt') out.push(['info',`${MK[m.key].label} (${side==='before'?'vorher':'nachher'}) ist geschätzt, keine reproduzierbare Messung`,m.method]);
     if(m.source==='gemessen' && (m.unc===null||m.unc===undefined) && !/Herstellerangabe/.test(m.method)) out.push(['info',`Messunsicherheit fehlt: ${MK[m.key].label}`,m.method]);
     if(/unkalibriert/.test(m.method)) out.push(['warn',`${MK[m.key].label}: Video nicht kalibriert, Winkel nur als Orientierung`,m.method]);
+    if(/Foto mit Messzeichen/.test(m.method)) out.push(['info',`${MK[m.key].label}: per Foto gemessen (Beta, Genauigkeit nicht geprüft) – mit Maßband gegenprüfen`,m.method]);
   }));
   Object.keys(s.after).forEach(k=>{ const b=s.before[k], a=s.after[k]; if(b && a && b.method!==a.method && !/Eingestellt nach Plan|Berechnet/.test(a.method)) out.push(['warn',`${MK[k].label}: Vorher und nachher mit unterschiedlicher Methode gemessen`,`${b.method} → ${a.method}`]); });
   if(s.status!=='geplant'&&!Object.keys(s.check||{}).length) out.push(['warn','Körpercheck nicht durchgeführt','Schritt Körpercheck']);
@@ -3546,6 +3547,7 @@ SESSTAB.ausgang0 = s => {
   <p class="faint" style="font-size:12.5px">✓✓ = doppelt gemessen. Die Koordinaten prüfen die anderen Werte gegen und machen die 1:1-Übertragung auf ein neues Rad möglich.</p>
   ${mk?(fromMaker.length?`<details class="more"><summary>Vom Hersteller: ${esc(mk.g.brand+' '+mk.g.model)}, ${esc(mk.r.size)}</summary><table style="margin-top:6px"><tbody>${fromMaker.map(k=>`<tr><td>${MK[k].label}</td><td class="r num">${fmtNum(s.before[k].value)} ${MK[k].unit}</td><td class="r"><button class="btn sm ghost" data-act="editMaker" data-k="${k}">Ändern</button></td></tr>`).join('')}</tbody></table><p class="faint" style="font-size:12.5px">Serienausstattung. Wurde etwas getauscht, tippe auf „Ändern“.</p></details>`:`<button class="btn" data-act="applyMaker" data-id="${s.id}">Serienwerte vom Hersteller übernehmen</button>`)
     :`<div class="statusbox"><div style="flex:1;min-width:0"><b>Kein Modell zugeordnet</b><span class="muted" style="font-size:14px">Dann übernimmt die App Vorbau, Lenker und Kurbel automatisch.</span></div><button class="btn sm" data-act="bikeGeo" data-id="${b.id}">Zuordnen</button></div>`}
+  <details class="more" ${fm.src?'open':''}><summary>Rad per Foto vermessen (Beta)</summary><div style="margin-top:10px">${fotoMessPanel(s,'before')}</div></details>
   <details class="more" ${vid.src?'open':''}><summary>Kniewinkel, Hüftwinkel und Knielot per Kamera messen</summary><div style="margin-top:10px">${vidPanel(s,'before')}</div></details>
   <details class="more" ${ui.editMaker?'open':''}><summary>Weitere Messpunkte (optional)</summary><div class="stack" style="margin-top:10px">
     ${[...(ui.editMaker?[ui.editMaker]:[]),...optional.filter(k=>k!==ui.editMaker),...fromMaker.filter(k=>k!==ui.editMaker)].map(k=>measureCard(s,'before',k,c,b)).join('')}
@@ -4914,6 +4916,116 @@ function vidPanel(s,side){
     </div></div>`,st('i'));
 }
 
+/* ---------- Foto-Messung: Rad per Foto mit Messzeichen vermessen (Beta, nicht validiert) ---------- */
+/* FOTO-CALC-START */
+const FM_PTS=[{k:'refA',l:'Messzeichen Anfang',s:'M1'},{k:'refB',l:'Messzeichen Ende',s:'M2'},{k:'bb',l:'Tretlagermitte',s:'TL'},{k:'floor',l:'Boden direkt unter dem Tretlager',s:'B'},{k:'saddle',l:'Sattel oben, Messpunkt der Sattelhöhe (Verlängerung Sitzrohr)',s:'S'},{k:'tip',l:'Sattelspitze',s:'SP'},{k:'bar',l:'Lenker oben, direkt neben dem Vorbau',s:'L'},{k:'hood',l:'Schalthebel oben, wo die Hand aufliegt (optional)',s:'SH',opt:1},{k:'h1',l:'Waagerechte Laserlinie, Punkt links (optional)',s:'W1',opt:1},{k:'h2',l:'Waagerechte Laserlinie, Punkt rechts (optional)',s:'W2',opt:1}];
+const FM_KEYS=['saddleHeight','saddleSetback','saddleFloor','bbHeight','barFloor','barX','drop','reach','hoodFloor','hoodX','saddleToHood'];
+function fotoCalc(P,refMm,opt){
+  opt=opt||{}; const need=['refA','refB','bb','saddle','tip','bar']; if(need.some(k=>!P[k])||!(refMm>0)) return null;
+  const d=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y); const refPx=d(P.refA,P.refB); if(refPx<1) return null;
+  const sc=refMm/refPx; let th=0; if(P.h1&&P.h2&&d(P.h1,P.h2)>1){ th=Math.atan2(P.h2.y-P.h1.y,P.h2.x-P.h1.x); if(th>Math.PI/2) th-=Math.PI; if(th<-Math.PI/2) th+=Math.PI; }
+  const c=Math.cos(th), s=Math.sin(th), o=P.bb;
+  const rot=p=>{ const dx=p.x-o.x, dy=p.y-o.y; return {x:dx*c+dy*s, y:-dx*s+dy*c}; };
+  const fwd=rot(P.bar).x<0?-1:1; const X=p=>rot(p).x*sc*fwd, Y=p=>-rot(p).y*sc; const r=v=>Math.round(v);
+  const v={}, warn=[];
+  v.saddleHeight=r(d(P.bb,P.saddle)*sc);
+  v.saddleSetback=r(-X(P.tip));
+  v.barX=r(X(P.bar));
+  v.drop=r(Y(P.saddle)-Y(P.bar));
+  v.reach=r(Math.hypot(X(P.bar)-X(P.tip),(Y(P.bar)-16)-Y(P.tip)));
+  if(P.floor){ const bb=-Y(P.floor); v.bbHeight=r(bb); v.saddleFloor=r(bb+Y(P.saddle)); v.barFloor=r(bb+Y(P.bar)); if(P.hood) v.hoodFloor=r(bb+Y(P.hood)); }
+  if(P.hood){ v.hoodX=r(X(P.hood)); v.saddleToHood=r(d(P.tip,P.hood)*sc); }
+  const rotDeg=Math.round(th*180/Math.PI*10)/10;
+  if(opt.imgW&&refPx<opt.imgW*0.15) warn.push('Das Messzeichen ist im Bild klein. Näher ran oder 2-fach-Zoom, sonst wird es ungenau.');
+  if(!(P.h1&&P.h2)) warn.push('Ohne waagerechte Laserlinie muss das iPhone genau gerade stehen (vorher „Ausrichtung prüfen“).');
+  else if(Math.abs(rotDeg)>0.2) warn.push(`Das Bild war um ${String(Math.abs(rotDeg)).replace('.',',')}° schief. FYF hat es über die Laserlinie ausgeglichen.`);
+  if(v.saddleHeight<450||v.saddleHeight>1000) warn.push('Sattelhöhe unplausibel – Länge des Messzeichens und die angetippten Punkte prüfen.');
+  if(v.bbHeight!=null&&(v.bbHeight<150||v.bbHeight>450)) warn.push('Tretlagerhöhe unplausibel – Bodenpunkt prüfen.');
+  const unc=Math.max(3,Math.round((opt.tapPx||3)*sc*1.5));
+  return {sc,rotDeg,fwd,vals:v,warn,unc};
+}
+/* FOTO-CALC-END */
+const FM_METHOD='2D-Foto mit Messzeichen (Beta)';
+const fm={src:null,pts:{},order:[],skip:{},drag:null,fine:null,loupe:null,w:0,h:0,lvl:[],lvlOn:false};
+let fmImg=null;
+function fmRef(){ return Number((S.settings||{}).fmRef)||300; }
+function fmNext(){ return FM_PTS.find(p=>!fm.pts[p.k]&&!fm.skip[p.k])||null; }
+function fmCalcNow(){ const cv=document.getElementById('fmCanvas'); const tapPx=cv&&cv.clientWidth?0.5*cv.width/cv.clientWidth:1; /* nach Feinjustieren (4× langsamer) ca. ½ Bildschirmpunkt */ return fotoCalc(fm.pts,fmRef(),{imgW:fm.w,tapPx}); }
+function fotoMessPanel(s,side){
+  const nx=fmNext();
+  return `<div class="stack">
+    <p class="muted" style="font-size:14px">Ein Foto vom Rad, ohne Person. Du tippst die Punkte an, FYF rechnet bis zu ${FM_KEYS.length} Werte. <b>Beta:</b> Genauigkeit noch nicht geprüft – bitte mit dem Maßband gegenprüfen.</p>
+    <details class="more" ${fm.src?'':'open'}><summary>So machst du das Foto</summary><ol style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px">
+      <li>Messzeichen mit bekannter Länge (z. B. Lineal 300 mm) <b>in der Mitte des Rads</b> befestigen, z. B. mit Klett am Oberrohr. Nicht seitlich daneben.</li>
+      <li>iPhone quer aufs Stativ, ca. 2 m seitlich, auf Höhe der Radmitte, genau rechtwinklig zum Rad. 2-fach-Zoom verringert Verzerrung.</li>
+      <li>„Ausrichtung prüfen“: beide Werte unter 1°. Besser noch: waagerechte Laserlinie des Kreuzlasers sichtbar im Bild.</li>
+      <li>Ganzes Rad mit Boden unter dem Tretlager im Bild. Kurbel in Verlängerung des Sitzrohrs ist nicht nötig.</li></ol></details>
+    <div class="row"><button class="btn sm" data-act="fmLevel">${ic('fit')}Ausrichtung prüfen</button><span id="fmLevel" class="chip nodot">${fm.lvlOn?'misst …':'iPhone aufs Stativ, dann tippen'}</span></div>
+    <div class="row" style="align-items:flex-end"><div class="field" style="width:170px"><label for="fmRef">Länge Messzeichen (mm)</label><input class="input num" id="fmRef" type="number" min="50" max="2000" step="0.5" inputmode="decimal" value="${fmRef()}" data-change="fmRef"></div>
+      <label class="btn" for="fmCam">${ic('camera')}Foto aufnehmen</label><input class="vh" type="file" id="fmCam" accept="image/*" capture="environment" data-change="fmFile"><label class="btn" for="fmLib">Aus Mediathek</label><input class="vh" type="file" id="fmLib" accept="image/*" data-change="fmFile"></div>
+    <div class="stack" ${fm.src?'':'hidden'}>
+      <div class="statusbox"><div style="flex:1;min-width:0"><b id="fmNext">${nx?'Tippe: '+esc(nx.l):'Alle Punkte gesetzt'}</b><span class="muted" style="font-size:13.5px">Erst grob antippen, dann den Punkt zum Feinjustieren verschieben – er bewegt sich 4× langsamer als der Finger. Die Lupe zeigt die Stelle vergrößert.</span></div></div>
+      <canvas id="fmCanvas" style="width:100%;max-width:100%;border-radius:10px;background:#000;touch-action:none;cursor:crosshair" aria-label="Foto zum Antippen der Messpunkte"></canvas>
+      <div class="row"><button class="btn sm" data-act="fmUndo">Letzten Punkt löschen</button><button class="btn sm" data-act="fmSkip" ${nx&&nx.opt?'':'hidden'} id="fmSkipBtn">Überspringen</button><button class="btn sm ghost" data-act="fmReset">Alle Punkte neu</button></div>
+      <div class="row"><select class="input" style="width:auto" id="fmSide" aria-label="Speichern als" data-change="fmSide"><option value="before">als Ausgangswert</option><option value="after" ${side==='after'?'selected':''}>als Endwert</option></select></div>
+      <div id="fmOut"></div>
+      <p class="faint" style="font-size:12.5px">Gespeichert wird als „${FM_METHOD}“ mit Unsicherheit. Vorhandene Werte werden nur ersetzt, wenn du sie anhakst. Das Foto mit den Punkten kommt als Nachweis zur Sitzung (nur mit Foto-Einwilligung, bleibt auf dem Gerät).</p>
+    </div></div>`;
+}
+function fmDraw(){
+  const cv=document.getElementById('fmCanvas'); if(!cv||!fmImg||!fm.w) return;
+  if(cv.width!==fm.w) { cv.width=fm.w; cv.height=fm.h; }
+  const ctx=cv.getContext('2d'); ctx.drawImage(fmImg,0,0,fm.w,fm.h);
+  const r=Math.max(5,fm.w/170); ctx.lineWidth=Math.max(2,fm.w/500); ctx.font=`700 ${Math.round(r*2.6)}px Figtree, sans-serif`;
+  const P=fm.pts, line=(a,b,col,dash)=>{ if(!P[a]||!P[b]) return; ctx.strokeStyle=col; ctx.setLineDash(dash?[r*2,r*1.4]:[]); ctx.beginPath(); ctx.moveTo(P[a].x,P[a].y); ctx.lineTo(P[b].x,P[b].y); ctx.stroke(); ctx.setLineDash([]); };
+  line('refA','refB','#3fb6ff'); line('bb','saddle','#ff8030'); line('h1','h2','#2fd27a',true);
+  if(P.bb){ ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.setLineDash([r,r]); ctx.beginPath(); ctx.moveTo(P.bb.x,0); ctx.lineTo(P.bb.x,fm.h); ctx.stroke(); ctx.setLineDash([]); }
+  FM_PTS.forEach(p=>{ const q=P[p.k]; if(!q) return; const col=p.k.startsWith('ref')?'#3fb6ff':p.k.startsWith('h')?'#2fd27a':'#ff8030';
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(q.x,q.y,r,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=Math.max(1.5,r/3); ctx.stroke();
+    ctx.lineWidth=4; ctx.strokeStyle='rgba(0,0,0,.7)'; ctx.strokeText(p.s,q.x+r*1.5,q.y-r*1.2); ctx.fillStyle='#fff'; ctx.fillText(p.s,q.x+r*1.5,q.y-r*1.2); ctx.lineWidth=Math.max(2,fm.w/500); });
+  if(fm.loupe){ const L=fm.loupe, R=Math.round(fm.w*0.13), z=3, cx=L.x<fm.w/2?fm.w-R-10:R+10, cy=R+10;
+    ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.clip(); ctx.fillStyle='#000'; ctx.fillRect(cx-R,cy-R,2*R,2*R);
+    const sw=fmImg.naturalWidth/fm.w; ctx.drawImage(fmImg,(L.x-R/z)*sw,(L.y-R/z)*sw,(2*R/z)*sw,(2*R/z)*sw,cx-R,cy-R,2*R,2*R);
+    ctx.strokeStyle='#ff8030'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(cx-R,cy); ctx.lineTo(cx+R,cy); ctx.moveTo(cx,cy-R); ctx.lineTo(cx,cy+R); ctx.stroke(); ctx.restore();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke(); }
+}
+function fmUpdate(){
+  const nx=fmNext(), el=document.getElementById('fmNext'); if(el) el.textContent=nx?'Tippe: '+nx.l:'Alle Punkte gesetzt';
+  const sk=document.getElementById('fmSkipBtn'); if(sk) sk.hidden=!(nx&&nx.opt);
+  const out=document.getElementById('fmOut'); if(!out) return; const s=sess(ui.sess); const R=fmCalcNow();
+  if(!R){ out.innerHTML=`<div class="empty">Ergebnisse erscheinen, sobald Messzeichen, Tretlager, Sattel, Sattelspitze und Lenker gesetzt sind.</div>`; return; }
+  const side=(document.getElementById('fmSide')||{}).value||'before'; const rec=s?s[side]:{};
+  const rows=FM_KEYS.filter(k=>R.vals[k]!=null).map(k=>{ const cur=rec&&rec[k], dv=cur?Math.round((R.vals[k]-Number(cur.value))*10)/10:null, big=dv!=null&&Math.abs(dv)>5;
+    return `<tr><td><label class="row" style="flex-wrap:nowrap;gap:8px"><input type="checkbox" class="fmChk" value="${k}" ${cur?'':'checked'}><span>${MK[k].label}</span></label></td><td class="r num"><b>${fmtNum(R.vals[k])} ${MK[k].unit}</b></td><td class="r num">${cur?fmtNum(cur.value)+' '+MK[k].unit+`<div class="faint" style="font-size:11px">${esc(cur.method)}</div>`:'–'}</td><td class="r num">${dv==null?'–':`<span class="chip nodot ${big?'c-warn':''}">${dv>0?'+':''}${fmtNum(dv)}</span>`}</td></tr>`; }).join('');
+  out.innerHTML=`${R.warn.map(w=>`<div class="statusbox"><span style="font-size:14px">${esc(w)}</span></div>`).join('')}
+    <div class="tw"><table><thead><tr><th>Messpunkt</th><th class="r">Foto</th><th class="r">Vorhanden</th><th class="r">Abweichung</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="faint" style="font-size:12.5px">Maßstab ${fmtNum(Math.round(R.sc*100)/100)} mm pro Bildpunkt · Unsicherheit ca. ±${R.unc} mm (geschätzt aus Antipp-Genauigkeit, nicht geprüft). Mehr als 5 mm Abweichung zum vorhandenen Wert: Punkte prüfen.</p>
+    <button class="btn primary" data-act="fmSave" data-id="${s?s.id:''}">Angehakte Werte übernehmen</button>`;
+}
+function wireFm(){
+  const cv=document.getElementById('fmCanvas'); if(!cv) return;
+  const pos=e=>{ const rc=cv.getBoundingClientRect(); return {x:Math.max(0,Math.min(fm.w,(e.clientX-rc.left)*cv.width/rc.width)), y:Math.max(0,Math.min(fm.h,(e.clientY-rc.top)*cv.height/rc.height))}; };
+  cv.addEventListener('pointerdown',e=>{ if(!fm.w) return; const p=pos(e); const ratio=cv.width/Math.max(1,cv.clientWidth), hit=14*ratio;
+    let best=null, bd=1e9; Object.entries(fm.pts).forEach(([k,q])=>{ const dd=Math.hypot(q.x-p.x,q.y-p.y); if(dd<bd){ bd=dd; best=k; } });
+    if(best&&bd<hit){ fm.drag=best; fm.fine={x0:p.x,y0:p.y,px:fm.pts[best].x,py:fm.pts[best].y}; } else { const nx=fmNext(); if(!nx) return; fm.drag=nx.k; fm.order.push(nx.k); fm.fine=null; fm.pts[fm.drag]=p; }
+    fm.loupe=fm.pts[fm.drag]; try{ cv.setPointerCapture(e.pointerId); }catch(err){} e.preventDefault(); fmDraw(); });
+  cv.addEventListener('pointermove',e=>{ if(!fm.drag) return; const p=pos(e); const F=fm.fine; const q=F?{x:Math.max(0,Math.min(fm.w,F.px+(p.x-F.x0)/4)),y:Math.max(0,Math.min(fm.h,F.py+(p.y-F.y0)/4))}:p; fm.pts[fm.drag]=q; fm.loupe=q; fmDraw(); });
+  const up=()=>{ if(!fm.drag) return; fm.drag=null; fm.fine=null; fm.loupe=null; fmDraw(); fmUpdate(); };
+  cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up);
+  if(fm.src){ if(fmImg&&fmImg.complete&&fm.w){ fmDraw(); fmUpdate(); } }
+}
+function fmMotion(e){
+  const el=document.getElementById('fmLevel'); if(!el){ fmLevelStop(); return; }
+  const g=e.accelerationIncludingGravity; if(!g||g.x==null) return; const n=Math.hypot(g.x,g.y,g.z); if(n<1) return;
+  fm.lvl.push([g.x,g.y,g.z]); if(fm.lvl.length>20) fm.lvl.shift(); const m=[0,1,2].map(i=>fm.lvl.reduce((a,b)=>a+b[i],0)/fm.lvl.length); const nn=Math.hypot(...m);
+  const a=Math.atan2(m[0],m[1])*180/Math.PI; let dv=((a%90)+90)%90; if(dv>45) dv-=90; const pitch=Math.asin(Math.max(-1,Math.min(1,m[2]/nn)))*180/Math.PI;
+  const ok=Math.abs(dv)<1&&Math.abs(pitch)<1.5; el.className='chip nodot '+(ok?'c-ok':'c-warn');
+  el.textContent=`gedreht ${fmtNum(Math.round(Math.abs(dv)*10)/10)}° · nach vorn/hinten ${fmtNum(Math.round(Math.abs(pitch)*10)/10)}° ${ok?'– passt':'– nachjustieren'}`;
+}
+function fmLevelStop(){ if(fm.lvlOn){ window.removeEventListener('devicemotion',fmMotion); fm.lvlOn=false; fm.lvl=[]; } }
+async function fmLevelStart(){ try{ if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){ const r=await DeviceMotionEvent.requestPermission(); if(r!=='granted'){ toast('Zugriff auf den Lagesensor wurde nicht erlaubt',true); return; } }
+  if(!fm.lvlOn){ window.addEventListener('devicemotion',fmMotion); fm.lvlOn=true; } const el=document.getElementById('fmLevel'); if(el) el.textContent='misst …';
+  setTimeout(()=>{ if(!fm.lvl.length){ const x=document.getElementById('fmLevel'); if(x) x.textContent='kein Lagesensor (nur am iPhone/iPad)'; } },1500); }catch(e){ toast('Lagesensor nicht verfügbar',true); } }
 /* --- Live-Analyse: Punkte automatisch erkennen, Mittel über viele Kurbelumdrehungen --- */
 let poseVideoPromise=null, poseFullPromise=null;
 function loadPoseFull(){
@@ -5762,7 +5874,7 @@ function afterRender(){ { const bb=document.getElementById('backBtn'); if(bb) bb
   labelTables(document.getElementById('view'));
   cancelAnimationFrame(motion.raf); motion.playing=false; motion.last=0;
   if(ui.route==='motion'){ const cv=document.getElementById('motionCanvas'); if(cv){ drawMotion(cv); } wireVid(); }
-  if(ui.route==='sitzung'){ wireVid(); changePreview(); }
+  if(ui.route==='sitzung'){ wireVid(); wireFm(); changePreview(); } else fmLevelStop();
   if(ui.focus){ const el=document.getElementById(ui.focus); if(el){ el.focus(); const v=el.value; try{el.setSelectionRange(v.length,v.length);}catch(e){} } ui.focus=null; }
 }
 
@@ -6009,6 +6121,19 @@ const ACT = {
   restoreKey(el){ try{ importJson(localStorage.getItem(el.dataset.k)); }catch(e){ toast('Sicherung nicht lesbar',true); } },
   vidMode(el){ vid.mode=el.dataset.v; vid.pts=[]; render(); },
   vidReset(){ vid.pts=[]; drawVid(); },
+  fmLevel(){ fmLevelStart(); },
+  fmUndo(){ const k=fm.order.pop(); if(k){ delete fm.pts[k]; } else { const last=FM_PTS.slice().reverse().find(p=>fm.skip[p.k]); if(last){ delete fm.skip[last.k]; if(/^h/.test(last.k)){ delete fm.skip.h1; delete fm.skip.h2; } } } fmDraw(); fmUpdate(); },
+  fmSkip(){ const nx=fmNext(); if(nx&&nx.opt){ fm.skip[nx.k]=1; if(nx.k==='h1') fm.skip.h2=1; fmUpdate(); } },
+  fmReset(){ fm.pts={}; fm.order=[]; fm.skip={}; fmDraw(); fmUpdate(); },
+  fmSave(el){ const s=sess(el.dataset.id); if(!s) return; const R=fmCalcNow(); if(!R){ toast('Erst alle Pflichtpunkte antippen',true); return; }
+    const side=(document.getElementById('fmSide')||{}).value||'before'; const keys=[...document.querySelectorAll('.fmChk:checked')].map(x=>x.value).filter(k=>R.vals[k]!=null&&MK[k]);
+    if(!keys.length){ toast('Keinen Wert angehakt',true); return; }
+    keys.forEach(k=>{ s[side][k]={...mv(k,R.vals[k],FM_METHOD,'gemessen',R.unc),time:nowStamp(),from:'Foto-Messung'}; }); if(s.status==='geplant') s.status='in Arbeit';
+    audit(`Foto-Messung: ${keys.length} Werte übernommen (${side==='before'?'Ausgangswert':'Endwert'}): ${keys.map(k=>MK[k].label+' '+R.vals[k]+' '+MK[k].unit).join(', ')}`,s.id); save();
+    const c=cust(s.customerId), cv=document.getElementById('fmCanvas');
+    const fin=saved=>{ render(); toast(`${keys.length} Werte übernommen${saved?' · Foto als Nachweis gespeichert':''}`); };
+    if(cv&&mediaOk(c)) cv.toBlob(b=>{ if(!b) return fin(false); const id=uid('m'); mPut({id,blob:b,type:'image/jpeg'}).then(()=>{ (S.media=S.media||[]).push({id,owner:'s:'+s.id,kind:'image',name:'Foto-Messung.jpg',type:'image/jpeg',size:b.size,date:today(),note:'Foto-Messung (Rad) · '+(side==='before'?'vorher':'nachher')}); save(); fin(true); }).catch(()=>fin(false)); },'image/jpeg',0.82);
+    else fin(false); },
   vidStep(el){ if(!vidEl||!vidEl.duration) return; vid.t=Math.max(0,Math.min(vidEl.duration,vidEl.currentTime+Number(el.dataset.d)/30)); vidEl.currentTime=vid.t; const sk=document.getElementById('vidSeek'); if(sk) sk.value=Math.round(vid.t/vidEl.duration*1000); },
   vidSave(el){ const ang=vidAngle(); if(ang==null){ toast(`Bitte erst alle Punkte antippen: ${VMODES[vid.mode].pts.join(', ')}`,true); return; } const s=sess(el.dataset.id); const side=document.getElementById('vidSide').value; const key=VMODES[vid.mode].key;
     const ent={...mv(key,ang,'2D-Video (unkalibriert)','gemessen',null),time:nowStamp()}; const asCheck=key==='kneeBDC'?storeVideoKnee(s[side],ent):(s[side][key]=ent,false); if(s.status==='geplant') s.status='in Arbeit';
@@ -6373,6 +6498,11 @@ const FORMS = {
 };
 
 const CHG = {
+  fmFile(el){ const f=el.files&&el.files[0]; if(!f) return; if(fm.src) try{ URL.revokeObjectURL(fm.src); }catch(e){} fm.src=URL.createObjectURL(f); fm.pts={}; fm.order=[]; fm.skip={}; fm.w=0;
+    fmImg=new Image(); fmImg.onload=()=>{ const sc=Math.min(1,2000/Math.max(fmImg.naturalWidth,fmImg.naturalHeight)); fm.w=Math.round(fmImg.naturalWidth*sc); fm.h=Math.round(fmImg.naturalHeight*sc); fmDraw(); fmUpdate(); };
+    fmImg.onerror=()=>toast('Foto konnte nicht geladen werden',true); fmImg.src=fm.src; render(); toast('Foto geladen – jetzt die Punkte antippen'); },
+  fmRef(el){ const v=Number(el.value); if(!(v>=50&&v<=2000)){ toast('Länge zwischen 50 und 2000 mm',true); return; } S.settings=S.settings||{}; S.settings.fmRef=v; save(); fmUpdate(); },
+  fmSide(){ fmUpdate(); },
   async teamRole(el){ try{ await clApi('/rest/v1/rpc/set_member_role',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_user:el.dataset.u,p_role:el.value})}); audit('Team: Rolle geändert'); toast('Rolle geändert'); }catch(e){ toast(clErrText(e.message),true); } TEAM.at=0; teamLoad(); },
   invCust(el){ const c=cust(el.value); const f=el.closest('form'); if(!c||!c.id||!f) return; const a=c.invAddr||{}; const set=(n,v)=>{ const i=f.querySelector(`[name="${n}"]`); if(i&&v!=null) i.value=v; }; set('name',c.name); set('email',c.email||''); set('company',a.company||''); set('street',a.street||''); set('zip',a.zip||''); set('city',a.city||''); },
 

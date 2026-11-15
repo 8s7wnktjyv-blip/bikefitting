@@ -103,6 +103,15 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Seitenvergleich links/rechts, Test Schulterbeweglichkeit, gemeinsame Zeitleiste in der Kundenakte, Videos vorher/nachher nebeneinander (synchron, bildweise, langsam), Ansicht je Video (v.56).
 - FYF-Messset (Datenbanken → Messmittel): Inhalt des geplanten Sets, mit einem Tippen als Messmittel anlegen. Prototyp, Genauigkeit noch nicht geprüft. Konzept: `docs/KONZEPT-MESSSET.md`.
 
+## Foto-Messung (Beta, ab v.107)
+
+- Fitting → Messen → „Rad per Foto vermessen (Beta)“: Foto vom Rad ohne Person, mit einem Messzeichen bekannter Länge (z. B. Lineal 300 mm) in der Mitte des Rads.
+- Punkte antippen: Messzeichen (2), Tretlagermitte, Boden, Sattel oben, Sattelspitze, Lenker oben; optional Schalthebel und zwei Punkte auf der waagerechten Laserlinie (gleicht ein schiefes Bild aus). Gesetzte Punkte zum Feinjustieren verschieben (4× langsamer), mit Lupe.
+- FYF rechnet bis zu 11 Werte: Sattelhöhe, Sattelversatz, Sattel/Lenker/Schalthebel über Boden, Tretlagerhöhe, Lenkermitte und Schalthebel vor Tretlager, Überhöhung, Sattel–Lenker, Sattelspitze bis Schalthebel.
+- Übernommen wird nur, was angehakt ist. Vorhandene Werte sind nicht vorausgewählt; Abweichung über 5 mm wird markiert. Methode „2D-Foto mit Messzeichen (Beta)“ mit geschätzter Unsicherheit (mind. ±3 mm). Die Datenprüfung erinnert an die Gegenprüfung mit dem Maßband.
+- „Ausrichtung prüfen“ zeigt am iPhone, ob es auf dem Stativ gerade steht. Das Foto mit den Punkten wird als Nachweis zur Sitzung gespeichert (nur mit Foto-Einwilligung, nur auf dem Gerät bzw. im eigenen Cloud-Speicher).
+- **Nicht validiert:** Genauigkeit am echten Rad noch nicht geprüft. Testplan: `docs/FOTO-MESSUNG.md`. Rechnung automatisch geprüft: `node tools/test-foto-messung.mjs`.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.
