@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-15.103';
+const APP_VER='2026-11-15.104';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2302,6 +2302,58 @@ function animIn(v){ try{ if(matchMedia('(prefers-reduced-motion: reduce)').match
   [...v.querySelectorAll('.kpi,.tile,.li,tbody tr,.rprods figure')].slice(0,24).forEach((el,i)=>{ el.style.animationDelay=(i*35)+'ms'; el.classList.add('rise'); setTimeout(()=>{ el.classList.remove('rise'); el.style.animationDelay=''; },950+i*35); });
   v.querySelectorAll('.kpi b.num').forEach(b=>{ const t=b.textContent.trim(); if(!/^\d{1,5}$/.test(t)) return; const n=Number(t); if(n<2) return; const t0=performance.now(), d=700; const step=now=>{ const k=Math.min(1,(now-t0)/d); b.textContent=String(Math.round(n*(1-Math.pow(1-k,3)))); if(k<1) requestAnimationFrame(step); }; b.textContent='0'; requestAnimationFrame(step); }); }
 function toast(msg,err){ const t=document.createElement('div'); t.className='toast'+(err?' err':''); t.textContent=msg; if(!err) t.insertAdjacentHTML('afterbegin',ic('check','class="tk"')); const box=document.getElementById('toasts'); box.appendChild(t); setTimeout(()=>t.remove(),3200); }
+/* Druck-/Dokumentansicht IN der App (statt neuem Fenster): immer mit „‹ Zurück“; PDF wird im Gerät erzeugt (iPhone: Teilen → In Dateien sichern / Drucken) */
+const DV_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const DV_LIB={h2c:new URL('vendor/html2canvas-1.4.1.min.js',location.href).href};
+/* Kleiner eigener PDF-Schreiber: A4-Seiten aus JPEG-Bildern (keine fremde Bibliothek nötig) */
+function dvPdfBytes(pages){ const enc=new TextEncoder(), parts=[], offs=[]; let len=0; const put=x=>{ const b=typeof x==='string'?enc.encode(x):x; parts.push(b); len+=b.length; };
+  const obj=(n,body)=>{ offs[n]=len; put(`${n} 0 obj\n`); body(); put('\nendobj\n'); };
+  put('%PDF-1.4\n%\u00e2\u00e3\n'); const N=pages.length, kids=pages.map((_,i)=>`${3+i*3} 0 R`).join(' ');
+  obj(1,()=>put('<< /Type /Catalog /Pages 2 0 R >>')); obj(2,()=>put(`<< /Type /Pages /Kids [${kids}] /Count ${N} >>`));
+  pages.forEach((p,i)=>{ const pn=3+i*3, im=pn+1, cn=pn+2, W=595.28, H=+(W*p.h/p.w).toFixed(2), PH=841.89; const cs=`q ${W} 0 0 ${H} 0 ${(PH-H).toFixed(2)} cm /I${i} Do Q`;
+    obj(pn,()=>put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${PH}] /Resources << /XObject << /I${i} ${im} 0 R >> >> /Contents ${cn} 0 R >>`));
+    obj(im,()=>{ put(`<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.jpg.length} >>\nstream\n`); put(p.jpg); put('\nendstream'); });
+    obj(cn,()=>put(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`)); });
+  const total=3+N*3, xo=len; let x=`xref\n0 ${total}\n0000000000 65535 f \n`; for(let n=1;n<total;n++) x+=String(offs[n]).padStart(10,'0')+' 00000 n \n'; put(x+`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xo}\n%%EOF`);
+  return new Blob(parts,{type:'application/pdf'}); }
+const dvJpg=cv=>{ const b=atob(cv.toDataURL('image/jpeg',0.88).split(',')[1]), u=new Uint8Array(b.length); for(let i=0;i<b.length;i++) u[i]=b.charCodeAt(i); return u; };
+function dvLoad(win,src){ return new Promise((ok,no)=>{ const d=win.document, s=d.createElement('script'); s.src=src; s.onload=ok; s.onerror=()=>no(new Error('Laden fehlgeschlagen')); (d.head||d.documentElement).appendChild(s); }); }
+async function dvPdf(html,name){ const fr=document.createElement('iframe'); fr.setAttribute('aria-hidden','true'); fr.style.cssText='position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;visibility:hidden';
+  document.body.appendChild(fr); try{ await new Promise(ok=>{ fr.onload=ok; fr.srcdoc=html; }); const w=fr.contentWindow, d=fr.contentDocument;
+    const st=d.createElement('style'); st.textContent='button,.bar{display:none!important}html,body{background:#fff!important}'; d.head.appendChild(st);
+    await Promise.all([...d.images].map(i=>i.complete?0:new Promise(r=>{ i.onload=i.onerror=r; }))); await dvLoad(w,DV_LIB.h2c);
+    const W=794, PH=Math.round(W*297/210), total=Math.max(d.documentElement.scrollHeight,d.body.scrollHeight);
+    const edges=new Set([0,total]); d.body.querySelectorAll('h1,h2,h3,h4,p,tr,li,img,table,.c,.top,.card,section,article').forEach(el=>{ const r=el.getBoundingClientRect(); edges.add(Math.round(r.top+w.scrollY)); edges.add(Math.round(r.bottom+w.scrollY)); });
+    const E=[...edges].sort((a,b)=>a-b), cuts=[0]; let s=0; while(s+PH<total){ const lim=s+PH; let c=E.filter(e=>e>s+PH*0.35&&e<=lim).pop(); if(c==null) c=lim; cuts.push(c); s=c; } cuts.push(total);
+    const sc=Math.max(1,Math.min(2,Math.sqrt(15e6/(W*total)))); const cv=await w.html2canvas(d.body,{scale:sc,backgroundColor:'#fff',windowWidth:W,width:W,height:total,useCORS:true,logging:false});
+    const pages=[];
+    for(let i=0;i<cuts.length-1;i++){ const y0=cuts[i], h=cuts[i+1]-y0; if(h<2) continue; const pc=document.createElement('canvas'); pc.width=Math.round(W*sc); pc.height=Math.round(h*sc); const g=pc.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,pc.width,pc.height); g.drawImage(cv,0,Math.round(y0*sc),cv.width,Math.round(h*sc),0,0,pc.width,Math.round(h*sc));
+      pages.push({w:pc.width,h:pc.height,jpg:dvJpg(pc)}); }
+    const blob=dvPdfBytes(pages); return new File([blob],(name||'Dokument').replace(/[–—]/g,'-').replace(/[^\w\säöüÄÖÜß.,()+-]+/g,'').replace(/\s+/g,' ').trim().slice(0,80)+'.pdf',{type:'application/pdf'}); } finally { fr.remove(); } }
+async function dvDeliver(file){ try{ if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:file.name}); return 'shared'; } }catch(e){ if(e&&e.name==='AbortError') return 'abort'; if(!(e&&e.name==='NotAllowedError')) throw e; return 'again'; }
+  const u=URL.createObjectURL(file), a=document.createElement('a'); a.href=u; a.download=file.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),60000); return 'download'; }
+function docvClose(){ const v=document.querySelector('.docv'); if(!v) return false; v.remove(); if(!document.querySelector('.docv,.tpage,.sheet,.scanner,.drawer')) document.body.style.overflow=''; return true; }
+function docWin(){ let buf='', ov=null, fr=null, t=null, file=null, busy=false; const w={closed:false,document:{write(s){ buf+=String(s); file=null; clearTimeout(t); t=setTimeout(show,0); },close(){ clearTimeout(t); show(); }},close(){ if(ov&&ov.isConnected){ ov.remove(); if(!document.querySelector('.docv,.tpage,.sheet,.scanner,.drawer')) document.body.style.overflow=''; } w.closed=true; },print(){ doPrint(); },focus(){}};
+  const title=()=>{ const m=/<title>([^<]*)<\/title>/i.exec(buf); return m?m[1].replace(/&amp;/g,'&').trim():'Dokument'; };
+  const btn=(k)=>ov&&ov.querySelector(`[data-dv=${k}]`);
+  async function doPdf(){ const b=btn('pdf'); if(busy) return; if(file){ const r=await dvDeliver(file).catch(e=>{ b.textContent='Fehler – nochmal tippen'; return 'err'; }); if(r==='again') b.textContent='PDF teilen / sichern'; return; }
+    busy=true; const old=b.textContent; b.textContent='PDF wird erstellt …'; b.disabled=true;
+    try{ file=await dvPdf(buf,title()); b.disabled=false; busy=false; const r=await dvDeliver(file).catch(()=> 'again'); b.textContent=r==='download'||r==='shared'?'PDF nochmal teilen':'PDF teilen / sichern'; }
+    catch(e){ busy=false; b.disabled=false; b.textContent='PDF braucht Internet – nochmal tippen'; setTimeout(()=>{ if(b.isConnected) b.textContent=old; },4000); } }
+  function doPrint(){ if(DV_IOS) return doPdf(); try{ fr.contentWindow.focus(); fr.contentWindow.print(); }catch(e){ doPdf(); } }
+  function fit(){ try{ const d=fr.contentDocument; fr.style.height=Math.max(window.innerHeight-60,(d.documentElement.scrollHeight||0)+8)+'px'; }catch(e){} }
+  function show(){ if(w.closed) return; if(!ov){ ov=document.createElement('div'); ov.className='docv'; ov.setAttribute('role','dialog'); ov.setAttribute('aria-modal','true');
+      ov.style.cssText='position:fixed;inset:0;z-index:2147483000;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch';
+      const bs='font:inherit;font-weight:600;padding:10px 14px;border-radius:999px;';
+      ov.innerHTML=`<div style="position:sticky;top:0;z-index:2;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;background:#f4f2ee;border-bottom:1px solid #ddd;font:15px -apple-system,system-ui,sans-serif"><button type="button" data-dv="back" style="${bs}border:1px solid #ccc;background:#fff;color:#111">‹ Zurück</button><span style="flex:1"></span>${DV_IOS?'':`<button type="button" data-dv="print" style="${bs}border:1px solid #ccc;background:#fff;color:#111">Drucken</button>`}<button type="button" data-dv="pdf" style="${bs}border:0;background:#111;color:#fff">${DV_IOS?'PDF sichern / drucken':'Als PDF'}</button></div><iframe title="Dokument" style="display:block;width:100%;border:0;background:#fff"></iframe>`;
+      fr=ov.querySelector('iframe'); btn('back').onclick=()=>{ w.close(); try{ if(history.state&&history.state.docv){ window.__dvSkip=1; history.back(); } }catch(e){} }; if(btn('print')) btn('print').onclick=doPrint; btn('pdf').onclick=doPdf;
+      fr.addEventListener('load',()=>{ fit(); setTimeout(fit,400); setTimeout(fit,1500); try{ const d=fr.contentDocument; d.querySelectorAll('img').forEach(i=>i.addEventListener('load',fit));
+        d.querySelectorAll('button').forEach(x=>{ const oc=x.getAttribute('onclick')||''; if(/print\(|close\(/.test(oc)){ if(/close\(/.test(oc)&&!/print\(/.test(oc)){ x.removeAttribute('onclick'); x.onclick=()=>btn('back').click(); } else { x.style.display='none'; } } });
+        d.addEventListener('keydown',e=>{ if(e.key==='Escape') btn('back').click(); }); }catch(e){} });
+      document.body.appendChild(ov); document.body.style.overflow='hidden'; try{ history.pushState({docv:1},'',location.href); }catch(e){} }
+    fr.srcdoc=buf; }
+  return w; }
+window.addEventListener('keydown',e=>{ if(e.key==='Escape'&&document.querySelector('.docv')) document.querySelector('.docv [data-dv=back]').click(); });
 function openDrawer(title,body,actions){
   document.getElementById('overlay').innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="drawer-h"><h2>${esc(title)}</h2>${actions||''}<button class="iconbtn" data-act="close" aria-label="Schließen">${ic('x')}</button></div><div class="drawer-b" id="drawerBody">${body}</div></aside>`;
   labelTables(document.getElementById('overlay')); if(typeof mediaHydrate==='function') setTimeout(mediaHydrate,0); const d=document.querySelector('.drawer'); d && d.querySelector('.iconbtn').focus();
@@ -6401,7 +6453,7 @@ document.addEventListener('submit',e=>{
 document.addEventListener('change',e=>{ if(e.target&&e.target.id==='m_key_after') changePreview(); const el=e.target.closest('[data-change]'); if(el&&CHG[el.dataset.change]){ try{ CHG[el.dataset.change](el); }catch(err){ console.error(err); toast('Fehler: '+err.message,true);} } });
 document.addEventListener('input',e=>{ if(e.target&&(e.target.id==='m_val_after')) changePreview(); if(e.target&&e.target.dataset&&e.target.dataset.lo!==undefined) liveRange(e.target); const el=e.target.closest('[data-input]'); if(!el) return; ui[el.dataset.input]=el.value; ui.focus=el.id; render(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDrawer(); closeMenu(); } });
-window.addEventListener('popstate',()=>{ try{ if(document.querySelector('.drawer')){ closeDrawer(); try{ history.pushState({fyf:1},'','#'+ui.route); }catch(e){} return; } navPop(); }catch(err){ console.error(err); } });
+window.addEventListener('popstate',()=>{ try{ if(window.__dvSkip){ window.__dvSkip=0; return; } if(docvClose()) return; if(document.querySelector('.drawer')){ closeDrawer(); try{ history.pushState({fyf:1},'','#'+ui.route); }catch(e){} return; } navPop(); }catch(err){ console.error(err); } });
 
 applyTheme(); storageOk=storageOk&&storageTest(); savePill();
 const start=(location.hash||'').slice(1);
@@ -6704,7 +6756,7 @@ Object.assign(ACT,{
   acadOpen(el){ ui.acadOpen=ui.acadOpen===el.dataset.id?null:el.dataset.id; render(); },
   acadAnswer(el){ const l=ACADEMY.find(x=>x.id===el.dataset.id), q=l.quiz[+el.dataset.q]; if(+el.dataset.a===q[2]){ acad().done[l.id]=today(); save(); toast('Richtig – Lektion abgeschlossen'); ui.acadOpen=null; render(); } else toast('Leider falsch. Lies den Text noch einmal.',true); },
   acadCert(el){ const c=el.dataset.c, A=acad(), L=ACADEMY.filter(l=>l.course===c); const who=A.name||acadKey(); const last=L.map(l=>A.done[l.id]).sort().pop();
-    const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
+    const w=docWin(); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
     w.document.write(`<!doctype html><meta charset="utf-8"><title>Teilnahmebestätigung</title><body style="font-family:system-ui,sans-serif;max-width:640px;margin:60px auto;padding:0 20px;color:#1d2a30"><p style="letter-spacing:.1em;text-transform:uppercase;font-size:12px;color:#777">${esc(BRAND.platform)} Academy</p><h1 style="margin:.2em 0">Teilnahmebestätigung</h1><p style="font-size:18px">${esc(who)}</p><p>hat alle ${L.length} Lektionen des Lernpfads <b>${esc(c)}</b> durchgearbeitet und die Kontrollfragen beantwortet.</p><p>Abgeschlossen am ${fmtDate(last)}${shopName()?' · '+esc(shopName()):''}</p><p style="font-size:12px;color:#777;margin-top:40px">Dies ist eine Teilnahmebestätigung, keine Zertifizierung.</p><script>setTimeout(()=>print(),300)<\/script></body>`); w.document.close(); }
 });
 const _stockAct=ACT.stock; ACT.stock=function(el){ const x=S.inventory.find(i=>i.sku===el.dataset.sku), before=x?x.stock:null; _stockAct.call(this,el); if(x&&x.stock!==before){ moveAdd(x.sku,x.stock-before,'Korrektur','Plus/Minus'); save(); } };
@@ -7146,7 +7198,7 @@ function bikePassHtml(P){ const row=(a,b)=>`<tr><td style="padding:6px 8px 6px 0
 ${P.fits.length?`<h2>Bikefitting</h2>${P.fits.map(f=>`<div class="e"><b>${fmtDate(f.date)}</b> · Fitting mit ${f.n} Änderungen</div>`).join('')}`:''}
 <p class="m" style="margin-top:30px">Dieser Fahrradpass listet die Arbeiten, die${P.shop.name?' bei '+esc(P.shop.name):' in dieser Werkstatt'} dokumentiert wurden. Arbeiten anderer Werkstätten sind nur enthalten, wenn sie nachgetragen wurden.${P.shop.addr||P.shop.phone?'<br>'+esc([P.shop.name,P.shop.addr,P.shop.phone].filter(Boolean).join(' · ')):''}</p></html>`; }
 Object.assign(ACT,{
-  bikePass(el){ const b=bike(el.dataset.id); if(!b||!b.id) return; const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; } w.document.write(bikePassHtml(bikePassData(b))); w.document.close(); audit(`Fahrradpass erstellt: ${bikeName(b)}`); },
+  bikePass(el){ const b=bike(el.dataset.id); if(!b||!b.id) return; const w=docWin(); if(!w){ toast('Bitte Pop-ups erlauben',true); return; } w.document.write(bikePassHtml(bikePassData(b))); w.document.close(); audit(`Fahrradpass erstellt: ${bikeName(b)}`); },
   bikePassSend(el){ const b=bike(el.dataset.id); if(!b) return; const c=cust(b.customerId); if(!c||!c.id) return; const x=document.createElement('button'); x.dataset.id=c.id; ACT.portalShare(x); }
 });
 { const BD2=bikeDrawer; bikeDrawer=function(id){ BD2(id); const b=bike(id), box=document.getElementById('drawerBody'); if(!b||!b.id||!box) return;
@@ -7250,7 +7302,7 @@ Object.assign(ACT,{
       <label class="wide row" style="flex-wrap:nowrap;gap:8px"><input type="checkbox" name="bill" checked><span>Als Werkstattauftrag abrechnen</span></label>
       <div class="wide row"><button class="btn primary" type="submit">Check speichern und Zertifikat öffnen</button></div></form>`); },
   usedCert(el){ const b=bike(el.dataset.id); if(!b) return; const k=(b.usedChecks||[]).find(x=>x.id===el.dataset.c)||(b.usedChecks||[]).slice(-1)[0]; if(!k) return;
-    const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
+    const w=docWin(); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
     const done=qr=>{ w.document.write(usedCertHtml(b,k,qr)); w.document.close(); };
     if(b.qr&&b.qr.code){ (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>done(qrSvg(passUrl(b.qr.code)))).catch(()=>done('')); } else done(''); }
 });
@@ -7308,7 +7360,7 @@ Object.assign(ACT,{
   async qrPassDel(el){ const b=bike(el.dataset.id); if(!b||!b.qr) return; if(!confirmDel('Fahrradpass zurückziehen? Er ist dann nicht mehr öffentlich, es kommen keine Einträge mehr dazu. Die bisherige Geschichte bleibt gespeichert.')) return;
     try{ await clApi('/rest/v1/rpc/pass_delete',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_bike:b.id})}); }catch(e){ toast(e.offline?'Keine Verbindung':netErr(e),true); return; }
     delete b.qr; audit(`QR-Fahrradpass zurückgezogen: ${bikeName(b)}`); save(); closeDrawer(); render(); toast('Fahrradpass zurückgezogen'); },
-  passSticker(el){ const b=bike(el.dataset.id); if(!b||!b.qr||!b.qr.code) return; const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
+  passSticker(el){ const b=bike(el.dataset.id); if(!b||!b.qr||!b.qr.code) return; const w=docWin(); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
     (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ const s=qrSvg(passUrl(b.qr.code)); const one=`<div class="st"><div class="q">${s}</div><div><b>FYF Fahrradpass</b><div class="c">${esc(b.qr.code)}</div><div class="m">Scannen: Service-Geschichte</div></div></div>`;
       w.document.write(`<!doctype html><html lang="de"><meta charset="utf-8"><title>Aufkleber ${esc(b.qr.code)}</title><style>body{font-family:system-ui,sans-serif;margin:16px}.g{display:grid;grid-template-columns:repeat(auto-fill,60mm);gap:6mm}.st{width:60mm;height:25mm;border:1px dashed #999;border-radius:3mm;display:flex;gap:2.5mm;align-items:center;padding:2mm;box-sizing:border-box}.q{width:21mm;height:21mm;flex:none}.q svg{width:100%;height:100%}.c{font:700 15px ui-monospace,monospace;letter-spacing:.08em}.m{font-size:9px;color:#555}b{font-size:10px}button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:#1d2a30;color:#fff;margin-bottom:12px}@media print{button,p{display:none}.st{border-color:#ddd}}</style><button onclick="print()">Drucken</button><p style="font-size:13px;color:#555">Auf Etikettenpapier oder normales Papier drucken, ausschneiden und mit klarer Folie überkleben. Am besten unter das Oberrohr oder an das Sitzrohr.</p><div class="g">${one.repeat(8)}</div></html>`); w.document.close(); }).catch(()=>{ w.close(); toast('QR-Code braucht Internet',true); }); },
   passCopy(el){ const b=bike(el.dataset.id); if(!b||!b.qr) return; try{ navigator.clipboard.writeText(passUrl(b.qr.code)).then(()=>toast('Link kopiert'),()=>toast('Kopieren nicht möglich',true)); }catch(e){ toast('Kopieren nicht möglich',true); } }
@@ -7414,7 +7466,7 @@ function passCardHtml(b,code,transfer,qr){ const I=b.ident||{}, sh=S.shop||{};
 <div class="card"><div class="t">FYF Fahrradschein · Teil II – Übergabe</div><div class="n" style="font-size:10pt">${esc(bikeName(b))} · ${esc(code)}</div>
 <div class="m">Geheimer Übergabe-Code (nur beim Verkauf weitergeben):</div><div class="tr">${esc(transfer.replace(/(.{4})(?=.)/g,'$1-'))}</div>
 <div class="m">Beim Kauf: Käufer bringt diese Karte in eine FYF-Werkstatt. Die Werkstatt überträgt den Pass, die ganze Geschichte bleibt erhalten, Namen früherer Besitzer werden nie gezeigt. Danach gilt dieser Code nicht mehr.</div></div></html>`; }
-async function passCardOpen(b,transfer){ const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
+async function passCardOpen(b,transfer){ const w=docWin(); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
   let qr=''; try{ if(!window.qrcode) await loadScript(QR_JS()); qr=qrSvg(passUrl(b.qr.code)); }catch(e){}
   w.document.write(passCardHtml(b,b.qr.code,transfer,qr)); w.document.close(); }
 // Mini-Etikett für 18-mm-Band: QR mit niedriger Fehlerkorrektur (L = kleinstmöglich), ganze Druckpunkte je Kästchen (180 dpi, Bild doppelt so fein)
@@ -7461,7 +7513,7 @@ Object.assign(ACT,{
       <div class="field"><label for="bi_bf">Gekauft bei</label><input class="input" id="bi_bf" name="from" value="${esc(I.from||'')}" maxlength="80"></div>
       <p class="wide faint" style="margin:0;font-size:12.5px">Batteriepass: Ab 18.02.2027 brauchen neu verkaufte E-Bike-Akkus einen digitalen Pass des Herstellers (EU-Batterieverordnung, Art. 77). Den QR auf dem Akku scannen und den Link hier einfügen.</p>
       <div class="wide"><button class="btn primary" type="submit">Speichern</button></div></form>`); },
-  async theftKit(el){ const b=bike(el.dataset.id); if(!b) return; const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
+  async theftKit(el){ const b=bike(el.dataset.id); if(!b) return; const w=docWin(); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
     if(b.qr&&b.qr.code&&!b.qr.stolen&&!b.qr.moved&&confirmDel('Rad im FYF-Fahrradpass als gestohlen melden? Jeder Scan zeigt dann eine Warnung.')){ b.qr.stolen=true; audit(`Als gestohlen gemeldet: ${bikeName(b)}`); save(); passPush(b,true); }
     let photo=''; try{ const im=(b.photos||[])[0]; if(im&&/^data:image\//.test(im.src||im)) photo=im.src||im; }catch(e){}
     const c=cust(b.customerId)||{}, I=b.ident||{}, L=b.life||{}; const row=(a,v)=>v?`<tr><td>${a}</td><td><b>${esc(v)}</b></td></tr>`:'';
@@ -7722,7 +7774,7 @@ Object.assign(FORMS,{ async passReissue(f,d){ if(!cloudReady()) return toast('Er
    try{ const r=await clApi('/rest/v1/rpc/pass_owner_reissue',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_code:code,p_fh:await frameHash(fr),p_note:String(d.get('note')||'').slice(0,120)})}); if(r&&r.error) return toast(errMap[r.error]||'Nicht möglich',true);
      ui.reissue={code:r.code,transfer:r.transfer}; audit(`Neuer Übergabe-Code für Fahrradpass ${r.code} nach Eigentumsprüfung ausgestellt`); save(); render(); toast('Neuer Übergabe-Code ausgestellt'); }
    catch(e){ toast(e.offline?'Keine Verbindung':netErr(e),true); } } });
-Object.assign(ACT,{ reissueClear(){ ui.reissue=null; render(); }, reissuePrint(){ const r=ui.reissue; if(!r) return; const w=window.open('','_blank'); if(!w) return toast('Pop-ups erlauben',true); const tr=r.transfer.replace(/(.{4})(?=.)/g,'$1-');
+Object.assign(ACT,{ reissueClear(){ ui.reissue=null; render(); }, reissuePrint(){ const r=ui.reissue; if(!r) return; const w=docWin(); if(!w) return toast('Pop-ups erlauben',true); const tr=r.transfer.replace(/(.{4})(?=.)/g,'$1-');
    w.document.write(`<!doctype html><html lang="de"><meta charset="utf-8"><title>Teil II ${esc(r.code)}</title><style>body{font-family:system-ui,sans-serif;margin:16px}.card{width:85.6mm;height:54mm;border:1px solid #bbb;border-radius:3.2mm;padding:3.5mm;box-sizing:border-box}.t{font-size:7pt;letter-spacing:.12em;font-weight:800;color:#d9612c}.tr{font:700 15pt ui-monospace,monospace;letter-spacing:.06em;margin:3mm 0}.m{font-size:6.5pt;color:#555}@media print{button{display:none}}</style><button onclick="print()">Drucken</button><div class="card"><div class="t">FYF FAHRRADSCHEIN · TEIL II – ÜBERGABE</div><div style="font-size:10pt;font-weight:700;margin-top:1mm">Fahrradpass ${esc(r.code)}</div><div class="m">Neuer geheimer Übergabe-Code (ersetzt den alten):</div><div class="tr">${tr}</div><div class="m">Ausgestellt von ${esc(shopName()||'FYF-Werkstatt')} am ${fmtDate(today())} nach Eigentumsprüfung. Sicher aufbewahren, nur beim Verkauf weitergeben.</div></div></html>`); w.document.close(); } });
 { const PV5=VIEWS.passport; VIEWS.passport=()=>PV5()+(cloudReady()?reissueHtml():''); }
 
@@ -7828,7 +7880,7 @@ Object.assign(CHG,{ async bikePhoto(el){ const b=bike(el.dataset.id), f=el.files
 Object.assign(ACT,{ bikePhotoDel(el){ const b=bike(el.dataset.id); if(!b) return; delete b.photo; delete b.photoPass; save(); bikeDrawer(b.id); render(); } });
 { const PL10=passPayload; passPayload=function(b){ const p=PL10(b); try{ if(p&&b&&b.photoPass&&b.photoPass.length<14000&&JSON.stringify(p).length+b.photoPass.length<38000) p.photo=b.photoPass; }catch(e){} return p; }; }
 // ---- Verkaufsunterlage / Fahrradakte als PDF (werkstattbestätigte Daten, für Gebrauchtrad-Verkauf vorbereitet)
-Object.assign(ACT,{ bikeSheet(el){ const b=bike(el.dataset.id); if(!b||!b.id) return; const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; } const sh=S.shop||{};
+Object.assign(ACT,{ bikeSheet(el){ const b=bike(el.dataset.id); if(!b||!b.id) return; const w=docWin(); if(!w){ toast('Bitte Pop-ups erlauben',true); return; } const sh=S.shop||{};
   const wos=S.workshop.filter(x=>x.bikeId===b.id&&x.status==='Übergeben').sort((a,c)=>String(c.due).localeCompare(String(a.due))); const svc=S.services.filter(x=>x.bikeId===b.id);
   const row=(k,v)=>v&&v!=='–'?`<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`:''; const parts=Object.entries(b.parts||{}).filter(([k,v])=>v&&typeof v==='string');
   w.document.write(`<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fahrradakte ${esc(b.brand+' '+b.model)}</title><style>body{font-family:-apple-system,system-ui,sans-serif;color:#111;margin:18px;max-width:760px}h1{font-size:22px;margin:0}h2{font-size:16px;margin:18px 0 6px}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #ddd;font-size:13.5px;vertical-align:top}th{width:38%;color:#555;font-weight:600}.m{color:#666;font-size:12px}.ok{display:inline-block;background:#e7f4ea;color:#1f6b35;border-radius:99px;padding:2px 8px;font-size:12px;font-weight:600}img{max-width:100%;border-radius:10px;margin:8px 0}button{font:inherit;padding:10px 16px;border-radius:999px;border:0;background:#111;color:#fff;margin-bottom:12px}@media print{button{display:none}}</style>
@@ -7843,10 +7895,15 @@ ${svc.length?`<h2>Wartungsplan</h2><table>${svc.map(x=>`<tr><th>${esc(x.task)}</
   const n=(NET&&NET.newCount)||0; if(n>0) h=h.replace(/(<section class="panel" id="today">)/,`<div class="notice acc" style="margin-bottom:12px">${ic('info')}<div><b>${n===1?'1 neue Kundenanfrage':n+' neue Kundenanfragen'}</b> unbeantwortet. <button class="btn sm" data-nav="netz">Anfragen öffnen</button></div></div>$1`); return h; }; }
 
 /* ===== v.103 Bewertungen: Theken-Aufsteller mit QR, Hinweis bei Übergabe ===== */
-ACT.reviewSign=function(){ const u=S.shop&&S.shop.reviewUrl; if(!/^https:\/\//.test(u||'')){ toast('Erst den Bewertungslink speichern',true); return; } const w=window.open('','_blank'); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
+ACT.reviewSign=function(){ const u=S.shop&&S.shop.reviewUrl; if(!/^https:\/\//.test(u||'')){ toast('Erst den Bewertungslink speichern',true); return; } const w=docWin(); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
   (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>{ const q=window.qrcode(0,'M'); q.addData(u); q.make(); const svg=q.createSvgTag({cellSize:8,margin:2,scalable:true}); const card=`<div class="c"><div class="k">${esc(shopName()||'Unsere Werkstatt')}</div><h1>Wie war's bei uns?</h1><p>Wir freuen uns über deine ehrliche Bewertung bei Google.</p><div class="q">${svg}</div><p class="s">Kamera aufs Handy, QR-Code scannen.<br>Ganz freiwillig – danke!</p></div>`;
     w.document.write(`<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bewertungs-Aufsteller</title><style>@page{size:A4;margin:10mm}body{font-family:-apple-system,system-ui,sans-serif;margin:0;color:#111}.bar{padding:12px}.bar button{font:inherit;padding:10px 16px;border:0;border-radius:99px;background:#111;color:#fff}.g{display:grid;grid-template-columns:1fr 1fr;gap:0}.c{box-sizing:border-box;height:138mm;border:1px dashed #bbb;padding:12mm 10mm;text-align:center;display:flex;flex-direction:column;justify-content:center}.k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#666}h1{font-size:24px;margin:6px 0}p{margin:4px 0;font-size:14px}.q{width:42mm;margin:8px auto}.q svg{width:100%;height:auto}.s{font-size:12px;color:#555}@media print{.bar{display:none}}</style><div class="bar"><button onclick="print()">Drucken</button> <span style="font-size:13px;color:#555">4 Karten (A6) pro A4-Blatt – an der Linie schneiden, falten oder in einen Aufsteller stecken.</span></div><div class="g">${card+card+card+card}</div></html>`); w.document.close(); }).catch(()=>{ w.close(); toast('QR-Code braucht Internet',true); }); };
 { const WR=ACT.woNext; ACT.woNext=function(el){ const id=el&&el.dataset&&el.dataset.id; const before=(S.workshop.find(x=>x.id===id)||{}).status; const r=WR.apply(this,arguments); const w=S.workshop.find(x=>x.id===id); if(w&&before!=='Übergeben'&&w.status==='Übergeben'&&!w.reviewAsked&&S.shop&&/^https:\/\//.test(S.shop.reviewUrl||'')) setTimeout(()=>toast('Übergeben. Jetzt um eine Google-Bewertung bitten? Knopf „Um Google-Bewertung bitten“ im Auftrag.'),300); return r; }; }
+/* ===== v.104 Drucken auf dem iPhone: Rechnung, Bericht, Handout als PDF (window.print geht in der Home-Bildschirm-App nicht zuverlässig) ===== */
+function dvFromEl(sel,title){ const el=[...document.querySelectorAll(sel)].find(x=>x.offsetParent!==null)||document.querySelector(sel); if(!el) return false;
+  const css=[...document.querySelectorAll('style,link[rel=stylesheet]')].map(x=>x.outerHTML).join('');
+  const w=docWin(); w.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${css}<style>html,body{background:#fff!important;height:auto!important;overflow:visible!important}body{margin:0;padding:14px;display:block!important}button,.btn{display:none!important}${sel}{position:static!important;max-width:none!important;box-shadow:none!important}</style></head><body>${el.outerHTML}</body></html>`); w.document.close(); return true; }
+[['invPrint','.invdoc','Rechnung'],['bmPrint','.report.handout','Handout'],['printReport','.report','Bericht']].forEach(([k,sel,t])=>{ const O=ACT[k]; if(typeof O!=='function') return; ACT[k]=function(){ if(DV_IOS&&dvFromEl(sel,(shopName()?shopName()+' – ':'')+t)) return; return O.apply(this,arguments); }; });
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();
