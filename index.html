@@ -1958,7 +1958,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-15.110';
+const APP_VER='2026-11-15.111';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -8475,6 +8475,37 @@ Object.assign(FORMS,{
 { const SS6=CHG.sessStatus; CHG.sessStatus=function(el){ const r=SS6.apply(this,arguments); try{ const id=el&&el.dataset&&el.dataset.id, s=sess(id); if(s&&s.status==='abgeschlossen'&&ui.msOpenAfter===id){ ui.msOpenAfter=null; setTimeout(()=>msOpen(s),250); } }catch(e){} return r; }; }
 // Knopf „Maßblatt“ im Bericht-Reiter und in der Berichtsliste
 { const SB=SESSTAB.bericht; SESSTAB.bericht=function(s){ return `<div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:10px"><button class="btn primary" data-act="fitSheetOpen" data-id="${s.id}">${ic('doc')}Maßblatt für den Kunden</button><button class="btn" data-act="fitSheet" data-id="${s.id}">Maßblatt bearbeiten</button></div>`+SB.apply(this,arguments); }; }
+/* ===================== v.111 Laden in Pass-App/Händlersuche sichtbar machen: Hinweis im Dashboard + Ein-Klick-Veröffentlichen ===================== */
+const visSlug=s=>String(s||'').toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60);
+function visState(){
+  if(!cloudReady()) return shopName()? {k:'cloud',t:'Dein Laden ist in der Pass-App noch nicht zu finden',d:'Die App speichert nur auf diesem Gerät. Für die Händlersuche und die Pass-App muss die Cloud-Speicherung verbunden sein.'}:null;
+  if(!NET.at){ if(!ui.visAuto){ ui.visAuto=1; setTimeout(()=>netLoad().then(()=>{ if(ui.route==='dashboard') render(); }),30); } return null; }
+  if(NET.err) return null; const p=NET.profile;
+  if(!p) return {k:'pub',t:'Dein Laden ist in der Pass-App noch nicht zu finden',d:'Es gibt noch kein öffentliches Händlerprofil. Ein Tipp genügt – Name, PLZ und Ort reichen.'};
+  if(!p.published) return {k:'pub',t:'Dein Laden ist nicht veröffentlicht',d:'Das Händlerprofil ist gespeichert, aber nicht öffentlich. Kunden sehen dich deshalb nicht.'};
+  const FIT=/fitting|cleat|sattel.*analyse|schuh|quick-?fit|triathlon/i; if(modOn('fitting')&&!(p.services||[]).some(x=>FIT.test(x))&&!(p.features||[]).includes('fitting')) return {k:'pub',t:'Dein Laden erscheint nicht bei „Bikefitting buchen“',d:'Im Profil ist keine Bikefitting-Leistung angehakt.'};
+  if(!p.zip&&!p.city) return {k:'pub',t:'PLZ und Ort fehlen im Händlerprofil',d:'Kunden suchen nach Ort oder PLZ.'};
+  return null; }
+function visBanner(){ const v=visState(); if(!v) return ''; const adm=role()==='Admin';
+  return `<div class="notice warn" style="margin-bottom:12px">${ic('warn')}<div class="grow"><b>${esc(v.t)}</b><div style="font-size:13.5px">${esc(v.d)}</div><div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">${v.k==='cloud'?'<button class="btn sm primary" data-nav="mehr">Cloud-Speicherung verbinden</button>':adm?'<button class="btn sm primary" data-act="visQuick">Jetzt sichtbar machen</button>':'<span class="faint" style="font-size:13px">Das kann nur ein Admin.</span>'}<button class="btn sm ghost" data-nav="netz">Händlerprofil</button></div></div></div>`; }
+{ const DV11=VIEWS.dashboard; VIEWS.dashboard=()=>{ const h=DV11(); const b=visBanner(); if(!b) return h; const i=h.indexOf('</header>'); return i>0?h.slice(0,i+9)+b+h.slice(i+9):b+h; }; }
+Object.assign(ACT,{ visQuick(){ const p=NET.profile||{}, a=(S.shop&&S.shop.addr)||'', m=/(\d{5})\s+([^,]+)/.exec(a), street=(p.street||a.split(',')[0]||'').replace(/\d{5}.*$/,'').trim();
+    const sv=p.services||[], fit=modOn('fitting'), has=x=>sv.includes(x);
+    openDrawer('Laden sichtbar machen',`<form class="form" data-form="visQuick"><p class="wide muted" style="margin:0;font-size:13.5px">Danach finden Kunden deinen Laden in der FYF-Händlersuche und in der Pass-App und können ohne Konto anfragen. Mehr Angaben (Öffnungszeiten, Text, Termine) später unter Händlerprofil.</p>
+      <div class="field wide"><label for="vq_n">Name des Ladens</label><input class="input" id="vq_n" name="name" required maxlength="120" value="${esc(p.name||shopName())}"></div>
+      <div class="field wide"><label for="vq_s">Straße und Hausnummer (optional)</label><input class="input" id="vq_s" name="street" maxlength="120" value="${esc(street)}"></div>
+      <div class="field"><label for="vq_z">PLZ</label><input class="input" id="vq_z" name="zip" required inputmode="numeric" pattern="[0-9]{5}" maxlength="5" value="${esc(p.zip||(m&&m[1])||'')}"></div>
+      <div class="field"><label for="vq_c">Ort</label><input class="input" id="vq_c" name="city" required maxlength="80" value="${esc(p.city||(m&&m[2].trim())||'')}"></div>
+      <div class="wide row" style="gap:12px;flex-wrap:wrap"><label class="row" style="gap:6px"><input type="checkbox" name="fit" ${fit||sv.some(x=>/fitting/i.test(x))?'checked':''}>Bikefitting</label><label class="row" style="gap:6px"><input type="checkbox" name="ws" ${!sv.length||has('Werkstatt')?'checked':''}>Werkstatt</label></div>
+      <p class="wide faint" style="margin:0;font-size:12.5px">Öffentlich sichtbar werden: Name, Adresse, Telefon/E-Mail aus dem Profil, Leistungen. Keine Kundendaten.</p>
+      <div class="wide"><button class="btn primary" type="submit">Veröffentlichen</button></div></form>`); } });
+Object.assign(FORMS,{ async visQuick(f,d){ const p=Object.assign({},NET.profile||{}), g=k=>String(d.get(k)||'').trim();
+    const sv=new Set((p.services||[])); ['Bikefitting','Werkstatt'].forEach(x=>sv.delete(x)); if(d.get('fit')==='on') sv.add('Bikefitting'); if(d.get('ws')==='on') sv.add('Werkstatt');
+    const q={slug:p.slug||visSlug(g('name')+'-'+g('city')),name:g('name'),street:g('street'),zip:g('zip'),city:g('city'),phone:p.phone||(S.shop&&S.shop.phone)||'',email:p.email||(S.shop&&S.shop.email)||'',web:p.web||(S.shop&&S.shop.web)||'',hours:p.hours||'',about:p.about||'',services:[...sv],published:true};
+    if(q.slug.length<3) q.slug=(q.slug+'-fyf-laden').replace(/^-/,'');
+    try{ let r; try{ r=await clApi('/rest/v1/rpc/save_profile',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p:q})}); }catch(e){ if(/SLUG_TAKEN/.test(String(e&&e.message)+netErr(e))){ q.slug=(q.slug+'-'+Math.random().toString(36).slice(2,6)).slice(0,60); r=await clApi('/rest/v1/rpc/save_profile',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p:q})}); } else throw e; }
+      audit('Händlerprofil veröffentlicht (Dashboard)'); closeDrawer(); NET.at=0; await netLoad(); render(); toast('Veröffentlicht – Kunden finden dich jetzt in der Pass-App'); }
+    catch(e){ toast(e.offline?'Keine Verbindung':netErr(e),true); } } });
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();
