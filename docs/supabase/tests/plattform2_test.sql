@@ -1,0 +1,15 @@
+-- Test für Stand 17 (Spiegel). Lokal mit Postgres 16 am 15.11.2026: Spiegel aller Bereiche, Gesundheitsdaten nicht gespiegelt, Speichern klappt auch beim Löschen eines Kunden mit Rechnung.
+insert into auth.users values ('11111111-1111-1111-1111-111111111111','a@x');
+insert into tenants(id,name) values ('aaaaaaaa-0000-0000-0000-000000000001','Laden A');
+insert into memberships values ('11111111-1111-1111-1111-111111111111','aaaaaaaa-0000-0000-0000-000000000001','admin');
+select set_config('request.jwt.claim.sub','11111111-1111-1111-1111-111111111111',false);
+grant usage on schema public to authenticated; grant select,insert,update,delete on all tables in schema public to authenticated; grant execute on all functions in schema public to authenticated;
+set role authenticated;
+select save_state('aaaaaaaa-0000-0000-0000-000000000001'::uuid, '{"customers":[{"id":"c1","name":"Lena","email":"l@x","consent":true,"body":{"height":172},"wv":[{"id":"w1","due":"2026-11-20","text":"Nachfassen"}]},{"id":"c2","name":"Anna","kind":"firma","company":"Weber GmbH","vatId":"DE1","contacts":[{"name":"Anna F","role":"Fuhrpark"}],"invAddr":{"street":"Hauptstr 5","zip":"91054","city":"Erlangen"}}],"bikes":[{"id":"b1","customerId":"c1","brand":"Canyon","model":"Grail","year":"2024","km":1234.5,"qr":{"code":"ABCDEFGH"}}],"workshop":[{"id":"WO-1","customerId":"c1","bikeId":"b1","title":"Inspektion","status":"Angenommen","created":"2026-11-15","positions":[{"t":"Inspektion","kind":"Arbeit","qty":1,"price":89},{"t":"Kette","kind":"Teil","qty":1,"price":39.9}],"checklist":[{"t":"Bremsen","ok":true},{"t":"Probefahrt","ok":false}]}],"labor":[{"id":"l1","cat":"Bremsen","name":"Bremse entlüften","price":29.9,"tpl":""}],"checkTpl":{"Annahme":["A","B"]},"invoices":[{"id":"i1","no":"2026-0001","date":"2026-11-15","customerId":"c2","type":"rechnung"}]}'::jsonb, 0);
+reset role;
+select (select count(*) from customers) kunden, (select count(*) from customer_contacts) kontakte, (select count(*) from followups) wv, (select count(*) from bikes) raeder, (select km from bikes) km, (select count(*) from work_orders) auftr, (select count(*) from work_order_items) pos, (select count(*) from work_order_checks) checks, (select count(*) from labor_items) preise, (select count(*) from check_templates) tpl, (select count(*) from invoices) rechn, (select health is null from customers where legacy_id='c1') ohne_gesundheit;
+-- Kunde c2 entfernen (hat Rechnung) -> Speichern darf nicht scheitern
+set role authenticated;
+select save_state('aaaaaaaa-0000-0000-0000-000000000001'::uuid, '{"customers":[{"id":"c1","name":"Lena Neu"}],"bikes":[],"workshop":[],"invoices":[{"id":"i1","no":"2026-0001","date":"2026-11-15","customerId":"c2","type":"rechnung"}]}'::jsonb, 1);
+reset role;
+select (select count(*) from customers) kunden, (select name from customers) name, (select count(*) from invoices) rechn, (select customer_id is null from invoices) rechnung_ohne_kunde, (select count(*) from bikes) raeder, (select version from tenant_state) version;
