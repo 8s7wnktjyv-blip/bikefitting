@@ -112,6 +112,15 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - „Ausrichtung prüfen“ zeigt am iPhone, ob es auf dem Stativ gerade steht. Das Foto mit den Punkten wird als Nachweis zur Sitzung gespeichert (nur mit Foto-Einwilligung, nur auf dem Gerät bzw. im eigenen Cloud-Speicher).
 - **Nicht validiert:** Genauigkeit am echten Rad noch nicht geprüft. Testplan: `docs/FOTO-MESSUNG.md`. Rechnung automatisch geprüft: `node tools/test-foto-messung.mjs`.
 
+## Fitting-Fahrprogramm mit der Rolle (Beta, ab v.108)
+
+- Fitting → Messen (und Anpassen) → „Rolle steuern: Fitting-Fahrprogramm“. Verbindet per Bluetooth mit Rollen, die den Standard FTMS können (z. B. Wahoo KICKR CORE 2).
+- **Nur in Chrome am Computer** (z. B. iMac). Auf iPhone/iPad und in Safari erlauben Webseiten kein Bluetooth; FYF zeigt dort einen Hinweis.
+- Programm: Einfahren (80 % der Mess-Last) → Messung bei fester Last (Standard 150 W) → Ausfahren. „Nach Änderung messen“ plant Eingewöhnen + Messung bei derselben Last ein. Pause, Stufe überspringen, ±10 W, Stopp.
+- Großanzeige: Ist-/Soll-Watt, Trittfrequenz, Stufe, Restzeit. Am Ende jeder Messstufe kommen Ø Watt und Ø Trittfrequenz als Notiz ins Fitting (erscheint im Bericht).
+- Sicherheit: einstellbarer Höchstwert (Standard 300 W). Stopp, Pause, Trennen, Verbindungsabbruch oder Verlassen der Seite geben die Last sofort frei.
+- **Mit echter Rolle noch nicht getestet** (nur mit simulierter Rolle im Browser). Rechnung geprüft: `node tools/test-fahrprogramm.mjs`.
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.

@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-15.107';
+const APP_VER='2026-11-15.108';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -3538,6 +3538,7 @@ SESSTAB.ausgang0 = s => {
   return `<div class="stack">
   <p class="onlyline">Miss das Rad so, wie die Person es mitgebracht hat. ${MEASURE_NOW.length} Punkte, je mit Skizze und Anleitung.</p>
   ${trainerHtml(s)}
+  ${krPanel(s)}
   <div class="statusbox ${done===MEASURE_NOW.length?'ok':''}"><div style="flex:1;min-width:0"><b>${done===MEASURE_NOW.length?'Alle Pflichtwerte erfasst':'Noch '+(MEASURE_NOW.length-done)+' Werte offen'}</b>${mk&&fromMaker.length?`<span class="muted" style="font-size:14px">${fromMaker.length} Serienwerte vom Hersteller übernommen</span>`:''}</div><span class="num" style="font-weight:700">${done}/${MEASURE_NOW.length}</span></div>
   ${bodySetupHtml(s)}
   ${startBtn(first,done,first>=0?MK[MEASURE_NOW[first]].label:'')}
@@ -4238,6 +4239,7 @@ SESSTAB.anpassung = s => { if(s.plan&&ui.adjIdx!=null) return guidedHtml(s); con
   const card=x=>`<div class="card"><div class="grow"><div class="t">${esc(x.title)}</div><div class="sub" style="white-space:normal;font-size:14px">${esc(x.how)}</div><details class="more" style="margin-top:4px"><summary style="font-size:13px">Warum?</summary><p class="muted" style="font-size:13.5px">${esc(x.why)}</p></details>${(()=>{ const q=pp.find(y=>y.key===x.key); return q?`<details class="more" style="margin-top:2px"><summary style="font-size:13px">Kunde will keine neuen Teile?</summary><ul class="muted" style="font-size:13.5px;margin:4px 0 0;padding-left:18px">${q.noParts.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>${q.parts.length?`<p class="muted" style="font-size:13.5px;margin-top:4px"><b>Mit Teilen:</b> ${q.parts.map(esc).join(' ')}</p>`:''}</details>`:''; })()}</div>${x.key?`<button class="btn sm primary" data-act="prepChange" data-key="${x.key}" data-v="${x.v??''}" data-reason="${esc(x.reason||x.title)}">Ändern</button>`:''}</div>`;
   return `<div class="stack">
   ${guidedHtml(s)}
+  ${krPanel(s)}
   ${checksHtml(s,true)}
   ${top.length?`<div><div class="label" style="margin-bottom:8px">Weitere Hinweise ${st('s')}</div><div class="sugg">${top.map(card).join('')}</div>${rest.length?`<details class="more" style="margin-top:8px"><summary>${rest.length} weitere Vorschläge</summary><div class="sugg" style="margin-top:8px">${rest.map(card).join('')}</div></details>`:''}</div>`:computePlan(s).steps.length?'':'<div class="statusbox"><div><b>Keine Vorschläge</b><span class="muted" style="font-size:14px">Trag Beschwerden im Schritt „Ziel“ ein oder miss den Kniewinkel.</span></div></div>'}
   <details class="more" ${ui.prepKey?'open':''}><summary>Alle Empfehlungen als Liste, selbst eintragen, Verlauf</summary><div class="stack" style="margin-top:10px">
@@ -4916,6 +4918,70 @@ function vidPanel(s,side){
     </div></div>`,st('i'));
 }
 
+/* ---------- Fitting-Fahrprogramm: Rolle (FTMS, z. B. KICKR) per Bluetooth steuern – nur Chrome am Computer ---------- */
+/* RIDE-CALC-START */
+function ftmsParse(b){ // Indoor Bike Data (0x2AD2), b = Array/Uint8Array
+  if(!b||b.length<2) return null; const f=b[0]|(b[1]<<8); let i=2; const u16=()=>{ const v=b[i]|(b[i+1]<<8); i+=2; return v; }, s16=()=>{ const v=u16(); return v>32767?v-65536:v; };
+  const o={}; if(!(f&1)){ if(i+2>b.length) return o; o.speed=u16()/100; }
+  if(f&2) i+=2; if(f&4){ if(i+2>b.length) return o; o.cad=u16()/2; } if(f&8) i+=2; if(f&16) i+=3; if(f&32) i+=2;
+  if(f&64){ if(i+2>b.length) return o; o.power=s16(); } return o; }
+function ftmsTarget(w){ const v=Math.max(0,Math.min(2000,Math.round(w))); return [0x05,v&255,(v>>8)&255]; }
+function ridePlan(messW,maxW){ const m=Math.max(50,Math.min(maxW||300,Math.round(messW||150))); const r=x=>Math.round(x/5)*5;
+  return [{n:'Einfahren',sec:300,w:r(m*0.8),k:'warm'},{n:'Messung',sec:120,w:m,k:'mess'},{n:'Ausfahren',sec:120,w:r(m*0.65),k:'cool'}]; }
+function rideAfterChange(messW){ return [{n:'Eingewöhnen nach Änderung',sec:60,w:messW,k:'warm'},{n:'Messung nach Änderung',sec:120,w:messW,k:'mess'}]; }
+function rideAvg(samples){ const ok=(samples||[]).filter(x=>x&&x.cad>20&&x.power!=null); if(!ok.length) return null;
+  const a=k=>Math.round(ok.reduce((s,x)=>s+x[k],0)/ok.length); return {power:a('power'),cad:a('cad'),n:ok.length}; }
+/* RIDE-CALC-END */
+const kr={dev:null,cp:null,on:false,power:null,cad:null,prog:null,idx:0,t:0,paused:false,timer:null,samples:[],sid:null,status:'',ctrl:false};
+function krMax(){ return Number((S.settings||{}).krMax)||300; }
+function krMess(){ return Number((S.settings||{}).krMess)||150; }
+const krTime=sec=>`${Math.floor(sec/60)}:${String(Math.max(0,Math.floor(sec%60))).padStart(2,'0')}`;
+function krPanel(s){
+  const bt=typeof navigator!=='undefined'&&!!navigator.bluetooth; const P=kr.prog, st=P&&P[kr.idx];
+  return `<details class="more" id="krPanel" ${kr.on||ui.krOpen?'open':''}><summary>Rolle steuern: Fitting-Fahrprogramm (Beta)</summary><div class="stack" style="margin-top:10px">
+  ${!bt?`<div class="statusbox"><div style="flex:1;min-width:0"><b>Hier nicht möglich</b><span class="muted" style="font-size:14px">Webseiten dürfen auf iPhone und iPad (und in Safari) kein Bluetooth nutzen. Öffne FYF am Computer in <b>Chrome</b> (z. B. iMac) und verbinde dort die Rolle.</span></div></div>`:`
+  <p class="muted" style="font-size:14px;margin:0">Hält die Rolle auf fester Leistung (ERG), damit jede Messung vorher/nachher unter gleicher Last läuft. Gang und Trittfrequenz ändern die Watt nicht. Andere Apps (Wahoo, Zwift, MyWhoosh) vorher schließen.</p>
+  <div class="row" style="align-items:flex-end">
+    ${kr.on?`<span class="chip nodot c-ok">verbunden: ${esc(kr.dev&&kr.dev.name||'Rolle')}</span><button class="btn sm ghost" data-act="krOff">Trennen</button>`:`<button class="btn primary" data-act="krConnect">Rolle verbinden</button>`}
+    <div class="field" style="width:130px"><label for="krMess">Mess-Last (W)</label><input class="input num" id="krMess" type="number" min="50" max="${krMax()}" step="5" value="${krMess()}" data-change="krMess"></div>
+    <div class="field" style="width:130px"><label for="krMax">Höchstwert (W)</label><input class="input num" id="krMax" type="number" min="100" max="1000" step="10" value="${krMax()}" data-change="krMax"></div></div>
+  <div class="krbig" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+    <div class="statusbox" style="display:block"><span class="muted" style="font-size:13px">Leistung</span><div class="num" style="font-size:40px;font-weight:700;line-height:1.1"><span id="krW">${kr.power??'–'}</span> <span style="font-size:18px">W</span></div><span class="faint" style="font-size:13px">Soll <span id="krTgt">${st?st.w:'–'}</span> W</span></div>
+    <div class="statusbox" style="display:block"><span class="muted" style="font-size:13px">Trittfrequenz</span><div class="num" style="font-size:40px;font-weight:700;line-height:1.1"><span id="krCad">${kr.cad??'–'}</span> <span style="font-size:18px">U/min</span></div><span class="faint" style="font-size:13px" id="krStat">${esc(kr.status||'')}</span></div></div>
+  <div class="statusbox ${st&&st.k==='mess'?'ok':''}" id="krStepBox"><div style="flex:1;min-width:0"><b id="krStep">${st?esc(st.n)+(kr.paused?' · Pause':''):P?'Programm beendet':'Kein Programm aktiv'}</b><span class="muted" style="font-size:14px" id="krLeft">${st?'noch '+krTime(st.sec-kr.t)+(P[kr.idx+1]?' · danach: '+esc(P[kr.idx+1].n)+' '+P[kr.idx+1].w+' W':''):'Einfahren → Messung → Ausfahren'}</span></div></div>
+  <div class="row">
+    ${!P||!st?`<button class="btn primary" data-act="krStart" data-id="${s.id}" ${kr.on?'':'disabled'}>Programm starten</button>`:`
+    <button class="btn" data-act="krPause">${kr.paused?'Weiter':'Pause'}</button><button class="btn" data-act="krNext">Stufe überspringen</button><button class="btn sm" data-act="krAdj" data-d="-10">−10 W</button><button class="btn sm" data-act="krAdj" data-d="10">+10 W</button><button class="btn danger" data-act="krStop">Stopp</button>`}
+    <button class="btn" data-act="krChange" data-id="${s.id}" ${kr.on?'':'disabled'}>Nach Änderung messen</button></div>
+  <p class="faint" style="font-size:12.5px;margin:0">Am Ende jeder Messstufe kommen Ø Watt und Ø Trittfrequenz als Notiz ins Fitting (erscheint im Bericht). Stopp, Trennen oder Verlassen der Seite gibt die Last sofort frei. Mit echter Rolle noch nicht getestet.</p>`}
+  </div></details>`;
+}
+function krUi(){ const P=kr.prog, st=P&&P[kr.idx], g=id=>document.getElementById(id);
+  if(g('krW')) g('krW').textContent=kr.power??'–'; if(g('krCad')) g('krCad').textContent=kr.cad??'–'; if(g('krTgt')) g('krTgt').textContent=st?st.w:'–'; if(g('krStat')) g('krStat').textContent=kr.status||'';
+  if(g('krStep')) g('krStep').textContent=st?st.n+(kr.paused?' · Pause':''):P?'Programm beendet':'Kein Programm aktiv';
+  if(g('krLeft')) g('krLeft').textContent=st?'noch '+krTime(st.sec-kr.t)+(P[kr.idx+1]?' · danach: '+P[kr.idx+1].n+' '+P[kr.idx+1].w+' W':''):'';
+  const bx=g('krStepBox'); if(bx) bx.className='statusbox'+(st&&st.k==='mess'?' ok':''); }
+async function krCp(bytes){ if(!kr.cp) throw new Error('Keine Steuerung'); const v=new Uint8Array(bytes); if(kr.cp.writeValueWithResponse) await kr.cp.writeValueWithResponse(v); else await kr.cp.writeValue(v); }
+async function krSetW(w){ const v=Math.min(krMax(),Math.max(0,w)); try{ if(!kr.ctrl){ await krCp([0x00]); kr.ctrl=true; await krCp([0x07]); } await krCp(ftmsTarget(v)); kr.status=''; }catch(e){ kr.status='Last setzen fehlgeschlagen'; } krUi(); }
+async function krRelease(){ try{ if(kr.cp&&kr.ctrl){ await krCp([0x08,0x01]); await krCp([0x01]); } }catch(e){} kr.ctrl=false; }
+async function krConnect(){
+  if(!navigator.bluetooth){ toast('Bluetooth geht nur in Chrome am Computer',true); return; }
+  try{ const dev=await navigator.bluetooth.requestDevice({filters:[{services:[0x1826]}]}); kr.dev=dev; dev.addEventListener('gattserverdisconnected',()=>{ kr.on=false; kr.cp=null; kr.ctrl=false; kr.power=null; kr.cad=null; if(kr.prog) krEnd('Verbindung getrennt – Programm gestoppt'); else { kr.status='getrennt'; render(); } });
+    kr.status='verbinde …'; krUi(); const gatt=await dev.gatt.connect(); const svc=await gatt.getPrimaryService(0x1826);
+    const data=await svc.getCharacteristic(0x2AD2); await data.startNotifications(); data.addEventListener('characteristicvaluechanged',e=>{ const d=e.target.value; const r=ftmsParse(new Uint8Array(d.buffer,d.byteOffset,d.byteLength)); if(!r) return; if(r.power!=null) kr.power=r.power; if(r.cad!=null) kr.cad=Math.round(r.cad); krUi(); });
+    try{ kr.cp=await svc.getCharacteristic(0x2AD9); await kr.cp.startNotifications(); }catch(e){ kr.cp=null; }
+    kr.on=true; kr.status=kr.cp?'':'Nur Anzeige – Rolle erlaubt keine Steuerung'; ui.krOpen=true; render(); toast('Rolle verbunden'); }
+  catch(e){ if(e&&e.name==='NotFoundError') return; kr.status=''; toast('Verbindung fehlgeschlagen: '+(e&&e.message||e),true); }
+}
+function krStep(){ const P=kr.prog; if(!P) return; const st=P[kr.idx]; if(!st){ krEnd('Programm beendet'); return; }
+  if(!kr.paused){ kr.t++; if(st.k==='mess') kr.samples.push({power:kr.power,cad:kr.cad}); }
+  if(kr.t>=st.sec) krAdvance(); else krUi(); }
+function krFinishStep(){ const P=kr.prog, st=P&&P[kr.idx]; if(!st||st.k!=='mess') return; const a=rideAvg(kr.samples); const s=sess(kr.sid); if(!s||!a) return;
+  const x=`Rolle: ${st.n} bei ${st.w} W (fest) · Ø ${a.power} W · Ø ${a.cad} U/min · ${krTime(kr.t)} Min.`; (s.liveNotes=s.liveNotes||[]).push({t:nowStamp(),x}); audit(x,s.id); save(); toast('Messstufe gespeichert'); }
+function krAdvance(){ krFinishStep(); kr.idx++; kr.t=0; kr.samples=[]; const st=kr.prog[kr.idx]; if(!st){ krEnd('Programm beendet'); return; } krSetW(st.w); krUi(); }
+function krEnd(msg){ clearInterval(kr.timer); kr.timer=null; krRelease(); kr.prog=null; kr.idx=0; kr.t=0; kr.samples=[]; kr.paused=false; kr.status=msg||''; if(msg) toast(msg); render(); }
+function krRun(sid,steps){ if(!kr.on){ toast('Erst Rolle verbinden',true); return; } if(!kr.cp){ toast('Diese Rolle erlaubt keine Steuerung – nur Anzeige',true); return; }
+  kr.sid=sid; kr.prog=steps; kr.idx=0; kr.t=0; kr.samples=[]; kr.paused=false; clearInterval(kr.timer); kr.timer=setInterval(krStep,1000); krSetW(steps[0].w); render(); }
 /* ---------- Foto-Messung: Rad per Foto mit Messzeichen vermessen (Beta, nicht validiert) ---------- */
 /* FOTO-CALC-START */
 const FM_PTS=[{k:'refA',l:'Messzeichen Anfang',s:'M1'},{k:'refB',l:'Messzeichen Ende',s:'M2'},{k:'bb',l:'Tretlagermitte',s:'TL'},{k:'floor',l:'Boden direkt unter dem Tretlager',s:'B'},{k:'saddle',l:'Sattel oben, Messpunkt der Sattelhöhe (Verlängerung Sitzrohr)',s:'S'},{k:'tip',l:'Sattelspitze',s:'SP'},{k:'bar',l:'Lenker oben, direkt neben dem Vorbau',s:'L'},{k:'hood',l:'Schalthebel oben, wo die Hand aufliegt (optional)',s:'SH',opt:1},{k:'h1',l:'Waagerechte Laserlinie, Punkt links (optional)',s:'W1',opt:1},{k:'h2',l:'Waagerechte Laserlinie, Punkt rechts (optional)',s:'W2',opt:1}];
@@ -5875,6 +5941,7 @@ function afterRender(){ { const bb=document.getElementById('backBtn'); if(bb) bb
   cancelAnimationFrame(motion.raf); motion.playing=false; motion.last=0;
   if(ui.route==='motion'){ const cv=document.getElementById('motionCanvas'); if(cv){ drawMotion(cv); } wireVid(); }
   if(ui.route==='sitzung'){ wireVid(); wireFm(); changePreview(); } else fmLevelStop();
+  if(kr.prog&&!document.getElementById('krPanel')) setTimeout(()=>krEnd('Seite verlassen – Programm gestoppt, Last freigegeben'),0);
   if(ui.focus){ const el=document.getElementById(ui.focus); if(el){ el.focus(); const v=el.value; try{el.setSelectionRange(v.length,v.length);}catch(e){} } ui.focus=null; }
 }
 
@@ -6122,6 +6189,14 @@ const ACT = {
   vidMode(el){ vid.mode=el.dataset.v; vid.pts=[]; render(); },
   vidReset(){ vid.pts=[]; drawVid(); },
   fmLevel(){ fmLevelStart(); },
+  krConnect(){ krConnect(); },
+  krOff(){ if(kr.prog) krEnd('Programm gestoppt'); krRelease().then(()=>{ try{ kr.dev&&kr.dev.gatt.disconnect(); }catch(e){} }); },
+  krStart(el){ krRun(el.dataset.id,ridePlan(krMess(),krMax())); },
+  krChange(el){ const add=rideAfterChange(Math.min(krMess(),krMax())); if(kr.prog&&kr.prog[kr.idx]){ kr.prog.splice(kr.idx+1,0,...add); toast('Eingewöhnen + Messung als nächste Stufen eingeplant'); krUi(); render(); } else krRun(el.dataset.id,add); },
+  krPause(){ if(!kr.prog) return; kr.paused=!kr.paused; if(kr.paused){ krRelease(); kr.status='Pause – Last freigegeben'; } else { const st=kr.prog[kr.idx]; if(st) krSetW(st.w); kr.status=''; } render(); },
+  krNext(){ if(kr.prog) krAdvance(); render(); },
+  krAdj(el){ const st=kr.prog&&kr.prog[kr.idx]; if(!st) return; st.w=Math.max(30,Math.min(krMax(),st.w+Number(el.dataset.d))); if(!kr.paused) krSetW(st.w); krUi(); },
+  krStop(){ krEnd('Programm gestoppt – Last freigegeben'); },
   fmUndo(){ const k=fm.order.pop(); if(k){ delete fm.pts[k]; } else { const last=FM_PTS.slice().reverse().find(p=>fm.skip[p.k]); if(last){ delete fm.skip[last.k]; if(/^h/.test(last.k)){ delete fm.skip.h1; delete fm.skip.h2; } } } fmDraw(); fmUpdate(); },
   fmSkip(){ const nx=fmNext(); if(nx&&nx.opt){ fm.skip[nx.k]=1; if(nx.k==='h1') fm.skip.h2=1; fmUpdate(); } },
   fmReset(){ fm.pts={}; fm.order=[]; fm.skip={}; fmDraw(); fmUpdate(); },
@@ -6503,6 +6578,8 @@ const CHG = {
     fmImg.onerror=()=>toast('Foto konnte nicht geladen werden',true); fmImg.src=fm.src; render(); toast('Foto geladen – jetzt die Punkte antippen'); },
   fmRef(el){ const v=Number(el.value); if(!(v>=50&&v<=2000)){ toast('Länge zwischen 50 und 2000 mm',true); return; } S.settings=S.settings||{}; S.settings.fmRef=v; save(); fmUpdate(); },
   fmSide(){ fmUpdate(); },
+  krMess(el){ const v=Number(el.value); if(!(v>=50&&v<=krMax())){ toast(`Mess-Last zwischen 50 und ${krMax()} W`,true); el.value=krMess(); return; } S.settings=S.settings||{}; S.settings.krMess=Math.round(v); save(); },
+  krMax(el){ const v=Number(el.value); if(!(v>=100&&v<=1000)){ toast('Höchstwert zwischen 100 und 1000 W',true); el.value=krMax(); return; } S.settings=S.settings||{}; S.settings.krMax=Math.round(v); if(krMess()>v) S.settings.krMess=Math.round(v); save(); render(); },
   async teamRole(el){ try{ await clApi('/rest/v1/rpc/set_member_role',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_user:el.dataset.u,p_role:el.value})}); audit('Team: Rolle geändert'); toast('Rolle geändert'); }catch(e){ toast(clErrText(e.message),true); } TEAM.at=0; teamLoad(); },
   invCust(el){ const c=cust(el.value); const f=el.closest('form'); if(!c||!c.id||!f) return; const a=c.invAddr||{}; const set=(n,v)=>{ const i=f.querySelector(`[name="${n}"]`); if(i&&v!=null) i.value=v; }; set('name',c.name); set('email',c.email||''); set('company',a.company||''); set('street',a.street||''); set('zip',a.zip||''); set('city',a.city||''); },
 
@@ -6575,6 +6652,7 @@ document.addEventListener('click',e=>{
   const a=e.target.closest('[data-act]'); if(a&&ACT[a.dataset.act]&&CONFIRM_ACTS.has(a.dataset.act)&&a.dataset.armed!=='1'){ e.preventDefault(); a.dataset.armed='1'; const old=a.innerHTML; a.classList.add('armed'); a.innerHTML='Wirklich löschen?'; a.setAttribute('aria-live','polite'); setTimeout(()=>{ if(a.isConnected&&a.dataset.armed==='1'){ a.dataset.armed=''; a.classList.remove('armed'); a.innerHTML=old; } },3500); return; }
   if(a&&ACT[a.dataset.act]){ e.preventDefault(); try{ ACT[a.dataset.act](a); }catch(err){ console.error(err); toast('Aktion fehlgeschlagen: '+err.message,true); } }
 });
+window.addEventListener('pagehide',()=>{ if(kr.ctrl) krRelease(); });
 document.addEventListener('submit',e=>{
   const f=e.target.closest('[data-form]'); if(!f) return; e.preventDefault(); if(!allowed(null,f.dataset.form)){ toast(`Keine Berechtigung (Rolle: ${role()})`,true); return; }
   if(f.dataset.form==='newSession' && !new FormData(f).get('bid')){ toast('Bitte zuerst ein Fahrrad für diesen Kunden anlegen',true); return; }
