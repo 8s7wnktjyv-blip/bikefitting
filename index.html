@@ -8278,7 +8278,72 @@ function fyfBrandLists(models){ try{ if(!document.getElementById('fyfBrands')){ 
   let m=document.getElementById('fyfModels'); if(!m){ m=document.createElement('datalist'); m.id='fyfModels'; document.body.appendChild(m); } const L=[...new Set((models&&models()||[]).filter(Boolean))].slice(0,400); m.innerHTML=L.map(x=>`<option value="${String(x).replace(/"/g,'&quot;')}">`).join(''); }catch(e){} }
 function fyfBrandWatch(brandSel,modelSel,models){ const apply=()=>{ let n=0; document.querySelectorAll(brandSel).forEach(i=>{ if(!i.getAttribute('list')){ i.setAttribute('list','fyfBrands'); n++; } }); document.querySelectorAll(modelSel).forEach(i=>{ if(!i.getAttribute('list')){ i.setAttribute('list','fyfModels'); n++; } }); if(n) fyfBrandLists(models); };
   apply(); new MutationObserver(apply).observe(document.body,{childList:true,subtree:true}); }
-fyfBrandWatch('#eb_b,#nb_b,#nr_b,#ng_b,[id^="ol_b"]','#eb_m,#nb_m,#nr_m,#ng_m',()=>[...GEO.map(g=>g.brand+' '+g.model).map(x=>x.split(' ').slice(1).join(' ')),...(S.bikes||[]).map(b=>b.model)]);
+/* Modelle je Marke (Vorschläge ohne Anspruch auf Vollständigkeit, Stand Nov. 2026 – eigene Eingabe bleibt möglich) */
+const FYF_MODELS={
+'Canyon':['Aeroad','Ultimate','Endurace','Grail','Grizl','Inflite','Speedmax','Spectral','Neuron','Strive','Torque','Lux','Exceed','Stoic','Pathlite','Roadlite','Commuter','Precede:ON','Grail:ON','Grizl:ON','Spectral:ON','Neuron:ON','Pathlite:ON','Endurace:ON'],
+'Cube':['Agree','Attain','Litening','Aerium','Nuroad','Cross Race','Stereo','AMS','Reaction','Aim','Attention','Analog','Kathmandu','Nuride','Touring','Hyde','Editor','Supreme','Kathmandu Hybrid','Nuride Hybrid','Stereo Hybrid','Reaction Hybrid','Touring Hybrid','Supreme Hybrid'],
+'Specialized':['Tarmac','Aethos','Roubaix','Allez','Diverge','Crux','Stumpjumper','Epic','Chisel','Enduro','Status','Rockhopper','Sirrus','Turbo Levo','Turbo Kenevo','Turbo Vado','Turbo Como','Turbo Creo'],
+'Trek':['Madone','Émonda','Domane','Checkpoint','Boone','Fuel EX','Top Fuel','Slash','Supercaliber','Marlin','Roscoe','FX','Dual Sport','Rail','Fuel EXe','Allant+','Powerfly','District'],
+'Giant':['TCR','Propel','Defy','Revolt','Contend','Anthem','Trance','Reign','Talon','Fathom','Stance','Escape','Roam','Trance X E+','Explore E+'],
+'Scott':['Addict','Foil','Speedster','Addict Gravel','Speedster Gravel','Spark','Genius','Ransom','Scale','Aspect','Contessa','Patron','Strike eRIDE','Lumen eRIDE','Sub Cross'],
+'Orbea':['Orca','Orca Aero','Avant','Terra','Gain','Oiz','Occam','Rallon','Alma','Laufey','Rise','Wild','Vibe','Kemen'],
+'Rose':['Reveal','X-Lite','Pro SL','Backroad','Backroad AL','Thrill Hill','Root Miller','Ground Control','Psycho Path','Sneak','Bonero','Multistreet'],
+'Radon':['Spire','Vaillant','Regard','Sage','Slide Trail','Swoop','Skeen Trail','Jab','Jealous','Cragger','Render','ZR Race','Scart'],
+'Bombtrack':['Beyond','Beyond AL','Beyond+','Hook','Hook EXT','Audax','Arise','Arise Geared','Tension','Munroe','Oxbow','Needle'],
+'BMC':['Teammachine','Teammachine SLR','Roadmachine','Kaius','URS','Fourstroke','Twostroke','Speedfox','Alpenchallenge','Trailfox'],
+'Cannondale':['SuperSix EVO','CAAD13','CAAD Optimo','Synapse','Topstone','SuperX','Scalpel','Habit','Jekyll','Trail','Moterra','Tesoro','Quick'],
+'Focus':['Izalco Max','Izalco Race','Paralane','Atlas','Raven','Jam','Thron','Whistler','Jarifa','Planet','Aventura','Sam'],
+'Ghost':['Lector','Kato','Riot','Lanao','Path Riot','Asket','E-Riot','Square'],
+'Stevens':['Arcalis','Aspin','Izoard','Ventoux','Prestige','Camino','Supreme','Sonora','Whaka'],
+'Bulls':['Copperhead','Wildtail','Sonic','Cross Lite','Iconic','Lacuba','Grinder'],
+'Haibike':['AllMtn','AllTrail','Nduro','SDURO','Trekking','Lyke','Hardseven'],
+'KTM':['Revelator','Scarp','Myroon','Macina','Ultra','Prowler','Chicago'],
+'Merida':['Scultura','Reacto','Mission CX','Silex','Ninety-Six','One-Twenty','One-Forty','Big.Nine','eOne-Sixty','eSpresso'],
+'Santa Cruz':['Hightower','Tallboy','Bronson','Nomad','Megatower','5010','Blur','Stigmata','Heckler','Bullit'],
+'YT Industries':['Capra','Jeffsy','Izzo','Decoy','Tues','Szepter'],
+'Kalkhoff':['Endeavour','Image','Entice','Agattu'],
+'Riese & Müller':['Charger','Nevo','Delite','Supercharger','Homage','Load','Packster','Multicharger','Culture'],
+'Gazelle':['Ultimate','Arroyo','Medeo','Orange','Chamonix','Esprit'],
+'Bergamont':['Grandurance','Sweep','E-Horizon','Revox','Trailster','Vitess','Contrail'],
+'Wilier':['Filante SLR','Zero SLR','Cento10','Granturismo','Rave SLR','Jena','Adlar'],
+'Pinarello':['Dogma F','Dogma X','Prince','F5','F7','F9','Grevil'],
+'Bianchi':['Oltre','Specialissima','Infinito','Sprint','Impulso','Arcadex','Methanol'],
+'Ridley':['Noah Fast','Helium','Fenix','Kanzo','Astr','X-Night'],
+'Cervélo':['S5','R5','Caledonia','Soloist','Áspero','P5'],
+'Felt':['AR','FR','VR','Breed'],
+'Kona':['Process','Honzo','Rove','Sutra','Libre','Dew','Ute'],
+'Marin':['Four Corners','Nicasio','Headlands','Gestalt','Rift Zone','San Quentin','Alpine Trail','Muirwoods'],
+'Surly':['Long Haul Trucker','Disc Trucker','Bridge Club','Midnight Special','Straggler','Krampus','Karate Monkey','Ogre','Big Dummy'],
+'Rocky Mountain':['Altitude','Instinct','Element','Growler','Slayer'],
+'Simplon':['Pride','Kiaro','Inissio','Rapcon','Chenoa'],
+'Conway':['Cairon','GRV','RLC','Xyron','Ryvon'],
+'Corratec':['CCT Evo','Allroad','MT Carbon','E-Power'],
+'Lapierre':['Xelius','Aircode','Pulsium','Crosshill','Spicy','Zesty','Overvolt','XRM'],
+'Diamant':['Mandara','Ubari','Juna','Zouma','247'],
+'BXT':['Gravel 135','Road 016'],
+'3T':['Exploro','Strada','Racemax'],
+'Tern':['GSD','HSD','Vektron','Quick Haul','Orox'],
+'Urban Arrow':['Family','Shorty','Tender'],
+'Moustache':['Samedi','Dimanche','Friday','J.'],
+'Mondraker':['Foxy','Crafty','Raze','Superfoxy','Level'],
+'Nukeproof':['Mega','Giga','Reactor','Scout'],
+'Pivot':['Switchblade','Firebird','Trail 429','Shuttle','Vault'],
+'Yeti':['SB120','SB140','SB160','ARC'],
+'Ibis':['Ripmo','Ripley','Hakka MX','Exie'],
+'Niner':['RLT','MCR','Jet','RIP']};
+// Sichtbare Vorschlagsliste unter einem Eingabefeld (funktioniert auf iPhone zuverlässiger als <datalist>)
+function fyfSuggest(input,getList){ if(!input||input.dataset.sugg) return; input.dataset.sugg='1'; input.removeAttribute('list'); input.setAttribute('autocomplete','off');
+  const box=document.createElement('div'); box.className='fyf-sugg'; box.setAttribute('role','listbox'); box.style.cssText='display:none;flex-wrap:wrap;gap:6px;margin:6px 0 2px';
+  input.insertAdjacentElement('afterend',box);
+  const draw=()=>{ const q=input.value.trim().toLowerCase(); const L=getList(); const hit=(q?L.filter(x=>x.toLowerCase().startsWith(q)).concat(L.filter(x=>!x.toLowerCase().startsWith(q)&&x.toLowerCase().includes(q))):L).slice(0,q?10:14);
+    if(!hit.length||(hit.length===1&&hit[0].toLowerCase()===q)){ box.style.display='none'; return; }
+    box.innerHTML=hit.map(x=>`<button type="button" role="option" style="padding:7px 12px;border-radius:999px;border:1px solid rgba(127,127,127,.35);background:transparent;color:inherit;font:inherit;font-size:14px">${String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}</button>`).join(''); box.style.display='flex';
+    box.querySelectorAll('button').forEach((b,i)=>{ b.onmousedown=e=>e.preventDefault(); b.onclick=()=>{ input.value=hit[i]; input.dispatchEvent(new Event('input',{bubbles:true})); input.dispatchEvent(new Event('change',{bubbles:true})); box.style.display='none'; const nx=input.form&&[...input.form.querySelectorAll('input,select,textarea')].find((el,k,a)=>a.indexOf(input)<k&&!el.disabled&&el.type!=='hidden'); if(nx&&input.dataset.next!=='0') nx.focus(); }; }); };
+  input.addEventListener('input',draw); input.addEventListener('focus',draw); input.addEventListener('blur',()=>setTimeout(()=>{ box.style.display='none'; },200)); }
+const fyfModelsOf=brand=>{ const b=String(brand||'').trim().toLowerCase(); const k=Object.keys(FYF_MODELS).find(x=>x.toLowerCase()===b); return k?FYF_MODELS[k]:[]; };
+{ const pairs=[['eb_b','eb_m'],['nb_b','nb_m'],['nr_b','nr_m'],['ng_b','ng_m']];
+  const attach=()=>{ pairs.forEach(([bi,mi])=>{ const b=document.getElementById(bi), m=document.getElementById(mi); if(b) fyfSuggest(b,()=>FYF_BRANDS); if(m) fyfSuggest(m,()=>{ const br=b&&b.value; const geo=GEO.filter(g=>br&&g.brand.toLowerCase()===br.trim().toLowerCase()).map(g=>g.model); const own=(S.bikes||[]).filter(x=>br&&String(x.brand||'').toLowerCase()===br.trim().toLowerCase()).map(x=>x.model); return [...new Set([...fyfModelsOf(br),...geo,...own].filter(Boolean))]; }); }); document.querySelectorAll('[id^="ol_b"]').forEach(x=>fyfSuggest(x,()=>FYF_BRANDS)); };
+  attach(); new MutationObserver(attach).observe(document.body,{childList:true,subtree:true}); }
 /* ===================== v.109 CRM: Firmenkunden, Ansprechpartner, Anschrift, Wiedervorlagen ===================== */
 const custKind=c=>c&&(c.kind==='firma'||(!c.kind&&c.invAddr&&c.invAddr.company))?'firma':'privat';
 { const ECk=ACT.editCustomer; ACT.editCustomer=function(el){ const r=ECk.apply(this,arguments); try{ const c=cust(el.dataset.id), f=document.querySelector('form[data-form="customerEdit"]'); if(!c||!f||f.querySelector('[data-crm]')) return r; const K=custKind(c), C=(c.contacts||[]).concat([{},{}]).slice(0,Math.max(2,(c.contacts||[]).length+1));
