@@ -1947,7 +1947,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-15.104';
+const APP_VER='2026-11-15.105';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -7904,6 +7904,13 @@ function dvFromEl(sel,title){ const el=[...document.querySelectorAll(sel)].find(
   const css=[...document.querySelectorAll('style,link[rel=stylesheet]')].map(x=>x.outerHTML).join('');
   const w=docWin(); w.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${css}<style>html,body{background:#fff!important;height:auto!important;overflow:visible!important}body{margin:0;padding:14px;display:block!important}button,.btn{display:none!important}${sel}{position:static!important;max-width:none!important;box-shadow:none!important}</style></head><body>${el.outerHTML}</body></html>`); w.document.close(); return true; }
 [['invPrint','.invdoc','Rechnung'],['bmPrint','.report.handout','Handout'],['printReport','.report','Bericht']].forEach(([k,sel,t])=>{ const O=ACT[k]; if(typeof O!=='function') return; ACT[k]=function(){ if(DV_IOS&&dvFromEl(sel,(shopName()?shopName()+' – ':'')+t)) return; return O.apply(this,arguments); }; });
+/* ===== v.105 NFC-Plakette in der Fahrradakte ===== */
+{ const BDn=bikeDrawer; bikeDrawer=function(id){ BDn(id); const b=bike(id), box=document.getElementById('drawerBody'); if(!b||!b.qr||!b.qr.code||!box||box.querySelector('[data-nfcbox]')) return; const u=passUrl(b.qr.code);
+  box.insertAdjacentHTML('beforeend',`<div class="stack" data-nfcbox style="margin-top:14px"><h3>NFC-Plakette</h3><p class="muted" style="font-size:13.5px;margin:0">Handy an den Chip halten öffnet den Fahrradpass. Chip mit der kostenlosen App „NFC Tools“ beschreiben: <b>Schreiben → Datensatz hinzufügen → URL</b>, Link einfügen, Chip ans iPhone halten. Am Alu-/Carbonrahmen nur „on metal“-Chips.</p>
+   <div class="field"><label for="nfc_u">Link für den Chip (${u.length} Zeichen, passt auf NTAG213)</label><input class="input" id="nfc_u" readonly value="${esc(u)}"></div>
+   <div class="row"><button class="btn sm" data-act="msgCopy" data-t="${esc(u)}">Link kopieren</button>${b.nfc?`<span class="chip c-ok">Chip am Rad seit ${fmtDate(b.nfc.d)}</span><button class="btn sm ghost" data-act="nfcMark" data-id="${b.id}" data-v="0">Chip entfernt</button>`:`<button class="btn sm" data-act="nfcMark" data-id="${b.id}" data-v="1">Chip ist beschrieben und am Rad</button>`}</div></div>`); }; }
+ACT.nfcMark=function(el){ const b=bike(el.dataset.id); if(!b) return; if(el.dataset.v==='1'){ b.nfc={d:today()}; audit(`${bikeName(b)}: NFC-Plakette angebracht`); } else { delete b.nfc; } save(); bikeDrawer(b.id); if(b.qr&&b.qr.code&&!b.qr.moved&&typeof cloudReady==='function'&&cloudReady()) try{ passPush(b,true); }catch(e){} toast(el.dataset.v==='1'?'NFC-Plakette vermerkt':'Entfernt'); };
+{ const PPn=passPayload; passPayload=function(b){ const p=PPn.apply(this,arguments); try{ if(b&&b.nfc&&b.nfc.d) p.nfc=b.nfc.d; }catch(e){} return p; }; }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();
