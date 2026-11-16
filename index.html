@@ -1958,7 +1958,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-15.113';
+const APP_VER='2026-11-16.114';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -8610,6 +8610,16 @@ new MutationObserver(()=>{ try{ const f=document.querySelector('form[data-form="
   if(sn&&w&&w.positions.length>n){ S.inventory.forEach(x=>{ const s=x.sn&&snOf(x).find(z=>z.sn===sn&&!z.out); if(s){ s.out=today(); s.ref=w.id; } }); save(); } return r; }; }
 // Scanner: Artikel mit Seriennummer → Auswahl im Auftrag aktualisieren
 { const SI=ACT.scanInto; ACT.scanInto=async function(el){ await SI.apply(this,arguments); const pt=document.getElementById('p_t'); if(pt) pt.dispatchEvent(new Event('change')); }; }
+/* ===================== v.114 Online-Termine: angefragte freie Zeiten bleiben gesperrt, Zeiten werden täglich automatisch aktualisiert ===================== */
+{ const FS0=freeSlots; freeSlots=function(){ const out=FS0.apply(this,arguments); const taken=(NET.inq||[]).filter(q=>q&&['neu','in Arbeit'].includes(q.status)&&/\(freie Zeit\)/.test(q.preferred||'')).map(q=>{ const m=String(q.preferred).match(/(\d{2})\.(\d{2})\.(\d{4})\D+(\d{2}:\d{2})/); return m?`${m[3]}-${m[2]}-${m[1]} ${m[4]}`:''; }).filter(Boolean);
+  if(!taken.length) return out; return out.map(x=>({d:x.d,t:x.t.filter(t=>!taken.includes(x.d+' '+t))})).filter(x=>x.t.length); }; }
+// Beim Öffnen: sind die veröffentlichten Zeiten älter als 12 Stunden, still neu veröffentlichen (vorher Anfragen laden, damit angefragte Zeiten gesperrt bleiben)
+setTimeout(async()=>{ try{ if(!(S.capacity&&S.capacity.online)||!cloudReady()) return; const last=Date.parse(String(S.slotsAtIso||'')); if(last&&Date.now()-last<12*3600e3) return; if(!NET.at) await netLoad(); await slotsPublish(true); S.slotsAtIso=new Date().toISOString(); save(); }catch(e){} },4000);
+/* ===================== v.114 Rad abholbereit → Kunde sofort benachrichtigen (ein Tipp) ===================== */
+{ const WN=ACT.woNext; ACT.woNext=function(el){ const w=S.workshop.find(x=>x.id===el.dataset.id), before=w&&w.status; const r=WN.apply(this,arguments);
+  try{ if(w&&before!=='Abholbereit'&&w.status==='Abholbereit'){ const c=cust(w.customerId), b=bike(w.bikeId);
+    openDrawer('Rad ist fertig – Kunde benachrichtigen',`<div class="stack"><p style="margin:0">${esc((c&&c.name)||'Kunde')} weiß noch nicht, dass ${esc(b?[b.brand,b.model].filter(Boolean).join(' '):'das Rad')} abholbereit ist.</p>${msgButtons(woMsg(w,'fertig'),c)}${b&&b.qr&&b.qr.code?'<p class="muted" style="margin:0;font-size:13px">Im Fahrradpass des Kunden steht nach dem Speichern automatisch „abholbereit“.</p>':''}<div class="row" style="gap:6px"><button class="btn ghost" data-act="openWO" data-id="${w.id}">Zurück zum Auftrag</button></div></div>`); } }catch(e){}
+  return r; }; }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();
