@@ -1,0 +1,2 @@
+MediaPipe Tasks Vision 0.10.14 (Apache-2.0) und Pose-Landmarker-Modelle (latest), PeerJS 1.5.4 (MIT).
+Geholt am 2026-11-16 von npm und storage.googleapis.com durch den Workflow 'Bibliotheken holen'.
