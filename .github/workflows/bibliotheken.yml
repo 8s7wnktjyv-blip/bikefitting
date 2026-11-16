@@ -1,0 +1,59 @@
+# Holt die Bibliotheken für Kamera-Fitting (MediaPipe) und Video-Verbindung (PeerJS) einmalig
+# und legt sie in vendor/ ab. Danach lädt die App nichts mehr von fremden Servern (jsdelivr, googleapis).
+# Läuft automatisch, wenn sich diese Datei ändert, oder von Hand: Actions → „Bibliotheken holen“ → Run workflow.
+name: Bibliotheken holen
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/bibliotheken.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bibliotheken
+  cancel-in-progress: false
+
+jobs:
+  holen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Herunterladen (feste Versionen)
+        run: |
+          set -euo pipefail
+          MP=0.10.14
+          PJ=1.5.4
+          mkdir -p vendor/mediapipe/wasm vendor/mediapipe/models
+          npm pack @mediapipe/tasks-vision@$MP --silent
+          tar -xzf mediapipe-tasks-vision-$MP.tgz
+          cp package/vision_bundle.mjs vendor/mediapipe/vision_bundle.mjs
+          cp package/wasm/* vendor/mediapipe/wasm/
+          cp package/LICENSE vendor/mediapipe/LICENSE 2>/dev/null || true
+          rm -rf package mediapipe-tasks-vision-$MP.tgz
+          curl -fsSL -o vendor/mediapipe/models/pose_landmarker_lite.task \
+            https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task
+          curl -fsSL -o vendor/mediapipe/models/pose_landmarker_full.task \
+            https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task
+          npm pack peerjs@$PJ --silent
+          tar -xzf peerjs-$PJ.tgz
+          cp package/dist/peerjs.min.js vendor/peerjs-$PJ.min.js
+          cp package/LICENSE vendor/LICENSE-peerjs.txt 2>/dev/null || true
+          rm -rf package peerjs-$PJ.tgz
+          printf "MediaPipe Tasks Vision %s (Apache-2.0) und Pose-Landmarker-Modelle (latest), PeerJS %s (MIT).\nGeholt am %s von npm und storage.googleapis.com durch den Workflow 'Bibliotheken holen'.\n" "$MP" "$PJ" "$(date -u +%F)" > vendor/mediapipe/QUELLE.txt
+          ls -la vendor/mediapipe vendor/mediapipe/wasm vendor/mediapipe/models
+
+      - name: Einchecken
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vendor
+          if git diff --cached --quiet; then echo "Nichts Neues"; exit 0; fi
+          git commit -m "Bibliotheken lokal: MediaPipe 0.10.14, Pose-Modelle, PeerJS 1.5.4 (Workflow)"
+          git push origin HEAD:main
