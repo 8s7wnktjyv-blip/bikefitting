@@ -4,7 +4,8 @@
 # Braucht zwei Secrets (Settings → Secrets and variables → Actions):
 #   SUPABASE_DB_URL      (gibt es schon, wie bei „Datenbank aktualisieren“)
 #   BACKUP_PASSPHRASE    (selbst ausdenken, mind. 20 Zeichen, sicher aufschreiben – ohne sie ist die Sicherung nicht lesbar)
-# Wiederherstellen: Artefakt herunterladen, gpg -d sicherung.sql.gpg > sicherung.sql, mit psql einspielen (Anleitung in docs/sicherung.md).
+# Enthält zusätzlich die Liste der Nutzerkonten (ID und E-Mail), damit Zuordnungen Laden ↔ Mitarbeiter wiederherstellbar sind.
+# Wiederherstellen: Anleitung in docs/sicherung.md.
 name: Sicherung
 
 on:
@@ -42,7 +43,8 @@ jobs:
         run: |
           set -e
           docker run --rm --network host -e PGSSLMODE=require postgres:17 pg_dump "$PGURL" --schema=public --no-owner --no-privileges --format=plain > sicherung.sql
-          echo "Größe: $(wc -c < sicherung.sql) Bytes, Tabellen: $(grep -c '^CREATE TABLE' sicherung.sql)"
+          docker run --rm --network host -e PGSSLMODE=require postgres:17 psql "$PGURL" -At -c "\\copy (select id, email from auth.users order by created_at) to stdout with csv" > nutzer.csv
+          echo "Größe: $(wc -c < sicherung.sql) Bytes, Tabellen: $(grep -c '^CREATE TABLE' sicherung.sql), Nutzerkonten: $(wc -l < nutzer.csv)"
       - name: Probe-Wiederherstellung in leere Datenbank
         env:
           PGPASSWORD: probe
@@ -55,22 +57,23 @@ jobs:
           create function auth.jwt() returns jsonb language sql stable as $$ select '{}'::jsonb $$;
           create schema if not exists extensions; create extension if not exists pgcrypto with schema extensions;
           SQL
-          # Fremdschlüssel auf auth.users werden beim Einspielen nicht geprüft
-          sed -e 's/^ALTER TABLE ONLY public\.\(.*\) ADD CONSTRAINT \(.*\) FOREIGN KEY \(.*\) REFERENCES auth\.users.*$/-- FK auf auth.users übersprungen: \1 \2/' sicherung.sql > probe.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -q -c "\\copy auth.users(id, email) from 'nutzer.csv' with csv"
+          grep -v '^CREATE SCHEMA public;' sicherung.sql > probe.sql
           psql -h localhost -U postgres -q -v ON_ERROR_STOP=0 -f probe.sql > probe.log 2>&1 || true
           echo "Fehler beim Einspielen: $(grep -c ERROR probe.log)"; grep ERROR probe.log | sort | uniq -c | head -20 || true
           psql -h localhost -U postgres -At -c "select 'Tabellen: '||count(*) from information_schema.tables where table_schema='public'"
           for t in tenants tenant_state bike_passes bike_pass_entries invoice_archive; do psql -h localhost -U postgres -At -c "select '$t: '||count(*) from public.$t" 2>/dev/null || echo "$t: fehlt"; done
           if [ "$(psql -h localhost -U postgres -At -c "select count(*) from information_schema.tables where table_schema='public'")" -lt 5 ]; then echo "::error::Probe-Wiederherstellung fehlgeschlagen"; exit 1; fi
+          if grep -q ERROR probe.log; then echo "::error::Probe-Wiederherstellung mit Fehlern – Sicherung prüfen"; exit 1; fi
       - name: Verschlüsseln
         run: |
           set -e
-          gzip -9 sicherung.sql
-          printf '%s' "$PASS" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --symmetric --cipher-algo AES256 -o sicherung.sql.gz.gpg sicherung.sql.gz
-          shred -u sicherung.sql.gz probe.sql 2>/dev/null || rm -f sicherung.sql.gz probe.sql
-          ls -la sicherung.sql.gz.gpg
+          tar -czf sicherung.tar.gz sicherung.sql nutzer.csv
+          printf '%s' "$PASS" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --symmetric --cipher-algo AES256 -o sicherung.tar.gz.gpg sicherung.tar.gz
+          shred -u sicherung.tar.gz sicherung.sql nutzer.csv probe.sql 2>/dev/null || rm -f sicherung.tar.gz sicherung.sql nutzer.csv probe.sql
+          ls -la sicherung.tar.gz.gpg
       - uses: actions/upload-artifact@v4
         with:
           name: sicherung-${{ github.run_number }}
-          path: sicherung.sql.gz.gpg
+          path: sicherung.tar.gz.gpg
           retention-days: 30
