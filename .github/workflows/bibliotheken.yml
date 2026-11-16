@@ -1,4 +1,4 @@
-# Holt die Bibliotheken für Kamera-Fitting (MediaPipe) und Video-Verbindung (PeerJS) einmalig
+# Holt die Bibliotheken für Kamera-Fitting (MediaPipe), Video-Verbindung (PeerJS) und PDF-Lesen (pdf.js, für Akku-/Diagnoseberichte) einmalig
 # und legt sie in vendor/ ab. Danach lädt die App nichts mehr von fremden Servern (jsdelivr, googleapis).
 # Läuft automatisch, wenn sich diese Datei ändert, oder von Hand: Actions → „Bibliotheken holen“ → Run workflow.
 name: Bibliotheken holen
@@ -46,6 +46,15 @@ jobs:
           cp package/dist/peerjs.min.js vendor/peerjs-$PJ.min.js
           cp package/LICENSE vendor/LICENSE-peerjs.txt 2>/dev/null || true
           rm -rf package peerjs-$PJ.tgz
+          PDF=4.10.38
+          mkdir -p vendor/pdfjs
+          npm pack pdfjs-dist@$PDF --silent
+          tar -xzf pdfjs-dist-$PDF.tgz
+          cp package/legacy/build/pdf.min.mjs vendor/pdfjs/pdf.min.mjs || cp package/build/pdf.min.mjs vendor/pdfjs/pdf.min.mjs
+          cp package/legacy/build/pdf.worker.min.mjs vendor/pdfjs/pdf.worker.min.mjs || cp package/build/pdf.worker.min.mjs vendor/pdfjs/pdf.worker.min.mjs
+          cp package/LICENSE vendor/pdfjs/LICENSE-pdfjs.txt 2>/dev/null || true
+          rm -rf package pdfjs-dist-$PDF.tgz
+          ls -la vendor/pdfjs
           printf "MediaPipe Tasks Vision %s (Apache-2.0) und Pose-Landmarker-Modelle (latest), PeerJS %s (MIT).\nGeholt am %s von npm und storage.googleapis.com durch den Workflow 'Bibliotheken holen'.\n" "$MP" "$PJ" "$(date -u +%F)" > vendor/mediapipe/QUELLE.txt
           ls -la vendor/mediapipe vendor/mediapipe/wasm vendor/mediapipe/models
 
@@ -55,5 +64,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add vendor
           if git diff --cached --quiet; then echo "Nichts Neues"; exit 0; fi
-          git commit -m "Bibliotheken lokal: MediaPipe 0.10.14, Pose-Modelle, PeerJS 1.5.4 (Workflow)"
+          git commit -m "Bibliotheken lokal: MediaPipe 0.10.14, Pose-Modelle, PeerJS 1.5.4, pdf.js 4.10.38 (Workflow)"
           git push origin HEAD:main

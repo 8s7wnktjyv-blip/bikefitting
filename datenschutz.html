@@ -34,6 +34,14 @@
 <p>Mit dem Besitzer-Code (Teil II) bestätigst du, dass dir das Rad gehört. Nur dann zeigt die App den Stand eines laufenden Werkstattauftrags (Status, Titel, geplanter Termin, Laden – keine Preise). Der Besitzer-Code wird auf dem Server nur als Prüfwert (Hash) gespeichert.</p>
 <h3>Konto und Cloud-Sicherung (freiwillig)</h3>
 <p>Wenn du ein Konto anlegst, erhältst du einen Sicherungscode. Deine App-Daten werden <b>auf deinem Gerät</b> mit diesem Code verschlüsselt (AES-256-GCM) und nur verschlüsselt in der Datenbank gespeichert. Der Server kennt den Code nicht und kann die Daten nicht lesen. Es werden keine E-Mail-Adresse und kein Name verlangt. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO. Löschen: Abmelden auf allen Geräten und Nachricht an uns mit dem Hinweis, dass die Sicherung gelöscht werden soll <span class="todo">[oder Lösch-Knopf, sobald vorhanden]</span>. Ohne Code können wir die Sicherung keiner Person zuordnen.</p>
+<h3>E-Bike-Daten, Berichte und Unfälle</h3>
+<p>Akku-Werte, Fehlercodes, eingelesene Berichte und Zertifikate, Fotos von Unfällen und vom Zustand bei Leasingende speichert die App auf deinem Gerät. Berichte (PDF) werden im Browser gelesen, nicht hochgeladen. Nur was du ausdrücklich „im öffentlichen Pass eintragen“ lässt, geht als Eintrag an den Pass (ohne Fotos). Die Vorlage für eine Datenanfrage beim Hersteller (EU Data Act) erstellt die App; du verschickst sie selbst.</p>
+<h3>Akku-Diebstahlmeldung (freiwillig)</h3>
+<p>Meldest du einen Akku als gestohlen, speichern wir einen Prüfwert (SHA-256) der Akku-Seriennummer, nicht die Nummer selbst, verknüpft mit dem Pass-Code. Wer eine Seriennummer prüft, erfährt nur „gestohlen ja/nein“. Rechtsgrundlage: Art. 6 Abs. 1 lit. b und f DSGVO. Löschen: Meldung aufheben oder Nachricht an uns. <span class="todo">[Speicherdauer festlegen]</span></p>
+<h3>Laufleistungen anderer Räder (freiwillig, anonym)</h3>
+<p>Schaltest du „anonym beitragen“ ein, sendet die App beim Teiletausch nur Modellname (z. B. „cube kathmandu hybrid“), Teil (z. B. Kette) und Kilometer – ohne Pass-Code und ohne Personenbezug. Ein zufälliger Prüfwert verhindert doppelte Einträge. Angezeigt werden nur Zusammenfassungen ab 5 Rädern. Rechtsgrundlage: Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), jederzeit ausschaltbar.</p>
+<h3>Rückruf-Abgleich</h3>
+<p>Die Rückrufliste lädt die App von unserem eigenen Webspeicher und vergleicht sie auf deinem Gerät mit Marke, Modell und Baujahr. Es werden dabei keine Daten über dein Rad gesendet.</p>
 <h3>NFC-Anhänger</h3>
 <p>Ein NFC-Anhänger enthält nur den Link zum öffentlichen Pass.</p>
 
@@ -45,6 +53,7 @@
 <li><b>Kamera-Analyse beim Fitting:</b> Die Körperhaltung wird im Browser des Ladens erkannt (MediaPipe, lokal geladen). Das Kamerabild wird dafür nicht an einen Server geschickt.</li>
 <li><b>Video-Fernfitting (optional):</b> Bild und Ton gehen direkt zwischen den beiden Geräten (WebRTC, verschlüsselt). Für den Verbindungsaufbau wird der Vermittlungsdienst von PeerJS (peerjs.com) genutzt; dabei werden IP-Adressen und eine zufällige Sitzungs-ID übertragen. Falls keine direkte Verbindung möglich ist, kann das Bild über einen Weiterleitungsserver von PeerJS laufen. <span class="todo">[Anbieter und Standort prüfen oder eigenen Vermittlungsserver einsetzen]</span></li>
 <li><b>Barcode-Scanner:</b> Das Foto wird nur auf dem Gerät ausgewertet.</li>
+<li><b>E-Bike-Diagnose, Drehmoment, Vorschäden:</b> Werte und Fotos speichert der Laden im Auftrag. Diagnose- und Drehmomentwerte gehen als Werkstatt-Eintrag in den Fahrradpass (ohne Fotos). Der Akku-Abgleich sendet nur einen Prüfwert der Seriennummer.</li>
 <li><b>Maßblatt:</b> Das PDF entsteht auf dem Gerät. In den Fahrradpass gehen nur die Einstellwerte am Rad, keine Körpermaße.</li>
 </ul>
 
