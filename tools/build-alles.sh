@@ -3,8 +3,8 @@
 # Neue Datenbank-Änderung: neue Datei in docs/supabase anlegen, hier in LISTE ergänzen, SCHEMA um 1 erhöhen.
 set -e
 cd "$(dirname "$0")/../docs/supabase"
-SCHEMA=21
-LISTE="start.sql media.sql team.sql netz.sql freigabe.sql pair.sql ausbau.sql feedback.sql werkstatt.sql pass.sql passport.sql funde.sql besitz.sql plattform.sql plattform2.sql stand18.sql stand19.sql stand20.sql stand21.sql"
+SCHEMA=22
+LISTE="start.sql media.sql team.sql netz.sql freigabe.sql pair.sql ausbau.sql feedback.sql werkstatt.sql pass.sql passport.sql funde.sql besitz.sql plattform.sql plattform2.sql stand18.sql stand19.sql stand20.sql stand21.sql stand22.sql"
 {
   echo "-- FYF – Fit your Frame · KOMPLETTE Datenbank (Stand $SCHEMA). Automatisch erzeugt aus: $LISTE"
   echo "-- Nicht von Hand ändern – stattdessen die Einzeldatei ändern und tools/build-alles.sh ausführen."

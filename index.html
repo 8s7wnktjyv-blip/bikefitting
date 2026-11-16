@@ -1958,7 +1958,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-16.116';
+const APP_VER='2026-11-16.117';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2062,7 +2062,7 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
 // Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
-const DB_SCHEMA=21; let dbSchema=null;
+const DB_SCHEMA=22; let dbSchema=null;
 async function dbCheck(){ if(!(CL.url&&CL.key)) return;
   try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
   catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
@@ -8897,6 +8897,17 @@ ACT.dmgDel=el=>{ const w=S.workshop.find(x=>x.id===el.dataset.id); if(!w||!w.dmg
 FEATURES.push(['Rechnungsarchiv (GoBD)','Jede Rechnung wird unveränderbar mit Hash-Kette in der Datenbank abgelegt; Archiv prüfen und exportieren; Verfahrensdokumentation als Vorlage; DATEV-Buchungsstapel (Beta)',1]);
 FEATURES.push(['Import aus altem System','Kunden mit Rädern und Artikel/Preislisten als CSV übernehmen, Spalten zuordnen, Vorschau, keine Dubletten',1]);
 
+/* ===================== v.117 Anonyme Nutzungszählung (Laden-App) und Auswertung für Plattform-Admins ===================== */
+function hitD(ev){ try{ if(!CL||!CL.url||!CL.key||(dbSchema!==null&&dbSchema<22)) return; const d=today(), k='fyf-hit:'+ev; if(localStorage.getItem(k)===d) return; localStorage.setItem(k,d); fetch(clBase()+'/rest/v1/rpc/usage_hit',{method:'POST',headers:{apikey:CL.key,'Content-Type':'application/json'},body:JSON.stringify({p_app:'laden',p_event:String(ev).slice(0,40)}),keepalive:true}).catch(()=>{}); }catch(e){} }
+setTimeout(()=>hitD('app_offen'),3000);
+{ const RNd=render; render=function(){ const r=RNd.apply(this,arguments); try{ if(ui&&ui.route) hitD('ansicht_'+String(ui.route).replace(/[^a-z0-9_]/gi,'_').toLowerCase()); }catch(e){} return r; }; }
+{ const IC3=FORMS.invCreate; FORMS.invCreate=function(){ hitD('rechnung'); return IC3.apply(this,arguments); }; }
+{ const ED=FORMS.eDiag; FORMS.eDiag=function(){ hitD('ebike_diagnose'); return ED.apply(this,arguments); }; }
+let PUSE={at:0,list:[],days:30};
+{ const PH2=platformHtml; platformHtml=function(){ const h=PH2(); if(dbSchema!==null&&dbSchema<22) return h; if(!PUSE.at){ setTimeout(async()=>{ try{ PUSE.list=await clApi('/rest/v1/rpc/usage_stats',{method:'POST',body:JSON.stringify({p_days:PUSE.days})})||[]; }catch(e){ PUSE.list=[]; } PUSE.at=Date.now(); render(); },40); return h+panel('Nutzung','<p class="muted">Wird geladen …</p>'); }
+  const by=a=>PUSE.list.filter(x=>x.app===a); const tbl=a=>{ const L=by(a); return L.length?`<div class="tw"><table><thead><tr><th>${a==='pass'?'Fahrradpass':'Laden-App'}</th><th class="r">Geräte-Tage</th><th class="r">heute</th></tr></thead><tbody>${L.slice(0,25).map(x=>`<tr><td>${esc(x.event)}</td><td class="r num">${x.n}</td><td class="r num">${x.today||0}</td></tr>`).join('')}</tbody></table></div>`:`<p class="muted" style="font-size:13px">${a==='pass'?'Fahrradpass':'Laden-App'}: noch keine Daten.</p>`; };
+  return h+panel(`Nutzung (letzte ${PUSE.days} Tage)`,`<div class="stack" style="gap:10px">${tbl('pass')}${tbl('laden')}<p class="faint" style="font-size:12px;margin:0">Anonym: Jedes Gerät zählt ein Ereignis höchstens einmal pro Tag. Keine Codes, keine Personen. „app_offen“ ≈ aktive Geräte.</p><div><button class="btn sm ghost" data-act="useReload">Neu laden</button></div></div>`); }; }
+ACT.useReload=()=>{ PUSE.at=0; render(); };
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();
