@@ -1,0 +1,30 @@
+-- Test Stand 21: Rechnungsarchiv (nur Admin/Fitter, unveränderbar, Hash-Kette), Fehlerberichte, Rückrufliste. Lokal Postgres 16 am 16.11.2026: Mitarbeiter abgelehnt, Ändern/Löschen gesperrt, Manipulation erkannt (RE-2), Fehler zusammengefasst (n=2), anon darf weder lesen noch Rückrufe schreiben.
+\set ON_ERROR_STOP 0
+insert into auth.users values ('11111111-1111-1111-1111-111111111121','a21@x'),('22222222-2222-2222-2222-222222222221','m21@x') on conflict do nothing;
+insert into tenants(id,name) values ('aaaaaaaa-0000-0000-0000-000000000021','Laden 21') on conflict do nothing;
+insert into memberships values ('11111111-1111-1111-1111-111111111121','aaaaaaaa-0000-0000-0000-000000000021','admin') on conflict do nothing;
+insert into memberships values ('22222222-2222-2222-2222-222222222221','aaaaaaaa-0000-0000-0000-000000000021','mitarbeiter') on conflict do nothing;
+set role authenticated;
+select set_config('request.jwt.claim.sub','22222222-2222-2222-2222-222222222221',false);
+select invoice_archive_put('aaaaaaaa-0000-0000-0000-000000000021','i1','RE-1','rechnung','{"t":1}','<x/>') as mitarbeiter_darf_nicht;
+select set_config('request.jwt.claim.sub','11111111-1111-1111-1111-111111111121',false);
+select invoice_archive_put('aaaaaaaa-0000-0000-0000-000000000021','i1','RE-1','rechnung','{"t":1}','<x/>') ->> 'ok' as admin_1;
+select invoice_archive_put('aaaaaaaa-0000-0000-0000-000000000021','i2','RE-2','storno','{"t":2}','') ->> 'ok' as admin_2;
+select invoice_archive_put('aaaaaaaa-0000-0000-0000-000000000021','i1','RE-1','rechnung','{"t":99}','') as doppelt_anders;
+select invoice_archive_verify('aaaaaaaa-0000-0000-0000-000000000021') as pruefung_ok;
+reset role;
+update invoice_archive set payload='{"t":3}' where inv_id='i2';
+delete from invoice_archive where inv_id='i2';
+alter table invoice_archive disable trigger invoice_archive_lock; update invoice_archive set payload='{"t":3}' where inv_id='i2' and tenant_id='aaaaaaaa-0000-0000-0000-000000000021'; alter table invoice_archive enable trigger invoice_archive_lock;
+set role authenticated; select set_config('request.jwt.claim.sub','11111111-1111-1111-1111-111111111121',false);
+select invoice_archive_verify('aaaaaaaa-0000-0000-0000-000000000021') as nach_manipulation;
+reset role;
+set role anon;
+select app_error_log('laden','2026-11-16.116','TypeError: x is undefined','index.html:12:3','Test');
+select app_error_log('laden','2026-11-16.116','TypeError: x is undefined','index.html:12:3','Test');
+select app_error_log('hacker','1','x','',''); 
+select app_errors_list() as anon_liest;
+select recalls_put('test-1','{"brand":"X","title":"T","url":"https://x"}',true) as anon_darf_nicht;
+select recalls_list() as liste;
+reset role;
+select app, msg, n from app_errors where ver='2026-11-16.116';
