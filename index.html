@@ -1473,9 +1473,9 @@ function loadPose(){
   if(posePromise) return posePromise;
   const V='0.10.14';
   posePromise=(async()=>{
-    const m=await import(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${V}/vision_bundle.mjs`);
-    const fs=await m.FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${V}/wasm`);
-    return await m.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task'},runningMode:'IMAGE',numPoses:1});
+    const m=await import(new URL('vendor/mediapipe/vision_bundle.mjs',location.href).href);
+    const fs=await m.FilesetResolver.forVisionTasks(new URL('vendor/mediapipe/wasm',location.href).href);
+    return await m.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:new URL('vendor/mediapipe/models/pose_landmarker_lite.task',location.href).href},runningMode:'IMAGE',numPoses:1});
   })();
   posePromise.catch(()=>{ posePromise=null; });
   return posePromise;
@@ -5107,13 +5107,13 @@ async function fmLevelStart(){ try{ if(typeof DeviceMotionEvent!=='undefined'&&t
 let poseVideoPromise=null, poseFullPromise=null;
 function loadPoseFull(){
   if(poseFullPromise) return poseFullPromise; const V='0.10.14';
-  poseFullPromise=(async()=>{ const m=await import(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${V}/vision_bundle.mjs`);
-    const fs=await m.FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${V}/wasm`);
-    const opt=d=>({baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task',delegate:d},runningMode:'VIDEO',numPoses:1});
+  poseFullPromise=(async()=>{ const m=await import(new URL('vendor/mediapipe/vision_bundle.mjs',location.href).href);
+    const fs=await m.FilesetResolver.forVisionTasks(new URL('vendor/mediapipe/wasm',location.href).href);
+    const opt=d=>({baseOptions:{modelAssetPath:new URL('vendor/mediapipe/models/pose_landmarker_full.task',location.href).href,delegate:d},runningMode:'VIDEO',numPoses:1});
     try{ return await m.PoseLandmarker.createFromOptions(fs,opt('GPU')); }catch(e){ return await m.PoseLandmarker.createFromOptions(fs,opt('CPU')); } })();
   poseFullPromise.catch(()=>{ poseFullPromise=null; }); return poseFullPromise; }
 /* ---------- Handy als Kamera: Video direkt vom iPhone zum PC (WebRTC), nichts wird gespeichert ---------- */
-function PEER_JS(){ return 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'; }
+function PEER_JS(){ return new URL('vendor/peerjs-1.5.4.min.js',location.href).href; }
 function QR_JS(){ return new URL('vendor/qrcode-generator-1.4.4.js',location.href).href; }
 function loadScript(src){ const scriptCache=(window.__ffsc=window.__ffsc||{}); if(scriptCache[src]) return scriptCache[src]; scriptCache[src]=new Promise((res,rej)=>{ const t=document.createElement('script'); t.src=src; t.async=true; t.onload=()=>res(); t.onerror=()=>{ delete scriptCache[src]; t.remove(); rej(new Error('load')); }; document.head.appendChild(t); }); return scriptCache[src]; }
 function PeerCls(){ return window.Peer||(window.peerjs&&window.peerjs.Peer)||null; }
@@ -5184,9 +5184,9 @@ function loadPoseVideo(full){
   if(poseVideoPromise) return poseVideoPromise;
   const V='0.10.14';
   poseVideoPromise=(async()=>{
-    const m=await import(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${V}/vision_bundle.mjs`);
-    const fs=await m.FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${V}/wasm`);
-    const opt=d=>({baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task',delegate:d},runningMode:'VIDEO',numPoses:1});
+    const m=await import(new URL('vendor/mediapipe/vision_bundle.mjs',location.href).href);
+    const fs=await m.FilesetResolver.forVisionTasks(new URL('vendor/mediapipe/wasm',location.href).href);
+    const opt=d=>({baseOptions:{modelAssetPath:new URL('vendor/mediapipe/models/pose_landmarker_lite.task',location.href).href,delegate:d},runningMode:'VIDEO',numPoses:1});
     try{ return await m.PoseLandmarker.createFromOptions(fs,opt('GPU')); }catch(e){ return await m.PoseLandmarker.createFromOptions(fs,opt('CPU')); }
   })();
   poseVideoPromise.catch(()=>{ poseVideoPromise=null; });
