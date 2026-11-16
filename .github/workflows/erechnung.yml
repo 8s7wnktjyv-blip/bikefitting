@@ -32,13 +32,17 @@ jobs:
           ls kv xr
       - name: Prüfen
         run: |
-          set -e
-          JAR=$(ls kv/validationtool-*-standalone.jar | head -1)
+          set -eo pipefail
           mkdir -p bericht
-          java -jar "$JAR" -s xr/scenarios.xml -r xr -o bericht -h tests/xrechnung/*.xml | tee pruefung.txt
-          echo "---"
-          if grep -Eq "Rejected|REJECT|invalid" pruefung.txt; then echo "::error::Mindestens eine E-Rechnung wurde abgelehnt – Bericht ansehen"; exit 1; fi
-          echo "Alle E-Rechnungen angenommen."
+          java -jar kv/validationtool-1.5.0-standalone.jar -s xr/scenarios.xml -r xr -o bericht -h tests/xrechnung/*.xml | tee pruefung.txt
+          N=$(ls tests/xrechnung/*.xml | wc -l); R=$(ls bericht/*-report.xml 2>/dev/null | wc -l)
+          echo "Dateien: $N, Berichte: $R"
+          if [ "$R" -ne "$N" ]; then echo "::error::Nicht für jede Datei ein Prüfbericht"; exit 1; fi
+          BAD=0
+          for f in bericht/*-report.xml; do
+            if grep -q "<rep:accept" "$f"; then echo "angenommen: $f"; else echo "::error::abgelehnt: $f"; grep -o 'code="[^"]*"[^>]*>' "$f" | head -20 || true; BAD=1; fi
+          done
+          [ "$BAD" -eq 0 ] && echo "Alle E-Rechnungen angenommen." || exit 1
       - uses: actions/upload-artifact@v4
         if: always()
         with:
