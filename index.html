@@ -1958,7 +1958,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-16.117';
+const APP_VER='2026-11-20.118';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -3550,6 +3550,7 @@ SESSTAB.ausgang0 = s => {
   <p class="onlyline">Miss das Rad so, wie die Person es mitgebracht hat. ${MEASURE_NOW.length} Punkte, je mit Skizze und Anleitung.</p>
   ${trainerHtml(s)}
   ${krPanel(s)}
+  ${stPanel(s)}
   <div class="statusbox ${done===MEASURE_NOW.length?'ok':''}"><div style="flex:1;min-width:0"><b>${done===MEASURE_NOW.length?'Alle Pflichtwerte erfasst':'Noch '+(MEASURE_NOW.length-done)+' Werte offen'}</b>${mk&&fromMaker.length?`<span class="muted" style="font-size:14px">${fromMaker.length} Serienwerte vom Hersteller übernommen</span>`:''}</div><span class="num" style="font-weight:700">${done}/${MEASURE_NOW.length}</span></div>
   ${bodySetupHtml(s)}
   ${startBtn(first,done,first>=0?MK[MEASURE_NOW[first]].label:'')}
@@ -4251,6 +4252,7 @@ SESSTAB.anpassung = s => { if(s.plan&&ui.adjIdx!=null) return guidedHtml(s); con
   return `<div class="stack">
   ${guidedHtml(s)}
   ${krPanel(s)}
+  ${stPanel(s)}
   ${checksHtml(s,true)}
   ${top.length?`<div><div class="label" style="margin-bottom:8px">Weitere Hinweise ${st('s')}</div><div class="sugg">${top.map(card).join('')}</div>${rest.length?`<details class="more" style="margin-top:8px"><summary>${rest.length} weitere Vorschläge</summary><div class="sugg" style="margin-top:8px">${rest.map(card).join('')}</div></details>`:''}</div>`:computePlan(s).steps.length?'':'<div class="statusbox"><div><b>Keine Vorschläge</b><span class="muted" style="font-size:14px">Trag Beschwerden im Schritt „Ziel“ ein oder miss den Kniewinkel.</span></div></div>'}
   <details class="more" ${ui.prepKey?'open':''}><summary>Alle Empfehlungen als Liste, selbst eintragen, Verlauf</summary><div class="stack" style="margin-top:10px">
@@ -4947,6 +4949,41 @@ const kr={dev:null,cp:null,on:false,power:null,cad:null,prog:null,idx:0,t:0,paus
 function krMax(){ return Number((S.settings||{}).krMax)||300; }
 function krMess(){ return Number((S.settings||{}).krMess)||150; }
 const krTime=sec=>`${Math.floor(sec/60)}:${String(Math.max(0,Math.floor(sec%60))).padStart(2,'0')}`;
+/* STATION-START */
+// Tab5-„FYF Station“: Werte kommen über den Eingangskorb (docs/supabase/station.sql). Reine Funktionen, getestet in tools/test-station.mjs.
+const ST_KEYS=['saddleHeight','saddleSetback','saddleFloor','barFloor','drop','reach','barX','hoodFloor','crankLength','saddleTilt','barRoll','kneeBDC'];
+const ST_METHOD={saddleTilt:'Digitaler Winkelmesser',barRoll:'Digitaler Winkelmesser',kneeBDC:'Goniometer'};
+const ST_LIMIT={saddleTilt:30,barRoll:45,kneeBDC:180};
+function stValues(p){ const out={before:{},after:{}};
+  ['before','after'].forEach(side=>{ const src=p&&p[side]; if(!src||typeof src!=='object'||Array.isArray(src)) return;
+    ST_KEYS.forEach(k=>{ const v=src[k]; const lim=ST_LIMIT[k]||3000; if(typeof v==='number'&&isFinite(v)&&Math.abs(v)<=lim) out[side][k]=Math.round(v*10)/10; }); });
+  return out; }
+function stInfo(r){ const p=(r&&r.payload)||{}; const c=(p.customer&&typeof p.customer==='object')?p.customer:{}; const V=stValues(p);
+  return {id:r&&r.id, when:String(p.when||(r&&r.created_at)||'').replace('T',' ').slice(0,16), name:typeof c.name==='string'?c.name.slice(0,60):'', fyfId:typeof c.fyf_id==='string'?c.fyf_id:'',
+    nb:Object.keys(V.before).length, na:Object.keys(V.after).length, obs:Array.isArray(p.obs)?p.obs.filter(x=>typeof x==='string').map(x=>x.slice(0,80)).slice(0,20):[]}; }
+function stApplyTo(s,p,stamp){ const V=stValues(p); let n=0;
+  ['before','after'].forEach(side=>{ s[side]=s[side]||{}; Object.entries(V[side]).forEach(([k,v])=>{ const old=s[side][k]; const meth=ST_METHOD[k]||(old&&old.method)||'Maßband';
+    s[side][k]={...mv(k,v,meth,'gemessen',null),time:stamp,from:'Tab5'}; n++; }); });
+  const ob=stInfo({payload:p}).obs; if(ob.length) s.notes=(s.notes?s.notes+'\n\n':'')+`[Tab5-Beobachtungen, ${stamp}]\n`+ob.map(x=>'- '+x).join('\n');
+  return n; }
+/* STATION-END */
+const ST={list:[],rows:[],at:0,err:'',busy:false};
+async function stLoad(){ if(!cloudReady()){ ST.err='Erst Cloud-Speicherung einrichten (Mehr → Cloud-Speicherung).'; render(); return; }
+  ST.busy=true; render();
+  try{ const rows=await clApi('/rest/v1/rpc/station_list',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant})})||[]; ST.rows=rows; ST.list=rows.map(stInfo); ST.err=''; }
+  catch(e){ ST.err=/station_list|Could not find the function/.test(e.message)?'Die Datenbank kennt die Tab5-Station noch nicht (docs/supabase/station.sql einspielen).':(e.offline?'Keine Verbindung zum Server':e.message); }
+  ST.busy=false; ST.at=Date.now(); render(); }
+function stPanel(s){ if(!cloudReady()&&!ST.list.length) return '';
+  const c=cust(s.customerId);
+  return `<details class="more" id="stPanel" ${ST.at?'open':''}><summary>Werte vom Tab5 holen (FYF Station)</summary><div class="stack" style="margin-top:10px">
+  <p class="muted" style="font-size:14px;margin:0">Am Tab5: Übersicht → „An FYF senden“. Dann hier holen und ins Fitting übernehmen. Vorhandene Werte mit gleichem Messpunkt werden ersetzt.</p>
+  <div class="row"><button class="btn primary" data-act="stFetch" ${ST.busy?'disabled':''}>${ST.busy?'Lädt …':(ST.at?'Neu laden':'Werte vom Tab5 holen')}</button></div>
+  ${ST.err?`<div class="statusbox"><div style="flex:1;min-width:0"><b>Hinweis</b><span class="muted" style="font-size:14px">${esc(ST.err)}</span></div></div>`:''}
+  ${ST.at&&!ST.err&&!ST.list.length?'<p class="faint" style="margin:0">Keine neuen Werte vom Tab5.</p>':''}
+  ${ST.list.map((x,i)=>{ const other=x.fyfId&&x.fyfId!==s.customerId; return `<div class="card"><div class="grow"><div class="t">${esc(x.when||'ohne Zeit')} · ${esc(x.name||'ohne Kunde')}</div>
+    <div class="sub">${x.nb} Werte vorher, ${x.na} nachher${x.obs.length?`, ${x.obs.length} Beobachtungen`:''}${other?` · <b style="color:var(--bad)">anderer Kunde als ${esc(c?c.name:'dieses Fitting')}</b>`:''}</div></div>
+    <button class="btn sm ${other?'ghost':'primary'}" data-act="stApply" data-id="${s.id}" data-i="${i}">Übernehmen</button><button class="btn sm ghost" data-act="stDrop" data-i="${i}">Verwerfen</button></div>`; }).join('')}
+  </div></details>`; }
 function krPanel(s){
   const bt=typeof navigator!=='undefined'&&!!navigator.bluetooth; const P=kr.prog, st=P&&P[kr.idx];
   return `<details class="more" id="krPanel" ${kr.on||ui.krOpen?'open':''}><summary>Rolle steuern: Fitting-Fahrprogramm (Beta)</summary><div class="stack" style="margin-top:10px">
@@ -6201,6 +6238,14 @@ const ACT = {
   vidReset(){ vid.pts=[]; drawVid(); },
   fmLevel(){ fmLevelStart(); },
   krConnect(){ krConnect(); },
+  stFetch(){ stLoad(); },
+  async stApply(el){ const s=sess(el.dataset.id); const i=Number(el.dataset.i); const r=ST.rows[i]; if(!s||!r) return;
+    const n=stApplyTo(s,r.payload,nowStamp()); if(s.status==='geplant') s.status='in Arbeit'; audit(`Tab5: ${n} Werte übernommen`,s.id); save();
+    try{ await clApi('/rest/v1/rpc/station_take',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_id:r.id})}); }catch(e){}
+    ST.rows.splice(i,1); ST.list.splice(i,1); render(); toast(n?`${n} Werte vom Tab5 übernommen`:'Keine passenden Werte im Eintrag'); },
+  async stDrop(el){ const i=Number(el.dataset.i); const r=ST.rows[i]; if(!r) return;
+    try{ await clApi('/rest/v1/rpc/station_take',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_id:r.id})}); }catch(e){ toast(e.offline?'Keine Verbindung zum Server':e.message,true); return; }
+    ST.rows.splice(i,1); ST.list.splice(i,1); render(); toast('Verworfen'); },
   krOff(){ if(kr.prog) krEnd('Programm gestoppt'); krRelease().then(()=>{ try{ kr.dev&&kr.dev.gatt.disconnect(); }catch(e){} }); },
   krStart(el){ krRun(el.dataset.id,ridePlan(krMess(),krMax())); },
   krChange(el){ const add=rideAfterChange(Math.min(krMess(),krMax())); if(kr.prog&&kr.prog[kr.idx]){ kr.prog.splice(kr.idx+1,0,...add); toast('Eingewöhnen + Messung als nächste Stufen eingeplant'); krUi(); render(); } else krRun(el.dataset.id,add); },
