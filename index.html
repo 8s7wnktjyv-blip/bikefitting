@@ -1958,7 +1958,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-16.117';
+const APP_VER='2026-11-21.118';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2062,7 +2062,7 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
 // Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
-const DB_SCHEMA=22; let dbSchema=null;
+const DB_SCHEMA=23; let dbSchema=null;
 async function dbCheck(){ if(!(CL.url&&CL.key)) return;
   try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
   catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
@@ -8908,6 +8908,95 @@ let PUSE={at:0,list:[],days:30};
   const by=a=>PUSE.list.filter(x=>x.app===a); const tbl=a=>{ const L=by(a); return L.length?`<div class="tw"><table><thead><tr><th>${a==='pass'?'Fahrradpass':'Laden-App'}</th><th class="r">Geräte-Tage</th><th class="r">heute</th></tr></thead><tbody>${L.slice(0,25).map(x=>`<tr><td>${esc(x.event)}</td><td class="r num">${x.n}</td><td class="r num">${x.today||0}</td></tr>`).join('')}</tbody></table></div>`:`<p class="muted" style="font-size:13px">${a==='pass'?'Fahrradpass':'Laden-App'}: noch keine Daten.</p>`; };
   return h+panel(`Nutzung (letzte ${PUSE.days} Tage)`,`<div class="stack" style="gap:10px">${tbl('pass')}${tbl('laden')}<p class="faint" style="font-size:12px;margin:0">Anonym: Jedes Gerät zählt ein Ereignis höchstens einmal pro Tag. Keine Codes, keine Personen. „app_offen“ ≈ aktive Geräte.</p><div><button class="btn sm ghost" data-act="useReload">Neu laden</button></div></div>`); }; }
 ACT.useReload=()=>{ PUSE.at=0; render(); };
+/* ===== v.118 Kalender: Termine immer beim Kunden, Ansichten Woche/Liste/Monat, iPhone-Kalender (Abo-Link + .ics) ===== */
+function apptNorm(s){ return String(s||'').toLowerCase().replace(/\s+/g,' ').trim(); }
+function apptFindCust(name,contact){ const ct=String(contact||'').trim(); const em=/@/.test(ct)?ct.toLowerCase():''; const ph=em?'':ct.replace(/[^\d]/g,'');
+  return S.customers.find(c=>em&&c.email&&String(c.email).toLowerCase()===em)
+    || S.customers.find(c=>ph.length>=6&&String(c.phone||'').replace(/[^\d]/g,'').slice(-8)===ph.slice(-8))
+    || S.customers.find(c=>name&&apptNorm(c.name)===apptNorm(name)); }
+function apptEnsureCust(name,contact,online){ let c=apptFindCust(name,contact); if(c) return {c,neu:false}; const ct=String(contact||'').trim();
+  c={id:uid('c'),name:String(name||'').trim()||'Terminkunde',email:/@/.test(ct)?ct:'',phone:/@/.test(ct)?'':ct,since:today(),discipline:'',consent:false,tags:[online?'Online-Termin':'Termin'],notes:''};
+  S.customers.push(c); audit(`Kunde angelegt aus Termin: ${c.name}`); return {c,neu:true}; }
+function apptLinkAll(){ let n=0; const min=iso(new Date(Date.now()-60*864e5)); appts().forEach(a=>{ if(a.customerId&&cust(a.customerId)&&cust(a.customerId).id) return; if(!a.name||!(a.date>=min)) return; const r=apptEnsureCust(a.name,a.contact,!!a.inq); a.customerId=r.c.id; n++; }); if(n) save(); return n; }
+setTimeout(()=>{ try{ if(S&&S.customers) apptLinkAll(); }catch(e){} },1500);
+{ const o=FORMS.apptSave; FORMS.apptSave=async function(f,d){ const g=k=>String(d.get(k)||'').trim(); let neu=null;
+    if(!g('customerId')&&g('name')){ const r=apptEnsureCust(g('name'),g('contact'),!!(f.dataset&&f.dataset.inq)); d.set('customerId',r.c.id); if(r.neu) neu=r.c; }
+    const before=new Set(appts().map(a=>a.id)); const res=await o.call(this,f,d);
+    try{ const id=f.dataset.id; const a=id?appts().find(x=>x.id===id):appts().find(x=>!before.has(x.id)); if(a&&f.dataset.inq&&!a.inq){ a.inq=f.dataset.inq; save(); }
+      if(neu&&a) toast(`Termin gespeichert · Kunde „${neu.name}“ neu angelegt`); }catch(e){}
+    return res; }; }
+const apptWho=a=>{ const c=a.customerId&&cust(a.customerId); return c&&c.id?c.name:(a.name||''); };
+const apptDate=(d,o)=>new Date(d+'T12:00').toLocaleDateString('de-DE',o||{weekday:'short',day:'2-digit',month:'2-digit'});
+function apptRow(a,withDate){ const c=a.customerId&&cust(a.customerId);
+  return `<div class="li click" style="padding:8px 0;align-items:flex-start" data-act="apptOpen" data-id="${esc(a.id)}"><span class="mono" style="font-size:12px;min-width:${withDate?'92':'44'}px">${withDate?esc(apptDate(a.date))+'<br>':''}${esc(a.start)}</span>
+    <div class="grow"><div class="t" style="font-size:14px">${esc(a.kind)} · ${esc(apptWho(a))}${a.inq?' <span class="chip nodot" style="font-size:11px">online</span>':''}</div>
+    <div class="sub">${fmtNum(Number(a.dur)||60)} Min.${a.staff?' · '+esc(a.staff):''}${c&&c.phone?' · '+esc(c.phone):a.contact&&!c?' · '+esc(a.contact):''}${a.note?' · '+esc(String(a.note).slice(0,60)):''}</div></div></div>`; }
+/* Kundenakte: Termine */
+{ const CD=customerDrawer; customerDrawer=function(id,tab){ CD(id,tab); try{ if(ui.custTab!=='uebersicht') return; const b=document.getElementById('drawerBody'); if(!b||b.querySelector('[data-cappts]')) return;
+    const L=appts().filter(a=>a.customerId===id).sort((x,y)=>(x.date+x.start).localeCompare(y.date+y.start)); const t=today(); const up=L.filter(a=>a.date>=t), past=L.filter(a=>a.date<t).slice(-3).reverse();
+    const h=document.createElement('div'); h.innerHTML=`<hr><div class="stack" data-cappts><div class="row" style="justify-content:space-between;gap:6px"><h3 style="margin:0">Termine</h3><button class="btn sm" data-act="apptNewFor" data-cust="${esc(id)}">${ic('plus')}Termin</button></div>
+      ${up.length?up.map(a=>apptRow(a,true)).join(''):'<span class="muted">Kein kommender Termin.</span>'}
+      ${past.length?`<details><summary class="faint" style="font-size:13px">Letzte Termine (${past.length})</summary>${past.map(a=>apptRow(a,true)).join('')}</details>`:''}</div>`;
+    try{ const dt=[...b.querySelectorAll('dl.dl dt')].find(x=>x.textContent.trim()==='Letztes Fitting'); if(dt){ const n=up[0]; dt.insertAdjacentHTML('beforebegin',`<dt>Nächster Termin</dt><dd>${n?`<a href="#" data-act="apptOpen" data-id="${esc(n.id)}">${esc(apptDate(n.date))} ${esc(n.start)} · ${esc(n.kind)}</a>`:'<span class="faint">–</span>'}</dd>`); } }catch(e){}
+    const bikesH=[...b.querySelectorAll('h3')].find(x=>x.textContent.trim()==='Fahrräder'); const st=bikesH&&bikesH.closest('.stack'); const hr=st&&st.previousElementSibling;
+    if(hr&&hr.tagName==='HR') hr.before(...h.childNodes); else b.append(...h.childNodes); }catch(e){ console.error(e); } }; }
+ACT.apptNewFor=function(el){ apptDrawer(null,{customerId:el.dataset.cust}); };
+ACT.apptNewAt=function(el){ apptDrawer(null,{date:el.dataset.date}); };
+/* Kalender-Ansichten */
+const CAL_MODES=[['woche','Woche'],['liste','Liste'],['monat','Monat']];
+function calMode(){ if(!ui.calMode){ try{ ui.calMode=localStorage.getItem('fyf:calMode')||'woche'; }catch(e){ ui.calMode='woche'; } } return CAL_MODES.some(m=>m[0]===ui.calMode)?ui.calMode:'woche'; }
+ACT.calMode=function(el){ ui.calMode=el.dataset.v; try{ localStorage.setItem('fyf:calMode',ui.calMode); }catch(e){} render(); };
+ACT.calPast=function(){ ui.calPast=!ui.calPast; render(); };
+ACT.calMonth=function(el){ const v=Number(el.dataset.v); const m=ui.calMonthK||today().slice(0,7); if(!v){ ui.calMonthK=today().slice(0,7); ui.calDay=today(); } else { const x=new Date(m+'-15T12:00'); x.setMonth(x.getMonth()+v); ui.calMonthK=iso(x).slice(0,7); ui.calDay=null; } render(); };
+ACT.calDay=function(el){ ui.calDay=el.dataset.date; render(); };
+CHG.calQ=function(el){ ui.calQ=el.value; render(); };
+function calSwitch(){ const m=calMode(); return `<div class="row" role="group" aria-label="Ansicht" style="gap:6px;flex-wrap:wrap;margin-bottom:10px">${CAL_MODES.map(([k,l])=>`<button class="btn sm${k===m?' primary':''}" data-act="calMode" data-v="${k}" aria-pressed="${k===m}">${l}</button>`).join('')}</div>`; }
+function calListHtml(){ const t=today(), q=apptNorm(ui.calQ||''); let L=appts().slice().sort((x,y)=>(x.date+x.start).localeCompare(y.date+y.start));
+  L=L.filter(a=>ui.calPast?a.date<t&&a.date>=iso(new Date(Date.now()-90*864e5)):a.date>=t); if(ui.calPast) L.reverse();
+  if(q) L=L.filter(a=>apptNorm([apptWho(a),a.kind,a.note,a.contact,a.staff].join(' ')).includes(q));
+  const days=[...new Set(L.map(a=>a.date))];
+  return `<div class="row" style="gap:6px;flex-wrap:wrap"><input class="input" style="flex:1;min-width:160px" type="search" placeholder="Name, Art, Notiz suchen" value="${esc(ui.calQ||'')}" data-change="calQ" aria-label="Termine durchsuchen"><button class="btn sm" data-act="calPast">${ui.calPast?'Kommende':'Vergangene'}</button><button class="btn sm primary" data-act="apptNew">${ic('plus')} Termin</button></div>
+    <div style="margin-top:8px">${days.length?days.map(d=>`<div style="margin-top:10px"><b style="font-size:13px">${esc(apptDate(d,{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'}))}${d===t?' · heute':''}</b>${L.filter(a=>a.date===d).map(a=>apptRow(a,false)).join('')}</div>`).join(''):`<p class="muted">${q?'Nichts gefunden.':ui.calPast?'Keine Termine in den letzten 90 Tagen.':'Keine kommenden Termine.'}</p>`}</div>`; }
+function calMonthHtml(){ const mk=ui.calMonthK||today().slice(0,7); const first=new Date(mk+'-01T12:00'); const lead=(first.getDay()||7)-1; const dim=new Date(first.getFullYear(),first.getMonth()+1,0).getDate(); const t=today();
+  const cnt={}; appts().forEach(a=>{ if(String(a.date).slice(0,7)===mk) cnt[a.date]=(cnt[a.date]||0)+1; });
+  const cells=[]; for(let i=0;i<lead;i++) cells.push('<div></div>'); for(let d=1;d<=dim;d++){ const ds=mk+'-'+String(d).padStart(2,'0'); const n=cnt[ds]||0; const sel=ui.calDay===ds;
+    cells.push(`<button type="button" class="btn" data-act="calDay" data-date="${ds}" aria-label="${esc(apptDate(ds,{weekday:'long',day:'2-digit',month:'long'}))}: ${n} Termin${n===1?'':'e'}" style="min-height:48px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;${sel?'background:var(--accent);color:#fff;':''}${ds===t&&!sel?'outline:2px solid var(--accent);':''}"><span style="font-size:14px">${d}</span>${n?`<span class="mono" style="font-size:11px;font-weight:700">${n}</span>`:''}</button>`); }
+  const day=ui.calDay&&String(ui.calDay).slice(0,7)===mk?ui.calDay:null; const L=day?appts().filter(a=>a.date===day).sort((x,y)=>hm(x.start)-hm(y.start)):[];
+  return `<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><button class="btn sm" data-act="calMonth" data-v="-1" aria-label="Vorheriger Monat">‹</button><b style="min-width:130px;text-align:center">${esc(first.toLocaleDateString('de-DE',{month:'long',year:'numeric'}))}</b><button class="btn sm" data-act="calMonth" data-v="1" aria-label="Nächster Monat">›</button><button class="btn sm" data-act="calMonth" data-v="0">Heute</button></div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px">${['Mo','Di','Mi','Do','Fr','Sa','So'].map(x=>`<div class="faint" style="text-align:center;font-size:12px">${x}</div>`).join('')}${cells.join('')}</div>
+    ${day?`<div style="margin-top:12px"><div class="row" style="justify-content:space-between;gap:6px"><b>${esc(apptDate(day,{weekday:'long',day:'2-digit',month:'2-digit'}))}</b><button class="btn sm primary" data-act="apptNewAt" data-date="${day}">${ic('plus')} Termin</button></div>${L.length?L.map(a=>apptRow(a,false)).join(''):'<p class="muted">Keine Termine.</p>'}</div>`:'<p class="faint" style="font-size:13px;margin-top:10px">Tag antippen, um die Termine zu sehen.</p>'}`; }
+/* iPhone-Kalender */
+function icsDT(date,start,addMin){ const x=new Date(`${date}T${start||'09:00'}:00`); if(addMin) x.setMinutes(x.getMinutes()+addMin); return x.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''); }
+const icsTxt=s=>String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
+function icsOf(list){ const now=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''); const loc=S.shop&&S.shop.addr||'';
+  const ev=list.map(a=>{ const c=a.customerId&&cust(a.customerId); const desc=[c&&c.phone,c&&c.email,!c&&a.contact,a.staff?'Mitarbeiter: '+a.staff:'',a.note].filter(Boolean).join('\n');
+    return ['BEGIN:VEVENT','UID:'+icsTxt(a.id)+'@fyf','DTSTAMP:'+now,'DTSTART:'+icsDT(a.date,a.start),'DTEND:'+icsDT(a.date,a.start,Number(a.dur)||60),'SUMMARY:'+icsTxt(`${a.kind} · ${apptWho(a)}`),desc?'DESCRIPTION:'+icsTxt(desc):'',loc?'LOCATION:'+icsTxt(loc):'','BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsTxt(a.kind),'TRIGGER:-PT30M','END:VALARM','END:VEVENT'].filter(Boolean).join('\r\n'); });
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//FYF Fit your Frame//Termine//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH',...ev,'END:VCALENDAR'].join('\r\n')+'\r\n'; }
+ACT.apptIcs=function(el){ const a=appts().find(x=>x.id===el.dataset.id); if(!a) return; download(`termin-${a.date}-${String(apptWho(a)).replace(/[^\wäöüÄÖÜß-]+/g,'_').slice(0,30)}.ics`,icsOf([a]),'text/calendar'); };
+ACT.calIcsAll=function(){ const t=iso(new Date(Date.now()-30*864e5)); const L=appts().filter(a=>a.date>=t); if(!L.length) return toast('Keine Termine zum Exportieren',true); download(`fyf-termine-${today()}.ics`,icsOf(L),'text/calendar'); toast(`${L.length} Termine exportiert`); };
+function calFeedUrl(tok,webcal){ const u=`${CL.url.replace(/\/$/,'')}/rest/v1/rpc/cal_feed?t=${encodeURIComponent(tok)}&apikey=${encodeURIComponent(CL.key)}`; return webcal?u.replace(/^https?:\/\//,'webcal://'):u; }
+ACT.calFeed=async function(el){ const act=el.dataset.v||'get'; if(!cloudReady()) return toast('Erst mit der Cloud verbinden (Einstellungen → Cloud)',true); if(!needDb(23)) return;
+  if((act==='renew'||act==='off')&&el.dataset.ok!=='1'){ el.dataset.ok='1'; el.textContent=act==='off'?'Wirklich beenden?':'Alter Link wird ungültig – sicher?'; return; }
+  try{ const body={p_tenant:CL.tenant,p_action:act}; if(el.dataset.names) body.p_names=el.dataset.names==='1'; const tok=await clApi('/rest/v1/rpc/cal_feed_token',{method:'POST',body:JSON.stringify(body)});
+    ui.calTok=typeof tok==='string'?tok:''; if(el.dataset.names) ui.calNames=el.dataset.names==='1'; toast(act==='off'?'Kalender-Abo beendet':act==='renew'?'Neuer Link erstellt – im iPhone neu abonnieren':'Abo-Link bereit'); render(); }
+  catch(e){ toast(/FYF_DENIED/.test(String(e.message||e))?'Nur Inhaber/Admin dürfen das ändern':'Hat nicht geklappt: '+String(e.message||e).slice(0,80),true); } };
+ACT.calCopy=function(){ if(!ui.calTok) return; const u=calFeedUrl(ui.calTok,false); try{ navigator.clipboard.writeText(u).then(()=>toast('Link kopiert')); }catch(e){ prompt('Link kopieren:',u); } };
+function calSyncHtml(){ const has=!!ui.calTok, on=cloudReady();
+  return panel('Termine im iPhone-Kalender',`<p class="muted" style="margin:0 0 8px">Mit dem <b>Abo</b> erscheinen alle FYF-Termine automatisch im Kalender von iPhone, Mac, Google oder Outlook – neue und geänderte Termine kommen von selbst nach.</p>
+    ${!on?`<p class="faint" style="font-size:13px">Das Abo braucht die Cloud-Verbindung. Ohne Cloud: Termine als Datei exportieren (unten).</p>`:has?`<div class="stack"><a class="btn primary" href="${esc(calFeedUrl(ui.calTok,true))}">Im iPhone-Kalender abonnieren</a>
+      <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="calCopy">Link kopieren (Google/Outlook)</button><button class="btn sm" data-act="calFeed" data-v="get" data-names="${ui.calNames===false?'1':'0'}">${ui.calNames===false?'Kundennamen wieder zeigen':'Ohne Kundennamen'}</button><button class="btn sm ghost" data-act="calFeed" data-v="renew">Neuer Link</button><button class="btn sm ghost" data-act="calFeed" data-v="off">Abo beenden</button></div>
+      <ol class="faint" style="font-size:13px;margin:6px 0 0;padding-left:18px"><li>Auf dem iPhone „Im iPhone-Kalender abonnieren“ tippen → <b>Abonnieren</b> → <b>Hinzufügen</b>.</li><li>Fertig. Das iPhone lädt Änderungen selbst nach (je nach iPhone-Einstellung kann das bis zu einer Stunde dauern).</li><li>Wer den Link hat, sieht die Termine. Nur in eigene Geräte eintragen. Bei Verdacht: „Neuer Link“.</li></ol></div>`
+      :`<button class="btn primary" data-act="calFeed" data-v="get">Abo-Link erstellen</button>`}
+    <hr><div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="calIcsAll">Alle Termine als Datei (.ics)</button></div><p class="faint" style="font-size:12px;margin:6px 0 0">Datei = einmaliger Stand (öffnen → „Alle hinzufügen“). Einzelne Termine: im Termin auf „In Kalender eintragen“.</p>`); }
+{ const T=VIEWS.termine; VIEWS.termine=()=>{ try{ apptLinkAll(); }catch(e){} let h=T(); const m=calMode(); hitD('kal_'+m);
+    const ns=h.indexOf('<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="calNav"'); const pe=h.indexOf('<p class="faint" style="font-size:12px;margin:8px 0 0">Auslastung');
+    if(ns>=0){ if(m==='woche') h=h.slice(0,ns)+calSwitch()+h.slice(ns); else if(pe>ns){ const end=h.indexOf('</p>',pe)+4; h=h.slice(0,ns)+calSwitch()+(m==='liste'?calListHtml():calMonthHtml())+h.slice(end); } }
+    const k=h.indexOf('<section class="panel ',h.indexOf('<section class="panel ')+1); const sync=calSyncHtml(); return k>0?h.slice(0,k)+sync+h.slice(k):h+sync; }; }
+{ const AD=apptDrawer; apptDrawer=function(id,pre){ AD(id,pre); if(!id) return; try{ const f=document.querySelector('#drawerBody form[data-form="apptSave"] .wide.row'); if(f&&!f.querySelector('[data-act="apptIcs"]')) f.insertAdjacentHTML('beforeend',`<button class="btn ghost" type="button" data-act="apptIcs" data-id="${esc(id)}">In Kalender eintragen</button>`);
+    const a=appts().find(x=>x.id===id); if(a&&a.customerId&&cust(a.customerId).id){ const s=document.querySelector('#ap_c'); if(s) s.insertAdjacentHTML('afterend',`<button class="btn sm" type="button" data-act="openCustomer" data-id="${esc(a.customerId)}" style="margin-top:6px">Kundenakte öffnen</button>`); } }catch(e){} }; }
+setTimeout(()=>{ try{ window.__fitframe=window.__fitframe||{}; window.__fitframe.T118={appts,apptDrawer,customerDrawer,apptLinkAll,closeDrawer,render,cust,iso,ACT,VIEWS,S:()=>S,ui:()=>ui,NET:()=>NET}; }catch(e){} },0);
+/* Anfragen: zeigen, ob schon ein Termin daraus wurde */
+{ const N=VIEWS.netz; if(N) VIEWS.netz=function(){ let h=N.apply(this,arguments); try{ appts().filter(a=>a.inq).forEach(a=>{ const b=`data-act="inqToAppt" data-id="${esc(a.inq)}">Als Termin eintragen<`; if(h.includes(b)) h=h.split(b).join(`data-act="apptOpen" data-id="${esc(a.id)}">✓ Termin ${esc(apptDate(a.date))} ${esc(a.start)}<`); }); }catch(e){} return h; }; }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();

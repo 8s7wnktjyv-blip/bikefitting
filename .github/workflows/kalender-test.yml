@@ -1,0 +1,19 @@
+name: Kalender-Abo prüfen
+# Prüft, ob der Kalender-Abo-Link der echten Datenbank eine gültige .ics-Datei liefert (mit absichtlich falschem Link = leerer Kalender, keine Daten).
+on: workflow_dispatch
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Abo-Adresse abrufen wie ein Kalender (ohne Login, ohne Accept-Header)
+        run: |
+          set -o pipefail
+          URL="https://tyfilehmrnibtoalwflf.supabase.co/rest/v1/rpc/cal_feed?t=testtesttesttesttesttesttesttesttest&apikey=sb_publishable_DUIWZF8H-BD-HaBUMvTg-A_pbpz1mgT"
+          curl -sS -D kopf.txt -o body.ics -H 'Accept:' -A 'iOS/18.0 dataaccessd/1.0' "$URL"
+          echo "--- Kopf"; cat kopf.txt; echo "--- Inhalt"; cat body.ics; echo
+          grep -qi '^HTTP/[0-9.]* 200' kopf.txt
+          grep -qi '^content-type: text/calendar' kopf.txt
+          grep -q 'BEGIN:VCALENDAR' body.ics
+          grep -q 'END:VCALENDAR' body.ics
+          ! grep -q 'BEGIN:VEVENT' body.ics
+          echo "OK: Kalender-Abo liefert gültige .ics"
