@@ -1958,7 +1958,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-20.118';
+const APP_VER='2026-11-20.119';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -4961,10 +4961,13 @@ function stValues(p){ const out={before:{},after:{}};
 function stInfo(r){ const p=(r&&r.payload)||{}; const c=(p.customer&&typeof p.customer==='object')?p.customer:{}; const V=stValues(p);
   return {id:r&&r.id, when:String(p.when||(r&&r.created_at)||'').replace('T',' ').slice(0,16), name:typeof c.name==='string'?c.name.slice(0,60):'', fyfId:typeof c.fyf_id==='string'?c.fyf_id:'',
     nb:Object.keys(V.before).length, na:Object.keys(V.after).length, obs:Array.isArray(p.obs)?p.obs.filter(x=>typeof x==='string').map(x=>x.slice(0,80)).slice(0,20):[]}; }
+function stRide(p){ const num=(v,lim)=>typeof v==='number'&&isFinite(v)&&Math.abs(v)<=lim?Math.round(v):null;
+  return (Array.isArray(p&&p.ride)?p.ride:[]).slice(0,8).filter(r=>r&&typeof r==='object'&&num(r.w,3000)!=null).map(r=>({label:typeof r.label==='string'?r.label.slice(0,40):'Messung',target:num(r.target,3000),w:num(r.w,3000),cad:num(r.cad,250),sdW:num(r.sd_w,3000),sdCad:num(r.sd_cad,250)})); }
 function stApplyTo(s,p,stamp){ const V=stValues(p); let n=0;
   ['before','after'].forEach(side=>{ s[side]=s[side]||{}; Object.entries(V[side]).forEach(([k,v])=>{ const old=s[side][k]; const meth=ST_METHOD[k]||(old&&old.method)||'Maßband';
     s[side][k]={...mv(k,v,meth,'gemessen',null),time:stamp,from:'Tab5'}; n++; }); });
   const ob=stInfo({payload:p}).obs; if(ob.length) s.notes=(s.notes?s.notes+'\n\n':'')+`[Tab5-Beobachtungen, ${stamp}]\n`+ob.map(x=>'- '+x).join('\n');
+  const rd=stRide(p); if(rd.length) s.notes=(s.notes?s.notes+'\n\n':'')+`[Tab5-Rolle, ${stamp}]\n`+rd.map(r=>`- ${r.label}: Ø ${r.w} W (Soll ${r.target} W), ${r.cad!=null?r.cad+' U/min':'Trittfrequenz –'}${r.sdW!=null?`, Schwankung ±${r.sdW} W`:''}`).join('\n');
   return n; }
 /* STATION-END */
 const ST={list:[],rows:[],at:0,err:'',busy:false};

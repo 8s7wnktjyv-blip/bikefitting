@@ -7,7 +7,7 @@ const html = readFileSync(fileURLToPath(new URL('../index.html', import.meta.url
 const m = html.match(/\/\* STATION-START \*\/([\s\S]*?)\/\* STATION-END \*\//);
 if (!m) { console.error('STATION-Block nicht gefunden'); process.exit(1); }
 const mv = (key, value, method, source, unc) => ({ key, value, method, source: source || 'gemessen', unc: unc ?? null, time: '' });
-const F = new Function('mv', m[1] + '; return { stValues, stInfo, stApplyTo, ST_KEYS };')(mv);
+const F = new Function('mv', m[1] + '; return { stValues, stInfo, stApplyTo, stRide, ST_KEYS };')(mv);
 
 let fail = 0, n = 0;
 const ok = (c, msg) => { n++; if (!c) { fail++; console.error('FEHLER:', msg); } };
@@ -39,5 +39,13 @@ eq(s.after.saddleHeight.method, 'Maßband', 'Standard-Methode');
 ok(s.notes.startsWith('alt\n\n[Tab5-Beobachtungen, 20.11.2026 18:40]\n- Knie links "innen"\n- Druck am Sattel'), 'Beobachtungen in Notizen');
 const s2 = { before: {}, after: {} }; eq(F.stApplyTo(s2, {}, 'x'), 0, 'nichts zu übernehmen'); ok(!('notes' in s2), 'keine leeren Notizen');
 
+// Rollen-Ergebnisse (Firmware v0.4)
+{
+  const pr = { ride: [{ label: 'Messung', target: 150, w: 150.4, cad: 88.2, sd_w: 6.1, sd_cad: 2 }, { label: 'x', w: null }, { label: 'Messung nach Aenderung', target: 150, w: 151, cad: null, sd_w: null }] };
+  eq(F.stRide(pr).length, 2, 'Rolle: ungültige Zeile weg');
+  const s3 = { before: {}, after: {} }; F.stApplyTo(s3, pr, 'T');
+  ok(s3.notes === '[Tab5-Rolle, T]\n- Messung: Ø 150 W (Soll 150 W), 88 U/min, Schwankung ±6 W\n- Messung nach Aenderung: Ø 151 W (Soll 150 W), Trittfrequenz –', 'Rolle in Notizen: ' + s3.notes);
+  eq(F.stRide({ ride: 'x' }), [], 'Rolle robust');
+}
 console.log(`${n} Prüfungen, ${fail} Fehler`);
 process.exit(fail ? 1 : 0);
