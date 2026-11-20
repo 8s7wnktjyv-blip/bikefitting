@@ -121,6 +121,13 @@ Klickbare Demo einer Bikefitting-Software für Fahrradläden. Eine einzige Datei
 - Sicherheit: einstellbarer Höchstwert (Standard 300 W). Stopp, Pause, Trennen, Verbindungsabbruch oder Verlassen der Seite geben die Last sofort frei.
 - **Mit echter Rolle noch nicht getestet** (nur mit simulierter Rolle im Browser). Rechnung geprüft: `node tools/test-fahrprogramm.mjs`.
 
+## Werte vom Tab5 (FYF Station, Beta, ab v.118)
+- Das M5Stack-Tab5 mit der Firmware „FYF Station“ (eigenes Projekt, nicht in diesem Repo) koppelt sich wie ein weiteres Gerät: FYF → Mehr → Cloud-Speicherung → „Weiteres Gerät verbinden“, Code am Tab5 eintippen.
+- Tab5 → Übersicht → „An FYF senden“ legt die Messwerte (vorher/nachher) und Beobachtungen in einen Eingangskorb. In FYF: Fitting → Messen oder Anpassen → „Werte vom Tab5 holen“ → Übernehmen.
+- Das Tab5 bekommt aus FYF nur Kundennummer, Name, Körpergröße und Schrittlänge – keine Kontaktdaten.
+- Datenbank: `docs/supabase/station.sql` (Entwurf, noch nicht eingespielt). Ohne sie zeigt die App einen Hinweis statt Fehler. Test: `docs/supabase/tests/station_test.sql`, `node tools/test-station.mjs`.
+- Voraussetzung in Supabase: anonyme Anmeldung erlaubt (wie bei der Geräte-Kopplung, pair.sql).
+
 ## Ablauf eines Fittings
 
 Jeder Schritt beginnt mit einer Übersicht und führt dann mit „eine Sache pro Bildschirm“ durch die Punkte.
