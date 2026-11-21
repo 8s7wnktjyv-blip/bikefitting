@@ -15,5 +15,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t134.js` – Bestellvorschlag zieht offene Bestellungen ab, keine Doppelbestellung, Teillieferung
 - `t135.js` – Termin im Pass: freie Termine des eigenen Ladens bei fälliger Wartung, Finder wählt Termin vor, Hinweis wenn vergeben
 - `t136.js` – Hol- und Bringservice: im Auftrag eintragen, Tagesliste mit Karte und Anruf, Erledigt, Tag wechseln, Zurück
+- `t137.js` – Import aus altem System: Sicherung vorher, „Import rückgängig“
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.

@@ -1959,7 +1959,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-21.136';
+const APP_VER='2026-11-21.137';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -9331,6 +9331,14 @@ ACT.hbDone=function(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); const
 ACT.hbPrint=function(){ window.print(); };
 { const WTb=VIEWS.werkstatt; VIEWS.werkstatt=function(){ const h=WTb.apply(this,arguments); const n=hbStops(today()).filter(s=>!s.x.done).length; return h.replace('<button class="btn" data-nav="tafel">',`<button class="btn" data-nav="touren">Hol- & Bringservice${n?` <span class="mono">${n}</span>`:''}</button><button class="btn" data-nav="tafel">`); }; }
 if(typeof TITLES==='object') TITLES.touren='Hol- und Bringservice';
+/* ===== v.137 Datenübernahme (Punkt 13): Import aus altem System gab es schon – neu: automatische Sicherung vor jedem Import und „Import rückgängig“ ===== */
+{ const IR=ACT.impRun; ACT.impRun=function(){ let snap=null, key=null; try{ snap=JSON.stringify(S); key='fitframe-before-import-'+nowStamp().replace(/[^\d]/g,''); localStorage.setItem(key,snap); }catch(e){ key=null; }
+  const r=IR.apply(this,arguments); try{ if(snap&&JSON.stringify(S)!==snap){ IMP.undo={key,at:nowStamp()}; audit('Import: Sicherung vorher angelegt');
+    openDrawer('Import fertig',`<div class="stack"><p style="margin:0">Der Import ist übernommen. Vorher wurde automatisch eine Sicherung angelegt.</p><p class="muted" style="margin:0;font-size:13.5px">Stimmt etwas nicht (z. B. Spalten vertauscht)? Dann jetzt rückgängig machen – solange du danach nichts anderes geändert hast.</p><div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn" data-act="impUndo">Import rückgängig machen</button><button class="btn primary" data-act="close">Passt so</button></div></div>`); }
+    else if(key){ try{ localStorage.removeItem(key); }catch(e){} } }catch(e){} return r; }; }
+ACT.impUndo=function(el){ const u=IMP&&IMP.undo; if(!u) return toast('Keine Sicherung vom Import da',true); if(el&&el.dataset.ok!=='1'){ el.dataset.ok='1'; el.textContent='Wirklich zurück zum Stand vor dem Import?'; return; }
+  let d=null; try{ d=JSON.parse(localStorage.getItem(u.key)); }catch(e){} if(!d||!Array.isArray(d.customers)) return toast('Sicherung nicht lesbar',true);
+  S=d; IMP.undo=null; audit(`Import rückgängig gemacht (Stand ${u.at})`); save(); closeDrawer(); render(); toast('Stand vor dem Import wiederhergestellt'); };
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();
