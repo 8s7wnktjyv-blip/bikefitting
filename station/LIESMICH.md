@@ -6,8 +6,10 @@ Firmware für das Tab5 als Mess-Station beim Bikefitting. Aktuelle Version: **v0
 - `KICKR_Test/KICKR_Test.ino` – Test der Rollen-Verbindung
 - `ANLEITUNG.md` – Neuerungen je Version, Bedienung, Hochladen
 
-Fertige ZIP-Datei zum Herunterladen: GitHub → Releases → „FYF Station v0.4.6“.
+Fertige ZIP-Datei zum Herunterladen: https://8s7wnktjyv-blip.github.io/bikefitting/station/FYF-Station-v0.4.6.zip
 
 **Status:** am Rechner getestet, auf dem Tab5 noch nicht. Enthält keine Passwörter: WLAN-Zugang und FYF-Kopplung werden erst am Gerät eingegeben und nur dort gespeichert. Der eingetragene FYF-Schlüssel ist der öffentliche „publishable“ Schlüssel (steht auch in der Web-App).
 
 Zusammenspiel mit der FYF-App: Fitting → „Werte vom Tab5 holen“ → „Übernehmen“ (ab App v.126 inkl. Einwilligung mit Unterschrift).
+
+Server-Teil: `docs/supabase/station.sql` (Eingangskorb, Grenze 64 kB je Eintrag wegen Unterschrift) ist seit 21.11.2026 in `alles.sql` und eingespielt.

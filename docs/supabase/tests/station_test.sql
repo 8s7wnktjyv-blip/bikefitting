@@ -16,7 +16,7 @@ select * from station_customers('10000000-0000-0000-0000-000000000001');
 select station_push('10000000-0000-0000-0000-000000000001', '{"v":1,"src":"tab5","before":{"saddleHeight":728},"after":{"saddleHeight":736}}') > 0 as gesendet;
 -- falsche Daten
 do $$ begin perform station_push('10000000-0000-0000-0000-000000000001', '[1,2]'); raise exception 'hätte scheitern müssen'; exception when others then if sqlerrm <> 'FYF_BAD_DATA' then raise; end if; end $$;
-do $$ begin perform station_push('10000000-0000-0000-0000-000000000001', jsonb_build_object('x', repeat('a', 21000))); raise exception 'hätte scheitern müssen'; exception when others then if sqlerrm <> 'FYF_BAD_DATA' then raise; end if; end $$;
+do $$ begin perform station_push('10000000-0000-0000-0000-000000000001', jsonb_build_object('x', repeat('a', 65000))); raise exception 'hätte scheitern müssen'; exception when others then if sqlerrm <> 'FYF_BAD_DATA' then raise; end if; end $$;
 -- Fremder Laden darf weder senden noch lesen noch Kunden sehen
 select set_config('test.uid', '00000000-0000-0000-0000-00000000000c', false);
 do $$ begin perform station_push('10000000-0000-0000-0000-000000000001', '{}'); raise exception 'hätte scheitern müssen'; exception when others then if sqlerrm <> 'FYF_DENIED' then raise; end if; end $$;

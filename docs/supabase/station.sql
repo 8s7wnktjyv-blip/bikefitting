@@ -1,5 +1,5 @@
 -- FYF – Tab5-Station (Entwurf, 20.11.2026)
--- STATUS: ENTWURF, in Supabase noch NICHT ausgeführt, noch nicht in alles.sql. Mit Postgres lokal getestet: siehe tests/station_test.sql.
+-- STATUS: eingespielt mit alles.sql ab 21.11.2026 (Grenze je Eintrag 64 kB wegen Unterschrift ab Station v0.4.6). Mit Postgres lokal getestet: siehe tests/station_test.sql.
 -- Voraussetzung: start.sql, team.sql und pair.sql sind eingespielt (Geräte-Kopplung mit Code).
 --
 -- Was das macht
@@ -7,7 +7,7 @@
 -- * station_customers: das Tab5 holt NUR Kundennummer, Name, Körpergröße und Schrittlänge – keine Kontaktdaten.
 -- * station_push: das Tab5 legt ein Fitting (Messwerte vorher/nachher, Beobachtungen) in einen Eingangskorb.
 -- * station_list / station_take: die FYF-App zeigt den Eingangskorb und markiert übernommene Einträge.
--- * Schutz: nur Mitglieder des Ladens, höchstens 20 kB je Eintrag, höchstens 300 Einträge je Laden und Tag,
+-- * Schutz: nur Mitglieder des Ladens, höchstens 64 kB je Eintrag (Platz für die Unterschrift als Bild), höchstens 300 Einträge je Laden und Tag,
 --   Einträge werden nach 30 Tagen gelöscht. Keine direkten Tabellenrechte, nur über die Funktionen.
 
 create table if not exists station_inbox (
@@ -28,7 +28,7 @@ language plpgsql security definer set search_path = public as $$
 declare i bigint;
 begin
   if auth.uid() is null or not is_member(p_tenant) then raise exception 'FYF_DENIED'; end if;
-  if p_payload is null or jsonb_typeof(p_payload) <> 'object' or octet_length(p_payload::text) > 20000 then raise exception 'FYF_BAD_DATA'; end if;
+  if p_payload is null or jsonb_typeof(p_payload) <> 'object' or octet_length(p_payload::text) > 64000 then raise exception 'FYF_BAD_DATA'; end if;
   if (select count(*) from station_inbox where tenant_id = p_tenant and created_at > now() - interval '1 day') >= 300 then raise exception 'FYF_RATE'; end if;
   delete from station_inbox where tenant_id = p_tenant and created_at < now() - interval '30 days';
   insert into station_inbox(tenant_id, payload, created_by) values (p_tenant, p_payload, auth.uid()) returning id into i;
