@@ -5,15 +5,16 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.129** (APP_VER 2026-11-21.129), Service-Worker-Cache `fyf-app-v1-p60`, Datenbank-Stand **27** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.130** (APP_VER 2026-11-21.130), Service-Worker-Cache `fyf-app-v1-p61`, Datenbank-Stand **27** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
-- Browser-Tests: `sh tests/e2e/run.sh` (9 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
+- Browser-Tests: `sh tests/e2e/run.sh` (10 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
 - Geplanter Task „FYF: Bauschritt (2× täglich)“ läuft im festen Chat (Archiv mit Schreibrecht), Mo–Sa 04:23 und 11:23 Uhr.
 
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.130 (21.11.) | Werkstatt-Tafel (Punkt 5): Werkstatt → „Werkstatt-Tafel“. Spalten Angenommen / In Arbeit / Wartet auf Teile / Abholbereit, Filter je Mechaniker, Knopf schiebt weiter (gleiche Regeln wie im Auftrag), „Teile sind da“, Abholbereit öffnet die Übergabe, Vollbild (wo der Browser es kann), aktualisiert jede Minute. Handy: Spalten untereinander, großer Bildschirm: 4 nebeneinander. Test `t130.js`. |
 | v.129 (21.11.) | Kündigung (Freigabe 21.11.): Plattform-Admin kann einen Laden schließen und wieder öffnen (`stand27.sql`). Geschlossen: Team, Einladungen, Kopplungscodes gesichert und entfernt → Laden sieht nichts; Profil offline, Börsen-Angebote beendet; Pässe und alle Einträge bleiben; Daten bleiben für die Aufbewahrung. Ex-Mitglied sieht „Zugang beendet“ und kann Daten als Datei sichern. Zusätzlich: Löschen eines Ladens löscht keine Pässe mehr. Tests `stand27_test.sql`, `t129.js`. |
 | v.128 (21.11.) | Rollen Werkstattleitung, Verkauf, Filialleitung, Buchhaltung vergebbar (Team → Einladen/Rolle, ab DB-Stand 26) mit Server-Filter nach Weg A (`stand26.sql`): Werkstattleitung ohne Rechnungen/Zahlungen/Verkäufe/DATEV/Mahnwesen, Verkauf ohne DATEV/Mahnwesen, Filialleitung und Buchhaltung sehen alles. Mitarbeiter unverändert. Tests `stand26_test.sql` (Postgres 16 lokal) und `t128.js`. |
 | v.127 (21.11.) | Dominiks Grail CF 7 (M) hat Pedalsystem „Shimano SPD“ in den festen Demodaten; bestehende Daten nur ergänzt, wenn das Feld leer ist (Merker `fixPedal1`). Test `t127.js`. |
@@ -36,7 +37,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 4. Händlerfinder mit Werkstatt-Bewertungen: fertig (v.124); Feinschliff nach Rückmeldung.
 
 ### Neue Funktionen (alle freigegeben von Dominik am 21.11.2026, in dieser Reihenfolge bauen)
-5. **Werkstatt-Tafel** (Software): Großansicht für einen Bildschirm in der Werkstatt, Spalten angenommen / in Arbeit / wartet auf Teile / abholbereit, Antippen schiebt weiter.
+5. ✅ **Werkstatt-Tafel** (fertig v.130) (Software): Großansicht für einen Bildschirm in der Werkstatt, Spalten angenommen / in Arbeit / wartet auf Teile / abholbereit, Antippen schiebt weiter.
 6. **Saison-Check** (Pass + Software): Pass zeigt „Service fällig – beim Laden anfragen“ (ein Tippen); Software: Liste der Kunden mit fälligem Service, Laden verschickt selbst (FYF versendet nichts).
 7. **Auftragsstatus im Pass** („in Arbeit“, „abholbereit“) automatisch aus dem Werkstattauftrag (Status-Link gibt es schon).
 8. **Ersatzrad anfragen** im Pass während der Reparatur (Leihräder der Software).
@@ -67,4 +68,4 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
-Punkt 5: Werkstatt-Tafel.
+Punkt 6: Saison-Check (Pass + Software).

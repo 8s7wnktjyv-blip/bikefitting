@@ -1959,7 +1959,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-21.129';
+const APP_VER='2026-11-21.130';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -9248,6 +9248,38 @@ const srvHidden=k=>cloudReady()&&!!CL.role&&!['admin','fitter'].includes(CL.role
 const roleName=()=>CL_ROLE[CL.role]||CL.role||'';
 { const RVh=VIEWS.rechnungen; VIEWS.rechnungen=function(){ if(srvHidden('invoices')) return head('Rechnungen','')+panel('Für deine Rolle gesperrt','<p class="muted" style="margin:0">Rechnungen, Zahlungen und Umsätze sind für die Rolle <b>'+esc(roleName())+'</b> gesperrt – auch auf dem Server. Zahlungen bei der Abholung kannst du weiterhin im Auftrag erfassen; sie werden dem Laden hinzugefügt.</p>'); return RVh.apply(this,arguments); }; }
 { const BTh=VIEWS.betrieb; if(BTh) VIEWS.betrieb=function(){ const h=BTh.apply(this,arguments); return srvHidden('invoices')?panel('Hinweis','<p class="muted" style="margin:0">Umsatzzahlen sind für die Rolle '+esc(roleName())+' ausgeblendet.</p>')+h:h; }; }
+const tfMech=w=>{ const m=String(w.mechanic||'').trim(); return /^[–\-]*$/.test(m)?'':m; };
+/* ===== v.130 Werkstatt-Tafel: Großansicht für einen Bildschirm in der Werkstatt (Freigabe 21.11.2026) ===== */
+const TAFEL_COLS=[['neu','Angenommen',w=>!w.wait&&['Angenommen','Kostenvoranschlag','Freigabe ausstehend'].includes(w.status)],['arbeit','In Arbeit',w=>!w.wait&&w.status==='In Arbeit'],['teile','Wartet auf Teile',w=>!!w.wait],['fertig','Abholbereit',w=>!w.wait&&w.status==='Abholbereit']];
+function tafelCard(w,col){ const td=today(), b=bike(w.bikeId)||{}, late=w.due&&w.due<td&&col!=='fertig', i=WO_FLOW.indexOf(w.status), nx=WO_FLOW[i+1];
+  const btn=col==='teile'?`<button class="btn sm" data-act="tafelParts" data-id="${w.id}">Teile sind da</button>`
+    :col==='fertig'?`<button class="btn sm" data-act="openWO" data-id="${w.id}">Übergabe öffnen</button>`
+    :nx?`<button class="btn sm primary" data-act="tafelNext" data-id="${w.id}">→ ${esc(nx)}</button>`:'';
+  return `<div class="tf-card${late?' late':''}"><button class="tf-main" data-act="openWO" data-id="${w.id}" aria-label="Auftrag ${esc(w.id)} öffnen"><span class="tf-t">${esc(w.title||'Auftrag')}</span>
+    <span class="tf-s">${esc(cust(w.customerId).name||'')} · ${esc([b.brand,b.model].filter(Boolean).join(' '))}</span>
+    <span class="tf-s mono">${esc(w.id)}${tfMech(w)?' · '+esc(tfMech(w)):''}${w.due?` · <b${late?' style="color:var(--bad)"':''}>${late?'überfällig ':'fällig '}${esc(fmtDate(w.due))}</b>`:''}</span>
+    ${col!=='teile'&&w.status!=='Angenommen'&&w.status!=='In Arbeit'&&w.status!=='Abholbereit'?`<span class="tf-s">${esc(w.status)}</span>`:''}${w.wait&&w.wait.note?`<span class="tf-s">Fehlt: ${esc(w.wait.note)}</span>`:''}</button>${btn?`<div class="tf-b">${btn}</div>`:''}</div>`; }
+VIEWS.tafel=()=>{ const mech=[...new Set(S.workshop.filter(w=>!woIsDone(w.status)&&tfMech(w)).map(tfMech))].sort(); const f=ui.tafelM&&mech.includes(ui.tafelM)?ui.tafelM:'';
+  const open=S.workshop.filter(w=>!woIsDone(w.status)&&(!f||tfMech(w)===f));
+  const fs=document.fullscreenEnabled&&document.documentElement.requestFullscreen;
+  return `${head('Werkstatt-Tafel','Für einen Bildschirm in der Werkstatt. Antippen öffnet den Auftrag, der Knopf schiebt ihn weiter.',`<button class="btn" data-nav="werkstatt">← Zurück zur Werkstatt</button>${fs?`<button class="btn ghost" data-act="tafelFull">Vollbild</button>`:''}`)}
+  ${mech.length>1?`<div class="row" style="flex-wrap:wrap">${['',...mech].map(m=>`<button class="btn sm ${f===m?'primary':''}" data-act="tafelMech" data-v="${esc(m)}">${m?esc(m):'Alle'}</button>`).join('')}</div>`:''}
+  <div class="tafel">${TAFEL_COLS.map(([k,l,fn])=>{ const L=open.filter(fn).sort((a,b)=>String(a.due||'9').localeCompare(String(b.due||'9'))); return `<section class="tf-col tf-${k}"><h3>${esc(l)} <span class="mono">${L.length}</span></h3>${L.length?L.map(w=>tafelCard(w,k)).join(''):'<p class="faint" style="margin:4px 0">Nichts</p>'}</section>`; }).join('')}</div>
+  <p class="faint" style="font-size:12px">Aktualisiert sich jede Minute. Stand ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}.</p>`; };
+ACT.tafelNext=function(el){ ACT.woNext(el); try{ closeDrawer(); }catch(e){} render(); };
+ACT.tafelParts=function(el){ const w=S.workshop.find(x=>x.id===el.dataset.id); if(!w||!w.wait) return; ACT.woWait(el); try{ closeDrawer(); }catch(e){} render(); };
+ACT.tafelMech=function(el){ ui.tafelM=el.dataset.v||''; render(); };
+ACT.tafelFull=function(){ try{ document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen(); }catch(e){} };
+setInterval(()=>{ try{ if(ui.route==='tafel'&&!document.querySelector('.drawer.open,#drawer.open')) render(); }catch(e){} },60000);
+{ const st=document.createElement('style'); st.textContent=`.tafel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start}
+@media(max-width:900px){.tafel{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.tafel{grid-template-columns:1fr}}
+.tf-col{background:var(--surface-2);border-radius:14px;padding:10px;min-width:0}.tf-col h3{margin:2px 4px 10px;font-size:16px;display:flex;justify-content:space-between}
+.tf-neu h3{color:var(--info)}.tf-arbeit h3{color:var(--acc,var(--fg))}.tf-teile h3{color:var(--warn)}.tf-fertig h3{color:var(--ok)}
+.tf-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;overflow:hidden}.tf-card.late{border-color:var(--bad)}
+.tf-main{all:unset;display:flex;flex-direction:column;gap:3px;padding:10px 12px;cursor:pointer;width:100%;box-sizing:border-box}.tf-main:focus-visible{outline:2px solid var(--info)}
+.tf-t{font-weight:650;font-size:16px;overflow-wrap:anywhere}.tf-s{font-size:13px;color:var(--muted);overflow-wrap:anywhere}.tf-b{padding:0 12px 10px}.tf-b .btn{width:100%;justify-content:center}`; document.head.appendChild(st); }
+{ const WT=VIEWS.werkstatt; VIEWS.werkstatt=function(){ const h=WT.apply(this,arguments); return h.replace('<button class="btn primary" data-act="newWO">','<button class="btn" data-nav="tafel">Werkstatt-Tafel</button><button class="btn primary" data-act="newWO">'); }; }
+if(typeof TITLES==='object') TITLES.tafel='Werkstatt-Tafel';
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();
