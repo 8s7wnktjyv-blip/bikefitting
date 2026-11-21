@@ -1783,7 +1783,7 @@ const CONSENT_TEXT=`<h3>Einwilligung zur Datenverarbeitung beim Bikefitting</h3>
 <p><b>Welche Daten:</b> Name, Kontaktdaten, Körpermaße, Fahrrad- und Einstellungsdaten. Nur wenn du zusätzlich zustimmst: Beschwerden und Ergebnisse des Körperchecks (Gesundheitsdaten nach Art. 9 DSGVO) sowie Fotos und Videos von dir auf dem Rad.</p>
 <p><b>Anonyme Auswertung (freiwillig):</b> Wenn du zustimmst, werden deine Mess- und Fittingdaten ohne Namen und Kontaktdaten ausgewertet, um die Fitting-Software zu verbessern. Ein Rückschluss auf dich ist dabei nicht vorgesehen.</p>
 <p><b>Service-Erinnerung (freiwillig):</b> Wenn du zustimmst, erinnern wir dich einmal im Jahr an den Service deines Fahrrads. Du kannst das jederzeit abbestellen.</p>
-<p><b>Wie lange:</b> bis du die Löschung verlangst, längstens [Frist eintragen] nach dem letzten Termin.</p>
+<p><b>Wie lange:</b> bis du die Löschung verlangst, längstens 3 Jahre nach dem letzten Termin.</p>
 <p><b>Deine Rechte:</b> Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit und Beschwerde bei einer Datenschutzbehörde. Du kannst die Einwilligung jederzeit widerrufen. Bis dahin bleibt die Verarbeitung rechtmäßig.</p>
 <p><b>Freiwillig:</b> Ohne Gesundheitsangaben ist ein Fitting möglich, aber weniger genau.</p>`;
 /* ---------- Seed data (fictitious) ---------- */
@@ -1958,7 +1958,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-21.125';
+const APP_VER='2026-11-21.126';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -4972,6 +4972,12 @@ function stApplyTo(s,p,stamp){ const V=stValues(p); let n=0;
   const ob=stInfo({payload:p}).obs; if(ob.length) s.notes=(s.notes?s.notes+'\n\n':'')+`[Tab5-Beobachtungen, ${stamp}]\n`+ob.map(x=>'- '+x).join('\n');
   const rd=stRide(p); if(rd.length) s.notes=(s.notes?s.notes+'\n\n':'')+`[Tab5-Rolle, ${stamp}]\n`+rd.map(r=>`- ${r.label}: Ø ${r.w} W (Soll ${r.target} W), ${r.cad!=null?r.cad+' U/min':'Trittfrequenz –'}${r.sdW!=null?`, Schwankung ±${r.sdW} W`:''}`).join('\n');
   return n; }
+// Einwilligung vom Tab5 (Unterschrift am Bildschirm) prüfen und in die Form der App bringen
+function stConsent(p){ const c=p&&p.consent; if(!c||typeof c!=='object'||c.data!==true) return null;
+  const sig=typeof c.sig==='string'&&c.sig.length<120000&&/^data:image\/png;base64,[A-Za-z0-9+\/=]+$/.test(c.sig)?c.sig:'';
+  const date=typeof c.date==='string'&&/^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$/.test(c.date)?c.date:'';
+  if(!date||!sig) return null;
+  return {date,health:c.health===true,media:c.media===true,research:c.research===true,remind:c.remind===true,sig,version:typeof c.version==='string'?c.version.slice(0,40):'Muster 3 (Tab5)'}; }
 /* STATION-END */
 const ST={list:[],rows:[],at:0,err:'',busy:false};
 async function stLoad(){ if(!cloudReady()){ ST.err='Erst Cloud-Speicherung einrichten (Mehr → Cloud-Speicherung).'; render(); return; }
@@ -6246,7 +6252,9 @@ const ACT = {
   krConnect(){ krConnect(); },
   stFetch(){ stLoad(); },
   async stApply(el){ const s=sess(el.dataset.id); const i=Number(el.dataset.i); const r=ST.rows[i]; if(!s||!r) return;
-    const n=stApplyTo(s,r.payload,nowStamp()); if(s.status==='geplant') s.status='in Arbeit'; audit(`Tab5: ${n} Werte übernommen`,s.id); save();
+    const n=stApplyTo(s,r.payload,nowStamp()); if(s.status==='geplant') s.status='in Arbeit'; audit(`Tab5: ${n} Werte übernommen`,s.id);
+    const ci=stConsent(r.payload), cu=ci&&cust(s.customerId); if(cu&&cu.id){ cu.consent=true; cu.consentInfo=ci; audit(`Einwilligung vom Tab5 übernommen: ${cu.name} (${ci.date})${ci.health?' inkl. Gesundheitsangaben':''}${ci.media?' inkl. Fotos/Videos':''}`,cu.id); }
+    save();
     try{ await clApi('/rest/v1/rpc/station_take',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_id:r.id})}); }catch(e){}
     ST.rows.splice(i,1); ST.list.splice(i,1); render(); toast(n?`${n} Werte vom Tab5 übernommen`:'Keine passenden Werte im Eintrag'); },
   async stDrop(el){ const i=Number(el.dataset.i); const r=ST.rows[i]; if(!r) return;

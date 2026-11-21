@@ -7,7 +7,7 @@ const html = readFileSync(fileURLToPath(new URL('../index.html', import.meta.url
 const m = html.match(/\/\* STATION-START \*\/([\s\S]*?)\/\* STATION-END \*\//);
 if (!m) { console.error('STATION-Block nicht gefunden'); process.exit(1); }
 const mv = (key, value, method, source, unc) => ({ key, value, method, source: source || 'gemessen', unc: unc ?? null, time: '' });
-const F = new Function('mv', m[1] + '; return { stValues, stInfo, stApplyTo, stRide, ST_KEYS };')(mv);
+const F = new Function('mv', m[1] + '; return { stValues, stInfo, stApplyTo, stRide, stConsent, ST_KEYS };')(mv);
 
 let fail = 0, n = 0;
 const ok = (c, msg) => { n++; if (!c) { fail++; console.error('FEHLER:', msg); } };
@@ -47,5 +47,13 @@ const s2 = { before: {}, after: {} }; eq(F.stApplyTo(s2, {}, 'x'), 0, 'nichts zu
   ok(s3.notes === '[Tab5-Rolle, T]\n- Messung: Ø 150 W (Soll 150 W), 88 U/min, Schwankung ±6 W\n- Messung nach Aenderung: Ø 151 W (Soll 150 W), Trittfrequenz –', 'Rolle in Notizen: ' + s3.notes);
   eq(F.stRide({ ride: 'x' }), [], 'Rolle robust');
 }
+// Einwilligung vom Tab5
+const sig = 'data:image/png;base64,iVBORw0KGgo=';
+eq(F.stConsent({ consent: { data: true, date: '21.11.2026 08:32', health: false, media: true, research: false, remind: true, sig, version: 'Muster 3 (Tab5)' } }),
+  { date: '21.11.2026 08:32', health: false, media: true, research: false, remind: true, sig, version: 'Muster 3 (Tab5)' }, 'Einwilligung lesen');
+eq(F.stConsent({ consent: { data: true, date: '21.11.2026 08:32', sig: 'javascript:alert(1)' } }), null, 'Einwilligung: fremde Unterschrift abgelehnt');
+eq(F.stConsent({ consent: { data: true, date: '"><img>', sig } }), null, 'Einwilligung: Datum geprüft');
+eq(F.stConsent({ consent: { data: false, date: '21.11.2026 08:32', sig } }), null, 'Einwilligung ohne Zustimmung');
+eq(F.stConsent({}), null, 'keine Einwilligung');
 console.log(`${n} Prüfungen, ${fail} Fehler`);
 process.exit(fail ? 1 : 0);
