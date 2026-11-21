@@ -48,7 +48,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 8. ✅ **Ersatzrad anfragen** (fertig v.133) im Pass während der Reparatur (Leihräder der Software).
 9. ✅ **Bestellvorschlag bei Mindestbestand** (fertig v.134) je Lieferant (Software).
 10. ✅ **Termin direkt im Pass buchen** (fertig v.135, Bestätigung durch den Laden): freie Werkstatt-Termine des Ladens sehen und buchen (Auslastung aus der Software).
-11. **Geprüfte Historie für Käufer**: Käufer scannt QR und sieht die werkstattbestätigte Historie (ohne Preise/Belege, nur mit Freigabe des Besitzers).
+11. ◐ **Geprüfte Historie für Käufer** (geprüft 21.11.: Historie mit Kennzeichnung, Kauf-Check, Kaufvertrag gibt es schon; zeitlich begrenzter Käufer-Link als Plan `docs/KAEUFER-LINK-PLAN.md`, wartet auf Freigabe): Käufer scannt QR und sieht die werkstattbestätigte Historie (ohne Preise/Belege, nur mit Freigabe des Besitzers).
 12. **Hol- und Bringservice** (Software): Abholtermine, Tagesliste mit Adressen.
 13. **Datenübernahme aus Altsystem**: Kunden und Räder als CSV mit Vorschau und Prüfung.
 14. **Pass auf Englisch**: größer – erst Plan in `docs/`, dann bauen.
@@ -56,6 +56,7 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Wartet auf Dominik
 
+- Freigabe Käufer-Link auf Zeit (`docs/KAEUFER-LINK-PLAN.md`): „Käufer-Link: ja/nein“.
 - Datenbank-Update auf Stand 28 einspielen (Auftragsstatus „Wartet auf Teile“ im Pass): GitHub → Actions → „Datenbank aktualisieren“ → Run workflow.
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
 - Datenschutz: noch offen sind Vertrag zur Auftragsverarbeitung mit Supabase, Mailversand-Dienst und Speicherort der Sicherung; danach rechtlich prüfen lassen.
@@ -74,4 +75,4 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
-Punkt 11: Geprüfte Historie für Käufer.
+Punkt 12: Hol- und Bringservice (Software).
