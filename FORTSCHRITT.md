@@ -5,15 +5,16 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.128** (APP_VER 2026-11-21.128), Service-Worker-Cache `fyf-app-v1-p59`, Datenbank-Stand **26** in `docs/supabase/alles.sql` (eingespielt: 25 – Update auf 26 offen).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.129** (APP_VER 2026-11-21.129), Service-Worker-Cache `fyf-app-v1-p60`, Datenbank-Stand **27** in `docs/supabase/alles.sql` (eingespielt: 26 – Update auf 27 offen).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
-- Browser-Tests: `sh tests/e2e/run.sh` (8 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
+- Browser-Tests: `sh tests/e2e/run.sh` (9 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
 - Geplanter Task „FYF: Bauschritt (2× täglich)“ läuft im festen Chat (Archiv mit Schreibrecht), Mo–Sa 04:23 und 11:23 Uhr.
 
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.129 (21.11.) | Kündigung (Freigabe 21.11.): Plattform-Admin kann einen Laden schließen und wieder öffnen (`stand27.sql`). Geschlossen: Team, Einladungen, Kopplungscodes gesichert und entfernt → Laden sieht nichts; Profil offline, Börsen-Angebote beendet; Pässe und alle Einträge bleiben; Daten bleiben für die Aufbewahrung. Ex-Mitglied sieht „Zugang beendet“ und kann Daten als Datei sichern. Zusätzlich: Löschen eines Ladens löscht keine Pässe mehr. Tests `stand27_test.sql`, `t129.js`. |
 | v.128 (21.11.) | Rollen Werkstattleitung, Verkauf, Filialleitung, Buchhaltung vergebbar (Team → Einladen/Rolle, ab DB-Stand 26) mit Server-Filter nach Weg A (`stand26.sql`): Werkstattleitung ohne Rechnungen/Zahlungen/Verkäufe/DATEV/Mahnwesen, Verkauf ohne DATEV/Mahnwesen, Filialleitung und Buchhaltung sehen alles. Mitarbeiter unverändert. Tests `stand26_test.sql` (Postgres 16 lokal) und `t128.js`. |
 | v.127 (21.11.) | Dominiks Grail CF 7 (M) hat Pedalsystem „Shimano SPD“ in den festen Demodaten; bestehende Daten nur ergänzt, wenn das Feld leer ist (Merker `fixPedal1`). Test `t127.js`. |
 | v.126 | Tab5-Station: Einwilligung mit Unterschrift wird beim Kunden gespeichert; FYF Station v0.4.6 in `station/` |
@@ -23,21 +24,20 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 | bereits vorhanden | Marken-/Modellauswahl in Händlersoftware und Pass |
 
 ### Erledigt durch Dominik (21.11.)
+- Datenbank auf Stand 26 eingespielt (neue Rollen live); Kündigungs-Plan freigegeben.
 - Datenbank auf Stand 25 eingespielt (Lauf erfolgreich, 14:46 Uhr).
 - Impressum vollständig; Verantwortlicher im Datenschutz eingetragen (USt-IdNr. keine angegeben).
 
 ## Freigegebene offene Punkte (Reihenfolge = Vorrang)
 
 1. Fehler / nicht funktionierende Knöpfe / Datensicherheit – laufend prüfen. Rundgang 21.11. (v.128, iPhone-13-Größe): Pass-App – alle Knöpfe der Radseite und aller 7 Werkzeuge unter „Mehr Funktionen“ ohne JS-Fehler und ohne Querscrollen; Händlersoftware – alle 33 Bereiche ohne Fehler und ohne Querscrollen. Kein Befund.
-2. Rechte: Rollen fertig (v.128). Offen: Sollen Werkstattleitung, Verkauf, Filialleitung, Buchhaltung Körper-/Gesundheitsdaten sehen? Derzeit ja (wie Mitarbeiter). Ausblenden braucht Umbau in der App (Fitting-Daten liegen in `sessions`) → nur nach Entscheidung.
-3. Kündigung eines Ladens: geprüft 21.11. – **Lücke**: Löschen eines Ladens löscht seine ausgestellten Pässe samt aller Einträge (`bike_passes` on delete cascade). Plan in `docs/KUENDIGUNG-PLAN.md`, wartet auf Freigabe (Datenmodell).
+2. Rechte: Rollen fertig (v.128). Entscheidung 21.11.: neue Rollen sehen Körper-/Gesundheitsdaten wie Mitarbeiter (so belassen).
+3. Kündigung eines Ladens: fertig (v.129, Stand 27), siehe `docs/KUENDIGUNG-PLAN.md`.
 4. Händlerfinder mit Werkstatt-Bewertungen: fertig (v.124); Feinschliff nach Rückmeldung.
 
 ## Wartet auf Dominik
 
-- Datenbank-Update auf Stand 26 einspielen (neue Rollen): GitHub → Actions → „Datenbank aktualisieren“ → Run workflow.
-- Entscheidung Gesundheitsdaten für die neuen Rollen (siehe Punkt 2).
-- Freigabe Kündigungs-Plan (`docs/KUENDIGUNG-PLAN.md`): „Kündigung: Schritt 1“ oder „Kündigung: alles“. Bis dahin keinen Laden im Supabase-Dashboard löschen.
+- Datenbank-Update auf Stand 27 einspielen (Kündigung): GitHub → Actions → „Datenbank aktualisieren“ → Run workflow.
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
 - Datenschutz: noch offen sind Vertrag zur Auftragsverarbeitung mit Supabase, Mailversand-Dienst und Speicherort der Sicherung; danach rechtlich prüfen lassen.
 - Test auf echtem iPhone/Android.
@@ -55,4 +55,4 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Nächster Schritt
 
-Nach Freigabe: Kündigung laut `docs/KUENDIGUNG-PLAN.md`. Ohne Freigabe: Pass-App – Abläufe mit Eingaben prüfen (Service eintragen, Beleg, Übergabe an neuen Besitzer) und mit Browser-Test absichern.
+Pass-App – Abläufe mit Eingaben prüfen (Service eintragen, Beleg, Übergabe an neuen Besitzer) und mit Browser-Test absichern.

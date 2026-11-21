@@ -1,6 +1,10 @@
 # Plan: Kündigung eines Ladens (zur Freigabe)
 
-Stand 21.11.2026 · betrifft das Datenmodell → **nicht umgesetzt, wartet auf Freigabe von Dominik**.
+Stand 21.11.2026 · **Freigegeben von Dominik am 21.11.2026 und umgesetzt in v.129 / Datenbank-Stand 27** (`docs/supabase/stand27.sql`, Tests `docs/supabase/tests/stand27_test.sql`, `tests/e2e/t129.js`).
+
+**Bedienung:** Händlersoftware → Händlerprofil & Anfragen → Plattform-Verwaltung (nur Plattform-Admin) → beim Laden „Laden schließen“ (Grund eingeben) bzw. „Wieder öffnen“.
+
+**Umgesetzt anders als geplant:** Statt `is_member()`/`has_role()` zu ändern, werden beim Schließen die Mitgliedschaften gesichert und entfernt. So greift jede bestehende Rechteprüfung automatisch, auch in Funktionen, die direkt in `memberships` schauen. Neue Mitgliedschaften in einem geschlossenen Laden sperrt ein Trigger.
 
 ## Regel (verbindlich)
 Kündigt ein Laden, bleiben die Pass-Einträge der Radbesitzer erhalten. Der Laden sieht danach nichts mehr.
