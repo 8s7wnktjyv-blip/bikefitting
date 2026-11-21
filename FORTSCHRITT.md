@@ -21,6 +21,10 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 | v.121–123 | Mahnwesen, Zahlungsabgleich, Arbeitszeit, Leihräder, Cockpit-Vergleich |
 | bereits vorhanden | Marken-/Modellauswahl in Händlersoftware und Pass |
 
+### Erledigt durch Dominik (21.11.)
+- Datenbank auf Stand 25 eingespielt (Lauf erfolgreich, 14:46 Uhr).
+- Impressum vollständig; Verantwortlicher im Datenschutz eingetragen (USt-IdNr. keine angegeben).
+
 ## Freigegebene offene Punkte (Reihenfolge = Vorrang)
 
 1. Fehler / nicht funktionierende Knöpfe / Datensicherheit – laufend prüfen.
@@ -30,9 +34,9 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Wartet auf Dominik
 
-- Datenbank-Update auf Stand 25 einspielen: GitHub → Actions → „Datenbank aktualisieren“ → Run workflow (am iPhone in Safari, ggf. „Desktop-Website anfordern“).
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
-- Impressum und Datenschutz ausfüllen; Test auf echtem iPhone/Android.
+- Datenschutz: noch offen sind Vertrag zur Auftragsverarbeitung mit Supabase, Mailversand-Dienst und Speicherort der Sicherung; danach rechtlich prüfen lassen.
+- Test auf echtem iPhone/Android.
 - Käuferschutz Marktplatz: nur extern (Kandidat Trustap).
 
 ## Entscheidungen (verbindlich)
