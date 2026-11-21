@@ -5,11 +5,11 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.139** (APP_VER 2026-11-21.139), Service-Worker-Cache `fyf-app-v1-p70`, Datenbank-Stand **29** in `alles.sql` (eingespielt: 28 – Update auf 29 offen).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.139** (APP_VER 2026-11-21.139), Service-Worker-Cache `fyf-app-v1-p70`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (18 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
-- Geplanter Task „FYF: Bauschritt (2× täglich)“ läuft im festen Chat (Archiv mit Schreibrecht), Mo–Sa 04:23 und 11:23 Uhr.
+- Geplanter Task „FYF: Bauschritt (täglich 5–14 Uhr)“ läuft im festen Chat (Archiv mit Schreibrecht), täglich stündlich 05:07–13:07 Uhr (Berlin), arbeitet durch bis 14 Uhr und nutzt das Kontingent voll.
 
 ### Zuletzt erledigt
 | Version | Inhalt |
@@ -60,7 +60,6 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Wartet auf Dominik
 
-- Datenbank-Update auf Stand 29 einspielen (Käufer-Link): GitHub → Actions → „Datenbank aktualisieren“ → Run workflow.
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
 - Datenschutz: noch offen sind Vertrag zur Auftragsverarbeitung mit Supabase, Mailversand-Dienst und Speicherort der Sicherung; danach rechtlich prüfen lassen.
 - Test auf echtem iPhone/Android.
