@@ -1958,7 +1958,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-21.124';
+const APP_VER='2026-11-21.125';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2022,9 +2022,12 @@ async function cloudPush(force){
     CL.ver=Number(v)||CL.ver; CL.dirty=false; CL.lastSync=new Date().toISOString(); clStatus('ok'); setTimeout(mediaSync,50); }
   catch(e){ const m=String(e.message||''); const c=m.match(/FYF_CONFLICT (\d+)/); const rr=m.match(/FYF_ROLE (.+)$/); if(c){ CL.serverVer=Number(c[1]); clStatus('conflict','Auf einem anderen Gerät wurde inzwischen gespeichert.'); } else if(rr){ clStatus('denied',rr[1]); } else clStatus('err',m); }
   finally{ clBusy=false; if(clAgain){ clAgain=false; cloudPush(); } } }
+/* v.125 Rechte auf dem Server: Stand nur über state_get (Mitarbeiter bekommt keine Rechnungen/Zahlungen/Verkäufe/Lieferanten). Fallback für ältere Datenbank. */
+async function clStateGet(){ try{ const r=await clApi('/rest/v1/rpc/state_get',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant})}); CL.hidden=r&&Array.isArray(r.hidden)?r.hidden:[]; clSave(); return r?[{version:r.version,data:r.data,updated_at:r.updated_at}]:[]; }
+  catch(e){ if(/state_get|PGRST202|Could not find|404/.test(String(e.message||e))){ CL.hidden=[]; return clApi(`/rest/v1/tenant_state?tenant_id=eq.${encodeURIComponent(CL.tenant)}&select=version,data,updated_at`,{method:'GET'}); } throw e; } }
 async function cloudPull(){
   if(!cloudOn()) return; clStatus('busy');
-  try{ const rows=await clApi(`/rest/v1/tenant_state?tenant_id=eq.${encodeURIComponent(CL.tenant)}&select=version,data,updated_at`,{method:'GET'}); const row=rows&&rows[0];
+  try{ const rows=await clStateGet(); const row=rows&&rows[0];
     if(!row){ CL.ver=0; clSave(); CL.status='ok'; return cloudPush(); }
     const sv=Number(row.version)||0;
     if(sv===Number(CL.ver)){ clStatus('ok'); if(CL.dirty) cloudPush(); else setTimeout(mediaSync,50); return; }
@@ -2038,7 +2041,7 @@ function cloudApply(data,ver){
   S=data; CL.ver=ver; CL.dirty=false; CL.lastSync=new Date().toISOString(); clSave();
   try{ STORE.write(JSON.stringify(S)); lastSave=new Date(); }catch(e){}
   clStatus('ok'); render(); toast('Stand aus der Cloud geladen'); }
-async function cloudLoadServer(){ try{ const rows=await clApi(`/rest/v1/tenant_state?tenant_id=eq.${encodeURIComponent(CL.tenant)}&select=version,data`,{method:'GET'}); if(rows&&rows[0]) cloudApply(rows[0].data,Number(rows[0].version)); }catch(e){ clStatus('err',e.message); } }
+async function cloudLoadServer(){ try{ const rows=await clStateGet(); if(rows&&rows[0]) cloudApply(rows[0].data,Number(rows[0].version)); }catch(e){ clStatus('err',e.message); } }
 async function cloudFindTenant(){ const uid=clUid(); if(!uid) throw new Error('Anmeldung unvollständig'); try{ await clApi('/rest/v1/rpc/accept_invites',{method:'POST',body:'{}'}); }catch(e){} const m=await clApi(`/rest/v1/memberships?user_id=eq.${uid}&select=tenant_id,role`,{method:'GET'}); if(m&&m[0]){ CL.tenant=m[0].tenant_id; CL.role=m[0].role; CL.ver=CL.ver||0; clSave(); return true; } return false; }
 async function cloudInit(){
   const h=clBootHash; if(/access_token=|error_description=/.test(h)){ const q=new URLSearchParams(h.replace(/^#/,''));
@@ -2062,7 +2065,7 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
 // Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
-const DB_SCHEMA=24; let dbSchema=null;
+const DB_SCHEMA=25; let dbSchema=null;
 async function dbCheck(){ if(!(CL.url&&CL.key)) return;
   try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
   catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
@@ -9221,6 +9224,10 @@ ACT.revReport=async function(el){ const why=prompt('Warum melden? (z. B. Beleidi
 { const PHr=platformHtml; platformHtml=function(){ const h=PHr(); if(dbSchema!==null&&dbSchema<24) return h; if(!PREV.at){ setTimeout(async()=>{ try{ PREV.list=await clApi('/rest/v1/rpc/review_reported',{method:'POST',body:'{}'})||[]; }catch(e){ PREV.list=[]; } PREV.at=Date.now(); render(); },50); return h+panel('Gemeldete Bewertungen','<p class="muted">Wird geladen …</p>'); }
   return h+panel(`Gemeldete Bewertungen${PREV.list.filter(r=>!r.hidden).length?` <span class="chip c-warn nodot">${PREV.list.filter(r=>!r.hidden).length}</span>`:''}`,PREV.list.length?`<div class="stack">${PREV.list.map(r=>`<div class="li"><div class="grow"><div class="t">${esc(r.shop||'')} · ${revStars(r.stars)}${r.hidden?' · ausgeblendet':''}</div><div class="sub">${esc(String(r.text||'(ohne Text)').slice(0,200))}</div><div class="sub">Gemeldet: ${esc(r.reported||'')}</div></div><button class="btn sm ${r.hidden?'':'ghost'}" data-act="revMod" data-id="${r.id}" data-v="${r.hidden?'0':'1'}">${r.hidden?'Wieder zeigen':'Ausblenden'}</button></div>`).join('')}</div><p class="faint" style="font-size:12px;margin:6px 0 0">Nur ausblenden bei Beleidigung, erkennbar falschen Tatsachen oder wenn kein echter Service vorlag. Schlechte, aber sachliche Bewertungen bleiben.</p>`:'<p class="muted" style="margin:0">Nichts gemeldet.</p>'); }; }
 ACT.revMod=async function(el){ try{ await clApi('/rest/v1/rpc/review_moderate',{method:'POST',body:JSON.stringify({p_id:Number(el.dataset.id),p_hide:el.dataset.v==='1'})}); PREV.at=0; render(); toast('Gespeichert'); }catch(e){ toast('Hat nicht geklappt',true); } };
+/* ===== v.125 Hinweise für die Rolle Mitarbeiter (Server liefert keine Geld-Daten) ===== */
+const srvHidden=k=>cloudReady()&&CL.role==='mitarbeiter'&&Array.isArray(CL.hidden)&&CL.hidden.includes(k);
+{ const RVh=VIEWS.rechnungen; VIEWS.rechnungen=function(){ if(srvHidden('invoices')) return head('Rechnungen','')+panel('Nur für Admin und Fitter','<p class="muted" style="margin:0">Rechnungen, Zahlungen und Umsätze sind für die Rolle <b>Mitarbeiter</b> gesperrt – auch auf dem Server. Zahlungen bei der Abholung kannst du weiterhin im Auftrag erfassen; sie werden dem Laden hinzugefügt.</p>'); return RVh.apply(this,arguments); }; }
+{ const BTh=VIEWS.betrieb; if(BTh) VIEWS.betrieb=function(){ const h=BTh.apply(this,arguments); return srvHidden('invoices')?panel('Hinweis','<p class="muted" style="margin:0">Umsatzzahlen sind für die Rolle Mitarbeiter ausgeblendet.</p>')+h:h; }; }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();
