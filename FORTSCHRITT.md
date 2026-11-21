@@ -30,13 +30,14 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 1. Fehler / nicht funktionierende Knöpfe / Datensicherheit – laufend prüfen.
 2. Rechte: Rollen fertig (v.128). Offen: Sollen Werkstattleitung, Verkauf, Filialleitung, Buchhaltung Körper-/Gesundheitsdaten sehen? Derzeit ja (wie Mitarbeiter). Ausblenden braucht Umbau in der App (Fitting-Daten liegen in `sessions`) → nur nach Entscheidung.
-3. Kündigung eines Ladens: Pass-Einträge bleiben, Laden sieht danach nichts mehr – Umsetzung auf dem Server prüfen und testen.
+3. Kündigung eines Ladens: geprüft 21.11. – **Lücke**: Löschen eines Ladens löscht seine ausgestellten Pässe samt aller Einträge (`bike_passes` on delete cascade). Plan in `docs/KUENDIGUNG-PLAN.md`, wartet auf Freigabe (Datenmodell).
 4. Händlerfinder mit Werkstatt-Bewertungen: fertig (v.124); Feinschliff nach Rückmeldung.
 
 ## Wartet auf Dominik
 
 - Datenbank-Update auf Stand 26 einspielen (neue Rollen): GitHub → Actions → „Datenbank aktualisieren“ → Run workflow.
 - Entscheidung Gesundheitsdaten für die neuen Rollen (siehe Punkt 2).
+- Freigabe Kündigungs-Plan (`docs/KUENDIGUNG-PLAN.md`): „Kündigung: Schritt 1“ oder „Kündigung: alles“. Bis dahin keinen Laden im Supabase-Dashboard löschen.
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
 - Datenschutz: noch offen sind Vertrag zur Auftragsverarbeitung mit Supabase, Mailversand-Dienst und Speicherort der Sicherung; danach rechtlich prüfen lassen.
 - Test auf echtem iPhone/Android.
@@ -54,4 +55,4 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Nächster Schritt
 
-Punkt 3: Kündigung eines Ladens – prüfen, dass Pass-Einträge erhalten bleiben und der Laden danach nichts mehr sieht (Server), mit Datenbank-Test absichern.
+Nach Freigabe: Kündigung laut `docs/KUENDIGUNG-PLAN.md`. Ohne Freigabe: Punkt 1 (Fehler/tote Knöpfe/Datensicherheit) – Rundgang durch Pass-App (`rad.html`) in Handy-Größe.
