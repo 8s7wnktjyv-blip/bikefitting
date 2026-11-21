@@ -5,15 +5,16 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.135** (APP_VER 2026-11-21.135), Service-Worker-Cache `fyf-app-v1-p66`, Datenbank-Stand **28** in `alles.sql` (eingespielt: 27 – Update auf 28 offen).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.136** (APP_VER 2026-11-21.136), Service-Worker-Cache `fyf-app-v1-p67`, Datenbank-Stand **28** in `alles.sql` (eingespielt: 27 – Update auf 28 offen).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
-- Browser-Tests: `sh tests/e2e/run.sh` (14 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
+- Browser-Tests: `sh tests/e2e/run.sh` (15 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
 - Geplanter Task „FYF: Bauschritt (2× täglich)“ läuft im festen Chat (Archiv mit Schreibrecht), Mo–Sa 04:23 und 11:23 Uhr.
 
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.136 (21.11.) | Hol- und Bringservice (Punkt 12): im Werkstattauftrag Abholen/Zurückbringen mit Datum, Zeitfenster, Adresse (aus der Kundenakte vorbelegt) und Hinweis; Werkstatt → „Hol- & Bringservice“ (Zähler für heute): Tagesliste nach Zeitfenster mit Karte (Google Maps-Link), Anrufen, Erledigt, Tag wechseln, Drucken. Nur lokal im Laden-Stand, kein neuer Dienst. Test `t136.js`. |
 | v.135 (21.11.) | Termin im Pass (Punkt 10): Läden veröffentlichen freie Zeiten schon (Software → Kalender → freie Zeiten online), der Finder zeigte sie. Neu: bei fälliger Wartung zeigt der Pass die nächsten 3 freien Termine des eigenen Ladens; Tippen öffnet die Anfrage mit vorausgewähltem Termin; vergebener Termin → Hinweis. Der Laden bestätigt wie bisher (keine automatische Reservierung – das wäre ein Datenmodell-Umbau). Test `t135.js`. |
 | v.134 (21.11.) | Bestellvorschlag (Punkt 9): Vorschlag je Lieferant und „Aus Bestellvorschlag anlegen“ gab es schon. Fehler behoben: bereits bestellte, noch nicht gelieferte Mengen (auch Teillieferungen) werden abgezogen – keine Doppelbestellungen mehr; Hinweis „schon bestellt“. Test `t134.js`. |
 | v.133 (21.11.) | Ersatzrad anfragen (Punkt 8): Pass – solange das Rad beim eigenen Laden in Arbeit ist (Besitzer-Ansicht), Knopf „Ersatzrad für die Zeit anfragen“ → Finder mit fertigem Text; Software – Anfrage zeigt „Ersatzrad gewünscht“ mit freien Leihrädern. Test `t133.js`. |
@@ -49,7 +50,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 9. ✅ **Bestellvorschlag bei Mindestbestand** (fertig v.134) je Lieferant (Software).
 10. ✅ **Termin direkt im Pass buchen** (fertig v.135, Bestätigung durch den Laden): freie Werkstatt-Termine des Ladens sehen und buchen (Auslastung aus der Software).
 11. ◐ **Geprüfte Historie für Käufer** (geprüft 21.11.: Historie mit Kennzeichnung, Kauf-Check, Kaufvertrag gibt es schon; zeitlich begrenzter Käufer-Link als Plan `docs/KAEUFER-LINK-PLAN.md`, wartet auf Freigabe): Käufer scannt QR und sieht die werkstattbestätigte Historie (ohne Preise/Belege, nur mit Freigabe des Besitzers).
-12. **Hol- und Bringservice** (Software): Abholtermine, Tagesliste mit Adressen.
+12. ✅ **Hol- und Bringservice** (fertig v.136) (Software): Abholtermine, Tagesliste mit Adressen.
 13. **Datenübernahme aus Altsystem**: Kunden und Räder als CSV mit Vorschau und Prüfung.
 14. **Pass auf Englisch**: größer – erst Plan in `docs/`, dann bauen.
 Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Preise, nichts entfernen.
@@ -75,4 +76,4 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
-Punkt 12: Hol- und Bringservice (Software).
+Punkt 13: Datenübernahme aus Altsystem (CSV mit Vorschau). Vorher prüfen, was der vorhandene Import (Mehr → Import & Export) schon kann.

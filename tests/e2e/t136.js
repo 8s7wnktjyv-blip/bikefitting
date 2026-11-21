@@ -1,0 +1,21 @@
+// v.136: Hol- und Bringservice – im Auftrag eintragen, Tagesliste mit Adresse/Karte/Anruf, Erledigt, Tag wechseln, Zurück, ohne Querscroll.
+const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
+(async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
+ const p=await (await b.newContext({...devices['iPhone 13']})).newPage(); p.on('pageerror',e=>errs.push(e.message)); await p.goto(BASE+'/index.html'); await p.waitForTimeout(1500);
+ const E=f=>p.evaluate(f);
+ const info=await E(()=>{ const S=window.__fitframe.S(); const w=S.workshop.find(x=>!['Übergeben','Storniert'].includes(x.status)); const c=S.customers.find(x=>x.id===w.customerId); c.address='Hauptstraße 5, 91054 Erlangen'; c.phone='0171 1234567'; window.__fitframe.save(); return {id:w.id}; });
+ const td=await E(()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }); const tm=await E(()=>{ const d=new Date(Date.now()+864e5); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); });
+ await E(`window.__fitframe.T118.ACT.openWO({dataset:{id:'${info.id}'}})`); await p.waitForTimeout(400);
+ const has=await E(()=>!!document.querySelector('#overlay [data-hb] form')); log('1 Abschnitt im Auftrag:',has); if(!has) bad('Abschnitt fehlt');
+ const addr=await E(()=>document.getElementById('hb_a').value); log('1b Adresse vorbelegt:',addr); if(!/Hauptstraße 5/.test(addr)) bad('Adresse nicht vorbelegt');
+ await p.fill('#hb_pickd',td); await p.selectOption('#hb_picks','08–10 Uhr'); await p.fill('#hb_dropd',tm); await p.selectOption('#hb_drops','16–18 Uhr'); await p.fill('#hb_n','Garage, klingeln'); await p.click('form[data-form="hbSave"] button[type=submit]'); await p.waitForTimeout(400);
+ const hb=await E(`JSON.stringify(window.__fitframe.S().workshop.find(x=>x.id==='${info.id}').hb)`); log('2 gespeichert:',hb); if(!/08–10/.test(hb)||!/16–18/.test(hb)) bad('Speichern');
+ await E(()=>window.__fitframe.T118.closeDrawer()); await E(()=>{ const F=window.__fitframe.T118; F.ui().route='werkstatt'; F.render(); }); await p.waitForTimeout(300);
+ const btn=await E(()=>{ const b=document.querySelector('#view [data-nav="touren"]'); return b?b.innerText:null; }); log('3 Knopf in Werkstatt:',btn); if(!btn||!/1/.test(btn)) bad('Knopf mit Zähler fehlt');
+ await p.click('#view [data-nav="touren"]'); await p.waitForTimeout(400);
+ const day=await E(()=>({t:document.body.innerText,map:!!document.querySelector('a[href*="google.com/maps"]'),tel:(document.querySelector('a[href^="tel:"]')||{}).href||''})); log('4 Tagesliste: Abholen',/Abholen · 08–10 Uhr/.test(day.t),'Karte',day.map,'Anruf',day.tel); if(!/Abholen · 08–10 Uhr/.test(day.t)||!day.map||!/01711234567/.test(day.tel)) bad('Tagesliste');
+ await p.click('[data-act="hbDone"]'); await p.waitForTimeout(300); const done=await E(`window.__fitframe.S().workshop.find(x=>x.id==='${info.id}').hb.pick.done`); log('5 Erledigt:',done); if(!done) bad('Erledigt');
+ await p.click('[data-act="hbDay"][data-v="1"]'); await p.waitForTimeout(300); const t2=await E(()=>document.body.innerText); log('6 Folgetag Zurückbringen:',/Zurückbringen · 16–18 Uhr/.test(t2)); if(!/Zurückbringen · 16–18 Uhr/.test(t2)) bad('Folgetag');
+ const ov=await E(()=>document.documentElement.scrollWidth>innerWidth+1); if(ov) bad('Querscroll');
+ await p.click('#view [data-nav="werkstatt"]'); await p.waitForTimeout(300); const r=await E(()=>window.__fitframe.T118.ui().route); log('7 Zurück:',r); if(r!=='werkstatt') bad('Zurück');
+ log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();
