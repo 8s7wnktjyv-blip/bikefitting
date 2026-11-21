@@ -1959,7 +1959,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-21.127';
+const APP_VER='2026-11-21.128';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2066,7 +2066,7 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
 // Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
-const DB_SCHEMA=25; let dbSchema=null;
+const DB_SCHEMA=26; let dbSchema=null;
 async function dbCheck(){ if(!(CL.url&&CL.key)) return;
   try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
   catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
@@ -2148,8 +2148,11 @@ async function cloudPairGo(input,cfg){ let code=String(input||'').trim(); const 
 function cloudPanel(){ if(dbSchema===null&&CL.url&&CL.key&&!dbCheck.t){ dbCheck.t=setTimeout(()=>{ dbCheck(); },300); } return panel('Cloud-Speicherung',`<div id="dbWarn">${dbWarnHtml()}</div><div class="stack" id="cloudBox">${cloudBody()}</div>`)+(CL.session&&CL.tenant?panel('Team',`<div class="stack" id="teamBox">${teamBody()}</div>`):''); }
 // Team: Mitglieder und Einladungen liegen nur auf dem Server. TEAM ist ein Zwischenspeicher im Arbeitsspeicher.
 let TEAM={at:0,members:[],invites:[],err:'',busy:false};
-const TEAM_ROLES=[['admin','Admin'],['fitter','Fitter'],['mitarbeiter','Mitarbeiter']];
-function clErrText(m){ m=String(m||''); const map={FYF_ALREADY_MEMBER:'Diese E-Mail ist schon im Team',FYF_BAD_EMAIL:'E-Mail prüfen',FYF_LAST_ADMIN:'Der letzte Admin kann nicht entfernt oder herabgestuft werden',FYF_DENIED:'Das darf nur ein Admin',FYF_NOT_FOUND:'Nicht mehr vorhanden',FYF_BAD_ROLE:'Unbekannte Rolle'};
+const TEAM_ROLES=[['admin','Admin'],['fitter','Fitter'],['mitarbeiter','Mitarbeiter'],['werkstattleitung','Werkstattleitung'],['verkauf','Verkauf'],['filialleitung','Filialleitung'],['buchhaltung','Buchhaltung']];
+/* v.128: Was jede Rolle sieht (Server filtert, Stand 26). Neue Rollen erst ab Datenbank-Stand 26 anbieten. */
+const ROLE_INFO={admin:'alles, verwaltet Team',fitter:'alles außer Team-Verwaltung',mitarbeiter:'Kunden, Werkstatt, Fittings – kein Geld, kein Lager-Einkauf',werkstattleitung:'Werkstatt, Lager, Einkauf – keine Rechnungen und Umsätze',verkauf:'Kunden, Verkauf, Rechnungen, Lager – kein DATEV, kein Mahnwesen',filialleitung:'alles außer Team-Verwaltung',buchhaltung:'alles außer Team-Verwaltung'};
+const teamRoles=()=>dbSchema!==null&&dbSchema<26?TEAM_ROLES.slice(0,3):TEAM_ROLES;
+function clErrText(m){ m=String(m||''); const map={FYF_ALREADY_MEMBER:'Diese E-Mail ist schon im Team',FYF_BAD_EMAIL:'E-Mail prüfen',FYF_LAST_ADMIN:'Der letzte Admin kann nicht entfernt oder herabgestuft werden',FYF_DENIED:'Das darf nur ein Admin',FYF_NOT_FOUND:'Nicht mehr vorhanden',FYF_BAD_ROLE:'Diese Rolle braucht das Datenbank-Update (Stand 26)'};
   const k=Object.keys(map).find(k=>m.includes(k)); if(k) return map[k];
   if(/Could not find the function|does not exist|PGRST202|not found \/rest/.test(m)) return 'Team ist in der Cloud noch nicht eingerichtet. Einmal team.sql im Supabase SQL-Editor ausführen.';
   return m; }
@@ -2164,10 +2167,11 @@ function teamBody(){ if(!TEAM.at&&!TEAM.err){ setTimeout(teamLoad,30); return '<
   if(TEAM.err) return `<p class="notice warn" style="margin:0">${ic('warn')}<span>${esc(TEAM.err)}</span></p><div><button class="btn sm" data-act="teamReload">Erneut laden</button></div>`;
   return `<div class="stack" style="gap:0">${TEAM.members.map(m=>`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 0;border-bottom:1px solid var(--line,#e5e0d8)">
     <span style="min-width:0;overflow-wrap:anywhere;flex:1 1 180px">${esc(m.email)}${m.is_me?' <span class="faint">(du)</span>':''}</span>
-    <span class="row" style="gap:6px;flex-wrap:wrap">${adm?`<select class="input" style="width:auto;min-width:130px" data-change="teamRole" data-u="${esc(m.user_id)}" aria-label="Rolle von ${esc(m.email)}">${TEAM_ROLES.map(([v,l])=>`<option value="${v}" ${m.role===v?'selected':''}>${l}</option>`).join('')}</select>${m.is_me?'':`<button class="btn sm ghost" data-act="teamRemove" data-u="${esc(m.user_id)}">Entfernen</button>`}`:`<span class="chip nodot">${esc(rl(m.role))}</span>`}</span></div>`).join('')}</div>
+    <span class="row" style="gap:6px;flex-wrap:wrap">${adm?`<select class="input" style="width:auto;min-width:130px" data-change="teamRole" data-u="${esc(m.user_id)}" aria-label="Rolle von ${esc(m.email)}">${(teamRoles().some(x=>x[0]===m.role)?teamRoles():TEAM_ROLES).map(([v,l])=>`<option value="${v}" ${m.role===v?'selected':''}>${l}</option>`).join('')}</select>${m.is_me?'':`<button class="btn sm ghost" data-act="teamRemove" data-u="${esc(m.user_id)}">Entfernen</button>`}`:`<span class="chip nodot">${esc(rl(m.role))}</span>`}</span></div>`).join('')}</div>
   ${adm&&TEAM.invites.length?`<div><b style="font-size:14px">Offene Einladungen</b>${TEAM.invites.map(i=>`<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:6px"><span>${esc(i.email)} · ${esc(rl(i.role))}</span><button class="btn sm ghost" data-act="teamRevoke" data-id="${esc(i.id)}">Zurückziehen</button></div>`).join('')}</div>`:''}
   ${adm?`<form class="form" data-form="teamInvite"><div class="field"><label for="tm_mail">E-Mail der Person</label><input class="input" id="tm_mail" name="email" type="email" required autocomplete="off"></div>
-    <div class="field"><label for="tm_role">Rolle</label><select class="input" id="tm_role" name="role">${TEAM_ROLES.map(([v,l])=>`<option value="${v}" ${v==='mitarbeiter'?'selected':''}>${l}</option>`).join('')}</select></div>
+    <div class="field"><label for="tm_role">Rolle</label><select class="input" id="tm_role" name="role">${teamRoles().map(([v,l])=>`<option value="${v}" ${v==='mitarbeiter'?'selected':''}>${l}</option>`).join('')}</select></div>
+    <details class="wide"><summary class="faint" style="font-size:13px">Was sieht welche Rolle?</summary><ul class="faint" style="font-size:13px;margin:6px 0 0;padding-left:18px">${teamRoles().map(([v,l])=>`<li><b>${l}:</b> ${esc(ROLE_INFO[v]||'')}</li>`).join('')}</ul></details>
     <div class="wide"><button class="btn primary" type="submit">Einladen</button></div></form>
     <p class="faint" style="font-size:12.5px;margin:0">So kommt die Person dazu: Auf ihrem Gerät FYF öffnen, den QR-Code „Weiteres Gerät verbinden“ scannen und sich mit genau dieser E-Mail anmelden. Sie landet dann automatisch in deinem Laden. Es wird keine E-Mail verschickt – sag ihr Bescheid.</p>`
     :`<p class="faint" style="font-size:12.5px;margin:0">Rollen und Einladungen verwaltet ein Admin.</p>`}`; }
@@ -2902,7 +2906,7 @@ VIEWS.wissen = () => { const q=(ui.wq||'').toLowerCase(); const m=t=>!q||t.toLow
 
 /* --- Phase 9: Rollen (Demo), Portal-Freigaben, Löschkonzept --- */
 const ROLES=['Admin','Fitter','Mitarbeiter'];
-const CL_ROLE={admin:'Admin',fitter:'Fitter',mitarbeiter:'Mitarbeiter'};
+const CL_ROLE={admin:'Admin',fitter:'Fitter',mitarbeiter:'Mitarbeiter',werkstattleitung:'Werkstattleitung',verkauf:'Verkauf',filialleitung:'Filialleitung',buchhaltung:'Buchhaltung'};
 // Mit Cloud-Laden gilt die Rolle vom Server (Team). Ohne Cloud bleibt der Demo-Umschalter.
 const cloudRole=()=>{ try{ return CL.removed?'Mitarbeiter':(CL&&CL.session&&CL.tenant&&CL_ROLE[CL.role]||''); }catch(e){ return ''; } };
 const role=()=>cloudRole()||(ROLES.includes(S.role)?S.role:'Admin');
@@ -9234,9 +9238,10 @@ ACT.revReport=async function(el){ const why=prompt('Warum melden? (z. B. Beleidi
   return h+panel(`Gemeldete Bewertungen${PREV.list.filter(r=>!r.hidden).length?` <span class="chip c-warn nodot">${PREV.list.filter(r=>!r.hidden).length}</span>`:''}`,PREV.list.length?`<div class="stack">${PREV.list.map(r=>`<div class="li"><div class="grow"><div class="t">${esc(r.shop||'')} · ${revStars(r.stars)}${r.hidden?' · ausgeblendet':''}</div><div class="sub">${esc(String(r.text||'(ohne Text)').slice(0,200))}</div><div class="sub">Gemeldet: ${esc(r.reported||'')}</div></div><button class="btn sm ${r.hidden?'':'ghost'}" data-act="revMod" data-id="${r.id}" data-v="${r.hidden?'0':'1'}">${r.hidden?'Wieder zeigen':'Ausblenden'}</button></div>`).join('')}</div><p class="faint" style="font-size:12px;margin:6px 0 0">Nur ausblenden bei Beleidigung, erkennbar falschen Tatsachen oder wenn kein echter Service vorlag. Schlechte, aber sachliche Bewertungen bleiben.</p>`:'<p class="muted" style="margin:0">Nichts gemeldet.</p>'); }; }
 ACT.revMod=async function(el){ try{ await clApi('/rest/v1/rpc/review_moderate',{method:'POST',body:JSON.stringify({p_id:Number(el.dataset.id),p_hide:el.dataset.v==='1'})}); PREV.at=0; render(); toast('Gespeichert'); }catch(e){ toast('Hat nicht geklappt',true); } };
 /* ===== v.125 Hinweise für die Rolle Mitarbeiter (Server liefert keine Geld-Daten) ===== */
-const srvHidden=k=>cloudReady()&&CL.role==='mitarbeiter'&&Array.isArray(CL.hidden)&&CL.hidden.includes(k);
-{ const RVh=VIEWS.rechnungen; VIEWS.rechnungen=function(){ if(srvHidden('invoices')) return head('Rechnungen','')+panel('Nur für Admin und Fitter','<p class="muted" style="margin:0">Rechnungen, Zahlungen und Umsätze sind für die Rolle <b>Mitarbeiter</b> gesperrt – auch auf dem Server. Zahlungen bei der Abholung kannst du weiterhin im Auftrag erfassen; sie werden dem Laden hinzugefügt.</p>'); return RVh.apply(this,arguments); }; }
-{ const BTh=VIEWS.betrieb; if(BTh) VIEWS.betrieb=function(){ const h=BTh.apply(this,arguments); return srvHidden('invoices')?panel('Hinweis','<p class="muted" style="margin:0">Umsatzzahlen sind für die Rolle Mitarbeiter ausgeblendet.</p>')+h:h; }; }
+const srvHidden=k=>cloudReady()&&!!CL.role&&!['admin','fitter'].includes(CL.role)&&Array.isArray(CL.hidden)&&CL.hidden.includes(k);
+const roleName=()=>CL_ROLE[CL.role]||CL.role||'';
+{ const RVh=VIEWS.rechnungen; VIEWS.rechnungen=function(){ if(srvHidden('invoices')) return head('Rechnungen','')+panel('Für deine Rolle gesperrt','<p class="muted" style="margin:0">Rechnungen, Zahlungen und Umsätze sind für die Rolle <b>'+esc(roleName())+'</b> gesperrt – auch auf dem Server. Zahlungen bei der Abholung kannst du weiterhin im Auftrag erfassen; sie werden dem Laden hinzugefügt.</p>'); return RVh.apply(this,arguments); }; }
+{ const BTh=VIEWS.betrieb; if(BTh) VIEWS.betrieb=function(){ const h=BTh.apply(this,arguments); return srvHidden('invoices')?panel('Hinweis','<p class="muted" style="margin:0">Umsatzzahlen sind für die Rolle '+esc(roleName())+' ausgeblendet.</p>')+h:h; }; }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();

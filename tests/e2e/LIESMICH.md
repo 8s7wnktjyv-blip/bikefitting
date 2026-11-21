@@ -7,5 +7,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t121.js` – Mahnwesen, Kontoauszug-Abgleich, Arbeitszeit, Leihrad
 - `t123.js` – Cockpit-Vergleich (Rechnung und Ansicht)
 - `t127.js` – Feste Demodaten: Dominiks Grail mit SPD, vorhandene Werte bleiben erhalten
+- `t128.js` – Rollen Werkstattleitung, Verkauf, Filialleitung, Buchhaltung: Auswahl ab DB-Stand 26, Server-Filter je Rolle, nichts geht verloren
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
