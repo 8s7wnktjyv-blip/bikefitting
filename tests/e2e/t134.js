@@ -1,7 +1,7 @@
 // v.134: Bestellvorschlag zieht offene Bestellungen ab – zweimal „Aus Bestellvorschlag anlegen“ erzeugt keine Doppelbestellung.
 const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
 (async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
- const p=await (await b.newContext({...devices['iPhone 13']})).newPage(); p.on('pageerror',e=>errs.push(e.message)); await p.goto(BASE+'/index.html'); await p.waitForTimeout(1500);
+ const p=await (await b.newContext({...devices['iPhone 13'],locale:'de-DE'})).newPage(); p.on('pageerror',e=>errs.push(e.message)); await p.goto(BASE+'/index.html'); await p.waitForTimeout(1500);
  const E=f=>p.evaluate(f);
  await E(()=>{ const S=window.__fitframe.S(); S.suppliers=[{id:'s1',name:'Großhandel A'}]; S.purchaseOrders=[]; S.inventory=[{sku:'K1',name:'Kette 11-fach',stock:1,min:4,ek:20,supplierId:'s1'},{sku:'B1',name:'Bremsbeläge',stock:10,min:2,ek:8,supplierId:'s1'}]; window.__fitframe.save(); const F=window.__fitframe.T118; F.ui().route='lager'; F.render(); });
  await p.waitForTimeout(300); let t=await E(()=>document.body.innerText); const m1=/Kette 11-fach[^\n]*\n?[^\n]*?(\d+) Stk\./.exec(t); log('1 Vorschlag Kette:',m1&&m1[1]); if(!m1||m1[1]!=='7') bad('Vorschlag Kette 7 Stk. erwartet');

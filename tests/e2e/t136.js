@@ -1,7 +1,7 @@
 // v.136: Hol- und Bringservice – im Auftrag eintragen, Tagesliste mit Adresse/Karte/Anruf, Erledigt, Tag wechseln, Zurück, ohne Querscroll.
 const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
 (async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
- const p=await (await b.newContext({...devices['iPhone 13']})).newPage(); p.on('pageerror',e=>errs.push(e.message)); await p.goto(BASE+'/index.html'); await p.waitForTimeout(1500);
+ const p=await (await b.newContext({...devices['iPhone 13'],locale:'de-DE'})).newPage(); p.on('pageerror',e=>errs.push(e.message)); await p.goto(BASE+'/index.html'); await p.waitForTimeout(1500);
  const E=f=>p.evaluate(f);
  const info=await E(()=>{ const S=window.__fitframe.S(); const w=S.workshop.find(x=>!['Übergeben','Storniert'].includes(x.status)); const c=S.customers.find(x=>x.id===w.customerId); c.address='Hauptstraße 5, 91054 Erlangen'; c.phone='0171 1234567'; window.__fitframe.save(); return {id:w.id}; });
  const td=await E(()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }); const tm=await E(()=>{ const d=new Date(Date.now()+864e5); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); });

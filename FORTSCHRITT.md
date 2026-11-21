@@ -5,15 +5,16 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.138** (APP_VER 2026-11-21.138), Service-Worker-Cache `fyf-app-v1-p69`, Datenbank-Stand **29** in `alles.sql` (eingespielt: 28 – Update auf 29 offen).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.139** (APP_VER 2026-11-21.139), Service-Worker-Cache `fyf-app-v1-p70`, Datenbank-Stand **29** in `alles.sql` (eingespielt: 28 – Update auf 29 offen).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
-- Browser-Tests: `sh tests/e2e/run.sh` (17 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
+- Browser-Tests: `sh tests/e2e/run.sh` (18 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
 - Geplanter Task „FYF: Bauschritt (2× täglich)“ läuft im festen Chat (Archiv mit Schreibrecht), Mo–Sa 04:23 und 11:23 Uhr.
 
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.139 (21.11.) | Pass auf Englisch, Stufe 1 (Punkt 14): Umschalter Deutsch/English unten in der Garage; ohne Wahl richtet sich die Sprache nach dem Handy (Englisch nur bei englischem Handy). Wörterbuch `pass-en.js` (370 Texte + Muster), wird nur bei Englisch geladen. Übersetzt: Garage, Registrierung, Radseite, Service/Wartungsplan, Diebstahl-Notfall, Teile & Ausstattung, Belege & Garantie, Käufer-Link, Werkstatt-Status. Messung: auf diesen Seiten kein Deutsch mehr. Rechtstexte bleiben Deutsch (gekennzeichnet). Datumsformat noch TT.MM.JJJJ. Test `t139.js`; ältere Tests laufen fest auf Deutsch. |
 | v.138 (21.11.) | Käufer-Link auf Zeit (Punkt 11, Freigabe 21.11.): Pass → Verkaufen → „Link für Käufer (14 Tage)“ (braucht Besitzer-Code). Käufer sieht nur Werkstatt-Einträge, Diebstahlstatus, Eckdaten – keine Belege, Preise, eigenen Einträge, Besitzerdaten. Pass bleibt wie eingestellt. Neuer Link macht den alten ungültig, Zurückziehen jederzeit. Server `stand29.sql` (neue Tabelle `pass_buyer_links`). Tests `stand29_test.sql`, `t138.js`. |
 | v.137 (21.11.) | Datenübernahme (Punkt 13): Import aus altem System (Kunden mit Rad, Artikel; Spalten zuordnen, Vorschau, Doppelte erkennen, bis 5000 Zeilen) gab es schon unter Mehr → Import & Export. Neu: automatische Sicherung vor jedem Import und „Import rückgängig machen“ direkt danach. Test `t137.js`. |
 | v.136 (21.11.) | Hol- und Bringservice (Punkt 12): im Werkstattauftrag Abholen/Zurückbringen mit Datum, Zeitfenster, Adresse (aus der Kundenakte vorbelegt) und Hinweis; Werkstatt → „Hol- & Bringservice“ (Zähler für heute): Tagesliste nach Zeitfenster mit Karte (Google Maps-Link), Anrufen, Erledigt, Tag wechseln, Drucken. Nur lokal im Laden-Stand, kein neuer Dienst. Test `t136.js`. |
@@ -54,7 +55,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 11. ✅ **Geprüfte Historie für Käufer** (fertig v.138 mit Käufer-Link auf Zeit): Käufer scannt QR und sieht die werkstattbestätigte Historie (ohne Preise/Belege, nur mit Freigabe des Besitzers).
 12. ✅ **Hol- und Bringservice** (fertig v.136) (Software): Abholtermine, Tagesliste mit Adressen.
 13. ✅ **Datenübernahme aus Altsystem** (fertig v.137): Kunden und Räder als CSV mit Vorschau und Prüfung.
-14. **Pass auf Englisch** (Plan `docs/PASS-ENGLISCH-PLAN.md`, alle Stufen freigegeben 21.11.): größer – erst Plan in `docs/`, dann bauen.
+14. ◐ **Pass auf Englisch** – Stufe 1 fertig (v.139); offen: Stufe 2 (Kosten, Setups, Termin/Ersatzrad-Texte, Händlerfinder `finder.html`), Stufe 3 (Verkaufen, Kauf-Check, Hilfe). Plan `docs/PASS-ENGLISCH-PLAN.md`, alle Stufen freigegeben.: größer – erst Plan in `docs/`, dann bauen.
 Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Preise, nichts entfernen.
 
 ## Wartet auf Dominik
@@ -77,4 +78,4 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
-Punkt 14: Pass auf Englisch, Stufe 1 (Plan `docs/PASS-ENGLISCH-PLAN.md`).
+Punkt 14: Englisch Stufe 2 (Kosten, Setups, Händlerfinder) – Texte wie in Stufe 1 automatisch sammeln (`/tmp`-Skript siehe v.139-Commit: sichtbare Texte je Seite), ins Wörterbuch, Test `t139.js` erweitern.

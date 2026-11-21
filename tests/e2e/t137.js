@@ -1,7 +1,7 @@
 // v.137: Import aus altem System – Sicherung vorher, „Import rückgängig“ stellt den alten Stand her (Kunden und Artikel).
 const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
 (async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
- const p=await (await b.newContext({...devices['iPhone 13']})).newPage(); p.on('pageerror',e=>errs.push(e.message)); await p.goto(BASE+'/index.html'); await p.waitForTimeout(1500);
+ const p=await (await b.newContext({...devices['iPhone 13'],locale:'de-DE'})).newPage(); p.on('pageerror',e=>errs.push(e.message)); await p.goto(BASE+'/index.html'); await p.waitForTimeout(1500);
  const E=f=>p.evaluate(f);
  const before=await E(()=>{ const S=window.__fitframe.S(); return {c:S.customers.length,b:S.bikes.length}; });
  await E(()=>window.__fitframe.T118.ACT.impOpen()); await p.waitForTimeout(300);

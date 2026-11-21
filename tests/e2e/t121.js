@@ -1,5 +1,5 @@
 const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765'; const fs=require('fs');
-(async()=>{ const b=await chromium.launch(); const c=await b.newContext({...devices['iPhone 13'],acceptDownloads:true}); const p=await c.newPage(); const errs=[]; p.on('pageerror',e=>errs.push(e.message)); p.on('dialog',d=>d.accept()); const log=(...a)=>console.log(...a);
+(async()=>{ const b=await chromium.launch(); const c=await b.newContext({...devices['iPhone 13'],acceptDownloads:true,locale:'de-DE'}); const p=await c.newPage(); const errs=[]; p.on('pageerror',e=>errs.push(e.message)); p.on('dialog',d=>d.accept()); const log=(...a)=>console.log(...a);
  await p.goto(BASE+'/index.html'); await p.waitForTimeout(1500);
  const E=(src,arg)=>p.evaluate(([src,arg])=>{ const F=window.__fitframe.T118,S=F.S(),ui=F.ui(); return eval(src); },[src,arg]);
  await p.evaluate(()=>{ const S=window.__fitframe.S(); S.shop={...(S.shop||{}),name:'FYF Testladen',owner:'Dominik Böhm',addr:'Hauptstr. 1, 91080 Uttenreuth',iban:'DE02120300000000202051',bic:'BYLADEM1001',bank:'Testbank',phone:'09131 123456',email:'laden@example.de',taxNo:'216/123/45678',vatId:'DE123456789'}; window.__fitframe.save(); });

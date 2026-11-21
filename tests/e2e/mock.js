@@ -15,6 +15,7 @@ http.createServer((req,res)=>{
     if(u.pathname==='/__setfeat'){ const t=u.searchParams.get('t'); if(db.prof[t]&&u.searchParams.has('f')) db.prof[t].features=(u.searchParams.get('f')||'').split(',').filter(Boolean); return send(res,200,{ok:1,f:db.prof[t]&&db.prof[t].features}); }
     if(u.pathname==='/__setth'){ const c=u.searchParams.get('c'), t=u.searchParams.get('t'); if(db.pass[c]) db.pass[c].th=require('crypto').createHash('sha256').update(t).digest('hex'); return send(res,200,{ok:!!db.pass[c]}); }
     if(u.pathname==='/__pass') return send(res,200,{pass:db.pass||{},ent:db.pent||[],st:db.st||{}});
+    if(u.pathname==='/pass-en.js'){ res.writeHead(200,{'Content-Type':'text/javascript'}); return res.end(fs.readFileSync(ROOT+'/pass-en.js')); }
     if(u.pathname==='/data/rueckrufe.json'){ res.writeHead(200,{'Content-Type':'application/json'}); return res.end(fs.readFileSync(ROOT+'/data/rueckrufe.json')); }
     if(u.pathname==='/finder.html'){ res.writeHead(200,{'Content-Type':'text/html'}); return res.end(fs.readFileSync(ROOT+'/finder.html')); }
     if(u.pathname==='/__verify'){ db.verified=db.verified||{}; db.platform=db.platform||{}; const t=u.searchParams.get('t'), e=u.searchParams.get('admin'); if(t) db.verified[t]=true; if(e) db.platform[db.users[e]]=true; return send(res,200,{ok:1}); }

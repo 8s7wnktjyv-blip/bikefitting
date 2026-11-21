@@ -3,7 +3,7 @@ const H=(o,t)=>({method:'POST',headers:{apikey:'k','Content-Type':'application/j
 (async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a);
  const email='kal'+Date.now()+'@test.de'; await fetch(BASE+'/auth/v1/otp',H({email,create_user:true})); const codes=await (await fetch(BASE+'/__codes')).json(); const s=await (await fetch(BASE+'/auth/v1/verify',H({type:'email',email,token:codes[email]}))).json();
  const t=await (await fetch(BASE+'/rest/v1/rpc/create_tenant',H({p_name:'Testladen'},s.access_token))).json(); await fetch(BASE+'/__schema?v=23');
- const c=await b.newContext({...devices['iPhone 13'],acceptDownloads:true}); await c.addInitScript(([B,S,T])=>{ if(!localStorage.getItem('fyf-cloud')) localStorage.setItem('fyf-cloud',JSON.stringify({url:B,key:'sb_publishable_TESTKEY_1234567890abc',session:{...S,expires_at:Math.floor(Date.now()/1000)+3600},tenant:T,role:'admin',ver:0})); },[BASE,s,t]);
+ const c=await b.newContext({...devices['iPhone 13'],acceptDownloads:true,locale:'de-DE'}); await c.addInitScript(([B,S,T])=>{ if(!localStorage.getItem('fyf-cloud')) localStorage.setItem('fyf-cloud',JSON.stringify({url:B,key:'sb_publishable_TESTKEY_1234567890abc',session:{...S,expires_at:Math.floor(Date.now()/1000)+3600},tenant:T,role:'admin',ver:0})); },[BASE,s,t]);
  const p=await c.newPage(); p.on('pageerror',e=>errs.push(e.message)); p.on('dialog',d=>d.accept());
  await p.goto(BASE+'/index.html'); await p.waitForTimeout(2000);
  const E=(src,arg)=>p.evaluate(([src,arg])=>{ const F=window.__fitframe.T118,{appts,apptDrawer,customerDrawer,apptLinkAll,closeDrawer,render,cust,iso,ACT,VIEWS}=F,S=F.S(),ui=F.ui(),NET=F.NET(); return eval(src); },[src,arg]);

@@ -8,7 +8,7 @@ const login=async email=>{ await fetch(BASE+'/auth/v1/otp',H({email,create_user:
  const A=await login('slot'+Date.now()+'@test.de'); const t=await (await fetch(BASE+'/rest/v1/rpc/create_tenant',H({p_name:'Terminladen'},A.access_token))).json();
  await fetch(BASE+'/rest/v1/rpc/save_profile',H({p_tenant:t,p:{published:true,slug:'terminladen',name:'Terminladen',zip:'91054',city:'Erlangen',services:['Inspektion']}},A.access_token));
  await fetch(BASE+'/rest/v1/rpc/profile_slots',H({p_tenant:t,p_slots:[{d:d1,t:['09:00','14:30']},{d:d2,t:['10:00']}]},A.access_token));
- const c=await b.newContext({...devices['iPhone 13']}); await c.addInitScript(()=>{ try{ localStorage.setItem('fyfpass:intro','1'); localStorage.setItem('fyfpass:setupLater',String(Date.now())); }catch(e){} });
+ const c=await b.newContext({...devices['iPhone 13'],locale:'de-DE'}); await c.addInitScript(()=>{ try{ localStorage.setItem('fyfpass:intro','1'); localStorage.setItem('fyfpass:setupLater',String(Date.now())); }catch(e){} });
  await c.route('**/rest/v1/rpc/pass_get',async r=>{ const res=await r.fetch(); const j=await res.json(); try{ if(j) j.shop={name:'Terminladen',slug:'terminladen'}; }catch(e){} await r.fulfill({response:res,json:j}); });
  const q=await c.newPage(); q.on('pageerror',e=>errs.push('pass: '+e.message)); await q.goto(BASE+'/rad.html#meine&cfg='+cfg); await q.waitForTimeout(700); await q.click('#regb'); await q.fill('#rb','Cube'); await q.fill('#rm','Attain'); await q.fill('#rf','T'+Date.now()%100000); await q.check('#rx'); await q.click('#rg button.btn:not(#rfscan)'); await q.waitForTimeout(1200);
  const code=await q.evaluate(()=>mine()[0].code);

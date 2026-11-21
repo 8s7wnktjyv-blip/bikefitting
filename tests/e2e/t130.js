@@ -23,5 +23,5 @@ const {chromium,devices}=require('playwright'); const BASE='http://localhost:876
   await p.locator('.tf-main').first().click(); await p.waitForTimeout(400); const dr=await E(()=>!!document.querySelector('#overlay .drawer')); log(name,'5 Karte öffnet Auftrag:',dr); if(!dr) bad(name+': Karte öffnet nicht');
   await E(()=>window.__fitframe.T118.closeDrawer()); await p.click('#view [data-nav="werkstatt"]'); await p.waitForTimeout(400); const back=await E(()=>window.__fitframe.T118.ui().route); log(name,'6 Zurück:',back); if(back!=='werkstatt') bad(name+': Zurück');
   await c.close(); };
- await run('iPhone',{...devices['iPhone 13']}); await run('Bildschirm',{viewport:{width:1600,height:900}});
+ await run('iPhone',{...devices['iPhone 13'],locale:'de-DE'}); await run('Bildschirm',{viewport:{width:1600,height:900}});
  log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();

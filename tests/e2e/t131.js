@@ -5,7 +5,7 @@ const H=(o,t)=>({method:'POST',headers:{apikey:'k','Content-Type':'application/j
 const login=async email=>{ await fetch(BASE+'/auth/v1/otp',H({email,create_user:true})); const codes=await (await fetch(BASE+'/__codes')).json(); return (await fetch(BASE+'/auth/v1/verify',H({type:'email',email,token:codes[email]}))).json(); };
 (async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
  // --- Software ---
- const c=await b.newContext({...devices['iPhone 13'],acceptDownloads:true}); const p=await c.newPage(); p.on('pageerror',e=>errs.push('sw: '+e.message));
+ const c=await b.newContext({...devices['iPhone 13'],acceptDownloads:true,locale:'de-DE'}); const p=await c.newPage(); p.on('pageerror',e=>errs.push('sw: '+e.message));
  await p.goto(BASE+'/index.html'); await p.waitForTimeout(1500);
  const info=await p.evaluate(()=>{ const S=window.__fitframe.S(); const withB=S.customers.filter(c=>S.bikes.some(b=>b.customerId===c.id)); withB.forEach(c=>{ delete c.season; c.consentInfo=c.consentInfo||{}; c.consentInfo.remind=false; });
    withB[0].consentInfo.remind=true; withB[0].name='=HYPERLINK("x") Test'; withB[1].consentInfo.remind=true; window.__fitframe.save(); const F=window.__fitframe.T118; F.ui().route='werkstatt'; F.render(); return {ids:[withB[0].id,withB[1].id],n:withB.length}; });
@@ -24,7 +24,7 @@ const login=async email=>{ await fetch(BASE+'/auth/v1/otp',H({email,create_user:
  const f=await c.newPage(); f.on('pageerror',e=>errs.push('finder: '+e.message)); const cfgF=Buffer.from(JSON.stringify({u:BASE,k:'sb_publishable_TESTKEY_1234567890abc'})).toString('base64url'); await f.goto(BASE+'/finder.html#d=saisonladen&pass=ABCDEFGH&want=service&todo='+encodeURIComponent('Kette, Bremsbeläge')+'&cfg='+cfgF); await f.waitForTimeout(1500);
  const msg=await f.evaluate(()=>{ const m=document.getElementById('m'); return m?m.value:'KEIN FORMULAR'; }); log('5 Finder-Anfrage:',JSON.stringify(msg)); if(!/Fällig laut Fahrradpass: Kette, Bremsbeläge/.test(msg)||!/ABCDEFGH/.test(msg)) bad('Finder übernimmt fällige Punkte nicht');
  // --- Pass: Knopf zum eigenen Laden ---
- const cfg=Buffer.from(JSON.stringify({u:BASE,k:'sb_publishable_TESTKEY_1234567890abc'})).toString('base64url'); const c2=await b.newContext({...devices['iPhone 13']}); await c2.addInitScript(()=>{ try{ localStorage.setItem('fyfpass:intro','1'); localStorage.setItem('fyfpass:setupLater',String(Date.now())); }catch(e){} });
+ const cfg=Buffer.from(JSON.stringify({u:BASE,k:'sb_publishable_TESTKEY_1234567890abc'})).toString('base64url'); const c2=await b.newContext({...devices['iPhone 13'],locale:'de-DE'}); await c2.addInitScript(()=>{ try{ localStorage.setItem('fyfpass:intro','1'); localStorage.setItem('fyfpass:setupLater',String(Date.now())); }catch(e){} });
  await c2.route('**/rest/v1/rpc/pass_get',async r=>{ const res=await r.fetch(); let j=await res.json(); try{ const P=Array.isArray(j)?j[0]:j; if(P){ const tgt=P.payload||P; tgt.shop={name:'Saisonladen',slug:'saisonladen'}; } }catch(e){} await r.fulfill({response:res,json:j}); });
  const q=await c2.newPage(); q.on('pageerror',e=>errs.push('pass: '+e.message)); await q.goto(BASE+'/rad.html#meine&cfg='+cfg); await q.waitForTimeout(700); await q.click('#regb'); await q.fill('#rb','Cube'); await q.fill('#rm','Attain'); await q.fill('#rf','K'+Date.now()%100000); await q.check('#rx'); await q.click('#rg button.btn:not(#rfscan)'); await q.waitForTimeout(1200);
  const code=await q.evaluate(()=>mine()[0].code);

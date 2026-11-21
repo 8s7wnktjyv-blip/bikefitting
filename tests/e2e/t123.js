@@ -1,5 +1,5 @@
 const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
-(async()=>{ const b=await chromium.launch(); const c=await b.newContext({...devices['iPhone 13']}); const p=await c.newPage(); const errs=[]; p.on('pageerror',e=>errs.push(e.message)); const log=(...a)=>console.log(...a);
+(async()=>{ const b=await chromium.launch(); const c=await b.newContext({...devices['iPhone 13'],locale:'de-DE'}); const p=await c.newPage(); const errs=[]; p.on('pageerror',e=>errs.push(e.message)); const log=(...a)=>console.log(...a);
  await p.goto(BASE+'/index.html'); await p.waitForTimeout(1500);
  const E=(src,arg)=>p.evaluate(([src,arg])=>{ const F=window.__fitframe.T118,S=F.S(),ui=F.ui(); return eval(src); },[src,arg]);
  log('1 Rechnung Standard:', await E("(()=>{ const r=F.ckCalc(F.ckDefault('MTB')); return ['reach','stack','rad','radA','width','back','up','barR','effStem'].map(k=>k+'='+Math.round(r[k]*10)/10).join(' '); })()"));

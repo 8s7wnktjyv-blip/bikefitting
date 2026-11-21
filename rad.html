@@ -142,6 +142,8 @@ details.more{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);
 table.fh{border-collapse:collapse;width:100%;font-size:13.5px}table.fh th,table.fh td{padding:6px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}table.fh th:first-child,table.fh td:first-child{text-align:left;color:var(--muted)}table.fh small.up{color:#c76a10}table.fh small.dn{color:#2a7bc7}
 .gchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.gchip{font-size:11.5px;font-weight:650;border-radius:999px;padding:3px 9px;background:var(--card2);color:var(--muted)}.gchip.new{background:#fdeee5;color:var(--acc)}.gchip.warn{background:#fff4e0;color:#b4660f}
 </style>
+<script>/* v.139 Sprache: Deutsch (Standard) oder English (pass-en.js) */
+(function(){ var l=''; try{ l=localStorage.getItem('fyfpass:lang')||''; }catch(e){} if(!l){ l=/^en/i.test(navigator.language||'')?'en':'de'; } window.FYF_LANG=l; if(l==='en'){ var s=document.createElement('script'); s.src='pass-en.js'; s.defer=true; document.head.appendChild(s); } })();</script>
 </head>
 <body>
 <main id="app"><p class="muted">Lädt …</p></main>
@@ -205,7 +207,7 @@ function askForm(err){
       <p style="margin:18px 0 0"><button class="btn block ghost" id="regb" type="button">+ Rad hinzufügen</button></p>`
      :`<div class="empty">${bikePic('','Gravel')}<h2 style="margin:0 0 6px">Dein Rad. Seine Geschichte.</h2><p class="muted" style="margin:0 0 18px">Kostenlos registrieren – ohne Konto, ohne Namen.</p><button class="btn block" id="regb" type="button">Rad registrieren</button><p style="margin:12px 0 0"><a href="#pruefen${CF?'&cfg='+CF:''}">Ich habe schon einen Code</a></p></div>`}
      ${err?`<p style="color:var(--bad)">${esc(err)}</p>`:''}
-     <div id="dataHost"></div><div id="instHost"></div><p class="muted small" style="text-align:center;margin:14px 0 0"><a href="#" id="rintro" style="color:inherit;font-weight:600">So funktioniert’s</a></p><p class="muted small" style="text-align:center;margin:6px 0 0"><a href="impressum.html" style="color:inherit">Impressum</a> · <a href="datenschutz.html" style="color:inherit">Datenschutz</a></p>`;
+     <div id="dataHost"></div><div id="instHost"></div><p class="muted small" style="text-align:center;margin:14px 0 0"><a href="#" id="rintro" style="color:inherit;font-weight:600">So funktioniert’s</a></p><p class="muted small" style="text-align:center;margin:6px 0 0"><a href="impressum.html" style="color:inherit">Impressum</a> · <a href="datenschutz.html" style="color:inherit">Datenschutz</a></p><p class="muted small" data-notr style="text-align:center;margin:6px 0 0"><button class="linkbtn" type="button" data-lang="de" style="${window.FYF_LANG==='en'?'':'font-weight:700'}">Deutsch</button> · <button class="linkbtn" type="button" data-lang="en" style="${window.FYF_LANG==='en'?'font-weight:700':''}">English</button></p>`;
   }
   installUi();
   const rb=document.getElementById('regb'); if(rb) rb.onclick=()=>regForm();
@@ -2102,6 +2104,7 @@ async function buyerView(tok){ document.title='Fahrrad-Geschichte'; app.innerHTM
    <div class="card"><b>Von Werkstätten eingetragen (${ev.length})</b>${ev.length?ev.map(e=>`<div style="padding:8px 0;border-top:1px solid rgba(127,127,127,.2)"><div><b>${esc(e.t||'')}</b></div><div class="muted small">${fd(e.d)}${e.km!=null?' · '+esc(String(e.km))+' km':''} · ${esc(e.by||'')} · <span class="ok">${esc(e.tr)}</span></div></div>`).join(''):'<p class="muted small" style="margin:6px 0 0">Noch keine Einträge von Werkstätten.</p>'}</div>
    <p class="muted small">Selbst eingetragene Angaben, Belege und Preise sind hier bewusst nicht enthalten. Gültig bis ${fd(String(v.expires_at).slice(0,10))}. Prüfe beim Kauf Rahmennummer und Ausweis des Verkäufers.</p>`; }
 { const RTk=route; route=function(){ const h=new URLSearchParams((location.hash||'').slice(1)); const k=String(h.get('k')||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if(k.length===20){ scrollTo(0,0); buyerView(k); return; } return RTk.apply(this,arguments); }; }
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-lang]'); if(!b) return; const l=b.dataset.lang; if(l===window.FYF_LANG) return; try{ localStorage.setItem('fyfpass:lang',l); }catch(x){} location.reload(); });
 window.addEventListener('hashchange',route); route();
 if(/(^|[#&])bestellt=1/.test(location.hash)) thanksSheet();
 if(!new URLSearchParams((location.hash||'').slice(1)).get('c')&&!new URLSearchParams((location.hash||'').slice(1)).get('k')) intro();
