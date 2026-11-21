@@ -6,5 +6,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t118d.js` – Kalender: Termin → Kunde, Kundenakte, Woche/Liste/Monat, Abo-Link, .ics, Anfragen
 - `t121.js` – Mahnwesen, Kontoauszug-Abgleich, Arbeitszeit, Leihrad
 - `t123.js` – Cockpit-Vergleich (Rechnung und Ansicht)
+- `t127.js` – Feste Demodaten: Dominiks Grail mit SPD, vorhandene Werte bleiben erhalten
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
