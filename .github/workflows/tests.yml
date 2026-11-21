@@ -1,0 +1,23 @@
+name: Tests
+# Bei jeder Änderung: Händlersoftware und Pass im Browser (iPhone-Ansicht) gegen einen Test-Server prüfen. Keine echten Daten, keine Zugangsdaten.
+on:
+  push:
+    branches: [main, master-auftrag]
+  workflow_dispatch:
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Playwright installieren
+        run: |
+          cd tests/e2e
+          npm init -y >/dev/null
+          npm install playwright@1 >/dev/null
+          npx playwright install --with-deps chromium
+      - name: Browser-Tests
+        run: sh tests/e2e/run.sh

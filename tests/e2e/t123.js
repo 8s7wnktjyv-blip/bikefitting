@@ -1,0 +1,15 @@
+const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
+(async()=>{ const b=await chromium.launch(); const c=await b.newContext({...devices['iPhone 13']}); const p=await c.newPage(); const errs=[]; p.on('pageerror',e=>errs.push(e.message)); const log=(...a)=>console.log(...a);
+ await p.goto(BASE+'/index.html'); await p.waitForTimeout(1500);
+ const E=(src,arg)=>p.evaluate(([src,arg])=>{ const F=window.__fitframe.T118,S=F.S(),ui=F.ui(); return eval(src); },[src,arg]);
+ log('1 Rechnung Standard:', await E("(()=>{ const r=F.ckCalc(F.ckDefault('MTB')); return ['reach','stack','rad','radA','width','back','up','barR','effStem'].map(k=>k+'='+Math.round(r[k]*10)/10).join(' '); })()"));
+ log('2 Rotation +5°:', await E("(()=>{ const d=F.ckDefault('MTB'); const a=F.ckCalc(d), r=F.ckCalc({...d,rot:5}); return 'dReach='+Math.round(r.reach-a.reach)+' dStack='+Math.round(r.stack-a.stack)+' back='+r.back.toFixed(1)+' up='+r.up.toFixed(1); })()"));
+ log('3 Kürzen 20/Seite:', await E("(()=>{ const d=F.ckDefault('MTB'); const r=F.ckCalc({...d,cut:20}); return 'width='+Math.round(r.width); })()"));
+ log('4 Spacer +10:', await E("(()=>{ const d=F.ckDefault('MTB'); const a=F.ckCalc(d), r=F.ckCalc({...d,sp:d.sp+10}); return 'dReach='+(r.reach-a.reach).toFixed(1)+' dStack='+(r.stack-a.stack).toFixed(1); })()"));
+ log('5 Solver neuer Rahmen (Stack+20, Reach+15):', await E("(()=>{ const d=F.ckDefault('MTB'); const s=F.ckSolve(d,{...d,stack:d.stack+20,reach:d.reach+15}); return JSON.stringify({L:s.L,a:s.a,sp:s.sp,e:Math.round(s.e)}); })()"));
+ await E("F.ckOpen({ist:F.ckDefault('MTB')})"); await p.waitForTimeout(300);
+ await p.fill('#ck_neu_back','5'); await p.press('#ck_neu_back','Enter'); await p.fill('#ck_neu_rise','40'); await p.press('#ck_neu_rise','Enter'); await p.waitForTimeout(300);
+ log('6 Drawer:', await p.evaluate(()=>document.querySelector('#ckOut p').innerText));
+ await p.evaluate(()=>document.querySelector('.drawer-b').scrollTop=0);  await p.click('[data-act="ckSolve"]'); await p.waitForTimeout(400); log('7 Solve:', await p.evaluate(()=>document.getElementById('ckSolveOut').innerText));
+ await E("F.closeDrawer()"); await E("(ui.route='vermessung',F.render())"); log('8 Panel Vermessung:', await p.evaluate(()=>!!document.querySelector('[data-act="ckOpen"]')));
+ log('Fehler:',errs.length?errs:'keine'); await b.close(); })();

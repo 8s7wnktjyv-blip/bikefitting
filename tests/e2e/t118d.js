@@ -1,0 +1,29 @@
+const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765'; const fs=require('fs');
+const H=(o,t)=>({method:'POST',headers:{apikey:'k','Content-Type':'application/json',...(t?{Authorization:'Bearer '+t}:{})},body:JSON.stringify(o)});
+(async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a);
+ const email='kal'+Date.now()+'@test.de'; await fetch(BASE+'/auth/v1/otp',H({email,create_user:true})); const codes=await (await fetch(BASE+'/__codes')).json(); const s=await (await fetch(BASE+'/auth/v1/verify',H({type:'email',email,token:codes[email]}))).json();
+ const t=await (await fetch(BASE+'/rest/v1/rpc/create_tenant',H({p_name:'Testladen'},s.access_token))).json(); await fetch(BASE+'/__schema?v=23');
+ const c=await b.newContext({...devices['iPhone 13'],acceptDownloads:true}); await c.addInitScript(([B,S,T])=>{ if(!localStorage.getItem('fyf-cloud')) localStorage.setItem('fyf-cloud',JSON.stringify({url:B,key:'sb_publishable_TESTKEY_1234567890abc',session:{...S,expires_at:Math.floor(Date.now()/1000)+3600},tenant:T,role:'admin',ver:0})); },[BASE,s,t]);
+ const p=await c.newPage(); p.on('pageerror',e=>errs.push(e.message)); p.on('dialog',d=>d.accept());
+ await p.goto(BASE+'/index.html'); await p.waitForTimeout(2000);
+ const E=(src,arg)=>p.evaluate(([src,arg])=>{ const F=window.__fitframe.T118,{appts,apptDrawer,customerDrawer,apptLinkAll,closeDrawer,render,cust,iso,ACT,VIEWS}=F,S=F.S(),ui=F.ui(),NET=F.NET(); return eval(src); },[src,arg]);
+ const d5=await E("(()=>{ const x=new Date(); x.setDate(x.getDate()+5); return iso(x); })()");
+ const save=async()=>{ await p.click('form[data-form="apptSave"] button[type=submit]'); await p.waitForTimeout(500); };
+ await E("apptDrawer(null)"); await p.fill('#ap_d',d5); await p.fill('#ap_s','10:30'); await p.fill('#ap_n','Lena Neukundin'); await p.fill('#ap_t','lena@example.de'); await save();
+ const a=await E("(()=>{ const a=appts().find(x=>x.customerId&&/Lena/.test(cust(x.customerId).name)); return a&&{id:a.id,cid:a.customerId,cn:cust(a.customerId).name,tags:cust(a.customerId).tags}; })()"); log('1 Termin->Kunde:',JSON.stringify(a));
+ await E("apptDrawer(null)"); await p.fill('#ap_d',d5); await p.fill('#ap_s','14:00'); await p.fill('#ap_n','Lena N.'); await p.fill('#ap_t','LENA@example.de'); await save();
+ log('2 Kunden mit Lena-Mail:', await E("JSON.stringify(S.customers.filter(c=>/lena/i.test(c.email||'')).map(c=>c.name+' '+c.email))"), '· Termine bei ihr:', await E("appts().filter(x=>x.customerId===arg).length",a.cid));
+ await E("customerDrawer(arg,'uebersicht')",a.cid); await p.waitForTimeout(300); log('3 Kundenakte:', await p.evaluate(()=>document.querySelector('dl.dl').innerText.match(/Nächster Termin\s*(.*)/)?.[1]), await p.evaluate(()=>{ const x=document.querySelector('[data-cappts]'); return x?x.innerText.replace(/\s+/g,' ').slice(0,170):'FEHLT'; }));
+  await E("closeDrawer()");
+ for(const m of ['woche','liste','monat']){ await E("(ui.route='termine',ui.calMode=arg,ui.calDay=null,render())",m); await p.waitForTimeout(300); log('4 Ansicht',m,':', await p.evaluate(()=>{ const v=document.body; return [v.querySelector('[data-act="calMode"][aria-pressed="true"]')?.textContent,(v.innerText.match(/Lena/g)||[]).length+'x Lena','Abo-Knopf '+!!v.querySelector('[data-act="calFeed"]')].join(' | '); })); }
+ await E("(ui.calMode='monat',ui.calMonthK=arg.slice(0,7),render())",d5); await p.click(`[data-act="calDay"][data-date="${d5}"]`); await p.waitForTimeout(300); log('4b Monat Tag: Lena', await p.evaluate(()=>(document.body.innerText.match(/Lena/g)||[]).length)); 
+ await E("(ui.calMode='liste',render())"); await p.fill('input[data-change="calQ"]','xyz'); await p.press('input[data-change="calQ"]','Enter'); await p.waitForTimeout(300); log('4c Suche xyz -> nichts:', await p.evaluate(()=>/Nichts gefunden/.test(document.body.innerText))); await E("(ui.calQ='',render())");
+ await p.click('[data-act="calFeed"][data-v="get"]'); await p.waitForTimeout(700); log('5 Abo-Link:', await p.evaluate(()=>{ const a=[...document.querySelectorAll('a')].find(x=>/abonnieren/.test(x.textContent)); return a?a.getAttribute('href').replace(/apikey=[^&]+/,'apikey=…'):'FEHLT'; })); 
+ await E("apptDrawer(arg)",a.id); await p.waitForTimeout(300); const [dl]=await Promise.all([p.waitForEvent('download'),p.click('[data-act="apptIcs"]')]); const ics=fs.readFileSync(await dl.path(),'utf8'); log('6 ics:',dl.suggestedFilename(),'|',ics.split('\r\n').filter(l=>/^(DTSTART|DTEND|SUMMARY|DESCRIPTION|LOCATION)/.test(l)).join(' | ')); log('6b Knopf Kundenakte:', await p.evaluate(()=>!!document.querySelector('#drawerBody [data-act="openCustomer"]')));
+ await E("closeDrawer()");
+ await E("(NET.inq=[{id:'q1',name:'Paul Pass',contact:'paul@example.de',topic:'Fitting',preferred:'',message:'Über Pass gebucht',created_at:new Date().toISOString(),status:'neu'}],ACT.inqToAppt({dataset:{id:'q1'}}))"); await p.waitForTimeout(300); await p.fill('#ap_d',d5); await save();
+ log('7 Anfrage->Termin:', await E("(()=>{ const a=appts().find(x=>x.inq==='q1'); return a?(cust(a.customerId).name+' · '+JSON.stringify(cust(a.customerId).tags)):'FEHLT'; })()"));
+ log('7b Anfragen-Ansicht:', await E("(()=>{ try{ const h=VIEWS.netz(); return /✓ Termin/.test(h)?'markiert':(/Als Termin eintragen/.test(h)?'NICHT markiert':'Anfrage nicht in Ansicht'); }catch(e){ return 'Fehler '+e.message; } })()"));
+ await E("S.appts.push({id:'old1',kind:'Fitting',date:arg,start:'09:00',dur:60,customerId:'',name:'Alt Bestand',contact:'0171 999888'})",d5); log('8 Altbestand verknüpft:', await E("(apptLinkAll(),(()=>{ const a=appts().find(x=>x.id==='old1'); return !!(a.customerId&&cust(a.customerId).name==='Alt Bestand'); })())"));
+ for(const r of ['dashboard','kunden','netz','termine','werkstatt']){ await E("(ui.route=arg,render())",r); await p.waitForTimeout(200); }
+ log('Fehler:',errs.length?errs:'keine'); await b.close(); })();
