@@ -28,7 +28,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Freigegebene offene Punkte (Reihenfolge = Vorrang)
 
-1. Fehler / nicht funktionierende Knöpfe / Datensicherheit – laufend prüfen.
+1. Fehler / nicht funktionierende Knöpfe / Datensicherheit – laufend prüfen. Rundgang 21.11. (v.128, iPhone-13-Größe): Pass-App – alle Knöpfe der Radseite und aller 7 Werkzeuge unter „Mehr Funktionen“ ohne JS-Fehler und ohne Querscrollen; Händlersoftware – alle 33 Bereiche ohne Fehler und ohne Querscrollen. Kein Befund.
 2. Rechte: Rollen fertig (v.128). Offen: Sollen Werkstattleitung, Verkauf, Filialleitung, Buchhaltung Körper-/Gesundheitsdaten sehen? Derzeit ja (wie Mitarbeiter). Ausblenden braucht Umbau in der App (Fitting-Daten liegen in `sessions`) → nur nach Entscheidung.
 3. Kündigung eines Ladens: geprüft 21.11. – **Lücke**: Löschen eines Ladens löscht seine ausgestellten Pässe samt aller Einträge (`bike_passes` on delete cascade). Plan in `docs/KUENDIGUNG-PLAN.md`, wartet auf Freigabe (Datenmodell).
 4. Händlerfinder mit Werkstatt-Bewertungen: fertig (v.124); Feinschliff nach Rückmeldung.
@@ -55,4 +55,4 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Nächster Schritt
 
-Nach Freigabe: Kündigung laut `docs/KUENDIGUNG-PLAN.md`. Ohne Freigabe: Punkt 1 (Fehler/tote Knöpfe/Datensicherheit) – Rundgang durch Pass-App (`rad.html`) in Handy-Größe.
+Nach Freigabe: Kündigung laut `docs/KUENDIGUNG-PLAN.md`. Ohne Freigabe: Pass-App – Abläufe mit Eingaben prüfen (Service eintragen, Beleg, Übergabe an neuen Besitzer) und mit Browser-Test absichern.
