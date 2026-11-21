@@ -1561,6 +1561,11 @@ function wsHtml(P){ const L=(P.workshop||[]).filter(w=>w&&w.status&&w.status!=='
       ${w.approval?'<p class="small" style="margin:8px 0 0;background:#fff4e5;color:#7a4300;padding:8px 10px;border-radius:10px"><b>Der Laden wartet auf deine Freigabe</b> des Kostenvoranschlags. Den Link dazu hast du per Nachricht oder E-Mail vom Laden bekommen.</p>':''}
       ${st==='Wartet auf Teile'?'<p class="muted small" style="margin:6px 0 0">Es fehlen noch Teile. Der Laden meldet sich, sobald sie da sind.</p>':''}</div>`; }).join(''); }
 { const SHw=show; show=async function(code){ const r=await SHw.apply(this,arguments); try{ const P=Pof(code); if(!mine().some(m=>m.code===code)||document.querySelector('[data-ws]')) return r; const h=wsHtml(P); if(!h) return r; const a=document.querySelector('#app .hero'); if(a) a.insertAdjacentHTML('afterend',h); }catch(e){} return r; }; }
+/* v.133 Ersatzrad anfragen (Freigabe 21.11.2026): Ist das Rad beim eigenen Laden in Arbeit, kann der Besitzer mit einem Tippen ein Leihrad anfragen. */
+{ const SHl=show; show=async function(code){ const r=await SHl.apply(this,arguments); try{ if(!mine().some(m=>m.code===code)) return r; const P=Pof(code), sh=P.shop||{}; if(!/^[a-z0-9-]{3,60}$/.test(sh.slug||'')) return r;
+  const L=(P.workshop||[]).filter(w=>w&&w.status&&!['Übergeben','Storniert','Abholbereit'].includes(w.status)&&(!w.shop||!sh.name||w.shop===sh.name));
+  const card=document.querySelector('[data-ws]'); if(!L.length||!card||card.querySelector('[data-loanreq]')) return r;
+  card.insertAdjacentHTML('beforeend',`<a class="btn ghost block" style="margin-top:10px" data-loanreq href="finder.html#d=${sh.slug}&pass=${code}&want=loaner${CF?'&cfg='+CF:''}">Ersatzrad für die Zeit anfragen</a>`); }catch(e){} return r; }; }
 GUIDE.push(['Werkstatt-Status','<p>Ist dein Rad in einer FYF-Werkstatt, siehst du oben auf der Radseite den Stand: angenommen, in Arbeit, abholbereit – und ob der Laden auf deine Freigabe wartet. Das sieht nur, wer den Besitzer-Code (Teil II) auf dem Handy hat.</p>']);
 /* ===== Kalender: alle Erinnerungen (Richtwerte + Plan der Werkstatt), auch für alle Räder auf einmal ===== */
 function calEvents(code){ const name=bikeName(code), link=passLink(code);

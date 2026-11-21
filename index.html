@@ -1959,7 +1959,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-21.132';
+const APP_VER='2026-11-21.133';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -9297,6 +9297,9 @@ ACT.seasonCsv=function(){ const q=v=>{ let t=String(v==null?'':v); if(/^[=+\-@\t
   const rows=[['Name','E-Mail','Telefon','Räder','Letzter Besuch'],...seasonList().filter(x=>x.ok).map(x=>[x.c.name,x.c.email||'',x.c.phone||'',S.bikes.filter(b=>b.customerId===x.c.id).map(bikeName).join(', '),x.last])];
   try{ download(`saison-check-${today()}.csv`,'﻿'+rows.map(r=>r.map(q).join(';')).join('\r\n'),'text/csv;charset=utf-8'); toast('Tabelle erstellt'); }catch(e){ toast('Export nicht möglich',true); } };
 { const WS=VIEWS.werkstatt; VIEWS.werkstatt=function(){ const h=WS.apply(this,arguments); const x=seasonHtml(); if(!x) return h; const i=h.indexOf('<div class="row">'); return i>0?h.slice(0,i)+x+h.slice(i):h+x; }; }
+/* ===== v.133 Ersatzrad-Anfragen aus dem Pass: Hinweis mit freien Leihrädern ===== */
+{ const Nl=VIEWS.netz; if(Nl) VIEWS.netz=function(){ let h=Nl.apply(this,arguments); try{ const free=loaners().filter(x=>!loanOf(x.id));
+  h=h.replace(/(<div style="white-space:pre-wrap;font-size:14px;margin-top:4px">[^<]*Ersatzrad \(Leihrad\)[\s\S]*?<\/div>)/g,(m)=>m+`<div class="notice" style="margin:6px 0 0;font-size:13.5px">${ic('info')}<span><b>Ersatzrad gewünscht.</b> ${free.length?`Frei: ${free.map(x=>esc(x.name)).join(', ')}. Im Werkstattauftrag unter „Leihrad“ ausgeben.`:'Gerade kein Leihrad frei. Leihräder legst du unter Werkstatt → Leihräder an.'}</span></div>`); }catch(e){} return h; }; }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();
