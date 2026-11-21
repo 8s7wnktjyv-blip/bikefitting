@@ -1959,7 +1959,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-21.131';
+const APP_VER='2026-11-21.132';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2068,7 +2068,7 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; await clClosedCheck(); clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
 // Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
-const DB_SCHEMA=27; let dbSchema=null;
+const DB_SCHEMA=28; let dbSchema=null;
 async function dbCheck(){ if(!(CL.url&&CL.key)) return;
   try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
   catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
