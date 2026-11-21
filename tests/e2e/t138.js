@@ -1,0 +1,16 @@
+// v.138: Käufer-Link – Besitzer erstellt Link im Verkaufswerkzeug, Käufer sieht nur Werkstatt-Einträge, Zurückziehen macht den Link ungültig.
+const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
+(async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
+ const cfg=Buffer.from(JSON.stringify({u:BASE,k:'sb_publishable_TESTKEY_1234567890abc'})).toString('base64url');
+ const c=await b.newContext({...devices['iPhone 13']}); await c.addInitScript(()=>{ try{ localStorage.setItem('fyfpass:intro','1'); localStorage.setItem('fyfpass:setupLater',String(Date.now())); }catch(e){} });
+ const q=await c.newPage(); q.on('pageerror',e=>errs.push('pass: '+e.message)); q.on('dialog',d=>d.accept()); await q.goto(BASE+'/rad.html#meine&cfg='+cfg); await q.waitForTimeout(700); await q.click('#regb'); await q.fill('#rb','Cube'); await q.fill('#rm','Attain'); await q.fill('#rf','KL'+Date.now()%100000); await q.check('#rx'); await q.click('#rg button.btn:not(#rfscan)'); await q.waitForTimeout(1500);
+ const code=await q.evaluate(()=>mine()[0].code); await fetch(BASE+'/__setth?c='+code+'&t=TEIL2TEST'); await q.evaluate(c=>localStorage.setItem('fyfpass:own:'+c,'TEIL2TEST'),code); log('1 Pass',code,'Besitzer-Code gesetzt');
+ await q.evaluate(c=>{ location.hash='#c='+c; },code); await q.waitForTimeout(1500); await q.evaluate(c=>toolSell(c),code); await q.waitForTimeout(1200);
+ const card=await q.evaluate(()=>{ const x=document.querySelector('[data-buyer]'); return x?x.innerText:'FEHLT'; }); log('2 Karte im Verkaufswerkzeug:',card.slice(0,60)); if(!/Link für Käufer/.test(card)) bad('Karte fehlt');
+ await q.click('[data-buyer] [data-bl="new"]'); await q.waitForTimeout(800); const link=await q.evaluate(()=>{ const i=document.querySelector('[data-buyer] input'); return i?i.value:''; }); log('3 Link:',link.replace(/cfg=.*/,'cfg=…')); if(!/#k=[A-Z2-9]{20}/.test(link)) bad('Link nicht erzeugt');
+ const k=await b.newContext({...devices['iPhone 13']}); const v=await k.newPage(); v.on('pageerror',e=>errs.push('käufer: '+e.message)); await v.goto(link); await v.waitForTimeout(1500);
+ const vt=await v.evaluate(()=>document.body.innerText); log('4 Käufer sieht:',/Geschichte für Kaufinteressierte/.test(vt),/Diebstahlmeldung in FYF/.test(vt)); if(!/Geschichte für Kaufinteressierte/.test(vt)) bad('Käufer-Ansicht');
+ const ov=await v.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1); if(ov) bad('Querscroll Käufer');
+ await q.click('[data-buyer] [data-bl="off"]'); await q.waitForTimeout(800); await v.reload(); await v.waitForTimeout(1500); const gone=await v.evaluate(()=>/nicht mehr gültig/.test(document.body.innerText)); log('5 nach Zurückziehen ungültig:',gone); if(!gone) bad('Zurückziehen');
+ await q.evaluate(c=>{ document.querySelectorAll('.tpage').forEach(t=>t.remove()); toolSell(c); },code); await q.waitForTimeout(1200); const card2=await q.evaluate(()=>(document.querySelector('[data-buyer]')||{}).innerText||''); log('6 danach wieder „Link erstellen“:',/Link erstellen/.test(card2)&&!/Neuen Link/.test(card2)); if(!/Link erstellen/.test(card2)) bad('Status nach Zurückziehen');
+ log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();

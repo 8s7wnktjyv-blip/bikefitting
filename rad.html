@@ -2076,9 +2076,35 @@ function revSheet(code,e){ if(!e) return; hit('bewerten'); page('Werkstatt bewer
     catch(err){ btn.disabled=false; toast(err.missing?'Bewertungen sind noch nicht freigeschaltet':'Keine Verbindung – später noch einmal'); } }; }); }
 { const SHr=show; show=async function(code){ const r=await SHr.apply(this,arguments); try{ await revCard(code); }catch(e){} return r; }; }
 function route(){ scrollTo(0,0); document.querySelectorAll('.sheet,.tpage,.scanner').forEach(e=>{ if(e.querySelector('video')&&e.querySelector('video').srcObject) e.querySelector('video').srcObject.getTracks().forEach(t=>t.stop()); e.remove(); }); document.body.style.overflow=''; const h=new URLSearchParams((location.hash||'').slice(1)); const c=norm(h.get('c')); if(h.get('import')){ tabs('meine'); askForm(''); importSheet(String(h.get('import')).split(/[.,]/)); return; } if(h.get('claim')){ const [cc,tk]=String(h.get('claim')).split('.'); tabs('meine'); askForm(''); claimSheet(norm(cc),String(tk||'')); return; } tabs(c?(mine().some(m=>m.code===c)?'meine':'pruefen'):(/pruefen/.test(location.hash)?'pruefen':'meine')); if(c) show(c); else askForm(''); }
+/* ===== v.138 Käufer-Link auf Zeit (Punkt 11, Freigabe 21.11.2026): 14 Tage nur die werkstattbestätigte Geschichte, Pass bleibt privat ===== */
+const buyerLink=tok=>location.origin+location.pathname+'#k='+tok+(CF?'&cfg='+CF:'');
+async function buyerCard(code,box){ const ot=ownGet(code);
+  if(!ot){ box.innerHTML=`<b>Link für Käufer (14 Tage)</b><p class="muted small" style="margin:4px 0 0">Dafür brauchst du den Besitzer-Code (Karte Teil II). Unter <b>Besitzer-Einstellungen</b> einmal eintragen.</p>`; return; }
+  let st=null; try{ st=await rpc('buyer_link_status',{p_code:code,p_transfer:ot}); }catch(e){ if(e.missing){ box.remove(); return; } }
+  const L=box.dataset.tok?buyerLink(box.dataset.tok):'';
+  box.innerHTML=`<b>Link für Käufer (14 Tage)</b><p class="muted small" style="margin:4px 0 10px">Zeigt nur die Einträge von Werkstätten – ohne Belege, Preise und deine Daten. Dein Pass bleibt wie eingestellt. Läuft nach 14 Tagen von selbst ab.</p>
+   ${L?`<input readonly value="${esc(L)}" style="width:100%;margin-bottom:8px" aria-label="Link für Käufer"><div style="display:grid;gap:10px;grid-template-columns:1fr 1fr"><button class="btn" type="button" data-bl="copy">Kopieren</button><button class="btn ghost" type="button" data-bl="share">Teilen</button></div>`:
+     st&&st.active?`<p class="small" style="margin:0 0 8px">Ein Link ist aktiv bis <b>${fd(String(st.expires_at).slice(0,10))}</b>. Aus Sicherheitsgründen kann er nicht noch einmal angezeigt werden – erstelle bei Bedarf einen neuen (der alte wird dann ungültig).</p>`:''}
+   <div style="display:grid;gap:10px;grid-template-columns:${st&&st.active||L?'1fr 1fr':'1fr'};margin-top:8px"><button class="btn${L?' ghost':''}" type="button" data-bl="new">${st&&st.active||L?'Neuen Link erstellen':'Link erstellen'}</button>${st&&st.active||L?'<button class="btn ghost" type="button" data-bl="off">Link zurückziehen</button>':''}</div>`;
+  box.querySelectorAll('[data-bl]').forEach(b=>b.onclick=async()=>{ const a=b.dataset.bl;
+    if(a==='copy') return copyText(L);
+    if(a==='share'){ try{ await navigator.share({title:'Fahrrad-Geschichte',text:'Die von Werkstätten bestätigte Geschichte des Rads (14 Tage gültig):',url:L}); }catch(e){ copyText(L); } return; }
+    try{ const r=await rpc(a==='new'?'buyer_link_create':'buyer_link_revoke',{p_code:code,p_transfer:ot}); if(r&&r.error){ toast(r.error==='FYF_RATE'?'Heute schon zu viele Links – morgen wieder':r.error==='FYF_BAD_TRANSFER'?'Besitzer-Code stimmt nicht':'Hat nicht geklappt'); return; }
+      if(a==='new'){ box.dataset.tok=r.token; hit&&hit('kaeuferlink'); } else { delete box.dataset.tok; toast('Link zurückgezogen'); } buyerCard(code,box); }catch(e){ toast('Keine Verbindung'); } }); }
+{ const TS=toolSell; toolSell=function(code){ const r=TS.apply(this,arguments); setTimeout(()=>{ try{ const tp=[...document.querySelectorAll('.tpage')].pop(); if(!tp||tp.querySelector('[data-buyer]')) return; const c=[...tp.querySelectorAll('.card')].find(x=>/Damit Käufer die Geschichte sehen/.test(x.textContent)); if(!c) return; const box=document.createElement('div'); box.className='card'; box.setAttribute('data-buyer',''); c.after(box); buyerCard(code,box); }catch(e){} },0); return r; }; }
+async function buyerView(tok){ document.title='Fahrrad-Geschichte'; app.innerHTML='<p class="muted">Lädt …</p>'; let v=null; try{ v=await rpc('buyer_view',{p_token:tok}); }catch(e){}
+  if(!v||v.error){ app.innerHTML=`<div class="card"><b>Dieser Link ist nicht mehr gültig</b><p class="muted small" style="margin:4px 0 0">Käufer-Links gelten 14 Tage oder bis der Besitzer sie zurückzieht. Bitte den Verkäufer um einen neuen Link.</p></div>`; return; }
+  const b=v.bike||{}, ev=[...(v.svc||[]).map(s=>({d:s.date,km:s.km,t:s.title+(s.parts&&s.parts.length?' · '+s.parts.join(', '):''),by:v.shop,tr:'Werkstatt'})),...(v.entries||[]).map(e=>({d:e.date,km:e.km,t:e.text,by:e.shop,tr:e.trust==='verified'?'geprüfte Werkstatt':'Werkstatt'}))].sort((a,c)=>String(c.d||'').localeCompare(String(a.d||'')));
+  app.innerHTML=`<div class="card"><div class="muted small">FYF Fahrradpass · Geschichte für Kaufinteressierte</div><h1 style="margin:4px 0">${esc(b.name||'Fahrrad')}</h1><div class="muted">${esc([b.type,b.size?'Größe '+b.size:'',b.year].filter(Boolean).join(' · '))}</div>
+    <div class="kv"><span>Diebstahlmeldung in FYF</span><b class="${v.stolen?'bad':'ok'}">${v.stolen?'Ja – Achtung':'Keine'}</b></div>
+    ${b.km!=null?`<div class="kv"><span>Kilometer (zuletzt erfasst)</span><b>${esc(String(b.km))} km</b></div>`:''}${b.frame?`<div class="kv"><span>Rahmennummer (Ausschnitt)</span><b class="mono">${esc(b.frame)}</b></div>`:''}
+    ${v.owner_no?`<div class="kv"><span>Besitzer laut Pass</span><b>${esc(String(v.owner_no))}.</b></div>`:''}</div>
+   <div class="card"><b>Von Werkstätten eingetragen (${ev.length})</b>${ev.length?ev.map(e=>`<div style="padding:8px 0;border-top:1px solid rgba(127,127,127,.2)"><div><b>${esc(e.t||'')}</b></div><div class="muted small">${fd(e.d)}${e.km!=null?' · '+esc(String(e.km))+' km':''} · ${esc(e.by||'')} · <span class="ok">${esc(e.tr)}</span></div></div>`).join(''):'<p class="muted small" style="margin:6px 0 0">Noch keine Einträge von Werkstätten.</p>'}</div>
+   <p class="muted small">Selbst eingetragene Angaben, Belege und Preise sind hier bewusst nicht enthalten. Gültig bis ${fd(String(v.expires_at).slice(0,10))}. Prüfe beim Kauf Rahmennummer und Ausweis des Verkäufers.</p>`; }
+{ const RTk=route; route=function(){ const h=new URLSearchParams((location.hash||'').slice(1)); const k=String(h.get('k')||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if(k.length===20){ scrollTo(0,0); buyerView(k); return; } return RTk.apply(this,arguments); }; }
 window.addEventListener('hashchange',route); route();
 if(/(^|[#&])bestellt=1/.test(location.hash)) thanksSheet();
-if(!new URLSearchParams((location.hash||'').slice(1)).get('c')) intro();
+if(!new URLSearchParams((location.hash||'').slice(1)).get('c')&&!new URLSearchParams((location.hash||'').slice(1)).get('k')) intro();
 try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); }catch(e){}
 </script>
 </body>

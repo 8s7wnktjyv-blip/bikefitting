@@ -5,15 +5,16 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.137** (APP_VER 2026-11-21.137), Service-Worker-Cache `fyf-app-v1-p68`, Datenbank-Stand **28** in `alles.sql` (eingespielt: 27 – Update auf 28 offen).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.138** (APP_VER 2026-11-21.138), Service-Worker-Cache `fyf-app-v1-p69`, Datenbank-Stand **29** in `alles.sql` (eingespielt: 28 – Update auf 29 offen).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
-- Browser-Tests: `sh tests/e2e/run.sh` (16 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
+- Browser-Tests: `sh tests/e2e/run.sh` (17 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
 - Geplanter Task „FYF: Bauschritt (2× täglich)“ läuft im festen Chat (Archiv mit Schreibrecht), Mo–Sa 04:23 und 11:23 Uhr.
 
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.138 (21.11.) | Käufer-Link auf Zeit (Punkt 11, Freigabe 21.11.): Pass → Verkaufen → „Link für Käufer (14 Tage)“ (braucht Besitzer-Code). Käufer sieht nur Werkstatt-Einträge, Diebstahlstatus, Eckdaten – keine Belege, Preise, eigenen Einträge, Besitzerdaten. Pass bleibt wie eingestellt. Neuer Link macht den alten ungültig, Zurückziehen jederzeit. Server `stand29.sql` (neue Tabelle `pass_buyer_links`). Tests `stand29_test.sql`, `t138.js`. |
 | v.137 (21.11.) | Datenübernahme (Punkt 13): Import aus altem System (Kunden mit Rad, Artikel; Spalten zuordnen, Vorschau, Doppelte erkennen, bis 5000 Zeilen) gab es schon unter Mehr → Import & Export. Neu: automatische Sicherung vor jedem Import und „Import rückgängig machen“ direkt danach. Test `t137.js`. |
 | v.136 (21.11.) | Hol- und Bringservice (Punkt 12): im Werkstattauftrag Abholen/Zurückbringen mit Datum, Zeitfenster, Adresse (aus der Kundenakte vorbelegt) und Hinweis; Werkstatt → „Hol- & Bringservice“ (Zähler für heute): Tagesliste nach Zeitfenster mit Karte (Google Maps-Link), Anrufen, Erledigt, Tag wechseln, Drucken. Nur lokal im Laden-Stand, kein neuer Dienst. Test `t136.js`. |
 | v.135 (21.11.) | Termin im Pass (Punkt 10): Läden veröffentlichen freie Zeiten schon (Software → Kalender → freie Zeiten online), der Finder zeigte sie. Neu: bei fälliger Wartung zeigt der Pass die nächsten 3 freien Termine des eigenen Ladens; Tippen öffnet die Anfrage mit vorausgewähltem Termin; vergebener Termin → Hinweis. Der Laden bestätigt wie bisher (keine automatische Reservierung – das wäre ein Datenmodell-Umbau). Test `t135.js`. |
@@ -50,17 +51,15 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 8. ✅ **Ersatzrad anfragen** (fertig v.133) im Pass während der Reparatur (Leihräder der Software).
 9. ✅ **Bestellvorschlag bei Mindestbestand** (fertig v.134) je Lieferant (Software).
 10. ✅ **Termin direkt im Pass buchen** (fertig v.135, Bestätigung durch den Laden): freie Werkstatt-Termine des Ladens sehen und buchen (Auslastung aus der Software).
-11. ◐ **Geprüfte Historie für Käufer** (geprüft 21.11.: Historie mit Kennzeichnung, Kauf-Check, Kaufvertrag gibt es schon; zeitlich begrenzter Käufer-Link als Plan `docs/KAEUFER-LINK-PLAN.md`, wartet auf Freigabe): Käufer scannt QR und sieht die werkstattbestätigte Historie (ohne Preise/Belege, nur mit Freigabe des Besitzers).
+11. ✅ **Geprüfte Historie für Käufer** (fertig v.138 mit Käufer-Link auf Zeit): Käufer scannt QR und sieht die werkstattbestätigte Historie (ohne Preise/Belege, nur mit Freigabe des Besitzers).
 12. ✅ **Hol- und Bringservice** (fertig v.136) (Software): Abholtermine, Tagesliste mit Adressen.
 13. ✅ **Datenübernahme aus Altsystem** (fertig v.137): Kunden und Räder als CSV mit Vorschau und Prüfung.
-14. ◐ **Pass auf Englisch** (Plan `docs/PASS-ENGLISCH-PLAN.md`, wartet auf „Englisch: Stufe 1 bauen“): größer – erst Plan in `docs/`, dann bauen.
+14. **Pass auf Englisch** (Plan `docs/PASS-ENGLISCH-PLAN.md`, alle Stufen freigegeben 21.11.): größer – erst Plan in `docs/`, dann bauen.
 Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Preise, nichts entfernen.
 
 ## Wartet auf Dominik
 
-- Freigabe Englisch (`docs/PASS-ENGLISCH-PLAN.md`): „Englisch: Stufe 1 bauen“.
-- Freigabe Käufer-Link auf Zeit (`docs/KAEUFER-LINK-PLAN.md`): „Käufer-Link: ja/nein“.
-- Datenbank-Update auf Stand 28 einspielen (Auftragsstatus „Wartet auf Teile“ im Pass): GitHub → Actions → „Datenbank aktualisieren“ → Run workflow.
+- Datenbank-Update auf Stand 29 einspielen (Käufer-Link): GitHub → Actions → „Datenbank aktualisieren“ → Run workflow.
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
 - Datenschutz: noch offen sind Vertrag zur Auftragsverarbeitung mit Supabase, Mailversand-Dienst und Speicherort der Sicherung; danach rechtlich prüfen lassen.
 - Test auf echtem iPhone/Android.
@@ -78,4 +77,4 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
-Ohne neue Freigabe: Punkt 1 (Fehler/Datensicherheit) – Rundgang mit Eingaben in der Pass-App (Service eintragen, Beleg, Übergabe an neuen Besitzer) und Browser-Test dazu. Mit Freigabe: Käufer-Link bzw. Englisch Stufe 1.
+Punkt 14: Pass auf Englisch, Stufe 1 (Plan `docs/PASS-ENGLISCH-PLAN.md`).
