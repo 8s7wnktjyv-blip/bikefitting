@@ -53,11 +53,12 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 11. ◐ **Geprüfte Historie für Käufer** (geprüft 21.11.: Historie mit Kennzeichnung, Kauf-Check, Kaufvertrag gibt es schon; zeitlich begrenzter Käufer-Link als Plan `docs/KAEUFER-LINK-PLAN.md`, wartet auf Freigabe): Käufer scannt QR und sieht die werkstattbestätigte Historie (ohne Preise/Belege, nur mit Freigabe des Besitzers).
 12. ✅ **Hol- und Bringservice** (fertig v.136) (Software): Abholtermine, Tagesliste mit Adressen.
 13. ✅ **Datenübernahme aus Altsystem** (fertig v.137): Kunden und Räder als CSV mit Vorschau und Prüfung.
-14. **Pass auf Englisch**: größer – erst Plan in `docs/`, dann bauen.
+14. ◐ **Pass auf Englisch** (Plan `docs/PASS-ENGLISCH-PLAN.md`, wartet auf „Englisch: Stufe 1 bauen“): größer – erst Plan in `docs/`, dann bauen.
 Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Preise, nichts entfernen.
 
 ## Wartet auf Dominik
 
+- Freigabe Englisch (`docs/PASS-ENGLISCH-PLAN.md`): „Englisch: Stufe 1 bauen“.
 - Freigabe Käufer-Link auf Zeit (`docs/KAEUFER-LINK-PLAN.md`): „Käufer-Link: ja/nein“.
 - Datenbank-Update auf Stand 28 einspielen (Auftragsstatus „Wartet auf Teile“ im Pass): GitHub → Actions → „Datenbank aktualisieren“ → Run workflow.
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
@@ -77,4 +78,4 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
-Punkt 14: Pass auf Englisch – zuerst Plan in `docs/` (Umfang, Vorgehen), dann bauen.
+Ohne neue Freigabe: Punkt 1 (Fehler/Datensicherheit) – Rundgang mit Eingaben in der Pass-App (Service eintragen, Beleg, Übergabe an neuen Besitzer) und Browser-Test dazu. Mit Freigabe: Käufer-Link bzw. Englisch Stufe 1.
