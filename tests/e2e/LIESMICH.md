@@ -10,5 +10,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t128.js` – Rollen Werkstattleitung, Verkauf, Filialleitung, Buchhaltung: Auswahl ab DB-Stand 26, Server-Filter je Rolle, nichts geht verloren
 - `t129.js` – Kündigung: Plattform-Admin schließt Laden, Ex-Mitglied sieht „Zugang beendet“ und kann Daten sichern, Wieder öffnen
 - `t130.js` – Werkstatt-Tafel: Spalten, Weiter, Teile sind da, Auftrag öffnen, Zurück (iPhone und großer Bildschirm)
+- `t131.js` – Saison-Check: Liste nur mit Einwilligung, Nachricht, Erledigt, CSV; Pass-Knopf zum eigenen Laden; Finder übernimmt fällige Punkte
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
