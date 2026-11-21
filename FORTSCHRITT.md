@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.129** (APP_VER 2026-11-21.129), Service-Worker-Cache `fyf-app-v1-p60`, Datenbank-Stand **27** in `docs/supabase/alles.sql` (eingespielt: 26 – Update auf 27 offen).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.129** (APP_VER 2026-11-21.129), Service-Worker-Cache `fyf-app-v1-p60`, Datenbank-Stand **27** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (9 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -24,7 +24,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 | bereits vorhanden | Marken-/Modellauswahl in Händlersoftware und Pass |
 
 ### Erledigt durch Dominik (21.11.)
-- Datenbank auf Stand 26 eingespielt (neue Rollen live); Kündigungs-Plan freigegeben.
+- Datenbank auf Stand 26 und 27 eingespielt (Rollen und Kündigung live); Kündigungs-Plan und neue Funktionen 5–14 freigegeben.
 - Datenbank auf Stand 25 eingespielt (Lauf erfolgreich, 14:46 Uhr).
 - Impressum vollständig; Verantwortlicher im Datenschutz eingetragen (USt-IdNr. keine angegeben).
 
@@ -35,9 +35,21 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 3. Kündigung eines Ladens: fertig (v.129, Stand 27), siehe `docs/KUENDIGUNG-PLAN.md`.
 4. Händlerfinder mit Werkstatt-Bewertungen: fertig (v.124); Feinschliff nach Rückmeldung.
 
+### Neue Funktionen (alle freigegeben von Dominik am 21.11.2026, in dieser Reihenfolge bauen)
+5. **Werkstatt-Tafel** (Software): Großansicht für einen Bildschirm in der Werkstatt, Spalten angenommen / in Arbeit / wartet auf Teile / abholbereit, Antippen schiebt weiter.
+6. **Saison-Check** (Pass + Software): Pass zeigt „Service fällig – beim Laden anfragen“ (ein Tippen); Software: Liste der Kunden mit fälligem Service, Laden verschickt selbst (FYF versendet nichts).
+7. **Auftragsstatus im Pass** („in Arbeit“, „abholbereit“) automatisch aus dem Werkstattauftrag (Status-Link gibt es schon).
+8. **Ersatzrad anfragen** im Pass während der Reparatur (Leihräder der Software).
+9. **Bestellvorschlag bei Mindestbestand** je Lieferant (Software).
+10. **Termin direkt im Pass buchen**: freie Werkstatt-Termine des Ladens sehen und buchen (Auslastung aus der Software).
+11. **Geprüfte Historie für Käufer**: Käufer scannt QR und sieht die werkstattbestätigte Historie (ohne Preise/Belege, nur mit Freigabe des Besitzers).
+12. **Hol- und Bringservice** (Software): Abholtermine, Tagesliste mit Adressen.
+13. **Datenübernahme aus Altsystem**: Kunden und Räder als CSV mit Vorschau und Prüfung.
+14. **Pass auf Englisch**: größer – erst Plan in `docs/`, dann bauen.
+Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Preise, nichts entfernen.
+
 ## Wartet auf Dominik
 
-- Datenbank-Update auf Stand 27 einspielen (Kündigung): GitHub → Actions → „Datenbank aktualisieren“ → Run workflow.
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
 - Datenschutz: noch offen sind Vertrag zur Auftragsverarbeitung mit Supabase, Mailversand-Dienst und Speicherort der Sicherung; danach rechtlich prüfen lassen.
 - Test auf echtem iPhone/Android.
@@ -55,4 +67,4 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Nächster Schritt
 
-Pass-App – Abläufe mit Eingaben prüfen (Service eintragen, Beleg, Übergabe an neuen Besitzer) und mit Browser-Test absichern.
+Punkt 5: Werkstatt-Tafel.
