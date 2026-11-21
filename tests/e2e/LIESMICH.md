@@ -13,5 +13,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t131.js` – Saison-Check: Liste nur mit Einwilligung, Nachricht, Erledigt, CSV; Pass-Knopf zum eigenen Laden; Finder übernimmt fällige Punkte
 - `t133.js` – Ersatzrad: Pass-Knopf nur während der Reparatur beim eigenen Laden, Finder-Text, Hinweis mit freien Leihrädern in der Software
 - `t134.js` – Bestellvorschlag zieht offene Bestellungen ab, keine Doppelbestellung, Teillieferung
+- `t135.js` – Termin im Pass: freie Termine des eigenen Ladens bei fälliger Wartung, Finder wählt Termin vor, Hinweis wenn vergeben
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.

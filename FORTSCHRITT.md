@@ -5,15 +5,16 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.134** (APP_VER 2026-11-21.134), Service-Worker-Cache `fyf-app-v1-p65`, Datenbank-Stand **28** in `alles.sql` (eingespielt: 27 – Update auf 28 offen).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.135** (APP_VER 2026-11-21.135), Service-Worker-Cache `fyf-app-v1-p66`, Datenbank-Stand **28** in `alles.sql` (eingespielt: 27 – Update auf 28 offen).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
-- Browser-Tests: `sh tests/e2e/run.sh` (13 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
+- Browser-Tests: `sh tests/e2e/run.sh` (14 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
 - Geplanter Task „FYF: Bauschritt (2× täglich)“ läuft im festen Chat (Archiv mit Schreibrecht), Mo–Sa 04:23 und 11:23 Uhr.
 
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.135 (21.11.) | Termin im Pass (Punkt 10): Läden veröffentlichen freie Zeiten schon (Software → Kalender → freie Zeiten online), der Finder zeigte sie. Neu: bei fälliger Wartung zeigt der Pass die nächsten 3 freien Termine des eigenen Ladens; Tippen öffnet die Anfrage mit vorausgewähltem Termin; vergebener Termin → Hinweis. Der Laden bestätigt wie bisher (keine automatische Reservierung – das wäre ein Datenmodell-Umbau). Test `t135.js`. |
 | v.134 (21.11.) | Bestellvorschlag (Punkt 9): Vorschlag je Lieferant und „Aus Bestellvorschlag anlegen“ gab es schon. Fehler behoben: bereits bestellte, noch nicht gelieferte Mengen (auch Teillieferungen) werden abgezogen – keine Doppelbestellungen mehr; Hinweis „schon bestellt“. Test `t134.js`. |
 | v.133 (21.11.) | Ersatzrad anfragen (Punkt 8): Pass – solange das Rad beim eigenen Laden in Arbeit ist (Besitzer-Ansicht), Knopf „Ersatzrad für die Zeit anfragen“ → Finder mit fertigem Text; Software – Anfrage zeigt „Ersatzrad gewünscht“ mit freien Leihrädern. Test `t133.js`. |
 | v.132 (21.11.) | Auftragsstatus im Pass (Punkt 7): Befund – der Besitzer sieht laufende Aufträge schon seit Stand 18 (Server spiegelt Aufträge, `pass_get_owner`, nur mit Besitzer-Code, ohne Preise). Lücke behoben (`stand28.sql`): „Wartet auf Teile“ kommt jetzt beim Besitzer an. Bewusst NICHT in den öffentlichen Pass geschrieben (sonst sähe jeder mit Pass-Code den Status). Test `stand28_test.sql`. |
@@ -46,7 +47,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 7. ✅ **Auftragsstatus im Pass** (fertig v.132) („in Arbeit“, „abholbereit“) automatisch aus dem Werkstattauftrag (Status-Link gibt es schon).
 8. ✅ **Ersatzrad anfragen** (fertig v.133) im Pass während der Reparatur (Leihräder der Software).
 9. ✅ **Bestellvorschlag bei Mindestbestand** (fertig v.134) je Lieferant (Software).
-10. **Termin direkt im Pass buchen**: freie Werkstatt-Termine des Ladens sehen und buchen (Auslastung aus der Software).
+10. ✅ **Termin direkt im Pass buchen** (fertig v.135, Bestätigung durch den Laden): freie Werkstatt-Termine des Ladens sehen und buchen (Auslastung aus der Software).
 11. **Geprüfte Historie für Käufer**: Käufer scannt QR und sieht die werkstattbestätigte Historie (ohne Preise/Belege, nur mit Freigabe des Besitzers).
 12. **Hol- und Bringservice** (Software): Abholtermine, Tagesliste mit Adressen.
 13. **Datenübernahme aus Altsystem**: Kunden und Räder als CSV mit Vorschau und Prüfung.
@@ -73,4 +74,4 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
-Punkt 10: Termin direkt im Pass buchen.
+Punkt 11: Geprüfte Historie für Käufer.
