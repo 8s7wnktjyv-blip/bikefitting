@@ -39,5 +39,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t162.js` – Pass: Umbau planen mit Kompatibilitäts-Hinweisen (Fachzahl, Marke)
 - `t163.js` – Pass: ein Eingang für Schäden/Unfälle, Unfall-Eintrag nur als Fehleintrag markierbar
 - `t164.js` – Pass: Foto je Bauteil (gespeichert als Teilfoto-Beleg, Vorschau)
+- `t167.js` – Software: Status-Chips der Werkstatt-Liste je Status eigene Farbe
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.

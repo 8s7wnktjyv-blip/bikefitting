@@ -833,6 +833,13 @@ input:focus,select:focus,textarea:focus{outline:none!important;border-color:var(
 .glance > .gl .gv{margin-left:auto}
 :root[data-theme="dark"] .tile.main{border-color:#1f2a36!important}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tile.main{border-color:#1f2a36!important;background:#1f2a36!important}}
+.chip.c-ok{color:var(--ok)!important;background:var(--ok-soft)!important;border-color:color-mix(in srgb,var(--ok) 35%,transparent)}
+.chip.c-warn{color:var(--warn)!important;background:var(--warn-soft)!important;border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+.chip.c-bad{color:var(--bad)!important;background:var(--bad-soft)!important;border-color:color-mix(in srgb,var(--bad) 35%,transparent)}
+.chip.c-info{color:var(--info)!important;background:var(--info-soft)!important;border-color:color-mix(in srgb,var(--info) 35%,transparent)}
+.chip.c-acc{color:var(--accent-strong)!important;background:var(--accent-soft)!important;border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+.chip.c-work{color:#6d28d9!important;background:rgba(109,40,217,.08)!important;border-color:rgba(109,40,217,.35)}
+:root[data-theme="dark"] .chip.c-work{color:#b79cf5!important}
 </style>
 <!--praez-end-->
 </head>
@@ -2054,7 +2061,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.166';
+const APP_VER='2026-11-22.167';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2485,7 +2492,7 @@ function panel(title,body,right,cls){ return `<section class="panel ${cls||''}">
 function panelFlush(title,body,right){ return `<section class="panel">${title?`<div class="panel-h"><h3>${title}</h3>${right?`<div class="row">${right}</div>`:''}</div>`:''}${body}</section>`; }
 const sessChip = s => { const m={'abgeschlossen':'c-ok','in Arbeit':'c-acc','geplant':'c-info','abgesagt':'c-bad','eingetroffen':'c-warn'}; return `<span class="chip ${m[s]||''}">${esc(s)}</span>`; };
 function woIsDone(s){ return s==='Übergeben'||s==='Storniert'; }
-const woChip = s => { const m={'Angenommen':'c-info','Kostenvoranschlag':'c-info','Freigabe ausstehend':'c-warn','In Arbeit':'c-acc','Abholbereit':'c-ok','Übergeben':'','Storniert':'c-bad'}; return `<span class="chip ${m[s]||''}">${esc(s)}</span>`; };
+const woChip = s => { const m={'Angenommen':'c-info','Kostenvoranschlag':'c-info','Freigabe ausstehend':'c-warn','In Arbeit':'c-work','Abholbereit':'c-ok','Übergeben':'','Storniert':'c-bad'}; return `<span class="chip ${m[s]||''}">${esc(s)}</span>`; };
 const srcChip = src => { const m={'vom Hersteller':'c-info','gemessen':'c-ok','manuell eingegeben':'c-info','berechnet':'','geschätzt':'c-warn'}; return `<span class="chip nodot ${m[src]||''}">${esc(src)}</span>`; };
 const opts = (arr,sel) => arr.map(a=>{const [v,l]=Array.isArray(a)?a:[a,a]; return `<option value="${esc(v)}" ${String(v)===String(sel)?'selected':''}>${esc(l)}</option>`;}).join('');
 
