@@ -2050,7 +2050,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.146';
+const APP_VER='2026-11-22.147';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -9502,6 +9502,12 @@ ACT.tgNew=function(el){ apptDrawer(null,{date:el.dataset.d,start:el.dataset.s});
 #drawerBody .form{background:var(--surface-2);border:1px solid var(--line);border-radius:18px;padding:16px}
 #drawerBody .form button[type=submit]{min-height:48px;padding:0 22px;font-size:15px}
 `; document.head.appendChild(st); }
+/* v.147 Dashboard je Ladentyp: Standard-Reihenfolge passend zum Laden, solange der Nutzer nichts selbst angepasst hat */
+const DASH_PRESET={studio:[['hero',1],['kpis',1],['today',1],['att',1],['last',1],['chart',1],['tiles',1],['recent',1],['activity',1]],
+ werkstatt:[['hero',1],['att',1],['today',1],['kpis',1],['tiles',1],['recent',1],['activity',1],['last',0],['chart',0]],
+ haendler:[['hero',1],['today',1],['att',1],['kpis',1],['tiles',1],['recent',1],['last',1],['activity',1],['chart',0]],
+ ebike:[['hero',1],['today',1],['att',1],['kpis',1],['tiles',1],['recent',1],['activity',1],['last',0],['chart',0]]};
+{ const DO=dashOrder; dashOrder=function(){ const st=S.settings||{}; if(!Array.isArray(st.dash)&&DASH_PRESET[st.shopType]){ const known=DASH_W.map(w=>w[0]); const L=DASH_PRESET[st.shopType].filter(([id])=>known.includes(id)).map(([id,on])=>({id,on:!!on})); known.forEach(id=>{ if(!L.some(x=>x.id===id)) L.push({id,on:true}); }); return L; } return DO.apply(this,arguments); }; }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();

@@ -60,7 +60,7 @@ Je nach Ladentyp (vorhandene Einstellung) ändert sich die Reihenfolge:
 - **Werkstatt:** Tafel-Kurzansicht, Teile in Wartestellung, Abholungen.
 - **Händler:** Übergaben, Probefahrten, Angebote.
 
-*Nächster Schritt:* Zuordnung je Ladentyp fest hinterlegen.
+*Umgesetzt v.147.*
 
 ---
 
@@ -107,7 +107,7 @@ Empfehlungslogik: bleibt regelbasiert, mit Begründung und Zahl. Wir sind keine 
    - Umschaltknöpfe (Woche/Liste/Monat) in Graphit statt Orange
    - Einheiten fest im Feld
    - Seitenfenster mit fester Fußleiste
-3. Dashboard je Ladentyp
+3. ✅ Dashboard je Ladentyp (v.147)
 4. Werkstatt-Tafel: Ziehen und Ablegen, Tablet-Querformat
 
 **Größere Schritte (mehrere Läufe):**

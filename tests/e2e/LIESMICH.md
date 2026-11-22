@@ -22,5 +22,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t142.js` – Pass: Wert-Schätzung und Diebstahlschutz-Check oben bei „Mein Rad“, Preis geht in „Verkaufen“
 - `t144.js` – Pass: Zustand der Teile (Ampel), Schäden & Unfälle (nicht löschbar, Status-Verlauf), Tracker-Link, Umbau planen (Kosten/Gewicht)
 - `t145.js` – Pass: Zustandsbericht-Urteil (Wartungsstau, Risiko, fast verkaufsbereit) und Kopf in „Verkaufen“
+- `t147.js` – Software: Dashboard-Reihenfolge je Ladentyp (Werkstatt: Aufmerksamkeit zuerst), eigene Anpassung hat Vorrang
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.

@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.146** (APP_VER 2026-11-22.146), Service-Worker-Cache `fyf-app-v1-p77`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.147** (APP_VER 2026-11-22.147), Service-Worker-Cache `fyf-app-v1-p78`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.147 (22.11.) | Software: Dashboard-Reihenfolge je Ladentyp (Studio: Kennzahlen/Heute/Fittings; Werkstatt: Aufmerksamkeit/Heute, Fitting-Statistik aus; Händler/E-Bike: Heute/Aufmerksamkeit). Gilt nur, solange nicht selbst angepasst; „Standard“ stellt den Ladentyp-Standard wieder her. Test t147. |
 | v.146 (22.11.) | Software-Feinschliff (Konzept Roadmap 2): Umschalter und Schnellauswahl in Graphit statt Orange (Orange nur Hauptaktion), Seitenfenster mit fester Speichern-Leiste unten, ruhigere Abschnittstitel. |
 | v.145 (22.11.) | Pass: Zustandsbericht mit Urteil „Verkaufsbereit / Fast verkaufsbereit / Wartungsstau / Risiko bei Verkauf“; neue Faktoren Verschleißteile (km), eigene Schadens-Chronik, Kaufbeleg; Urteil + To-dos oben in „Verkaufen“. Test t145. |
 | v.144 (22.11.) | Pass (Wunschliste 22.11.): „Zustand der Teile“ als Kachel + Seite „Was ist verbaut?“ (Stückliste nach Gruppen, Verschleiß-Ampel aus km seit Einbau, Richtwerte); „Schäden & Unfälle“ (Foto zu Belegen, Status offen/versichert/repariert mit Verlauf, nicht löschbar, nur „Fehleintrag“); „Tracker“ (Typ, Versteck nur lokal, Link Apple/Samsung-Suche); „Umbau planen“ (Kosten- und Gewichtssumme, „Eingebaut“ → Ausstattung). Konzepte: `docs/SOFTWARE-DESIGN-KONZEPT.md`, `docs/STRATEGIE.md`, `docs/PASS-WERKSTATT-FREIGABE-PLAN.md` (wartet auf Freigabe). Test t144. |
@@ -88,7 +89,7 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
-1. Software nach `docs/SOFTWARE-DESIGN-KONZEPT.md`, Roadmap-Punkte 3–9 (Dashboard je Ladentyp, Tafel Tablet, Fitting-Ablauf mit Fortschritt und Live-Skizze, Sitzungsvergleich, Kundenakte-Zeitleiste, PDF neu).
+1. Software nach `docs/SOFTWARE-DESIGN-KONZEPT.md`, Roadmap-Punkte 4–9 (Tafel Tablet, Fitting-Ablauf mit Fortschritt und Live-Skizze, Sitzungsvergleich, Kundenakte-Zeitleiste, PDF neu).
 2. Pass: Plan-Schritte 4/5/7 (Ziele & Abzeichen, Rad-Karte teilen, Tour-Check), Verkaufs-/Übergabe-Flow weiter (Übergabe-Checkliste), PDF „Unterlagen für die Versicherung“, Intervalle je Teil/Hersteller, nach Werkstattbesuch Intervalle zurücksetzen vorschlagen.
 3. Wartet auf Freigabe: Werkstatt-Freigabe 7 Tage + Schadens-Einträge von Läden (`docs/PASS-WERKSTATT-FREIGABE-PLAN.md`), Entscheidungen in `docs/STRATEGIE.md` (Werbung, kein Endkunden-Abo, Station).
 4. Danach Englisch Stufe 2/3.
