@@ -3,6 +3,7 @@
    Rechtstexte (Datenschutz, Impressum, Kaufvertrag) bleiben bewusst Deutsch. */
 (function(){
 const D={
+"Gebrauchtes Rad gefunden?":"Found a used bike?","In 10 Sekunden prüfen – vor dem Kauf.":"Check it in 10 seconds \u2013 before you buy.","Diebstahl-Abgleich":"Theft check","Ist das Rad in FYF als gestohlen gemeldet?":"Is the bike reported stolen in FYF?","Service und Reparaturen, von Werkstätten bestätigt":"Service and repairs confirmed by workshops","Kilometer-Prüfung":"Mileage check","Passen die Kilometerstände zusammen?":"Do the mileage readings add up?","Akku & Besitzer":"Battery & owners","Akku-Zustand (E-Bike) und Anzahl Vorbesitzer":"Battery health (e-bike) and number of previous owners",
 "Pass":"Pass","Schutz":"Protection","Einträge":"entries","bestätigt":"verified","Besitzer":"owner","Zustandsbericht – Details":"Condition report \u2013 details","Pass vervollständigen":"Complete the pass","vollständig":"complete",
 "＋ Foto":"＋ Photo","Foto gespeichert":"Photo saved",
 "Unfall oder Sturz mit Teile-Liste":"Crash or accident with parts list","Unfälle öffnen":"Open accidents","+ Unfall / Sturz ausführlich erfassen":"+ Record crash / accident in detail","+ Sonstigen Schaden kurz eintragen":"+ Quickly add other damage",

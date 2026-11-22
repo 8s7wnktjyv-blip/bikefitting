@@ -2448,6 +2448,19 @@ details.more[data-tmore]>summary{display:flex;align-items:center;gap:8px}details
 { const st=document.createElement('style'); st.textContent=`details.more>summary::after{content:"›"!important;font-size:24px!important;line-height:1;color:var(--muted);transition:transform .2s;display:inline-block}details.more[open]>summary::after{content:"›"!important;transform:rotate(90deg)}
 details.more:not(.ck-det)>summary{font-size:16px}`; document.head.appendChild(st); }
 
+// ---------- v.177 „Rad prüfen“: Scan-Bereich als dunkle Hero-Karte, darunter was die Prüfung zeigt ----------
+{ const AF=askForm; askForm=function(err){ const r=AF.apply(this,arguments); try{ if(!/pruefen/.test(location.hash)) return r; const sb=document.getElementById('scanb'); if(!sb||document.querySelector('.pc-hero')) return r;
+  const hero=document.createElement('div'); hero.className='pc-hero'; hero.innerHTML=`<div class="pc-ic"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg></div><b>Gebrauchtes Rad gefunden?</b><span>In 10 Sekunden prüfen – vor dem Kauf.</span>`;
+  sb.parentNode.insertBefore(hero,sb); hero.appendChild(sb);
+  const f=document.getElementById('f'); if(f){ const g=document.createElement('div'); g.className='pc-feat'; const I=(p)=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+   g.innerHTML=[['#dc2626',I('<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>'),'Diebstahl-Abgleich','Ist das Rad in FYF als gestohlen gemeldet?'],['#16a34a',I('<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>'),'Werkstatt-Nachweise','Service und Reparaturen, von Werkstätten bestätigt'],['#2563eb',I('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>'),'Kilometer-Prüfung','Passen die Kilometerstände zusammen?'],['#7c3aed',I('<rect x="7" y="4" width="10" height="17" rx="2"/><path d="M10 2h4"/>'),'Akku & Besitzer','Akku-Zustand (E-Bike) und Anzahl Vorbesitzer']].map(([c,i,t,d])=>`<div class="pc-f"><span class="pc-fi" style="background:${c}">${i}</span><b>${t}</b><span>${d}</span></div>`).join('');
+   f.insertAdjacentElement('afterend',g); } }catch(e){} return r; }; }
+{ const st=document.createElement('style'); st.textContent=`.pc-hero{background:linear-gradient(160deg,#111827 0%,#1e2a38 100%);color:#fff;border-radius:28px;padding:22px 18px 18px;margin:0 0 6px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;box-shadow:0 20px 40px -24px rgba(15,20,25,.6)}
+.pc-ic{width:72px;height:72px;border-radius:22px;background:rgba(255,255,255,.1);display:grid;place-items:center;margin-bottom:8px}.pc-hero b{font-size:20px;letter-spacing:-.02em}.pc-hero>span{color:rgba(255,255,255,.7);font-size:14px;margin-bottom:12px}
+.pc-hero #scanb{background:#e8620f!important;color:#fff!important;border:0!important;width:100%}
+.pc-feat{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 6px}.pc-f{background:var(--card);border-radius:20px;padding:14px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:4px}.pc-f b{font-size:14.5px;letter-spacing:-.01em;margin-top:6px}.pc-f>span:last-child{font-size:12.5px;color:var(--muted);line-height:1.35}
+.pc-fi{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;color:#fff}`; document.head.appendChild(st); }
+
 window.addEventListener('hashchange',route); route();
 if(/(^|[#&])bestellt=1/.test(location.hash)) thanksSheet();
 if(!new URLSearchParams((location.hash||'').slice(1)).get('c')&&!new URLSearchParams((location.hash||'').slice(1)).get('k')) intro();
