@@ -820,6 +820,15 @@ input:focus,select:focus,textarea:focus{outline:none!important;border-color:var(
 .side .navbtn.small{padding-left:40px!important;color:var(--side-mute)!important}
 .side .navbtn.small svg{display:none}
 .side .navbtn.small[aria-current="page"]{color:#fff!important}
+.btn.primary[aria-pressed]{background:var(--fg)!important;border-color:var(--fg)!important;color:var(--surface)!important}
+.btn[aria-pressed="false"]{background:var(--surface)}
+/* Seitenfenster: Speichern-Leiste bleibt unten sichtbar */
+.drawer-b > .row:last-child:has(.btn.primary),.drawer-b > form > .row:last-child:has(.btn.primary){position:sticky;bottom:-18px;z-index:3;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);margin:0 -18px -18px;padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);justify-content:flex-end}
+.drawer-h h2{font-size:18px;letter-spacing:-.01em}
+.drawer-b .sec-h,.drawer-b h3{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.qp-b.on:not([style*="--qc"]){background:var(--fg)!important;border-color:var(--fg)!important;color:var(--surface)!important;box-shadow:none!important}
+.qp-b{border-radius:8px!important}
+.fsec{color:var(--muted)!important}
 </style>
 <!--praez-end-->
 </head>
@@ -2041,7 +2050,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.145';
+const APP_VER='2026-11-22.146';
 let loadIssue = null;
 function load(){
   let raw=null;

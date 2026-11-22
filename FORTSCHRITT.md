@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.145** (APP_VER 2026-11-22.145), Service-Worker-Cache `fyf-app-v1-p76`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.146** (APP_VER 2026-11-22.146), Service-Worker-Cache `fyf-app-v1-p77`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.146 (22.11.) | Software-Feinschliff (Konzept Roadmap 2): Umschalter und Schnellauswahl in Graphit statt Orange (Orange nur Hauptaktion), Seitenfenster mit fester Speichern-Leiste unten, ruhigere Abschnittstitel. |
 | v.145 (22.11.) | Pass: Zustandsbericht mit Urteil „Verkaufsbereit / Fast verkaufsbereit / Wartungsstau / Risiko bei Verkauf“; neue Faktoren Verschleißteile (km), eigene Schadens-Chronik, Kaufbeleg; Urteil + To-dos oben in „Verkaufen“. Test t145. |
 | v.144 (22.11.) | Pass (Wunschliste 22.11.): „Zustand der Teile“ als Kachel + Seite „Was ist verbaut?“ (Stückliste nach Gruppen, Verschleiß-Ampel aus km seit Einbau, Richtwerte); „Schäden & Unfälle“ (Foto zu Belegen, Status offen/versichert/repariert mit Verlauf, nicht löschbar, nur „Fehleintrag“); „Tracker“ (Typ, Versteck nur lokal, Link Apple/Samsung-Suche); „Umbau planen“ (Kosten- und Gewichtssumme, „Eingebaut“ → Ausstattung). Konzepte: `docs/SOFTWARE-DESIGN-KONZEPT.md`, `docs/STRATEGIE.md`, `docs/PASS-WERKSTATT-FREIGABE-PLAN.md` (wartet auf Freigabe). Test t144. |
 | v.143 (22.11.) | Software: Design „Präzision“ (Wunsch 22.11.: weniger Pastell, technischer) – kühles Grau, Graphit-Seitenleiste mit Akzentbalken, Orange nur für Hauptaktionen, Blau für Messwerte/Fokus, ruhige Kacheln, Status als Rahmen-Chips, Tabellenköpfe, Dark Mode; Dashboard zeigt „Heute“ vor Einrichtung/Ladentyp. Alle Tests grün. |
@@ -87,7 +88,7 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
-1. Software nach `docs/SOFTWARE-DESIGN-KONZEPT.md`, Roadmap-Punkte 2–9 (Feinschliff, Dashboard je Ladentyp, Tafel Tablet, Fitting-Ablauf mit Fortschritt und Live-Skizze, Sitzungsvergleich, Kundenakte-Zeitleiste, PDF neu).
+1. Software nach `docs/SOFTWARE-DESIGN-KONZEPT.md`, Roadmap-Punkte 3–9 (Dashboard je Ladentyp, Tafel Tablet, Fitting-Ablauf mit Fortschritt und Live-Skizze, Sitzungsvergleich, Kundenakte-Zeitleiste, PDF neu).
 2. Pass: Plan-Schritte 4/5/7 (Ziele & Abzeichen, Rad-Karte teilen, Tour-Check), Verkaufs-/Übergabe-Flow weiter (Übergabe-Checkliste), PDF „Unterlagen für die Versicherung“, Intervalle je Teil/Hersteller, nach Werkstattbesuch Intervalle zurücksetzen vorschlagen.
 3. Wartet auf Freigabe: Werkstatt-Freigabe 7 Tage + Schadens-Einträge von Läden (`docs/PASS-WERKSTATT-FREIGABE-PLAN.md`), Entscheidungen in `docs/STRATEGIE.md` (Werbung, kein Endkunden-Abo, Station).
 4. Danach Englisch Stufe 2/3.
