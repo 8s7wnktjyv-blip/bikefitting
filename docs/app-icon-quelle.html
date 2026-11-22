@@ -1,0 +1,27 @@
+<!doctype html><html><body style="margin:0;background:#000">
+<svg id="ic" xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<defs>
+ <radialGradient id="bg" cx="50%" cy="28%" r="85%"><stop offset="0" stop-color="#1f2c3a"/><stop offset=".55" stop-color="#0d1218"/><stop offset="1" stop-color="#05070a"/></radialGradient>
+ <filter id="rough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G"/></filter>
+ <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .05 0"/></filter>
+ <filter id="glow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="1024" height="1024" fill="url(#bg)"/>
+<rect width="1024" height="1024" filter="url(#grain)"/>
+<g id="tag" transform="translate(512 520) rotate(-9) translate(-512 -520)" filter="url(#rough)" stroke="#fff" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".97">
+ <path d="M272 300 C 264 450 252 580 240 700" stroke-width="54"/>
+ <path d="M226 334 C 300 302 384 292 468 300 C 492 302 506 292 506 276" stroke-width="46"/>
+ <path d="M252 512 C 302 500 352 494 408 502" stroke-width="42"/>
+ <path d="M474 324 C 496 392 516 442 548 502" stroke-width="46"/>
+ <path d="M656 300 C 624 380 584 452 548 502 C 540 572 532 640 522 712" stroke-width="52"/>
+ <path d="M523 724 L 521 772" stroke-width="11"/><circle cx="521" cy="777" r="11" fill="#fff" stroke="none"/>
+ <path d="M738 304 C 731 450 719 580 708 692" stroke-width="54"/>
+ <path d="M700 322 C 772 298 852 290 934 300" stroke-width="46"/>
+ <path d="M724 502 C 772 492 820 488 872 494" stroke-width="42"/>
+ <path d="M168 840 C 380 806 640 796 900 778 C 934 776 954 764 966 748" stroke-width="20"/>
+ <path d="M241 712 L 238 790" stroke-width="12"/><circle cx="238" cy="796" r="12" fill="#fff" stroke="none"/>
+ <path d="M708 704 L 706 762" stroke-width="11"/><circle cx="706" cy="767" r="11" fill="#fff" stroke="none"/>
+ <path d="M930 306 L 928 368" stroke-width="10"/><circle cx="928" cy="373" r="10" fill="#fff" stroke="none"/>
+ <path d="M404 506 L 402 548" stroke-width="9"/><circle cx="402" cy="552" r="8" fill="#fff" stroke="none"/>
+</g>
+</svg></body></html>
