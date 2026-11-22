@@ -50,5 +50,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t186.js` – Pass: Klarheit (Räder zuerst, Sicherung einmal als Nächster Schritt, Konto/Erinnerungen als Zeilen)
 - `t187.js` – Pass: Zustands-Check mit 12 Fragen (Urteil, Reihenfolge der Arbeiten, Speichern), Einstieg im Kauf-Check, Fahrer-Etikett auf Garage-Karte
 - `t188.js` – Pass: Prüf-Ergebnis als Urteilskarte (fremdes Rad), Fahrer-Etikett und Foto-Knopf im Rad-Foto
+- `t189.js` – Pass: Ausweis-Angaben (nur lokal, im Anzeige-Blatt), Foto im Vollbild (öffnen, Doppeltippen-Zoom, Esc)
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
