@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.147** (APP_VER 2026-11-22.147), Service-Worker-Cache `fyf-app-v1-p78`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.148** (APP_VER 2026-11-22.148), Service-Worker-Cache `fyf-app-v1-p79`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.148 (22.11.) | Software: Verlauf & Vergleich zeigt oben eine überlagerte Seitenansicht (A gestrichelt, B blau; Verschiebung 5-fach vergrößert) aus Sattelhöhe, Versatz, Sattel–Lenker, Überhöhung plus Differenzen. Test t148. |
 | v.147 (22.11.) | Software: Dashboard-Reihenfolge je Ladentyp (Studio: Kennzahlen/Heute/Fittings; Werkstatt: Aufmerksamkeit/Heute, Fitting-Statistik aus; Händler/E-Bike: Heute/Aufmerksamkeit). Gilt nur, solange nicht selbst angepasst; „Standard“ stellt den Ladentyp-Standard wieder her. Test t147. |
 | v.146 (22.11.) | Software-Feinschliff (Konzept Roadmap 2): Umschalter und Schnellauswahl in Graphit statt Orange (Orange nur Hauptaktion), Seitenfenster mit fester Speichern-Leiste unten, ruhigere Abschnittstitel. |
 | v.145 (22.11.) | Pass: Zustandsbericht mit Urteil „Verkaufsbereit / Fast verkaufsbereit / Wartungsstau / Risiko bei Verkauf“; neue Faktoren Verschleißteile (km), eigene Schadens-Chronik, Kaufbeleg; Urteil + To-dos oben in „Verkaufen“. Test t145. |

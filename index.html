@@ -2050,7 +2050,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.147';
+const APP_VER='2026-11-22.148';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -9508,6 +9508,22 @@ const DASH_PRESET={studio:[['hero',1],['kpis',1],['today',1],['att',1],['last',1
  haendler:[['hero',1],['today',1],['att',1],['kpis',1],['tiles',1],['recent',1],['last',1],['activity',1],['chart',0]],
  ebike:[['hero',1],['today',1],['att',1],['kpis',1],['tiles',1],['recent',1],['activity',1],['last',0],['chart',0]]};
 { const DO=dashOrder; dashOrder=function(){ const st=S.settings||{}; if(!Array.isArray(st.dash)&&DASH_PRESET[st.shopType]){ const known=DASH_W.map(w=>w[0]); const L=DASH_PRESET[st.shopType].filter(([id])=>known.includes(id)).map(([id,on])=>({id,on:!!on})); known.forEach(id=>{ if(!L.some(x=>x.id===id)) L.push({id,on:true}); }); return L; } return DO.apply(this,arguments); }; }
+/* v.148 Sitzungsvergleich: überlagerte Seitenansicht (A gestrichelt grau, B blau) aus Sattelhöhe, Versatz, Sattel–Lenker und Überhöhung */
+function fitOverlaySvg(a,b,la,lb){ const n=v=>{ if(v&&typeof v==='object') v=v.value; const x=parseFloat(String(v??'').replace(',','.')); return isFinite(x)?x:null; };
+  const pt=e=>{ const h=n(e.saddleHeight), sb=n(e.saddleSetback)||0, r=n(e.reach), d=n(e.drop); if(h==null||r==null) return null; const sy=Math.sqrt(Math.max(0,h*h-sb*sb)); return {S:[-sb,-70+sy],H:[-sb+r,-70+sy-(d||0)]}; };
+  let A=pt(a), B=pt(b); if(!A&&!B) return ''; const K=5; if(A&&B) B={S:[A.S[0]+(B.S[0]-A.S[0])*K,A.S[1]+(B.S[1]-A.S[1])*K],H:[A.H[0]+(B.H[0]-A.H[0])*K,A.H[1]+(B.H[1]-A.H[1])*K]};
+  const X=x=>Math.round(300+x*0.3), Y=y=>Math.round(330-(y+340)*0.3);
+  const bike=`<line x1="40" y1="330" x2="620" y2="330" stroke="var(--line)" stroke-width="2"/><g stroke="var(--line)" stroke-width="2" fill="none"><circle cx="${X(-410)}" cy="${Y(0)}" r="102"/><circle cx="${X(590)}" cy="${Y(0)}" r="102"/><line x1="${X(-410)}" y1="${Y(0)}" x2="${X(0)}" y2="${Y(-70)}"/></g><circle cx="${X(0)}" cy="${Y(-70)}" r="6" fill="var(--faint)"/>`;
+  const draw=(P,col,dash)=>P?`<g stroke="${col}" stroke-width="3" fill="none" stroke-linecap="round" ${dash?'stroke-dasharray="7 6"':''}><line x1="${X(0)}" y1="${Y(-70)}" x2="${X(P.S[0])}" y2="${Y(P.S[1])}"/><line x1="${X(P.S[0])}" y1="${Y(P.S[1])}" x2="${X(P.H[0])}" y2="${Y(P.H[1])}"/><line x1="${X(P.S[0])-20}" y1="${Y(P.S[1])}" x2="${X(P.S[0])+26}" y2="${Y(P.S[1])}" stroke-width="6"/><line x1="${X(P.H[0])}" y1="${Y(P.H[1])}" x2="${X(P.H[0])-40}" y2="${Y(-70)+20}" stroke-width="2.5"/></g><circle cx="${X(P.H[0])}" cy="${Y(P.H[1])}" r="7" fill="${col}"/>`:'';
+  const dv=k=>{ const x=n(a[k]), y=n(b[k]); if(x==null||y==null) return '–'; const d=Math.round((y-x)*10)/10; return (d>0?'+':'')+String(d).replace('.',',')+' mm'; };
+  return `<div class="fov"><svg viewBox="0 0 660 345" role="img" aria-label="Seitenansicht Sitzposition A und B überlagert">${bike}${draw(A,'var(--faint)',1)}${draw(B,'var(--info)',0)}</svg>
+   <div class="fov-l"><div><span class="fov-k" style="border-top:3px dashed var(--faint)"></span>A · ${esc(la)}</div><div><span class="fov-k" style="border-top:3px solid var(--info)"></span>B · ${esc(lb)}</div>
+   <table class="fov-t"><tr><td>Sattelhöhe</td><td>${dv('saddleHeight')}</td></tr><tr><td>Sattelversatz</td><td>${dv('saddleSetback')}</td></tr><tr><td>Sattel–Lenker</td><td>${dv('reach')}</td></tr><tr><td>Überhöhung</td><td>${dv('drop')}</td></tr></table>
+   <p class="faint" style="font-size:12px;margin:8px 0 0">Schematisch. Verschiebungen 5-fach vergrößert, damit auch wenige Millimeter sichtbar werden.</p></div></div>`; }
+{ const VV=VIEWS.verlauf; VIEWS.verlauf=function(){ let h=VV.apply(this,arguments); try{ const A=sess(ui.cmpA), B=sess(ui.cmpB); if(A&&B){ const ov=fitOverlaySvg({...A.before,...A.after},{...B.before,...B.after},fmtDate(A.date)+' '+A.type,fmtDate(B.date)+' '+B.type); const i=h.indexOf('<div class="tw"><table>'); if(ov&&i>0) h=h.slice(0,i)+ov+h.slice(i); } }catch(e){} return h; }; }
+{ const st=document.createElement('style'); st.textContent=`.fov{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(220px,1fr);gap:16px;align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}.fov svg{width:100%;height:auto;display:block}
+.fov-l{font-size:13.5px;display:flex;flex-direction:column;gap:6px}.fov-k{display:inline-block;width:26px;margin-right:8px;vertical-align:middle}.fov-t{margin-top:6px;width:100%;border-collapse:collapse}.fov-t td{padding:5px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}.fov-t td:last-child{text-align:right;font-family:var(--f-mono);color:var(--info);font-weight:600}
+@media(max-width:760px){.fov{grid-template-columns:1fr}}`; document.head.appendChild(st); }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();
