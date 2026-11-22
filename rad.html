@@ -2000,6 +2000,59 @@ function qaKind(b){ const t=(b.textContent||'').toLowerCase(); return b.id==='qr
 .qa-i{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:#fff;background:#1f2937}
 .qa-qr{background:#111827}.qa-nfc{background:#2563eb}.qa-svc{background:#e8620f}.qa-fit{background:#16a34a}.qa-sticker{background:#7c3aed}.qa-add{background:#111827}
 @media(prefers-color-scheme:dark){.actions.qa .btn{background:rgba(255,255,255,.06)}}`; document.head.appendChild(st); }
+// ---------- v.142 Rad auf einen Blick: Wert-Schätzung & Diebstahlschutz-Check (regelbasiert, nur auf dem Gerät) ----------
+const VAL_COND=[['Neuwertig',1.08],['Sehr gut',1],['Gut',.92],['Gebraucht mit Spuren',.8],['Reparaturbedürftig',.6]];
+const eurN=v=>dnum(String(v??'').replace(/\s|€/g,'').replace(/\.(?=\d{3}(\D|$))/g,''));
+function valInputs(code){ const x=X(code), o=x.val||{}, b=Pof(code).bike||{}, kb=(x.docs||[]).find(d=>/Kaufbeleg Rad/.test(d.name||''));
+  const np=o.np!=null&&o.np!==''?eurN(o.np):kb&&kb.amount?eurN(kb.amount):null;
+  const y=o.y?Number(o.y):kb&&kb.date?Number(String(kb.date).slice(0,4)):b.year?Number(b.year):null;
+  return {np,y,cond:o.cond||(x.sell&&x.sell.cond)||'Gut',kb:!!kb}; }
+function valEstimate(code){ const I=valInputs(code); if(!I.np||I.np<50||!I.y) return {I,ok:false};
+  const now=new Date().getFullYear(), age=Math.max(0,now-I.y), eb=isE(bikeType(code))||!!(X(code).eb||{}).m, L=[];
+  let f=age<1?.85:(eb?.70:.75)*Math.pow(eb?.88:.90,age-1); f=Math.max(.15,f); L.push([`Alter ${age} ${age===1?'Jahr':'Jahre'}${eb?' (E-Bike)':''}`,Math.round((f-1)*100)]);
+  const km=curKm(code); if(km!=null&&age>=0){ const exp=(eb?2000:2500)*Math.max(1,age); const d=(km-exp)/1000; const kf=d>0?Math.max(-.15,-.02*d):Math.min(.03,-.01*d); if(Math.abs(kf)>=.005){ f*=1+kf; L.push([`${num(km)} km (üblich ca. ${num(exp)})`,Math.round(kf*100)]); } }
+  const c=(VAL_COND.find(v=>v[0]===I.cond)||VAL_COND[2])[1]; f*=c; if(c!==1) L.push([`Zustand: ${I.cond}`,Math.round((c-1)*100)]);
+  const P=Pof(code), yr=Date.now()-365*864e5, ver=(P.entries||[]).some(e=>e.trust==='verified'&&e.date&&new Date(e.date)>yr)||(P.svc||[]).some(s=>s.date&&new Date(s.date)>yr);
+  if(ver){ f*=1.05; L.push(['Werkstatt-Service im letzten Jahr belegt',5]); }
+  const ps=passScore(code).pct; if(ps>=80){ f*=1.03; L.push([`Pass ${ps} % vollständig (Käufer vertrauen mehr)`,3]); }
+  const mid=I.np*f, r10=v=>Math.max(10,Math.round(v/10)*10); return {I,ok:true,mid:r10(mid),lo:r10(mid*.9),hi:r10(mid*1.1),L}; }
+function guardState(code){ const s=passScore(code), g=k=>{ const l=s.L.find(z=>z[0]===k); return l?!!l[2]:false; };
+  const L=[['frame','Rahmennummer vollständig','Die Polizei sucht gestohlene Räder über die Rahmennummer.','parts'],['photo','Foto vom Rad','Hilft bei der Anzeige und beim Wiedererkennen.','photo'],['look','Farbe & besondere Merkmale','Aufkleber, Kratzer, Umbauten – macht das Rad unverwechselbar.','parts'],['receipt','Kaufbeleg gespeichert','Brauchen Polizei und Versicherung als Eigentumsnachweis.','docs'],['own','Besitzer-Code hinterlegt','Nur so kann niemand anders den Pass übernehmen.','own']].map(z=>({k:z[0],t:z[1],w:z[2],fix:z[3],ok:g(z[0])}));
+  const n=L.filter(z=>z.ok).length; return {L,n,st:n>=5?'ok':n>=3?'warn':'bad'}; }
+function glanceHtml(code){ const v=valEstimate(code), g=guardState(code), gl={ok:'Gut geschützt',warn:'Fast geschützt',bad:'Kaum geschützt'}[g.st];
+  return `<div class="glance"><button class="gl-t gl-val" data-tool="val" type="button"><span class="gl-l">Wert heute</span><span class="gl-v">${v.ok?'ca. '+num(v.mid)+' €':'Schätzen'}</span><span class="gl-s">${v.ok?num(v.lo)+' – '+num(v.hi)+' €':'Neupreis & Jahr eingeben'}</span></button><button class="gl-t gl-g gl-${g.st}" data-tool="guard" type="button"><span class="gl-l">Diebstahlschutz</span><span class="gl-v"><span class="gl-dot"></span>${g.n}/5</span><span class="gl-s">${gl}</span></button></div>`; }
+function toolVal(code){ page('Was ist mein Rad wert?','',(r)=>{ const draw=()=>{ const v=valEstimate(code), I=v.I;
+  r.innerHTML=`<div class="card val-hero">${v.ok?`<div class="muted small">Geschätzter Verkaufswert heute</div><div class="val-big">ca. ${num(v.mid)} €</div><div class="muted">Spanne ${num(v.lo)} – ${num(v.hi)} €</div>`:'<b>Noch zu wenig Angaben</b><div class="muted small">Neupreis und Kaufjahr reichen für eine erste Schätzung.</div>'}</div>
+   <div class="card"><div class="fsec2">Angaben</div><label class="small" for="vaNp" style="display:block;font-weight:600;margin:0 0 4px">Neupreis (€)${I.kb?' <span class="muted">– aus dem Kaufbeleg</span>':''}</label><input id="vaNp" inputmode="decimal" value="${I.np!=null?esc(I.np):''}" placeholder="z. B. 2499">
+   <label class="small" for="vaY" style="display:block;font-weight:600;margin:10px 0 4px">Gekauft im Jahr</label><input id="vaY" type="number" inputmode="numeric" min="1980" max="${new Date().getFullYear()}" value="${I.y||''}" placeholder="${new Date().getFullYear()-2}">
+   <div class="small" style="font-weight:600;margin:10px 0 6px">Zustand</div><div class="val-cond">${VAL_COND.map(([c])=>`<button type="button" class="chip${c===I.cond?' on':''}" data-vc="${esc(c)}">${esc(c)}</button>`).join('')}</div></div>
+   ${v.ok?`<div class="card"><div class="fsec2">So kommt der Wert zustande</div><div class="kv"><span>Neupreis</span><b>${num(I.np)} €</b></div>${v.L.map(([t,p])=>`<div class="kv"><span>${esc(t)}</span><b class="${p<0?'warn':'ok'}">${p>0?'+':''}${p} %</b></div>`).join('')}</div>`:''}
+   <p class="muted small">Schätzung nach festen Regeln, kein Gutachten. Der echte Preis hängt von Modell, Nachfrage und Saison ab – im Frühjahr verkaufen sich Räder meist besser.</p>
+   ${v.ok?`<button class="btn block" type="button" id="vaSell">Mit diesem Preis verkaufen</button>`:''}`;
+  const sv=()=>{ const o=X(code); o.val={...(o.val||{}),np:val(r,'vaNp'),y:val(r,'vaY')}; Xset(code,o); };
+  r.querySelector('#vaNp').onchange=()=>{ sv(); draw(); }; r.querySelector('#vaY').onchange=()=>{ sv(); draw(); };
+  r.querySelectorAll('[data-vc]').forEach(b=>b.onclick=()=>{ sv(); const o=X(code); o.val={...(o.val||{}),cond:b.dataset.vc}; Xset(code,o); draw(); });
+  const s=r.querySelector('#vaSell'); if(s) s.onclick=()=>{ const o=X(code); o.sell={...(o.sell||{cond:I.cond,vb:true}),price:String(v.mid),cond:I.cond}; Xset(code,o); hit('wert_verkaufen'); toolSell(code); }; };
+  draw(); hit('wert_geschaetzt'); }); }
+function toolGuard(code){ page('Diebstahlschutz','',(r)=>{ const draw=()=>{ const g=guardState(code);
+  r.innerHTML=`<div class="card" style="display:flex;gap:14px;align-items:center"><div class="ring" style="--p:${g.n*20}"><span>${g.n}/5</span></div><div><b>${{ok:'Dein Rad ist gut vorbereitet',warn:'Fast geschafft',bad:'Im Diebstahlfall fehlt noch viel'}[g.st]}</b><div class="muted small">Wird ein Rad gestohlen, zählt jede Angabe – vorher eintragen geht schnell.</div></div></div>
+   <div class="card">${g.L.map(z=>`<div class="kv"><span><b>${z.ok?'✓ ':''}${esc(z.t)}</b><br><span class="muted small">${esc(z.w)}</span></span>${z.ok?'<b class="ok">erledigt</b>':`<button class="chip" type="button" data-gfix="${z.fix}">Eintragen</button>`}</div>`).join('')}</div>
+   <button class="btn block ghost" type="button" id="gTheft">Rad wurde gestohlen – Notfall-Hilfe</button>`;
+  r.querySelectorAll('[data-gfix]').forEach(b=>b.onclick=()=>{ const k=b.dataset.gfix; if(k==='photo') return photoMenu(code); if(k==='own'){ document.querySelectorAll('.tpage').forEach(t=>t.remove()); document.body.style.overflow=''; const d=document.getElementById('ownd'); if(d){ d.open=true; d.scrollIntoView({behavior:'smooth',block:'start'}); } return; } const fn=TOOLFN[k]; if(fn) fn(code); });
+  r.querySelector('#gTheft').onclick=()=>toolTheft(code); };
+  draw(); hit('schutz_check'); }); }
+TOOLFN.val=toolVal; TOOLFN.guard=toolGuard;
+{ const THg=toolsHtml; toolsHtml=function(code){ const h=THg(code); let g=''; try{ g=glanceHtml(code); }catch(e){} return h.replace('<h2>Mein Rad</h2>','<h2>Mein Rad</h2>'+g); }; }
+{ const st=document.createElement('style'); st.textContent=`.glance{display:grid;grid-template-columns:1.25fr 1fr;gap:10px;margin:0 0 10px}
+.gl-t{display:flex!important;flex-direction:column;align-items:flex-start!important;gap:2px;text-align:left;border:0;border-radius:22px!important;padding:16px!important;min-height:112px;box-shadow:var(--sh);cursor:pointer;font:inherit;color:var(--ink)!important;background:var(--card)!important}
+.gl-val{background:linear-gradient(135deg,#0f172a,#1e3a5f)!important;color:#fff!important}.gl-val .gl-l,.gl-val .gl-s{color:rgba(255,255,255,.75)!important}
+.gl-l{font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.gl-v{font-size:24px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;margin-top:auto}.gl-s{font-size:12.5px;color:var(--muted);font-weight:550}
+.gl-dot{width:12px;height:12px;border-radius:50%;background:var(--ok)}.gl-warn .gl-dot{background:#f59e0b}.gl-bad .gl-dot{background:#dc2626}
+.val-hero{text-align:center;padding:22px 16px!important}.val-big{font-size:40px;font-weight:850;letter-spacing:-.03em;margin:4px 0}
+.val-cond{display:flex;flex-wrap:wrap;gap:8px}.val-cond .chip{padding:9px 13px;font-size:13.5px;cursor:pointer}.chip.on{background:var(--ink)!important;color:var(--card)!important}
+.fsec2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px}
+@media(max-width:360px){.glance{grid-template-columns:1fr}}`; document.head.appendChild(st); }
+
 // ---------- Garage: Fahrer/in auf den Karten und Filter ----------
 { const RTg=route; route=function(){ const r=RTg.apply(this,arguments); try{ const g=app.querySelector('.garage'); if(g&&!app.querySelector('[data-riders]')){ hit('garage');
    const cards=[...g.querySelectorAll('a.bikecard')]; const code=a=>(/#c=([A-Z0-9]{8})/.exec(a.getAttribute('href')||'')||[])[1]; const R={}; cards.forEach(a=>{ const c=code(a); const rd=c&&X(c).rider; if(rd){ (R[rd]=R[rd]||[]).push(a); const m=a.querySelector('.meta'); if(m&&!m.querySelector('[data-rd]')) m.insertAdjacentHTML('beforeend',`<span class="small muted" data-rd>· ${esc(rd)}</span>`); } });

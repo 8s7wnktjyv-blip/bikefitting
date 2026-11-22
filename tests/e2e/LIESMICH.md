@@ -19,5 +19,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t138.js` – Käufer-Link: erstellen im Verkaufswerkzeug, Käufer-Ansicht, Zurückziehen
 - `t139.js` – Pass auf Englisch (Stufe 1): Umschalten, Garage, Radseite, Service, Diebstahl, Teile, Belege ohne deutsche Reste, zurück auf Deutsch
 - `t140.js` – Kalender mit Zeitraster (Desktop), freie Fläche → Termin, Schnellauswahl im Formular, Handy-Tageskarten
+- `t142.js` – Pass: Wert-Schätzung und Diebstahlschutz-Check oben bei „Mein Rad“, Preis geht in „Verkaufen“
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
