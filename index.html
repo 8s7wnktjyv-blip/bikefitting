@@ -2064,7 +2064,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.170';
+const APP_VER='2026-11-22.171';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -9599,6 +9599,11 @@ document.addEventListener('drop',e=>{ const col=e.target.closest&&e.target.close
 /* v.169 Seitenfenster am Handy/Tablet: nach rechts wischen schließt (nicht in Feldern oder seitlich scrollbaren Bereichen) */
 { let sx=null, sy=0, st=0; document.addEventListener('touchstart',e=>{ const d=e.target.closest&&e.target.closest('#overlay .drawer'); if(!d||e.touches.length!==1||e.target.closest('input,textarea,select,canvas,.tw,.ctabs,.c360-f,[data-noswipe]')){ sx=null; return; } sx=e.touches[0].clientX; sy=e.touches[0].clientY; st=Date.now(); },{passive:true});
   document.addEventListener('touchend',e=>{ if(sx==null) return; const t=e.changedTouches[0], dx=t.clientX-sx, dy=Math.abs(t.clientY-sy); sx=null; if(dx>90&&dy<60&&Date.now()-st<600){ try{ closeDrawer(); }catch(x){} } },{passive:true}); }
+/* v.171 Kundenliste: Handlungsbedarf direkt am Namen (Nachkontrolle überfällig/fällig, offener Werkstattauftrag) */
+{ const VKn=VIEWS.kunden; VIEWS.kunden=function(){ let h=VKn.apply(this,arguments); try{ const td=today(); S.customers.forEach(c=>{ const fu=S.sessions.filter(x=>x.customerId===c.id).flatMap(x=>x.followUps||[]).filter(f=>f.status==='offen'&&(f.due||f.date)); const fd0=f=>f.due||f.date; const late=fu.filter(f=>fd0(f)<td).length, soon=fu.filter(f=>fd0(f)>=td&&fd0(f)<=dayOff(7)).length; const wo=(S.workshop||[]).filter(w=>w.customerId===c.id&&!woIsDone(w.status));
+  const ch=[late?`<span class="chip nodot c-bad">Nachkontrolle überfällig</span>`:soon?`<span class="chip nodot c-warn">Nachkontrolle bald</span>`:'',wo.length?`<span class="chip nodot c-info">${wo.length} Auftrag${wo.length>1?'e':''} offen</span>`:''].filter(Boolean).join(' ');
+  if(!ch) return; const key=`data-act="openCustomer" data-id="${c.id}"`; const i=h.indexOf(key); if(i<0) return; const j=h.indexOf('<div>'+esc(c.name)+'</div>',i); if(j<0) return; const k=j+('<div>'+esc(c.name)+'</div>').length; h=h.slice(0,k)+`<div class="cl-flags">${ch}</div>`+h.slice(k); }); }catch(e){} return h; }; }
+{ const st=document.createElement('style'); st.textContent=`.cl-flags{display:flex;gap:4px;flex-wrap:wrap;margin:3px 0 1px}.cl-flags .chip{font-size:11.5px;padding:1px 7px}`; document.head.appendChild(st); }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();

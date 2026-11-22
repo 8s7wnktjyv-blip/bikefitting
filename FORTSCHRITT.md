@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.170** (APP_VER 2026-11-22.170), Service-Worker-Cache `fyf-app-v1-p101`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.171** (APP_VER 2026-11-22.171), Service-Worker-Cache `fyf-app-v1-p102`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.171 (22.11.) | Software: Kundenliste zeigt Handlungsbedarf direkt am Namen – „Nachkontrolle überfällig“ (rot), „Nachkontrolle bald“ (7 Tage), „N Aufträge offen“. Test t171. |
 | v.170 (22.11.) | Software: Werkstatt-Tafel – Karten mit farbigem Statusbalken je Spalte (blau/violett/gelb-braun/grün, wie die Status-Chips), überfällige Karten mit rotem Rahmen. |
 | v.169 (22.11.) | Software (Konzept 5, Seitenfenster): am Handy/Tablet nach rechts wischen schließt das Seitenfenster; in Eingabefeldern, Tabellen und Reitern nicht. Esc gab es schon. Test t169. |
 | v.168 (22.11.) | Software: Seitenleiste zeigt Zähler nur bei Handlungsbedarf (Kundenzahl entfernt, Werkstatt/Termine/Anfragen bleiben); Typ-Chips der Kunden-Zeitleiste farbig (auch Dark Mode); iPad quer/hoch geprüft (Start, Werkstatt, Tafel, Kunden, Kalender ohne Fehler/Querscroll). |
