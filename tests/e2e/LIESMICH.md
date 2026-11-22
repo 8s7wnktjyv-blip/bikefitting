@@ -47,5 +47,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t183.js` – Pass: Nächste Schritte (Garage + Rad), Antippen öffnet Werkzeug, Offline-Hinweis
 - `t184.js` – Pass: Lebenslauf-Zeitleiste (Reihenfolge, Einklappen, Alle anzeigen)
 - `t185.js` – Pass: Studio-Look für freigestellte Rad-Fotos (Lichtkegel, Spiegelung, Knopf bei normalem Foto)
+- `t186.js` – Pass: Klarheit (Räder zuerst, Sicherung einmal als Nächster Schritt, Konto/Erinnerungen als Zeilen)
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.

@@ -3,6 +3,7 @@
    Rechtstexte (Datenschutz, Impressum, Kaufvertrag) bleiben bewusst Deutsch. */
 (function(){
 const D={
+'Daten sichern (1 Minute)':'Back up data (1 minute)','Konto & Sicherung':'Account & backup','nicht eingerichtet':'not set up','aktiv':'active','Erinnerungen':'Reminders',
 '✨ Studio-Look':'✨ Studio look',
 "Lebenslauf":"Life story","Selbst":"Self","Teil":"Part","Schaden":"Damage","Kauf":"Purchase","Start":"Start","Pass angelegt":"Pass created","Rad gekauft":"Bike purchased","selbst eingetragen":"self-entered","geprüft":"checked","noch nicht geprüft":"not checked yet",
 "Nächste Schritte":"Next steps","Alles erledigt":"All done","Nichts Dringendes – gute Fahrt!":"Nothing urgent \u2013 enjoy the ride!","laut Wartungsplan":"per maintenance plan","Reparatur oder Versicherung eintragen":"Add repair or insurance","rechtzeitig Termin machen":"book a slot in time","Je vollständiger, desto besser bei Diebstahl und Verkauf":"The more complete, the better for theft and selling","Offline – Einträge bleiben auf dem Handy":"Offline \u2013 entries stay on your phone","Wieder online":"Back online",
@@ -97,6 +98,8 @@ const D={
 "Sprache":"Language"
 };
 const P=[
+[/^(\d+) Termine$/,(m,a)=>`${a} dates`],
+[/^Noch: als App installieren und Konto mit Sicherung$/,()=>'Still open: install as app and account with backup'],[/^Noch: als App installieren$/,()=>'Still open: install as app'],[/^Noch: Konto mit Sicherung$/,()=>'Still open: account with backup'],
 [/^(\d+) Ereignis(se)?$/,(m,a)=>`${a} event${a==='1'?'':'s'}`],[/^Alle (\d+) anzeigen$/,(m,a)=>`Show all ${a}`],[/^Erledigt: (.+)$/,(m,a)=>`Done: ${T(a)||a}`],
 [/^Service fällig: (.+)$/,(m,a)=>`Service due: ${T(a)||a}`],[/^Bald fällig: (.+)$/,(m,a)=>`Due soon: ${T(a)||a}`],[/^(.+) tauschen$/,(m,a)=>`Replace ${T(a)||a}`],[/^Diebstahlschutz (\d)\/5$/,(m,a)=>`Theft protection ${a}/5`],[/^Pass (\d+) % vollständig$/,(m,a)=>`Pass ${a} % complete`],[/^(\d+) Schaden offen$/,(m,a)=>`${a} open damage`],
 [/^(\d+) Angaben? fehlen$/,(m,a)=>`${a} item${a==='1'?'':'s'} missing`],

@@ -2064,7 +2064,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.185';
+const APP_VER='2026-11-22.186';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2173,7 +2173,7 @@ async function cloudRoleCheck(){ const uid=clUid(); let m;
   if(!m||!m[0]){ CL.tenant=null; CL.role=null; CL.ver=0; CL.removed=true; await clClosedCheck(); clSave(); clStatus('setup'); render(); return false; }
   if(m[0].role!==CL.role){ CL.role=m[0].role; clSave(); render(); } return true; }
 // Datenbank-Stand prüfen: fyf_schema() kommt aus docs/supabase/alles.sql. Fehlt sie oder ist sie älter, zeigt die App, wie man aktualisiert.
-const DB_SCHEMA=29; let dbSchema=null;
+const DB_SCHEMA=30; let dbSchema=null;
 async function dbCheck(){ if(!(CL.url&&CL.key)) return;
   try{ const v=await clRaw('/rest/v1/rpc/fyf_schema',{method:'POST',body:'{}'},false); dbSchema=Number(v)||0; }
   catch(e){ if(e.offline) return; dbSchema=(e.status===404||/fyf_schema|could not find/i.test(String(e.message||'')))?0:null; }
@@ -8028,7 +8028,7 @@ Object.assign(FORMS,{
   set('Öffentlicher Marktplatz',2,'Öffentliche Produkte und Gebrauchträder mit Fahrradpass, mit Anfrage. Bestellung/Bezahlung bewusst nicht (Käuferschutz nur über externen Anbieter, noch nicht gewählt)'); }
 
 /* ===================== v.82 Diebstahl-Abgleich bei der Annahme, Rahmennummer nur als Hash, Quick-Fit übernimmt das letzte Fitting ===================== */
-Object.assign(errMap,{FYF_FRAME_EXISTS:'Für diese Rahmennummer gibt es schon einen Fahrradpass.'});
+Object.assign(errMap,{FYF_FRAME_EXISTS:'Für diese Rahmennummer gibt es schon einen Fahrradpass. Pro Rahmennummer gibt es nur einen Pass. Bitte den Besitzer um die Karte „Teil II“ und den Pass damit übernehmen.'});
 const frameNorm=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 async function frameHash(s){ const n=frameNorm(s); if(n.length<4||!(window.crypto&&crypto.subtle)) return ''; const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('fyf:'+n)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
 // Hash der Rahmennummer mit dem Pass speichern (die Nummer selbst bleibt beim Laden)
