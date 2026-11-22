@@ -2061,7 +2061,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.167';
+const APP_VER='2026-11-22.168';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2362,7 +2362,7 @@ function counts(){
 }
 function renderNav(){
   const c = counts(); const pill=document.querySelector('.demo-pill'); if(pill) pill.hidden=!!S.demoRemoved;
-  const btn=(r,l,i,cls)=>`<button class="navbtn ${cls||''}" data-nav="${r}" ${ui.route===r?'aria-current="page"':''}>${ic(i)}<span>${l}</span>${c[r]?`<span class="cnt">${c[r]}</span>`:''}</button>`;
+  const btn=(r,l,i,cls)=>`<button class="navbtn ${cls||''}" data-nav="${r}" ${ui.route===r?'aria-current="page"':''}>${ic(i)}<span>${l}</span>${c[r]&&r!=='kunden'?`<span class="cnt">${c[r]}</span>`:''}</button>`;
   document.getElementById('side').innerHTML = `
     <div class="brand">
       <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" style="fill:var(--accent)"/><path d="M10 23l6-14h7M13 16h7" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -9543,7 +9543,7 @@ function custTimeline(cid){ const E=[]; const bk=id=>{ const b=S.bikes.find(x=>x
   (S.appts||[]).filter(a=>a.customerId===cid).forEach(a=>E.push({k:'apt',d:a.date,t:`Termin: ${a.kind||''}`,s:[a.start,a.note].filter(Boolean).join(' · ')}));
   (S.warranty||[]).filter(w=>w.customerId===cid).forEach(w=>E.push({k:'war',d:String(w.reported||'').slice(0,10),t:'Garantie: '+(w.item||''),s:w.status||''}));
   return E.filter(e=>e.d).sort((a,b)=>String(b.d).localeCompare(String(a.d))); }
-const TL_K={fit:['Fitting','var(--accent)'],ws:['Werkstatt','var(--info)'],buy:['Kauf','var(--ok)'],apt:['Termin','#7c3aed'],war:['Garantie','var(--warn)']};
+const TL_K={fit:['Fitting','var(--accent)'],ws:['Werkstatt','var(--info)'],buy:['Kauf','var(--ok)'],apt:['Termin','#6d28d9'],war:['Garantie','var(--warn)']};
 { const CDt=customerDrawer; customerDrawer=function(id,tab){ CDt(id,tab); try{ const c=cust(id), box=document.getElementById('drawerBody'); if(!c||!box||box.querySelector('[data-c360]')) return;
   const ss=sessOf(c.id), done=ss.filter(s=>s.status==='abgeschlossen'), wo=(S.workshop||[]).filter(w=>w.customerId===c.id&&!['Übergeben','Storniert'].includes(w.status)), rev=(S.sales||[]).filter(x=>x.customerId===c.id).reduce((a,x)=>a+(Number(x.total)||0),0);
   const head=`<div class="c360" data-c360><div><b>${done.length}</b><span>Fittings</span></div><div><b>${bikesOf(c.id).length}</b><span>Räder</span></div><div><b class="${wo.length?'c360-on':''}">${wo.length}</b><span>offene Aufträge</span></div><div><b>${rev?Math.round(rev).toLocaleString('de-DE')+' €':'–'}</b><span>Umsatz</span></div></div>`;
@@ -9551,7 +9551,7 @@ const TL_K={fit:['Fitting','var(--accent)'],ws:['Werkstatt','var(--info)'],buy:[
   const crm=box.querySelector('[data-crmbox]'); if(crm&&!(c.wv||[]).some(x=>!x.done)){ const f=crm.querySelector('form[data-form="wvAdd"]'), h3=[...crm.querySelectorAll('h3')].find(x=>/Wiedervorlagen/.test(x.textContent)); if(f&&h3){ const st=h3.parentElement; const d=document.createElement('details'); d.className='c360-wv'; d.innerHTML='<summary>+ Wiedervorlage anlegen</summary>'; st.replaceWith(d); d.appendChild(f); } }
   if((ui.custTab||'uebersicht')==='uebersicht'){ const E=custTimeline(c.id); if(E.length){ const ks=[...new Set(E.map(e=>e.k))];
     box.insertAdjacentHTML('beforeend',`<section class="c360-tl" data-tl="all"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Zeitleiste</h3><div class="c360-f">${['all',...ks].map(k=>`<button type="button" class="qp-b${k==='all'?' on':''}" data-act="tlFilter" data-k="${k}">${k==='all'?'Alle':TL_K[k][0]}</button>`).join('')}</div></div>
-     <ol class="c360-list">${E.slice(0,40).map(e=>`<li data-k="${e.k}" ${e.a?`data-act="${e.a}" data-id="${e.id}" class="click"`:''}><i style="background:${TL_K[e.k][1]}"></i><span class="c360-d">${fmtDate(e.d)}</span><span class="c360-t"><b>${esc(e.t)}</b>${e.s?`<span class="faint">${esc(e.s)}</span>`:''}</span><span class="chip nodot" style="color:${TL_K[e.k][1]};border-color:currentColor">${TL_K[e.k][0]}</span></li>`).join('')}</ol></section>`); } }
+     <ol class="c360-list">${E.slice(0,40).map(e=>`<li data-k="${e.k}" ${e.a?`data-act="${e.a}" data-id="${e.id}" class="click"`:''}><i style="background:${TL_K[e.k][1]}"></i><span class="c360-d">${fmtDate(e.d)}</span><span class="c360-t"><b>${esc(e.t)}</b>${e.s?`<span class="faint">${esc(e.s)}</span>`:''}</span><span class="chip nodot ${({fit:'c-acc',ws:'c-info',buy:'c-ok',apt:'c-work',war:'c-warn'})[e.k]}">${TL_K[e.k][0]}</span></li>`).join('')}</ol></section>`); } }
  }catch(e){} }; }
 ACT.tlFilter=function(el){ const sec=el.closest('.c360-tl'); if(!sec) return; const k=el.dataset.k; sec.querySelectorAll('[data-act="tlFilter"]').forEach(b=>b.classList.toggle('on',b===el)); sec.querySelectorAll('.c360-list li').forEach(li=>{ li.style.display=k==='all'||li.dataset.k===k?'':'none'; }); };
 { const st=document.createElement('style'); st.textContent=`.c360{flex-shrink:0;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px}.c360>div{background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:2px}.c360 b{font-family:var(--f-head);font-size:22px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.c360 span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:650}.c360 b.c360-on{color:var(--info)}
