@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.143** (APP_VER 2026-11-22.143), Service-Worker-Cache `fyf-app-v1-p74`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.144** (APP_VER 2026-11-22.144), Service-Worker-Cache `fyf-app-v1-p75`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.144 (22.11.) | Pass (Wunschliste 22.11.): „Zustand der Teile“ als Kachel + Seite „Was ist verbaut?“ (Stückliste nach Gruppen, Verschleiß-Ampel aus km seit Einbau, Richtwerte); „Schäden & Unfälle“ (Foto zu Belegen, Status offen/versichert/repariert mit Verlauf, nicht löschbar, nur „Fehleintrag“); „Tracker“ (Typ, Versteck nur lokal, Link Apple/Samsung-Suche); „Umbau planen“ (Kosten- und Gewichtssumme, „Eingebaut“ → Ausstattung). Konzepte: `docs/SOFTWARE-DESIGN-KONZEPT.md`, `docs/STRATEGIE.md`, `docs/PASS-WERKSTATT-FREIGABE-PLAN.md` (wartet auf Freigabe). Test t144. |
 | v.143 (22.11.) | Software: Design „Präzision“ (Wunsch 22.11.: weniger Pastell, technischer) – kühles Grau, Graphit-Seitenleiste mit Akzentbalken, Orange nur für Hauptaktionen, Blau für Messwerte/Fokus, ruhige Kacheln, Status als Rahmen-Chips, Tabellenköpfe, Dark Mode; Dashboard zeigt „Heute“ vor Einrichtung/Ladentyp. Alle Tests grün. |
 | v.142 (22.11.) | Punkt 16, Schritte 2/3/6 – Pass: „Mein Rad“ zeigt oben Wert heute (regelbasierte Schätzung: Neupreis/Kaufbeleg, Alter, km, Zustand, belegter Service, Pass-Vollständigkeit; „kein Gutachten“) und Diebstahlschutz 0–5 mit Ampel; Seite „Was ist mein Rad wert?“ mit Aufschlüsselung und „Mit diesem Preis verkaufen“; Seite „Diebstahlschutz“ mit 5 Punkten, Eintragen-Knöpfen und Notfall-Hilfe. Englisch-Wörterbuch ergänzt. Test t142. |
 | v.141 (22.11.) | Punkt 16, Teil 1 – Pass: Plan `docs/PASS-ATTRAKTIV-PLAN.md` (8 Schritte); Radseite: Schnellzugriff (QR, NFC, Service, Fitting) als farbige Icon-Kacheln. |
@@ -85,4 +86,7 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
-Abwechselnd: Punkt 15 Teil 2 (Kalender-Tagesagenda am Handy, Kunden-/Auftragsformulare, Dashboard) und Punkt 16 Schritte 2–8 (Plan). Danach Englisch Stufe 2/3 (neue Texte gleich ins Wörterbuch).
+1. Software nach `docs/SOFTWARE-DESIGN-KONZEPT.md`, Roadmap-Punkte 2–9 (Feinschliff, Dashboard je Ladentyp, Tafel Tablet, Fitting-Ablauf mit Fortschritt und Live-Skizze, Sitzungsvergleich, Kundenakte-Zeitleiste, PDF neu).
+2. Pass: Plan-Schritte 4/5/7 (Ziele & Abzeichen, Rad-Karte teilen, Tour-Check), Verkaufs-/Übergabe-Flow (Zustandsbericht „verkaufsbereit / Wartungsstau“, Warnung bei unplausiblen km), PDF „Unterlagen für die Versicherung“, Intervalle je Teil/Hersteller, nach Werkstattbesuch Intervalle zurücksetzen vorschlagen.
+3. Wartet auf Freigabe: Werkstatt-Freigabe 7 Tage + Schadens-Einträge von Läden (`docs/PASS-WERKSTATT-FREIGABE-PLAN.md`), Entscheidungen in `docs/STRATEGIE.md` (Werbung, kein Endkunden-Abo, Station).
+4. Danach Englisch Stufe 2/3.
