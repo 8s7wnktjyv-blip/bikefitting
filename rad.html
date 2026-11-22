@@ -196,7 +196,7 @@ function tabs(on){ const c=(()=>{ const x=new URLSearchParams((location.hash||''
   el.querySelectorAll('a').forEach(x=>x.onclick=e=>{ if(x.href===location.href){ e.preventDefault(); route(); } }); }
 
 const norm=c=>String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
-const head=`<p class="brand">FYF · FAHRRADPASS</p>`;
+const head=`<p class="brand">FAHRRADPASS</p>`;
 function askForm(err){
   const chk=/pruefen/.test(location.hash);
   if(chk){

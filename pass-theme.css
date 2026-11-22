@@ -30,3 +30,8 @@
 :root[data-theme="dark"] .hv-almost{color:#93c5fd!important;border-color:#93c5fd!important}:root[data-theme="dark"] .hv-ready{color:#4ade80!important;border-color:#4ade80!important}:root[data-theme="dark"] .hv-stau{color:#fbbf24!important;border-color:#fbbf24!important}:root[data-theme="dark"] .hv-risk{color:#f87171!important;border-color:#f87171!important}
 :root[data-theme="dark"] button[class=""]{background:rgba(255,255,255,.08)!important;color:var(--ink)!important;border:1px solid rgba(255,255,255,.1)!important}:root[data-theme="dark"] button[class=""][aria-pressed="true"],:root[data-theme="dark"] button[class=""].on{background:var(--acc)!important;color:#fff!important}
 :root[data-theme="dark"] .photo-btn{background:rgba(0,0,0,.45)!important;color:#fff!important;border:1px solid rgba(255,255,255,.18)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+/* v.181 FYF-Logo (Edding-Tag) oben auf jeder Seite – hell und dunkel */
+.brand,main>p.muted.small:first-child{gap:10px!important;color:var(--muted)!important}
+.brand,main>p.muted.small:first-child{margin-top:10px!important}
+.brand::before,main>p.muted.small:first-child::before{width:86px!important;height:62px!important;flex:none;border-radius:0!important;background:var(--ink)!important;-webkit-mask:url(logo-tag.svg) center/contain no-repeat;mask:url(logo-tag.svg) center/contain no-repeat}
+.intro::before{content:"";display:block;width:120px;height:86px;margin:4px auto 2px;flex:none;background:var(--ink);-webkit-mask:url(logo-tag.svg) center/contain no-repeat;mask:url(logo-tag.svg) center/contain no-repeat}
