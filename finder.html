@@ -272,5 +272,14 @@ function revChip(r){ if(!r||!r.n) return ''; return r.avg!=null?`<span class="ch
 start();
 try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); }catch(e){}
 </script>
+<script>/* v.178 Händlerfinder: Laden-Karten mit Initial, ganze Karte antippbar, ruhigere Chips */
+(function(){ const st=document.createElement('style'); st.textContent=`.card.shopc{display:grid;grid-template-columns:52px 1fr 18px;gap:4px 14px;align-items:start;cursor:pointer;padding:16px!important;border-radius:24px!important}
+.card.shopc .sh-av{grid-row:1/span 3;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:22px}
+.card.shopc h2{margin:2px 0 0!important;font-size:19px!important;letter-spacing:-.02em}.card.shopc h2 a{text-decoration:none!important;color:inherit!important}
+.card.shopc>.muted{grid-column:2}.card.shopc>.row{grid-column:1/-1;margin-top:10px!important;gap:6px!important;flex-wrap:wrap}.card.shopc .sh-go{grid-column:3;grid-row:1;align-self:center;color:var(--muted,#8a929c);font-size:24px}
+.card.shopc .chip{font-size:12px!important;padding:3px 9px!important}.card.shopc .chip[data-rv]{background:#fff7e6!important;color:#b45309!important}`; document.head.appendChild(st);
+ const COL=['#2563eb','#e8620f','#16a34a','#7c3aed','#0891b2','#db2777','#ca8a04'];
+ const deco=()=>{ document.querySelectorAll('.card').forEach(c=>{ if(c.classList.contains('shopc')) return; const a=c.querySelector(':scope > h2 > a[data-d]'); if(!a) return; c.classList.add('shopc'); const n=(a.textContent||'?').trim(); const av=document.createElement('span'); av.className='sh-av'; av.textContent=n.charAt(0).toUpperCase(); let h=0; for(const ch of n) h=(h*31+ch.charCodeAt(0))>>>0; av.style.background=COL[h%COL.length]; c.insertBefore(av,c.firstChild); const go=document.createElement('span'); go.className='sh-go'; go.textContent='›'; c.appendChild(go); c.addEventListener('click',e=>{ if(e.target.closest('a,button,input,select')) return; a.click(); }); }); };
+ new MutationObserver(deco).observe(document.documentElement,{childList:true,subtree:true}); document.addEventListener('DOMContentLoaded',deco); })();</script>
 </body>
 </html>
