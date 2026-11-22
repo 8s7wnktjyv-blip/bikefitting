@@ -2256,6 +2256,15 @@ function compatHints(code,b){ const p=effParts(code).v||{}, H=[], K=b.k, nt=Stri
   dec(); new MutationObserver(dec).observe(body,{childList:true}); }catch(e){} }; TOOLFN.build=toolBuild; }
 { const st=document.createElement('style'); st.textContent=`.bld-h{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.35);font-size:13px;display:flex;flex-direction:column;gap:4px}`; document.head.appendChild(st); }
 
+// ---------- v.164 Pass: Fotos je Bauteil (in „Was ist verbaut?“; gespeichert wie Belege, also auch in der Sicherung) ----------
+{ const TCp=toolComp; toolComp=function(code){ TCp(code); try{ const body=[...document.querySelectorAll('.tpage .tp-body')].pop(); if(!body) return; const C=compState(code);
+  const deco=async()=>{ const docs=(X(code).docs||[]).filter(d=>d.pk); body.querySelectorAll('.cp-row').forEach((row,i)=>{ const c=C[i]; if(!c||row.querySelector('.cp-ph')) return; const has=docs.filter(d=>d.pk===c.k);
+    row.insertAdjacentHTML('beforeend',`<div class="cp-ph">${has.map(d=>`<img data-pkimg="${d.id}" alt="Foto ${esc(c.l)}">`).join('')}<label class="cp-cam" title="Foto hinzufügen"><input type="file" accept="image/*" hidden data-pk="${c.k}" data-pkl="${esc(c.l)}">＋ Foto</label></div>`); });
+   for(const im of body.querySelectorAll('[data-pkimg]')){ if(im.src) continue; try{ const bl=await IDB.get('doc:'+im.dataset.pkimg); if(bl) im.src=URL.createObjectURL(bl); }catch(e){} }
+   body.querySelectorAll('[data-pk]').forEach(inp=>inp.onchange=async()=>{ const f=inp.files[0]; if(!f) return; const id='d'+Date.now().toString(36); try{ await IDB.put('doc:'+id,await shrink(f,1200,.75)); const o=X(code); o.docs=(o.docs||[]).concat([{id,name:'Teilfoto: '+inp.dataset.pkl,date:today(),amount:'',wy:0,note:'',img:true,pk:inp.dataset.pk}]); Xset(code,o); toast('Foto gespeichert'); hit('teilfoto'); reTool(toolComp,code); }catch(e){ toast('Foto konnte nicht gespeichert werden'); } }); };
+  deco(); }catch(e){} }; TOOLFN.comp=toolComp; }
+{ const st=document.createElement('style'); st.textContent=`.cp-ph{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.cp-ph img{width:52px;height:52px;object-fit:cover;border-radius:10px}.cp-cam{font-size:12.5px;font-weight:650;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:6px 10px;cursor:pointer}`; document.head.appendChild(st); }
+
 // ---------- Garage: Fahrer/in auf den Karten und Filter ----------
 { const RTg=route; route=function(){ const r=RTg.apply(this,arguments); try{ const g=app.querySelector('.garage'); if(g&&!app.querySelector('[data-riders]')){ hit('garage');
    const cards=[...g.querySelectorAll('a.bikecard')]; const code=a=>(/#c=([A-Z0-9]{8})/.exec(a.getAttribute('href')||'')||[])[1]; const R={}; cards.forEach(a=>{ const c=code(a); const rd=c&&X(c).rider; if(rd){ (R[rd]=R[rd]||[]).push(a); const m=a.querySelector('.meta'); if(m&&!m.querySelector('[data-rd]')) m.insertAdjacentHTML('beforeend',`<span class="small muted" data-rd>· ${esc(rd)}</span>`); } });
