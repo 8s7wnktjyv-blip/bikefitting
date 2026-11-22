@@ -345,7 +345,7 @@ try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persiste
 function installHint(){ if(standalone()) return ''; return `<div class="card"><b>Als App installieren</b><p class="muted small" style="margin:4px 0 0">${ios()?'In Safari unten auf <b>Teilen</b> (Quadrat mit Pfeil) → <b>Zum Home-Bildschirm</b>. Dann hast du „FYF Pass“ wie eine App.':'Im Browser-Menü <b>App installieren</b> bzw. <b>Zum Startbildschirm</b> wählen.'}</p></div>`; }
 function bikeStatus(code){ const r0=bikeStatus0(code); if(r0[0]==='bad'||/zurückgezogen/.test(r0[1])) return r0; try{ const S=svcSummary(code); if(S.due.length) return ['warn',`Fällig: ${S.due[0].t}${S.due.length>1?' +'+(S.due.length-1):''}`]; }catch(e){} return r0; }
 function bikeStatus0(code){ const c=cacheGet(code); if(!c||!c.p) return ['','Pass aktiv']; const P=c.p; if(P.stolen) return ['bad','Als gestohlen gemeldet']; if(P.withdrawn) return ['warn','Pass zurückgezogen'];
-  const last=(P.entries||[]).filter(e=>e.kind!=='Registrierung').map(e=>e.date).sort().pop(); if(!last) return ['warn','Noch kein Service eingetragen']; const days=Math.round((Date.now()-new Date(last))/864e5); return days>365?['warn',`Letzter Service vor ${Math.round(days/30)} Monaten`]:['',`Gepflegt · Service ${fd(last)}`]; }
+  const last=(P.entries||[]).filter(e=>e.kind!=='Registrierung').map(e=>e.date).sort().pop(); if(!last) return ['','Pass aktiv']; const days=Math.round((Date.now()-new Date(last))/864e5); return days>365?['warn',`Letzter Service vor ${Math.round(days/30)} Monaten`]:['',`Gepflegt · Service ${fd(last)}`]; }
 // Rad-Zeichnung je Art (eigene Grafik) oder eigenes Foto (nur auf diesem Gerät)
 function bikeArt(type){
   const t=String(type||'').toLowerCase();
@@ -2264,6 +2264,10 @@ function compatHints(code,b){ const p=effParts(code).v||{}, H=[], K=b.k, nt=Stri
    body.querySelectorAll('[data-pk]').forEach(inp=>inp.onchange=async()=>{ const f=inp.files[0]; if(!f) return; const id='d'+Date.now().toString(36); try{ await IDB.put('doc:'+id,await shrink(f,1200,.75)); const o=X(code); o.docs=(o.docs||[]).concat([{id,name:'Teilfoto: '+inp.dataset.pkl,date:today(),amount:'',wy:0,note:'',img:true,pk:inp.dataset.pk}]); Xset(code,o); toast('Foto gespeichert'); hit('teilfoto'); reTool(toolComp,code); }catch(e){ toast('Foto konnte nicht gespeichert werden'); } }); };
   deco(); }catch(e){} }; TOOLFN.comp=toolComp; }
 { const st=document.createElement('style'); st.textContent=`.cp-ph{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.cp-ph img{width:52px;height:52px;object-fit:cover;border-radius:10px}.cp-cam{font-size:12.5px;font-weight:650;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:6px 10px;cursor:pointer}`; document.head.appendChild(st); }
+
+// ---------- v.165 Garage: Karten zeigen nicht nur Service – km, Jahresziel, Diebstahlschutz ----------
+{ const GC=garageChips; garageChips=function(code){ let h=GC(code); try{ const km=curKm(code), G=goalState(code), g=guardState(code); const add=[km?`<span class="gchip">${num(km)} km</span>`:'',G.g?`<span class="gchip">Ziel ${G.pct} %</span>`:'',`<span class="gchip ${g.st==='ok'?'':'warn'}">Schutz ${g.n}/5</span>`].filter(Boolean).join('');
+  h=h?h.replace('<div class="gchips">','<div class="gchips">'+add):`<div class="gchips">${add}</div>`; }catch(e){} return h; }; }
 
 // ---------- Garage: Fahrer/in auf den Karten und Filter ----------
 { const RTg=route; route=function(){ const r=RTg.apply(this,arguments); try{ const g=app.querySelector('.garage'); if(g&&!app.querySelector('[data-riders]')){ hit('garage');

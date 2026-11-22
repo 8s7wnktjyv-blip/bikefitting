@@ -91,6 +91,8 @@ const D={
 "Sprache":"Language"
 };
 const P=[
+[/^Ziel (\d+) %$/,(m,a)=>`Goal ${a} %`],
+[/^Schutz (\d)\/5$/,(m,a)=>`Protection ${a}/5`],
 [/^⚠︎ (\d+)-fach-Teil, dein Antrieb ist (\d+)-fach – Kette, Kassette, Schaltwerk und Hebel müssen zusammenpassen\.$/,(m,a,b)=>`⚠︎ ${a}-speed part, your drivetrain is ${b}-speed – chain, cassette, derailleur and shifters must match.`],
 [/^⚠︎ (\w+)-(Schaltwerk|Hebel) mit (\w+)-Antrieb: Zugweg\/Protokoll meist nicht kompatibel\.$/,(m,a,k,b)=>`⚠︎ ${a} ${k==='Hebel'?'shifters':'derailleur'} with ${b} drivetrain: cable pull/protocol usually not compatible.`],
 [/^(\d+) Läden$/,(m,a)=>`${a} shops`],

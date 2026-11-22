@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.164** (APP_VER 2026-11-22.164), Service-Worker-Cache `fyf-app-v1-p95`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.165** (APP_VER 2026-11-22.165), Service-Worker-Cache `fyf-app-v1-p96`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.165 (22.11.) | Pass-Garage: Karten zeigen km, Jahresziel und Diebstahlschutz (nicht nur Service); „Noch kein Service eingetragen“ ist kein orangefarbener Warnhinweis mehr, sondern neutral „Pass aktiv“ (überfälliger Service warnt weiterhin). |
 | v.164 (22.11.) | Pass (Wunschliste 22.11., Punkt 2): Fotos je Bauteil in „Was ist verbaut?“ – „＋ Foto“ je Teil, Vorschau in der Stückliste; gespeichert wie Belege (Name „Teilfoto: …“), damit auch in Sicherung/Export. Test t164. |
 | v.163 (22.11.) | Pass: Doppelstruktur aufgelöst – „Unfall / Sturz“ (v.105) und „Schäden & Unfälle“ (v.144) haben einen gemeinsamen Eingang „Schäden & Unfälle“ (Unfall ausführlich mit Teilen/Fotos/Werkstatt-Prüfung, sonstige Schäden kurz); Unfall-Einträge sind nicht mehr löschbar, nur „Fehleintrag“ (Fotos bleiben); offene Unfälle zählen auf der Kachel. Test t163. |
 | v.162 (22.11.) | Pass (Plan-Schritt 8): „Umbau planen“ zeigt regelbasierte Kompatibilitäts-Hinweise – Fachzahl (8–13-fach) passt nicht zum Antrieb, Schaltwerk/Hebel anderer Marke, große Rennrad-Kassette, Bremsscheibe ≥ 200 mm an Rennrad/Gravel, sehr breite Reifen am Rennrad, Vorbau/Lenker ändert Sitzposition; „ohne Gewähr“. Test t162. |
