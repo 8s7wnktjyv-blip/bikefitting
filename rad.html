@@ -2492,6 +2492,28 @@ function nsBind(root,codeFix){ root.querySelectorAll('[data-ns]').forEach(b=>b.o
 .ns-go{color:var(--muted);font-size:22px}.ns-ok{cursor:default}
 #offBar{position:fixed;left:50%;top:calc(8px + env(safe-area-inset-top));transform:translateX(-50%);z-index:300;background:#1f2937;color:#fff;font-size:13px;font-weight:650;padding:8px 14px;border-radius:999px;box-shadow:0 10px 30px -10px rgba(0,0,0,.6);display:flex;align-items:center;gap:8px;max-width:calc(100% - 24px)}.ob-dot{width:8px;height:8px;border-radius:50%;background:#fbbf24}`; document.head.appendChild(st); }
 
+// ---------- v.184 Lebenslauf des Rads: eine farbige Zeitleiste aus Pass-Einträgen, eigener Wartung, Teiletausch, Schäden, Kauf ----------
+const LIFE_T={ws:['Werkstatt','#16a34a'],self:['Selbst','#2563eb'],part:['Teil','#7c3aed'],dmg:['Schaden','#dc2626'],buy:['Kauf','#ca8a04'],start:['Start','#e8620f']};
+function lifeEvents(code){ const P=Pof(code), x=X(code), E=[]; const pl=(()=>{ try{ return svcPlan(bikeType(code),code); }catch(e){ return []; } })(); const L=Object.fromEntries(PARTS.map(p=>[p[0],p[1]]));
+  (P.entries||[]).forEach(e=>{ if(!e.date) return; if(e.kind==='Registrierung') E.push({d:e.date,k:'start',t:'Pass angelegt',s:e.shop||''}); else E.push({d:e.date,k:/schaden|unfall|sturz/i.test(e.kind||'')?'dmg':e.trust==='verified'?'ws':'self',t:(e.kind?e.kind+': ':'')+(e.text||''),s:[e.trust==='verified'?(e.shop||'Werkstatt')+' · bestätigt':'selbst eingetragen',e.km!=null?num(e.km)+' km':''].filter(Boolean).join(' · ')}); });
+  (P.svc||[]).forEach(v=>{ if(v.date) E.push({d:v.date,k:'ws',t:v.title||'Service',s:[(P.shop||{}).name||'Werkstatt',v.km!=null?num(v.km)+' km':''].filter(Boolean).join(' · ')}); });
+  Object.entries(x.svc||{}).forEach(([k,v])=>{ if(v&&v.d) E.push({d:v.d,k:'self',t:'Erledigt: '+((pl.find(i=>i.k===k)||{}).t||k),s:['selbst eingetragen',v.km!=null?num(v.km)+' km':''].filter(Boolean).join(' · ')}); });
+  (x.partsHist||[]).filter(h=>!h.alt&&h.d).forEach(h=>E.push({d:h.d,k:'part',t:`${L[h.k]||h.k}: ${h.from?h.from+' → ':''}${h.to||'ausgebaut'}`,s:h.km!=null?'bei '+num(h.km)+' km':''}));
+  (x.dmg||[]).filter(d=>!d.void).forEach(d=>E.push({d:d.d,k:'dmg',t:d.t,s:(DMG_ST.find(z=>z[0]===d.st)||[0,d.st])[1]}));
+  (x.acc||[]).filter(a=>!a.void).forEach(a=>E.push({d:a.d,k:'dmg',t:a.what||'Sturz',s:a.closed?'geprüft':'noch nicht geprüft'}));
+  (x.docs||[]).filter(d=>/Kaufbeleg Rad/.test(d.name||'')&&d.date).forEach(d=>E.push({d:d.date,k:'buy',t:'Rad gekauft',s:d.amount?d.amount+' €':''}));
+  const seen=new Set(); return E.filter(e=>{ const key=String(e.d).slice(0,10)+e.t; if(seen.has(key)) return false; seen.add(key); return true; }).sort((a,b)=>String(b.d).localeCompare(String(a.d))); }
+function lifeHtml(code){ const E=lifeEvents(code); if(!E.length) return ''; const ks=[...new Set(E.map(e=>e.k))];
+  return `<section class="life" data-life><div class="life-h"><h2>Lebenslauf</h2><span class="muted small">${E.length} Ereignis${E.length>1?'se':''}</span></div><div class="life-leg">${ks.map(k=>`<span><i style="background:${LIFE_T[k][1]}"></i>${LIFE_T[k][0]}</span>`).join('')}</div>
+   <ol class="life-l">${E.map((e,i)=>`<li class="${i>=6?'life-more':''}"><i style="background:${LIFE_T[e.k][1]}"></i><span class="life-d">${fd(e.d)}</span><b>${esc(e.t)}</b>${e.s?`<span class="muted small">${esc(e.s)}</span>`:''}</li>`).join('')}</ol>${E.length>6?`<button class="btn ghost block" type="button" data-lifeall>Alle ${E.length} anzeigen</button>`:''}</section>`; }
+{ const SHl=show; show=async function(code){ const r=await SHl.apply(this,arguments); try{ if(!mine().some(m=>m.code===code)||document.querySelector('[data-life]')) return r; const th=document.getElementById('toolsHost'); const h=lifeHtml(code); if(th&&h){ th.insertAdjacentHTML('afterend',h); const b=document.querySelector('[data-lifeall]'); if(b) b.onclick=()=>{ document.querySelector('[data-life]').classList.add('life-open'); b.remove(); }; } }catch(e){} return r; }; }
+{ const st=document.createElement('style'); st.textContent=`.life{margin:22px 0 10px}.life-h{display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 8px}.life-h h2{margin:0;font-size:20px;letter-spacing:-.02em}
+.life-leg{display:flex;flex-wrap:wrap;gap:10px;margin:0 2px 12px;font-size:12px;color:var(--muted)}.life-leg span{display:inline-flex;align-items:center;gap:5px}.life-leg i{width:8px;height:8px;border-radius:50%}
+.life-l{list-style:none;margin:0;padding:4px 16px 4px 34px;background:var(--card);border-radius:22px;box-shadow:var(--sh);position:relative}.life-l::before{content:"";position:absolute;left:21px;top:22px;bottom:22px;width:2px;background:var(--line)}
+.life-l li{position:relative;display:flex;flex-direction:column;gap:1px;padding:12px 0;border-bottom:1px solid var(--line)}.life-l li:last-child{border-bottom:0}.life-l li>i{position:absolute;left:-18px;top:17px;width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 3px var(--card)}
+.life-d{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}.life-l b{font-size:14.5px;line-height:1.35}
+.life .life-more{display:none}.life.life-open .life-more{display:flex}`; document.head.appendChild(st); }
+
 window.addEventListener('hashchange',route); route();
 if(/(^|[#&])bestellt=1/.test(location.hash)) thanksSheet();
 if(!new URLSearchParams((location.hash||'').slice(1)).get('c')&&!new URLSearchParams((location.hash||'').slice(1)).get('k')) intro();

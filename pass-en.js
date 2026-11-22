@@ -3,6 +3,7 @@
    Rechtstexte (Datenschutz, Impressum, Kaufvertrag) bleiben bewusst Deutsch. */
 (function(){
 const D={
+"Lebenslauf":"Life story","Selbst":"Self","Teil":"Part","Schaden":"Damage","Kauf":"Purchase","Start":"Start","Pass angelegt":"Pass created","Rad gekauft":"Bike purchased","selbst eingetragen":"self-entered","geprüft":"checked","noch nicht geprüft":"not checked yet",
 "Nächste Schritte":"Next steps","Alles erledigt":"All done","Nichts Dringendes – gute Fahrt!":"Nothing urgent \u2013 enjoy the ride!","laut Wartungsplan":"per maintenance plan","Reparatur oder Versicherung eintragen":"Add repair or insurance","rechtzeitig Termin machen":"book a slot in time","Je vollständiger, desto besser bei Diebstahl und Verkauf":"The more complete, the better for theft and selling","Offline – Einträge bleiben auf dem Handy":"Offline \u2013 entries stay on your phone","Wieder online":"Back online",
 "Design:":"Theme:","Dunkel":"Dark","Hell":"Light","Automatisch":"Automatic",
 "Gebrauchtes Rad gefunden?":"Found a used bike?","In 10 Sekunden prüfen – vor dem Kauf.":"Check it in 10 seconds \u2013 before you buy.","Diebstahl-Abgleich":"Theft check","Ist das Rad in FYF als gestohlen gemeldet?":"Is the bike reported stolen in FYF?","Service und Reparaturen, von Werkstätten bestätigt":"Service and repairs confirmed by workshops","Kilometer-Prüfung":"Mileage check","Passen die Kilometerstände zusammen?":"Do the mileage readings add up?","Akku & Besitzer":"Battery & owners","Akku-Zustand (E-Bike) und Anzahl Vorbesitzer":"Battery health (e-bike) and number of previous owners",
@@ -95,6 +96,7 @@ const D={
 "Sprache":"Language"
 };
 const P=[
+[/^(\d+) Ereignis(se)?$/,(m,a)=>`${a} event${a==='1'?'':'s'}`],[/^Alle (\d+) anzeigen$/,(m,a)=>`Show all ${a}`],[/^Erledigt: (.+)$/,(m,a)=>`Done: ${T(a)||a}`],
 [/^Service fällig: (.+)$/,(m,a)=>`Service due: ${T(a)||a}`],[/^Bald fällig: (.+)$/,(m,a)=>`Due soon: ${T(a)||a}`],[/^(.+) tauschen$/,(m,a)=>`Replace ${T(a)||a}`],[/^Diebstahlschutz (\d)\/5$/,(m,a)=>`Theft protection ${a}/5`],[/^Pass (\d+) % vollständig$/,(m,a)=>`Pass ${a} % complete`],[/^(\d+) Schaden offen$/,(m,a)=>`${a} open damage`],
 [/^(\d+) Angaben? fehlen$/,(m,a)=>`${a} item${a==='1'?'':'s'} missing`],
 [/^Ziel (\d+) %$/,(m,a)=>`Goal ${a} %`],
