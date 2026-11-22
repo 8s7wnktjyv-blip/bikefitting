@@ -113,7 +113,7 @@ Empfehlungslogik: bleibt regelbasiert, mit Begründung und Zahl. Wir sind keine 
 **Größere Schritte (mehrere Läufe):**
 5. Fitting-Ablauf mit Fortschrittsleiste und Live-Skizze
 6. ◐ Sitzungsvergleich: Überlagerung fertig (v.148), Verlaufslinien gab es schon
-7. Kundenakte mit einer gemeinsamen Zeitleiste
+7. ✅ Kundenakte mit Kopf und gemeinsamer Zeitleiste (v.151)
 8. PDF-Berichte im neuen Stil
 9. Geometrie-Bibliothek im Fitting-Ablauf: „passende Rahmen zu dieser Sitzposition“
 

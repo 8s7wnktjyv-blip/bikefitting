@@ -1,0 +1,11 @@
+// v.151: Kundenakte – Kennzahlen-Kopf, Wiedervorlage eingeklappt, Zeitleiste mit Filter, Eintrag öffnet Fitting; Handy ohne Querscroll.
+const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
+(async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
+ for(const [n,o] of [['Bildschirm',{viewport:{width:1440,height:1000},locale:'de-DE'}],['iPhone',{...devices['iPhone 13'],locale:'de-DE'}]]){ const p=await (await b.newContext(o)).newPage(); p.on('pageerror',e=>errs.push(n+': '+e.message)); await p.goto(BASE+'/index.html'); await p.waitForTimeout(1500);
+  await p.evaluate(()=>{ const F=window.__fitframe.T118; const c=F.S().customers.find(x=>/Lena/.test(x.name)); c.wv=[]; F.ui().route='kunden'; F.render(); }); await p.waitForTimeout(300);
+  await p.click('tr[data-act="openCustomer"]:has-text("Lena")'); await p.waitForTimeout(600);
+  const r=await p.evaluate(()=>{ const h=document.querySelector('.c360'); return {h:h?h.innerText.replace(/\s+/g,' '):'',hh:h?h.getBoundingClientRect().height:0,wv:!!document.querySelector('details.c360-wv'),n:document.querySelectorAll('.c360-list li').length,ov:document.documentElement.scrollWidth>innerWidth+1}; });
+  log(n,'1 Kopf:',r.h,'Höhe',Math.round(r.hh),'Wiedervorlage eingeklappt:',r.wv,'Zeitleiste:',r.n); if(!/Fittings/i.test(r.h)||r.hh<40) bad(n+': Kopf'); if(!r.wv) bad(n+': Wiedervorlage'); if(r.n<3) bad(n+': Zeitleiste'); if(r.ov) bad(n+': Querscroll');
+  await p.click('.c360-f [data-k="ws"]'); const vis=await p.evaluate(()=>[...document.querySelectorAll('.c360-list li')].filter(l=>l.style.display!=='none').map(l=>l.dataset.k)); log(n,'2 Filter Werkstatt:',JSON.stringify(vis)); if(!vis.length||vis.some(k=>k!=='ws')) bad(n+': Filter');
+  await p.click('.c360-f [data-k="all"]'); await p.locator('.c360-list li[data-act="openSession"]').first().click(); await p.waitForTimeout(500); const rt=await p.evaluate(()=>window.__fitframe.T118.ui().route); log(n,'3 Klick öffnet:',rt); if(rt!=='sitzung') bad(n+': Fitting öffnet nicht'); }
+ log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();
