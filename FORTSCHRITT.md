@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.172** (APP_VER 2026-11-22.172), Service-Worker-Cache `fyf-app-v1-p103`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.173** (APP_VER 2026-11-22.173), Service-Worker-Cache `fyf-app-v1-p104`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.173 (22.11.) | Pass-Garage im Stil der Radseite: Name, Status und Infos (km, Ziel, Schutz, Pass) weiß auf dem Foto mit Verlauf, Glas-Chips. |
 | v.172 (22.11.) | Pass-Radseite neu (Rückmeldung Dominik: „nicht krass genug“): großer Foto-Kopf mit Name und Diebstahl-Status weiß auf dem Bild; dunkles Cockpit mit Urteil (z. B. Verkaufsbereit), 3 Ringen Zustand · Pass · Schutz und Kennzahlen km/Einträge/bestätigt/Besitzer (ersetzt die 4 Einzelkacheln); Zustandsbericht und Pass-Vervollständigung als eingeklappte Details; Schutz-Kachel in „Mein Rad“ entfällt (steht im Cockpit), Wert-Kachel volle Breite; Schnellzugriff kompakter. Test t172. |
 | v.171 (22.11.) | Software: Kundenliste zeigt Handlungsbedarf direkt am Namen – „Nachkontrolle überfällig“ (rot), „Nachkontrolle bald“ (7 Tage), „N Aufträge offen“. Test t171. |
 | v.170 (22.11.) | Software: Werkstatt-Tafel – Karten mit farbigem Statusbalken je Spalte (blau/violett/gelb-braun/grün, wie die Status-Chips), überfällige Karten mit rotem Rahmen. |

@@ -2426,6 +2426,14 @@ details.ck-det #scoreHost .card.score{box-shadow:none;padding:0 0 12px;margin:0;
 .glance{grid-template-columns:1fr 1fr!important}
 details.more[data-tmore]>summary{display:flex;align-items:center;gap:8px}details.more[data-tmore]>summary .muted{margin-right:auto}.glance .gl-val{grid-column:1/-1;min-height:96px}.glance .gl-comp{grid-column:auto!important}`; document.head.appendChild(st); }
 
+// ---------- v.173 Garage im Stil der Radseite: Name, Status und Infos auf dem Foto ----------
+{ const st=document.createElement('style'); st.textContent=`.garage{gap:16px!important}
+.bikecard{border-radius:30px!important;box-shadow:0 20px 40px -26px rgba(15,20,25,.5)!important}
+.bikecard .meta{position:absolute;left:0;right:0;bottom:0;padding:70px 18px 16px!important;background:linear-gradient(180deg,rgba(11,15,20,0) 0%,rgba(11,15,20,.55) 42%,rgba(11,15,20,.9) 100%);color:#fff}
+.bikecard .bk-name{color:#fff!important;font-size:24px!important;text-shadow:0 1px 12px rgba(0,0,0,.35)}.bikecard .bk-sub{color:rgba(255,255,255,.75)!important}
+.bikecard .meta .status{color:#fff!important;font-size:13px!important}.bikecard .meta .status i{background:#4ade80!important}.bikecard .meta .status.warn i{background:#fbbf24!important}.bikecard .meta .status.bad i{background:#f87171!important}
+.bikecard .gchip{background:rgba(255,255,255,.16)!important;color:#fff!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}.bikecard .gchip.warn{background:rgba(251,191,36,.28)!important}.bikecard .gchip.new{background:rgba(232,98,15,.85)!important}`; document.head.appendChild(st); }
+
 window.addEventListener('hashchange',route); route();
 if(/(^|[#&])bestellt=1/.test(location.hash)) thanksSheet();
 if(!new URLSearchParams((location.hash||'').slice(1)).get('c')&&!new URLSearchParams((location.hash||'').slice(1)).get('k')) intro();
