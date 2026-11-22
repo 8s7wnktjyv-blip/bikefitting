@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.178** (APP_VER 2026-11-22.178), Service-Worker-Cache `fyf-app-v1-p109`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.179** (APP_VER 2026-11-22.179), Service-Worker-Cache `fyf-app-v1-p110`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.179 (22.11.) | Pass dunkel & modern (Entscheidung Dominik 22.11.: „dunkel als Standard, in Einstellungen änderbar, wie Strava“): neues `pass-theme.css` für Pass und Händlerfinder – Nachtblau-Verlauf, dunkle Karten mit feinem Rand, orange Hauptknöpfe, Glas-Leiste; Umschalter „Design: Dunkel · Hell · Automatisch“ unten in der Garage (gespeichert, Automatisch = iPhone-Einstellung); alle Pass-Seiten automatisch auf helle Reste/Kontrast geprüft. Test t179. |
 | v.178 (22.11.) | Händlerfinder: Laden-Karten mit farbigem Initial, ohne Unterstreichung, Pfeil, ganze Karte antippbar, Bewertung hervorgehoben. |
 | v.177 (22.11.) | Pass „Rad prüfen“: Scan als dunkle Hero-Karte mit orangem Knopf, darunter 4 Kacheln, was die Prüfung zeigt (Diebstahl, Werkstatt-Nachweise, Kilometer, Akku & Besitzer). |
 | v.176 (22.11.) | Pass: einheitliche Aufklapp-Pfeile (› dreht beim Öffnen) statt +/– überall. |

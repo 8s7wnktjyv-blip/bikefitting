@@ -1,0 +1,32 @@
+/* FYF Pass – dunkles Design (Standard ab v.179). Hell bleibt per Einstellung wählbar. Gilt für rad.html und finder.html. */
+:root[data-theme="dark"]{--bg:#07090c;--card:#12171e;--card2:#1a212a;--ink:#f3f6f9;--muted:#8d99a8;--line:#232c37;--acc:#ff6a1a;--acc2:#ff8a45;--ok:#22c55e;--bad:#f87171;--sh:0 1px 0 rgba(255,255,255,.04) inset,0 18px 40px -24px rgba(0,0,0,.9);color-scheme:dark}
+:root[data-theme="dark"] body{background:radial-gradient(130% 55% at 50% -8%,#1c2936 0%,#0a0e13 52%,#07090c 100%) fixed!important;color:var(--ink)}
+:root[data-theme="dark"] .card,:root[data-theme="dark"] .tool,:root[data-theme="dark"] .gl-t:not(.gl-val),:root[data-theme="dark"] details.more,:root[data-theme="dark"] .actions.qa>*,:root[data-theme="dark"] .ck-rider,:root[data-theme="dark"] .bdg,:root[data-theme="dark"] .pc-f,:root[data-theme="dark"] .hero,:root[data-theme="dark"] .bikecard{background:linear-gradient(180deg,#151b23 0%,#10151b 100%)!important;border:1px solid rgba(255,255,255,.06)!important;color:var(--ink)!important}
+:root[data-theme="dark"] details.more .card,:root[data-theme="dark"] .card .card{background:rgba(255,255,255,.03)!important}
+:root[data-theme="dark"] .cockpit{background:linear-gradient(160deg,#1a2532 0%,#0e141b 100%)!important;border:1px solid rgba(255,255,255,.07)}:root[data-theme="dark"] .ck-ring b{background:#0f151c!important}
+:root[data-theme="dark"] .gl-val{background:linear-gradient(135deg,#ff6a1a 0%,#c2410c 100%)!important}
+:root[data-theme="dark"] .bikepic{background:#161d25!important}
+:root[data-theme="dark"] .btn{background:var(--acc)!important;color:#fff!important}
+:root[data-theme="dark"] .btn.ghost{background:rgba(255,255,255,.06)!important;color:var(--ink)!important;border:1px solid rgba(255,255,255,.1)!important}
+:root[data-theme="dark"] .actions.qa>.btn{background:linear-gradient(180deg,#151b23,#10151b)!important}
+:root[data-theme="dark"] input,:root[data-theme="dark"] select,:root[data-theme="dark"] textarea{background:#0d1217!important;color:var(--ink)!important;border-color:#2a3542!important}
+:root[data-theme="dark"] input::placeholder,:root[data-theme="dark"] textarea::placeholder{color:#5f6b78!important}
+:root[data-theme="dark"] .chip,:root[data-theme="dark"] .gchip:not(.new):not(.warn){background:rgba(255,255,255,.07)!important;color:var(--ink)!important}
+:root[data-theme="dark"] .chip.on{background:var(--ink)!important;color:#0b0f14!important}
+:root[data-theme="dark"] .tb{color:var(--muted)!important;border-color:rgba(255,255,255,.12)!important}:root[data-theme="dark"] .tb.v{background:rgba(34,197,94,.15)!important;color:#4ade80!important}
+:root[data-theme="dark"] .gchip.new{background:rgba(255,106,26,.2)!important;color:#ff9a5c!important}:root[data-theme="dark"] .gchip.warn{background:rgba(251,191,36,.15)!important;color:#fbbf24!important}
+:root[data-theme="dark"] .tpage{background:var(--bg)!important}:root[data-theme="dark"] .tp-top{background:rgba(7,9,12,.72)!important}:root[data-theme="dark"] .tp-back{background:rgba(255,255,255,.08)!important;color:var(--ink)!important}
+:root[data-theme="dark"] .sheet>div,:root[data-theme="dark"] .sheet .card{background:#12171e!important;color:var(--ink)!important}
+:root[data-theme="dark"] nav,:root[data-theme="dark"] .tabbar{background:rgba(16,21,27,.82)!important;border-color:rgba(255,255,255,.07)!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+:root[data-theme="dark"] nav a[aria-current],:root[data-theme="dark"] nav a.on,:root[data-theme="dark"] .tabbar .on{background:rgba(255,255,255,.08)!important;color:#fff!important}
+:root[data-theme="dark"] .ring span,:root[data-theme="dark"] .goal-ring span{background:var(--card)!important}
+:root[data-theme="dark"] .hv{background:rgba(255,255,255,.06)!important}
+:root[data-theme="dark"] .bld-h{background:rgba(217,119,6,.12)!important}
+:root[data-theme="dark"] .kv{border-color:var(--line)!important}
+:root[data-theme="dark"] a{color:inherit}
+:root[data-theme="dark"] button:not([class]){background:rgba(255,255,255,.07)!important;color:var(--ink)!important;border:1px solid rgba(255,255,255,.1)!important}:root[data-theme="dark"] input[type="submit"]{background:var(--acc)!important;color:#fff!important;border:0!important}
+:root[data-theme="dark"] .hint{background:rgba(248,113,113,.1)!important;color:var(--ink)!important;border-color:rgba(248,113,113,.3)!important}
+:root[data-theme="dark"] .n{background:rgba(255,255,255,.1)!important;color:#fff!important}
+:root[data-theme="dark"] .hv-almost{color:#93c5fd!important;border-color:#93c5fd!important}:root[data-theme="dark"] .hv-ready{color:#4ade80!important;border-color:#4ade80!important}:root[data-theme="dark"] .hv-stau{color:#fbbf24!important;border-color:#fbbf24!important}:root[data-theme="dark"] .hv-risk{color:#f87171!important;border-color:#f87171!important}
+:root[data-theme="dark"] button[class=""]{background:rgba(255,255,255,.08)!important;color:var(--ink)!important;border:1px solid rgba(255,255,255,.1)!important}:root[data-theme="dark"] button[class=""][aria-pressed="true"],:root[data-theme="dark"] button[class=""].on{background:var(--acc)!important;color:#fff!important}
+:root[data-theme="dark"] .photo-btn{background:rgba(0,0,0,.45)!important;color:#fff!important;border:1px solid rgba(255,255,255,.18)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
