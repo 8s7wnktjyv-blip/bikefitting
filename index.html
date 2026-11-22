@@ -2050,7 +2050,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.154';
+const APP_VER='2026-11-22.155';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -9564,6 +9564,17 @@ document.addEventListener('dragover',e=>{ const col=e.target.closest&&e.target.c
 document.addEventListener('drop',e=>{ const col=e.target.closest&&e.target.closest('.tf-col'); if(!col) return; e.preventDefault(); const [id,from]=(e.dataTransfer.getData('text/plain')||'').split('|'); const to=(col.className.match(/tf-(neu|arbeit|teile|fertig)\b/)||[])[1]; col.classList.remove('tf-over'); if(id&&to) tafelMove(id,from,to); });
 { const st=document.createElement('style'); st.textContent=`.tf-card[draggable="true"]{cursor:grab}.tf-card.tf-drag{opacity:.45}.tf-col.tf-over{outline:2px dashed var(--info);outline-offset:-4px;background:color-mix(in srgb,var(--info) 6%,var(--surface-2))!important}
 @media(min-width:900px) and (orientation:landscape){.tafel{grid-template-columns:repeat(4,minmax(0,1fr))!important}}`; document.head.appendChild(st); }
+/* v.155 Fitting-Bericht im Design „Präzision“: Graphit-Kopf, nummerierte Abschnitte, Messwerte in Monospace, Skizze vorher/nachher */
+{ const RH=reportHtml; reportHtml=function(s){ let h=RH(s); try{ if(Object.keys(s.after||{}).length&&Object.keys(s.before||{}).length){ const ov=fitOverlaySvg(s.before,{...s.before,...s.after},'Vorher','Nachher'); const i=h.indexOf('Vorher-Nachher-Vergleich</h3>'); if(ov&&i>0){ const j=i+'Vorher-Nachher-Vergleich</h3>'.length; h=h.slice(0,j)+ov.replace('class="fov"','class="fov fov-rep"')+h.slice(j); } } }catch(e){} return h; }; }
+{ const st=document.createElement('style'); st.textContent=`.report{font-family:var(--f-body);border-radius:12px!important;padding:0!important;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.report>.rh{background:#0f1419;color:#fff;padding:22px 26px!important;margin:0!important;border-bottom:3px solid #e8620f!important}.report>.rh h2,.report>.rh b{color:#fff!important}.report>.rh div{color:rgba(255,255,255,.8)}.report>.rh img{background:#fff;border-radius:6px;padding:3px}
+.report>:not(.rh){margin-left:26px;margin-right:26px}.report>:last-child{margin-bottom:24px}
+.report h3{display:flex;align-items:center;gap:10px;font-size:13px!important;text-transform:uppercase;letter-spacing:.08em;color:#0f1419!important;border-bottom:1px solid #e2e5ea;padding-bottom:6px;margin:6px 0 4px}
+.report h3 .rn{display:inline-grid!important;place-items:center;width:22px;height:22px;border-radius:6px!important;background:#0f1419!important;color:#fff!important;font-size:11.5px;letter-spacing:0;margin-right:0!important}
+.report table{width:100%;border-collapse:collapse}.report th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#56606b!important;font-weight:700;text-align:left;padding:6px 8px;border-bottom:1px solid #e2e5ea}.report td{padding:6px 8px;border-bottom:1px solid #eef0f3;font-variant-numeric:tabular-nums}
+.report td[style*="text-align:right"]{font-variant-numeric:tabular-nums;font-weight:600}
+.fov-rep{background:#f6f7f9!important;border-color:#e2e5ea!important;margin:6px 0 10px}.fov-rep .fov-t td:last-child{color:#1f5fae}
+@media print{.report>.rh{background:#0f1419!important}}`; document.head.appendChild(st); }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();

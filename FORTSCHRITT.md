@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.154** (APP_VER 2026-11-22.154), Service-Worker-Cache `fyf-app-v1-p85`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.155** (APP_VER 2026-11-22.155), Service-Worker-Cache `fyf-app-v1-p86`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.155 (22.11.) | Software (Konzept 8): Fitting-Bericht im Stil „Präzision“ – Graphit-Kopf mit Orange-Linie, nummerierte Abschnitte, ruhige Tabellen; im Vorher-Nachher-Vergleich die überlagerte Skizze mit Differenzen (auch im Druck/PDF). Test t155. |
 | v.154 (22.11.) | Pass (Plan-Schritt 7): „Tour-Check“ – 6–7 Punkte (Reifendruck mit eigenem Wert, Bremsen, Laufräder, Kette, Licht/Akku, Ausrüstung, fällige Wartung), Knopf erst nach allen Haken, Zähler auf der Kachel. Test t154. |
 | v.153 (22.11.) | Software (Konzept 4): Werkstatt-Tafel – Karten mit Maus/Stift ziehen; erlaubt sind nur dieselben Schritte wie der Weiter-Knopf (kein Überspringen von Kostenvoranschlag/Freigabe), „Wartet auf Teile“ hin und zurück; Tablet quer 4 Spalten. Test t153. |
 | v.152 (22.11.) | Pass (Plan-Schritt 5): „Rad-Karte teilen“ – Bild 1080×1350 im Browser gezeichnet (Foto oder Rad-Grafik, Modell, km, Jahresziel, Abzeichen), ohne Pass-Code/Rahmennummer/persönliche Daten; Teilen über das Handy-Menü oder als JPG speichern; auch auf der Ziel-Seite. Test t152. |
@@ -96,7 +97,7 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
-1. Software nach `docs/SOFTWARE-DESIGN-KONZEPT.md`, Roadmap-Punkte 4–9 (Fitting-Ablauf mit Fortschritt und Live-Skizze, Sitzungsvergleich, PDF neu).
+1. Software nach `docs/SOFTWARE-DESIGN-KONZEPT.md`, Roadmap-Punkte 4–9 (Fitting-Ablauf mit Fortschritt und Live-Skizze, Sitzungsvergleich, .
 2. Pass: Plan-Schritt 8 (Wunschliste/Kompatibilität – Umbau-Planer v.144 deckt Kosten/Gewicht ab), Verkaufs-/Übergabe-Flow weiter (Übergabe-Checkliste), Intervalle je Teil/Hersteller, nach Werkstattbesuch Intervalle zurücksetzen vorschlagen.
 3. Wartet auf Freigabe: Werkstatt-Freigabe 7 Tage + Schadens-Einträge von Läden (`docs/PASS-WERKSTATT-FREIGABE-PLAN.md`), Entscheidungen in `docs/STRATEGIE.md` (Werbung, kein Endkunden-Abo, Station).
 4. Danach Englisch Stufe 2/3.

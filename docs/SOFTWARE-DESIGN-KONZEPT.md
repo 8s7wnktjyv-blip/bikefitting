@@ -114,7 +114,7 @@ Empfehlungslogik: bleibt regelbasiert, mit Begründung und Zahl. Wir sind keine 
 5. Fitting-Ablauf mit Fortschrittsleiste und Live-Skizze
 6. ◐ Sitzungsvergleich: Überlagerung fertig (v.148), Verlaufslinien gab es schon
 7. ✅ Kundenakte mit Kopf und gemeinsamer Zeitleiste (v.151)
-8. PDF-Berichte im neuen Stil
+8. ✅ Fitting-Bericht (PDF) im neuen Stil mit Skizze (v.155)
 9. Geometrie-Bibliothek im Fitting-Ablauf: „passende Rahmen zu dieser Sitzposition“
 
 Keiner dieser Schritte ändert das Datenmodell. Alle sind Darstellung und Abläufe und damit freigegeben.
