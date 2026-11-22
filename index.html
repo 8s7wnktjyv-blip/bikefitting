@@ -2050,7 +2050,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.152';
+const APP_VER='2026-11-22.153';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -9353,7 +9353,7 @@ function tafelCard(w,col){ const td=today(), b=bike(w.bikeId)||{}, late=w.due&&w
 VIEWS.tafel=()=>{ const mech=[...new Set(S.workshop.filter(w=>!woIsDone(w.status)&&tfMech(w)).map(tfMech))].sort(); const f=ui.tafelM&&mech.includes(ui.tafelM)?ui.tafelM:'';
   const open=S.workshop.filter(w=>!woIsDone(w.status)&&(!f||tfMech(w)===f));
   const fs=document.fullscreenEnabled&&document.documentElement.requestFullscreen;
-  return `${head('Werkstatt-Tafel','Für einen Bildschirm in der Werkstatt. Antippen öffnet den Auftrag, der Knopf schiebt ihn weiter.',`<button class="btn" data-nav="werkstatt">← Zurück zur Werkstatt</button>${fs?`<button class="btn ghost" data-act="tafelFull">Vollbild</button>`:''}`)}
+  return `${head('Werkstatt-Tafel','Für einen Bildschirm in der Werkstatt. Antippen öffnet den Auftrag, der Knopf schiebt ihn weiter – am Computer auch per Ziehen.',`<button class="btn" data-nav="werkstatt">← Zurück zur Werkstatt</button>${fs?`<button class="btn ghost" data-act="tafelFull">Vollbild</button>`:''}`)}
   ${mech.length>1?`<div class="row" style="flex-wrap:wrap">${['',...mech].map(m=>`<button class="btn sm ${f===m?'primary':''}" data-act="tafelMech" data-v="${esc(m)}">${m?esc(m):'Alle'}</button>`).join('')}</div>`:''}
   <div class="tafel">${TAFEL_COLS.map(([k,l,fn])=>{ const L=open.filter(fn).sort((a,b)=>String(a.due||'9').localeCompare(String(b.due||'9'))); return `<section class="tf-col tf-${k}"><h3>${esc(l)} <span class="mono">${L.length}</span></h3>${L.length?L.map(w=>tafelCard(w,k)).join(''):'<p class="faint" style="margin:4px 0">Nichts</p>'}</section>`; }).join('')}</div>
   <p class="faint" style="font-size:12px">Aktualisiert sich jede Minute. Stand ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}.</p>`; };
@@ -9549,6 +9549,21 @@ ACT.tlFilter=function(el){ const sec=el.closest('.c360-tl'); if(!sec) return; co
 .c360-list{list-style:none;margin:12px 0 0;padding:0 0 0 14px;border-left:2px solid var(--line)}.c360-list li{position:relative;display:grid;grid-template-columns:88px 1fr auto;gap:10px;align-items:start;padding:9px 6px 9px 10px;border-radius:8px}.c360-list li.click{cursor:pointer}.c360-list li.click:hover{background:var(--surface-2)}
 .c360-list li>i{position:absolute;left:-21px;top:14px;width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 3px var(--bg)}.c360-d{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:1px}.c360-t{display:flex;flex-direction:column;min-width:0}.c360-t .faint{font-size:12.5px}
 @media(max-width:520px){.c360{grid-template-columns:repeat(2,1fr)}.c360-list li{grid-template-columns:1fr auto}.c360-d{grid-column:1/-1}}`; document.head.appendChild(st); }
+/* v.153 Werkstatt-Tafel: Karten ziehen (Maus/Stift) – nur erlaubte Schritte, Freigabe wird nie übersprungen */
+{ const TC=tafelCard; tafelCard=function(w,col){ return TC(w,col).replace('<div class="tf-card',`<div draggable="true" data-tfid="${esc(w.id)}" data-tfcol="${col}" class="tf-card`); }; }
+function tafelMove(id,from,to){ const w=S.workshop.find(x=>x.id===id); if(!w||from===to) return; const el={dataset:{id}}, nx=WO_FLOW[WO_FLOW.indexOf(w.status)+1];
+  const done=()=>{ try{ closeDrawer(); }catch(e){} render(); };
+  if(to==='teile'&&!w.wait){ ACT.woWait(el); return done(); }
+  if(from==='teile'&&w.wait&&(to==='arbeit'||to==='neu')){ ACT.woWait(el); return done(); }
+  if(from==='neu'&&to==='arbeit'&&nx==='In Arbeit'){ ACT.woNext(el); return done(); }
+  if(from==='arbeit'&&to==='fertig'&&nx==='Abholbereit'){ ACT.woNext(el); return done(); }
+  toast(w.status==='Freigabe ausstehend'||w.status==='Kostenvoranschlag'?'Erst Kostenvoranschlag/Freigabe im Auftrag erledigen':'Dieser Schritt geht nur im Auftrag',true); }
+document.addEventListener('dragstart',e=>{ const c=e.target.closest&&e.target.closest('[data-tfid]'); if(!c) return; e.dataTransfer.setData('text/plain',c.dataset.tfid+'|'+c.dataset.tfcol); e.dataTransfer.effectAllowed='move'; c.classList.add('tf-drag'); });
+document.addEventListener('dragend',e=>{ document.querySelectorAll('.tf-drag,.tf-over').forEach(x=>x.classList.remove('tf-drag','tf-over')); });
+document.addEventListener('dragover',e=>{ const col=e.target.closest&&e.target.closest('.tf-col'); if(!col) return; e.preventDefault(); document.querySelectorAll('.tf-over').forEach(x=>x!==col&&x.classList.remove('tf-over')); col.classList.add('tf-over'); });
+document.addEventListener('drop',e=>{ const col=e.target.closest&&e.target.closest('.tf-col'); if(!col) return; e.preventDefault(); const [id,from]=(e.dataTransfer.getData('text/plain')||'').split('|'); const to=(col.className.match(/tf-(neu|arbeit|teile|fertig)\b/)||[])[1]; col.classList.remove('tf-over'); if(id&&to) tafelMove(id,from,to); });
+{ const st=document.createElement('style'); st.textContent=`.tf-card[draggable="true"]{cursor:grab}.tf-card.tf-drag{opacity:.45}.tf-col.tf-over{outline:2px dashed var(--info);outline-offset:-4px;background:color-mix(in srgb,var(--info) 6%,var(--surface-2))!important}
+@media(min-width:900px) and (orientation:landscape){.tafel{grid-template-columns:repeat(4,minmax(0,1fr))!important}}`; document.head.appendChild(st); }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();
