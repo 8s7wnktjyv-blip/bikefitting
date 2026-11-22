@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.191** (APP_VER 2026-11-22.191), Service-Worker-Cache `fyf-app-v1-p122`, Datenbank **Stand 30**, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.192** (APP_VER 2026-11-22.192), Service-Worker-Cache `fyf-app-v1-p123`, Datenbank **Stand 30**, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.192 (22.11.) | Pass (Premium-Konzept Prio 5+8): **Leere Garage** – „Gib deinem Rad einen Ausweis.“, drei Nutzen-Chips (Diebstahlschutz, Service-Erinnerung, Wert beim Verkauf), Knopf „Rad anlegen · 1 Minute“; Konto ohne Rad nur „optional“ statt Warnung. **Bewegung & Haptik:** Ringe füllen sich beim Öffnen, Karten/Schritte/Kacheln blenden gestaffelt ein, Seiten gleiten herein, leichtes Eindrücken beim Antippen, kurzes Vibrieren bei „Gespeichert“ (Android; iPhone-Safari unterstützt das nicht). Alles aus bei „Bewegung reduzieren“. Test t192. |
 | v.191 (22.11.) | Pass (Wettbewerbs-Analyse Prio 4): **Helfer in der Nähe** – Fahrradläden/Werkstätten, Reparatur-Stationen, Luft, Schlauch-Automaten, E-Bike-Ladestationen, Polizei aus OpenStreetMap (kostenloser Overpass-Dienst, Ausweich-Server), nach Entfernung sortiert, Filter-Chips, Öffnungszeiten, „Route“ öffnet Apple Karten. Standort nur auf Knopfdruck, auf ~100 m gerundet, nichts gespeichert. Einstieg: Mehr Funktionen und „Problem lösen“ (Panne unterwegs?). „Helfer-Karte“ aus „Wünsch dir was“ entfernt (ist jetzt da). Live-Abruf in der Testumgebung nicht möglich (Netz gesperrt) – mit simulierter Antwort getestet. Test t191. |
 | v.190 (22.11.) | Pass (Wettbewerbs-Analyse Prio 6+7): **Rad-Karte teilen in Dunkel, Hell und als Sticker** (quadratisches PNG mit durchsichtigem Hintergrund für Instagram-Storys); freigestelltes Rad erscheint im Studio-Look mit Bodenschatten; Auswahl bleibt gespeichert. **„Wünsch dir was“** in der Garage: 6 geplante Funktionen (Apple Wallet, Helfer-Karte, Push-Erinnerungen, Werkstatt-Freigabe, Ratgeber, km aus Strava/Garmin) mit „Will ich haben“ – zählt anonym über die Nutzungszählung (Ereignis `wunsch_…`, sichtbar in der Plattform-Auswertung). Test t190. |
 | v.189 (22.11.) | Pass (Wettbewerbs-Analyse Prio 2+3): **Fotos im Vollbild** – Rad-Foto antippen bzw. Belege/Teil-/Schadensfotos öffnen im Vollbild mit Zoom (zwei Finger, Doppeltippen), Verschieben, Blättern (Wischen/Pfeile), Schließen (✕, nach unten wischen, Esc). **Ausweis-Angaben** im Diebstahl-Bereich: Position der Rahmennummer, Codierung/Registrierung (z. B. ADFC), 2. Schloss, weitere Seriennummern (Gabel, Dämpfer, Display, Licht), Halter/in falls abweichend – nur auf dem Gerät, nur im Anzeige-Blatt und in den Versicherungs-Unterlagen, nie in Verkaufstext oder öffentlichem Pass. Test t189. |

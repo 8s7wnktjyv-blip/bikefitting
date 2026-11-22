@@ -53,5 +53,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t189.js` – Pass: Ausweis-Angaben (nur lokal, im Anzeige-Blatt), Foto im Vollbild (öffnen, Doppeltippen-Zoom, Esc)
 - `t190.js` – Pass: Rad-Karte Dunkel/Hell/Sticker (PNG transparent), „Wünsch dir was“ (Wunsch zählt anonym)
 - `t191.js` – Pass: Helfer in der Nähe (Standort gerundet, OpenStreetMap-Abfrage simuliert, Sortierung, Filter, Route-Link)
+- `t192.js` – Pass: leere Garage (Nutzen-Chips, 1-Minuten-Knopf), Vibration beim Speichern, Ring-Animation
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.

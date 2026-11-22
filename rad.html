@@ -2543,7 +2543,7 @@ function clarityGarage(){ try{ if(/pruefen/.test(location.hash)) return; const g
 { const DUc=dataUi; dataUi=function(){ const r=DUc.apply(this,arguments); try{ const h=document.getElementById('dataHost'); if(!h) return r;
   const wrap=(card,title,note,warn)=>{ if(!card||card.closest('details')) return; const d=document.createElement('details'); d.className='more cl-grp'; d.innerHTML=`<summary><b>${title}</b><span class="cl-note${warn?' cl-warn':''}">${note}</span></summary><div></div>`; card.before(d); d.lastElementChild.appendChild(card); card.classList.add('cl-in'); };
   const cards=[...h.querySelectorAll(':scope > .card, :scope > div > .card')];
-  const va=cards.find(c=>/^Konto & Cloud-Sicherung/.test((c.querySelector('b')||{}).textContent||'')); if(va) wrap(va,'Konto & Sicherung',vaState()?'aktiv':'nicht eingerichtet',!vaState());
+  const va=cards.find(c=>/^Konto & Cloud-Sicherung/.test((c.querySelector('b')||{}).textContent||'')); if(va) wrap(va,'Konto & Sicherung',vaState()?'aktiv':mine().length?'nicht eingerichtet':'optional',!vaState()&&mine().length>0);
   const cal=h.querySelector('[data-calg]'); if(cal){ const n=(cal.querySelector('p')||{}).textContent||''; const m=n.match(/^(\d+) Termine/); wrap(cal,'Erinnerungen',m?m[1]+' Termine':''); }
  }catch(e){} return r; }; }
 { const AFc=askForm; askForm=function(){ const r=AFc.apply(this,arguments); clarityGarage(); return r; }; }
@@ -2636,9 +2636,9 @@ TOOLFN.card=toolCard;
 .bcard-img.bc-st{background:repeating-conic-gradient(rgba(127,127,127,.22) 0 25%,transparent 0 50%) 0 0/24px 24px;box-shadow:none}`; document.head.appendChild(st); }
 // v.190 „Wünsch dir was“ (ENDURE-Vorbild): geplante Funktionen, „Will ich haben“ zählt anonym über die Nutzungszählung
 const WISH=[['wallet','Fahrradpass im Apple Wallet','Die Pass-Karte immer griffbereit im iPhone'],['push','Erinnerungen aufs Handy','Service fällig? Eine Nachricht statt Kalender-Eintrag'],['grant','Werkstatt-Freigabe auf Zeit','Einer Werkstatt 7 Tage Zugriff geben, danach automatisch zu'],['tips','Kurze Ratgeber','Kette ölen, Reifendruck, Winterpause – jeweils in 60 Sekunden'],['strava','Kilometer automatisch','Kilometer aus Strava oder Garmin übernehmen']];
-function wishHtml(){ const W=LS('fyfpass:wish')||{}; const n=Object.keys(W).length; return `<details class="more" data-wish><summary style="display:flex;align-items:center;gap:8px"><b style="margin-right:auto">Wünsch dir was</b><span class="cl-note">${n?n+' gewählt':'Was kommt als Nächstes?'}</span></summary><div><p class="muted small" style="margin:0 0 10px">Daran arbeiten wir. Tipp an, was du willst – wir zählen nur anonym mit und bauen zuerst, was am meisten gewünscht wird.</p>${WISH.map(([k,t,d])=>`<div class="wish"><div><b>${esc(t)}</b><span>${esc(d)}</span></div><button type="button" class="wish-b${W[k]?' on':''}" data-wk="${k}">${W[k]?'✓ Gewünscht':'Will ich haben'}</button></div>`).join('')}</div></details>`; }
+function wishHtml(){ const W=LS('fyfpass:wish')||{}; const n=Object.keys(W).length; return `<details class="more" data-wish><summary style="display:flex;align-items:center;gap:8px"><b style="margin-right:auto">Wünsch dir was</b><span class="cl-note">${n?n+' gewählt':'Abstimmen'}</span></summary><div><p class="muted small" style="margin:0 0 10px">Daran arbeiten wir. Tipp an, was du willst – wir zählen nur anonym mit und bauen zuerst, was am meisten gewünscht wird.</p>${WISH.map(([k,t,d])=>`<div class="wish"><div><b>${esc(t)}</b><span>${esc(d)}</span></div><button type="button" class="wish-b${W[k]?' on':''}" data-wk="${k}">${W[k]?'✓ Gewünscht':'Will ich haben'}</button></div>`).join('')}</div></details>`; }
 { const DUw=dataUi; dataUi=function(){ const r=DUw.apply(this,arguments); try{ const h=document.getElementById('dataHost'); if(!h||h.querySelector('[data-wish]')) return r; h.insertAdjacentHTML('beforeend',wishHtml()); const d=h.querySelector('[data-wish]');
-  d.querySelectorAll('[data-wk]').forEach(b=>b.onclick=()=>{ const W=LS('fyfpass:wish')||{}, k=b.dataset.wk; if(W[k]) delete W[k]; else { W[k]=1; hit('wunsch_'+k); } LSset('fyfpass:wish',W); b.classList.toggle('on',!!W[k]); b.textContent=W[k]?'✓ Gewünscht':'Will ich haben'; const n=Object.keys(W).length; d.querySelector('summary .cl-note').textContent=n?n+' gewählt':'Was kommt als Nächstes?'; }); }catch(e){} return r; }; }
+  d.querySelectorAll('[data-wk]').forEach(b=>b.onclick=()=>{ const W=LS('fyfpass:wish')||{}, k=b.dataset.wk; if(W[k]) delete W[k]; else { W[k]=1; hit('wunsch_'+k); } LSset('fyfpass:wish',W); b.classList.toggle('on',!!W[k]); b.textContent=W[k]?'✓ Gewünscht':'Will ich haben'; const n=Object.keys(W).length; d.querySelector('summary .cl-note').textContent=n?n+' gewählt':'Abstimmen'; }); }catch(e){} return r; }; }
 { const st=document.createElement('style'); st.textContent=`.wish{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(127,127,127,.14)}.wish>div{flex:1;display:flex;flex-direction:column;min-width:0}.wish>div span{font-size:13px;color:var(--muted,#8d99a8)}
 .wish-b{font:inherit;font-size:13px;font-weight:700;white-space:nowrap;padding:8px 12px;border-radius:999px;border:1px solid rgba(127,127,127,.3);background:transparent;color:inherit;cursor:pointer}.wish-b.on{background:var(--acc,#ff6a1a);border-color:var(--acc,#ff6a1a);color:#fff}`; document.head.appendChild(st); }
 // v.191 Helfer in der Nähe (linexo/BikePass-EU-Vorbild): Werkstätten, Reparatur-Stationen, Luft, Schlauch-Automaten, E-Bike-Laden, Polizei – kostenlos über OpenStreetMap (Overpass), Standort nur auf Knopfdruck und auf ~100 m gerundet
@@ -2674,6 +2674,14 @@ TOOLFN.near=toolNear;
 .nr>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.nr>div b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nr>div span{font-size:12.5px;color:var(--muted,#8d99a8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nr-oh{font-size:12px!important}
 .nr-i{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;flex-shrink:0;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c)}
 .nr-d{text-align:right;font-weight:800;font-size:14px;white-space:nowrap;display:flex;flex-direction:column}.nr-d small{font-weight:700;font-size:12px;color:var(--acc,#ff6a1a)}`; document.head.appendChild(st); }
+// v.192 Leere Garage (Premium-Konzept C): Nutzen in einem Satz, 1-Minuten-Versprechen, drei Nutzen-Chips
+{ const AFe=askForm; askForm=function(){ const r=AFe.apply(this,arguments); try{ if(/pruefen/.test(location.hash)) return r; const e=document.querySelector('#app .empty'); if(!e||e.querySelector('.em-chips')) return r; const h=e.querySelector('h2'); if(h) h.textContent='Gib deinem Rad einen Ausweis.';
+  const p=e.querySelector('p.muted'); const ic=d=>`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
+  const chips=`<div class="em-chips"><span style="--c:#ef4444">${ic('M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z')}Diebstahlschutz</span><span style="--c:#f97316">${ic('M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z')}Service-Erinnerung</span><span style="--c:#22c55e">${ic('M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6')}Wert beim Verkauf</span></div>`;
+  if(p) p.insertAdjacentHTML('afterend',chips); const rb=e.querySelector('#regb'); if(rb) rb.innerHTML='Rad anlegen <span style="opacity:.75;font-weight:600">· 1 Minute</span>'; }catch(x){} return r; }; }
+// v.192 Bewegung & Haptik: Ringe füllen sich beim Öffnen, Karten blenden sanft ein, kurzes Vibrieren beim Speichern (wo möglich); respektiert „Bewegung reduzieren“
+function haptic(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms||12); }catch(e){} }
+{ const T0=toast; toast=function(m,bad){ try{ if(!bad&&/Gespeichert|gespeichert|Erledigt|eingetragen/.test(String(m))) haptic(12); }catch(e){} return T0.apply(this,arguments); }; }
 { const AFp=askForm; askForm=function(){ const r=AFp.apply(this,arguments); cardPolish(); setTimeout(cardPolish,300); return r; }; }
 { const st=document.createElement('style'); const TC={parts:'#3b82f6',svc:'#f97316',theft:'#ef4444',docs:'#22c55e',eb:'#06b6d4',fit:'#8b5cf6',sus:'#14b8a6',tire:'#94a3b8',sell:'#ec4899',cost:'#eab308',help:'#0ea5e9',dmg:'#ef4444',trk:'#6366f1',build:'#a855f7',tour:'#10b981',card:'#ff6a1a',newpart:'#3b82f6',qr:'#94a3b8',nfc:'#3b82f6',book:'#f97316',bfit:'#22c55e'};
   st.textContent=`[data-setupb]{display:none!important}
@@ -2712,6 +2720,20 @@ details.more + details.more{border-top-left-radius:0!important;border-top-right-
 .vd li>span{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900;flex-shrink:0}
 .vd li.vd-ok>span{background:#22c55e;color:#06210f}.vd li.vd-warn>span{background:#f59e0b;color:#241500}.vd li.vd-bad>span{background:#ef4444;color:#fff}.vd li.vd-unk>span,.vd li.vd-info>span{background:rgba(127,127,127,.25)}
 .vd-f{margin-top:12px;padding-top:10px;border-top:1px solid rgba(127,127,127,.16);font-size:12.5px;color:var(--muted,#8d99a8)}.vd-f details{margin-top:6px}.vd-f summary{cursor:pointer;font-weight:700;color:inherit}.vd-f p{margin:6px 0 0;line-height:1.45}
+@property --p{syntax:'<number>';inherits:true;initial-value:0}
+.empty h2{font-size:26px!important;letter-spacing:-.02em}
+.em-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 20px}.em-chips span{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:7px 12px;border-radius:999px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c)}
+@media (prefers-reduced-motion:no-preference){
+ @keyframes fyfUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+ .garage>.bikecard,[data-ns-gar] .ns,[data-ns-rad] .ns,.vd,[data-cockpit],.glance>*,.tools>.tool{animation:fyfUp .38s cubic-bezier(.2,.7,.2,1) both}
+ .garage>.bikecard:nth-child(2),[data-ns-gar] .ns:nth-child(2),[data-ns-rad] .ns:nth-child(2),.glance>*:nth-child(2),.tools>.tool:nth-child(2){animation-delay:.05s}
+ .garage>.bikecard:nth-child(3),[data-ns-gar] .ns:nth-child(3),[data-ns-rad] .ns:nth-child(3),.glance>*:nth-child(3),.tools>.tool:nth-child(3){animation-delay:.1s}
+ .glance>*:nth-child(4),.tools>.tool:nth-child(4){animation-delay:.15s}
+ .tpage{animation:fyfUp .26s cubic-bezier(.2,.7,.2,1) both}
+ .ck-ring,.cq-ring{animation:fyfRing .9s cubic-bezier(.2,.7,.2,1) both}
+ @keyframes fyfRing{from{--p:0}}
+ .bikecard:active,.ns:active,.tool:active,.cq-entry:active,.nr:active{transform:scale(.98);transition:transform .12s}
+}
 .gc-rider{position:absolute;top:12px;left:12px;z-index:3;font-size:12.5px!important;font-weight:700;color:#fff!important;background:rgba(10,13,18,.5);border:1px solid rgba(255,255,255,.18);padding:5px 11px;border-radius:999px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .gc-rider::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc,#ff6a1a);margin-right:6px;vertical-align:1px}
 .cl-grp>summary{display:flex;align-items:center;gap:8px}.cl-grp>summary b{margin-right:auto}.cl-note{font-size:13px;color:var(--muted,#8d99a8);font-weight:600}.cl-warn{color:#f59e0b}
