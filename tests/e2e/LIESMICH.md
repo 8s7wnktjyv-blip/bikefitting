@@ -36,5 +36,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t159.js` – Pass: Verkauf in 5 Schritten (Zähler und Speicherung)
 - `t160.js` – Pass und Software offline (eigenes Rad ohne frühere Online-Ansicht, kein Diebstahl-Status offline)
 - `t161.js` – Englisch Stufe 2/3: Händlerfinder englisch, neue Pass-Seiten englisch, Rückschalten auf Deutsch
+- `t162.js` – Pass: Umbau planen mit Kompatibilitäts-Hinweisen (Fachzahl, Marke)
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.

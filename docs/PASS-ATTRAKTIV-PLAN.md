@@ -17,7 +17,7 @@ Teilen – Wartung bleibt voll erhalten, wird aber nicht zur Hürde.
 5. ✅ **Rad-Karte zum Teilen** – schöne Bildkarte (Foto, Modell, km, Abzeichen) für WhatsApp/Instagram, erzeugt im Browser (html2canvas ist schon vorhanden), ohne Code und ohne persönliche Daten.
 6. ✅ **Diebstahlschutz-Check** – 5 Punkte (Rahmennummer, Foto, Merkmale, QR-Aufkleber, Versicherung) mit Ampel; Versicherungs-Checkliste als PDF.
 7. ✅ **Tour-Check vor der Ausfahrt** – 1-Minuten-Checkliste (Reifendruck aus Rechner, Bremsen, Licht, Werkzeug) mit „Alles ok“-Haken.
-8. **Upgrade-Planer / Wunschliste** – Teile merken, Kompatibilitätshinweise aus der eingetragenen Ausstattung (regelbasiert), Anfrage an die Werkstatt.
+8. ✅ **Upgrade-Planer / Wunschliste** – Teile merken, Kompatibilitätshinweise aus der eingetragenen Ausstattung (regelbasiert), Anfrage an die Werkstatt.
 
 ## Regeln
 Keine bezahlten Dienste, KI nur regelbasiert, Daten bleiben auf dem Gerät bzw. im Pass wie bisher, Design hell nach Vorbild Canyon/SRAM AXS, Dark Mode, Englisch-Wörterbuch um neue Texte ergänzen.

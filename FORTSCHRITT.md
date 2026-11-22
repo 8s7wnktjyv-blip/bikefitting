@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.161** (APP_VER 2026-11-22.161), Service-Worker-Cache `fyf-app-v1-p92`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.162** (APP_VER 2026-11-22.162), Service-Worker-Cache `fyf-app-v1-p93`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.162 (22.11.) | Pass (Plan-Schritt 8): „Umbau planen“ zeigt regelbasierte Kompatibilitäts-Hinweise – Fachzahl (8–13-fach) passt nicht zum Antrieb, Schaltwerk/Hebel anderer Marke, große Rennrad-Kassette, Bremsscheibe ≥ 200 mm an Rennrad/Gravel, sehr breite Reifen am Rennrad, Vorbau/Lenker ändert Sitzposition; „ohne Gewähr“. Test t162. |
 | v.161 (22.11.) | Englisch Stufe 2/3 (Punkt 14): Wörterbuch um ca. 210 Texte und Muster erweitert – alle Pass-Werkzeuge (inkl. neuer Seiten Wert, Schutz, Teile, Schäden, Tracker, Umbau, Ziele, Rad-Karte, Tour-Check, Verkauf), Hilfe/Problemlöser, Sitzposition, Reifendruck, Kosten; Händlerfinder lädt bei Englisch dasselbe Wörterbuch (Liste, Laden, Anfrage). Messung: in allen 22 Pass-Bereichen keine deutschen Oberflächentexte mehr (Kaufvertrag/Rechtstexte bleiben bewusst Deutsch). Test t161. |
 | v.160 (22.11.) | Offline (Wunschliste 22.11.): Fehler behoben – ein eigenes Rad, das noch nie online geöffnet wurde, zeigte offline nur „Gerade nicht erreichbar“. Jetzt erscheinen die eigenen Daten mit Hinweis „Werkstatt-Einträge laden, sobald wieder Internet da ist“; Diebstahl-Status wird offline nicht behauptet. Software startet offline (Service-Worker). Test t160. |
 | v.159 (22.11.) | Pass: „Verkauf in 5 Schritten“ oben in „Verkaufen“ – Zustand klären, Preis, Anzeige teilen, Kaufvertrag, Pass übergeben; Haken setzen sich beim Benutzen der Knöpfe, Antippen springt zum Feld. Test t159. |
@@ -104,6 +105,6 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 ## Nächster Schritt
 
 1. Software-Konzept `docs/SOFTWARE-DESIGN-KONZEPT.md` ist umgesetzt (Punkte 1–9). Weiter: Feinschliff nach Rückmeldung von Dominik, Dashboard-Kacheln je Ladentyp verfeinern.
-2. Pass: Plan `docs/PASS-ATTRAKTIV-PLAN.md` umgesetzt bis auf Schritt 8 (Wunschliste/Kompatibilität – Umbau-Planer deckt Kosten/Gewicht ab).
+2. Pass: Plan `docs/PASS-ATTRAKTIV-PLAN.md` vollständig umgesetzt (v.141–v.162).
 3. Wartet auf Freigabe: Werkstatt-Freigabe 7 Tage + Schadens-Einträge von Läden (`docs/PASS-WERKSTATT-FREIGABE-PLAN.md`), Entscheidungen in `docs/STRATEGIE.md` (Werbung, kein Endkunden-Abo, Station).
 4. Englisch fertig (v.161) – neue Texte immer gleich ins Wörterbuch `pass-en.js`.
