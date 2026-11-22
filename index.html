@@ -2061,7 +2061,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.168';
+const APP_VER='2026-11-22.169';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -9593,6 +9593,9 @@ document.addEventListener('drop',e=>{ const col=e.target.closest&&e.target.close
   const card=`<div class="ff-teaser"><div><span class="eyebrow">Geometrie-Bibliothek</span><b>${hits.length?`${hits.length} Rahmen passen zu dieser Sitzposition`:'Kein Rahmen der Bibliothek passt ohne Umbau'}</b>${hits[0]?`<span class="faint">Beste Übereinstimmung: ${esc(hits[0].g.brand+' '+hits[0].g.model)} · ${esc(hits[0].x.size)} (Vorbau ${hits[0].x.stem} mm, Spacer ${hits[0].x.spacer} mm)</span>`:'<span class="faint">Andere Radtypen oder eigene Geometrien prüfen.</span>'}</div><button class="btn" data-act="resTab" data-v="groesse">Rahmen-Finder öffnen</button></div>`;
   const i=h.lastIndexOf('</div>'); h=i>0?h.slice(0,i)+card+h.slice(i):h+card; } }catch(e){} return h; }; }
 { const st=document.createElement('style'); st.textContent=`.ff-teaser{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--line);border-left:4px solid var(--info);border-radius:12px;padding:14px 16px;background:var(--surface);margin-top:12px}.ff-teaser>div{display:flex;flex-direction:column;gap:2px;min-width:0}.ff-teaser .eyebrow{color:var(--info)}.ff-teaser .faint{font-size:13px}`; document.head.appendChild(st); }
+/* v.169 Seitenfenster am Handy/Tablet: nach rechts wischen schließt (nicht in Feldern oder seitlich scrollbaren Bereichen) */
+{ let sx=null, sy=0, st=0; document.addEventListener('touchstart',e=>{ const d=e.target.closest&&e.target.closest('#overlay .drawer'); if(!d||e.touches.length!==1||e.target.closest('input,textarea,select,canvas,.tw,.ctabs,.c360-f,[data-noswipe]')){ sx=null; return; } sx=e.touches[0].clientX; sy=e.touches[0].clientY; st=Date.now(); },{passive:true});
+  document.addEventListener('touchend',e=>{ if(sx==null) return; const t=e.changedTouches[0], dx=t.clientX-sx, dy=Math.abs(t.clientY-sy); sx=null; if(dx>90&&dy<60&&Date.now()-st<600){ try{ closeDrawer(); }catch(x){} } },{passive:true}); }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();

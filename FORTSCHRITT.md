@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.168** (APP_VER 2026-11-22.168), Service-Worker-Cache `fyf-app-v1-p99`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.169** (APP_VER 2026-11-22.169), Service-Worker-Cache `fyf-app-v1-p100`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.169 (22.11.) | Software (Konzept 5, Seitenfenster): am Handy/Tablet nach rechts wischen schließt das Seitenfenster; in Eingabefeldern, Tabellen und Reitern nicht. Esc gab es schon. Test t169. |
 | v.168 (22.11.) | Software: Seitenleiste zeigt Zähler nur bei Handlungsbedarf (Kundenzahl entfernt, Werkstatt/Termine/Anfragen bleiben); Typ-Chips der Kunden-Zeitleiste farbig (auch Dark Mode); iPad quer/hoch geprüft (Start, Werkstatt, Tafel, Kunden, Kalender ohne Fehler/Querscroll). |
 | v.167 (22.11.) | Software: Fehler aus v.143 behoben – farbige Status-Chips (Angenommen blau, Freigabe ausstehend gelb-braun, In Arbeit violett, Abholbereit grün, überfällig rot) waren durch die neue Chip-Regel grau geworden. Test t167. |
 | v.165 (22.11.) | Pass-Garage: Karten zeigen km, Jahresziel und Diebstahlschutz (nicht nur Service); „Noch kein Service eingetragen“ ist kein orangefarbener Warnhinweis mehr, sondern neutral „Pass aktiv“ (überfälliger Service warnt weiterhin). |
