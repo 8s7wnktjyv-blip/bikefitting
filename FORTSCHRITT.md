@@ -5,15 +5,16 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.139** (APP_VER 2026-11-21.139), Service-Worker-Cache `fyf-app-v1-p70`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.140** (APP_VER 2026-11-22.140), Service-Worker-Cache `fyf-app-v1-p71`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
-- Browser-Tests: `sh tests/e2e/run.sh` (18 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
+- Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
 - Geplanter Task „FYF: Bauschritt (täglich 5–14 Uhr)“ läuft im festen Chat (Archiv mit Schreibrecht), täglich stündlich 05:07–13:07 Uhr (Berlin), arbeitet durch bis 14 Uhr und nutzt das Kontingent voll.
 
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.140 (22.11.) | Punkt 15, Teil 1 – Kalender & Formulare: Wochenansicht am großen Bildschirm als echtes Zeitraster (Spalten Mo–So, Stunden nach Öffnungszeit, Termine als farbige Blöcke je Art, Auslastungsbalken, fällige Aufträge als 🔧-Chips, Jetzt-Linie, geschlossene Tage schraffiert, freie Fläche antippen = neuer Termin mit Tag/Uhrzeit). Termin-Formular mit Abschnitten und Schnellauswahl (Art, Heute/Morgen, Uhrzeiten, Dauer). Alle Eingabefelder größer/klarer, Formulare in Fenstern als Karte. Handy: bisherige Tageskarten (nächster Schritt: Tages-Agenda). Test `t140.js`. |
 | v.139 (21.11.) | Pass auf Englisch, Stufe 1 (Punkt 14): Umschalter Deutsch/English unten in der Garage; ohne Wahl richtet sich die Sprache nach dem Handy (Englisch nur bei englischem Handy). Wörterbuch `pass-en.js` (370 Texte + Muster), wird nur bei Englisch geladen. Übersetzt: Garage, Registrierung, Radseite, Service/Wartungsplan, Diebstahl-Notfall, Teile & Ausstattung, Belege & Garantie, Käufer-Link, Werkstatt-Status. Messung: auf diesen Seiten kein Deutsch mehr. Rechtstexte bleiben Deutsch (gekennzeichnet). Datumsformat noch TT.MM.JJJJ. Test `t139.js`; ältere Tests laufen fest auf Deutsch. |
 | v.138 (21.11.) | Käufer-Link auf Zeit (Punkt 11, Freigabe 21.11.): Pass → Verkaufen → „Link für Käufer (14 Tage)“ (braucht Besitzer-Code). Käufer sieht nur Werkstatt-Einträge, Diebstahlstatus, Eckdaten – keine Belege, Preise, eigenen Einträge, Besitzerdaten. Pass bleibt wie eingestellt. Neuer Link macht den alten ungültig, Zurückziehen jederzeit. Server `stand29.sql` (neue Tabelle `pass_buyer_links`). Tests `stand29_test.sql`, `t138.js`. |
 | v.137 (21.11.) | Datenübernahme (Punkt 13): Import aus altem System (Kunden mit Rad, Artikel; Spalten zuordnen, Vorschau, Doppelte erkennen, bis 5000 Zeilen) gab es schon unter Mehr → Import & Export. Neu: automatische Sicherung vor jedem Import und „Import rückgängig machen“ direkt danach. Test `t137.js`. |
@@ -59,7 +60,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Preise, nichts entfernen.
 
 ### Neue Wünsche (Dominik, 22.11.2026) – freigegeben, VOR Englisch Stufe 2/3 bauen
-15. **Händlersoftware: Optik und Übersicht deutlich verbessern („muss richtig krass aussehen“)** – vor allem Kalender und alle Eingabeformulare (Felder, Abstände, Gruppierung, große Touch-Ziele, klare Hierarchie, schöne Datum-/Uhrzeit-Auswahl, Dark Mode). Schrittweise je Bereich (zuerst Kalender/Termin-Formular, dann Kunden-/Auftragsformulare, dann Dashboard), jeweils mit Vorher/Nachher-Bildschirmfotos im Bericht. Keine Funktion entfernen, alle Tests grün.
+15. ◐ **Händlersoftware: Optik (Teil 1 Kalender/Termin-Formular fertig v.140; weiter: Handy-Tagesagenda, Kunden-/Auftragsformulare, Dashboard) und Übersicht deutlich verbessern („muss richtig krass aussehen“)** – vor allem Kalender und alle Eingabeformulare (Felder, Abstände, Gruppierung, große Touch-Ziele, klare Hierarchie, schöne Datum-/Uhrzeit-Auswahl, Dark Mode). Schrittweise je Bereich (zuerst Kalender/Termin-Formular, dann Kunden-/Auftragsformulare, dann Dashboard), jeweils mit Vorher/Nachher-Bildschirmfotos im Bericht. Keine Funktion entfernen, alle Tests grün.
 16. **Pass-App: schöner (Vorbild Canyon/SRAM AXS, hell) und „für jeden etwas dabei“** – Service-Eintragen bleibt (wichtig), aber zusätzlich Funktionen, die auch Leute ohne Wartungs-Interesse anziehen. Erst kurzen Plan mit 5–8 Ideen in `docs/PASS-ATTRAKTIV-PLAN.md` (z. B. Diebstahlschutz/„Rad gefunden“-Seite, Tourenstatistik/Kilometer-Ziele aus Strava-Datei, Reifendruck-Rechner, Wert-/Verkaufspreis-Schätzung aus der Historie, Familien-Garage, Werkstatt-Bewertungen/Finder in der Nähe, Saison-Checkliste, Teile-Wunschliste), dann Design-Überarbeitung der Start-/Garage-/Radseite, dann die Ideen der Reihe nach. Keine bezahlten Dienste, KI nur regelbasiert.
 
 ## Wartet auf Dominik
@@ -81,4 +82,4 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
-Punkt 15 (Software-Optik, zuerst Kalender und Termin-Formular), danach Punkt 16 (Pass-Plan + Optik), dann Englisch Stufe 2/3.
+Punkt 15 Teil 2: Kalender am Handy als Tages-Agenda (Tagesleiste + Zeitleiste), dann Kunden- und Auftragsformulare, dann Dashboard. Danach Punkt 16 (Pass).

@@ -1959,7 +1959,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-21.139';
+const APP_VER='2026-11-22.140';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -9339,6 +9339,78 @@ if(typeof TITLES==='object') TITLES.touren='Hol- und Bringservice';
 ACT.impUndo=function(el){ const u=IMP&&IMP.undo; if(!u) return toast('Keine Sicherung vom Import da',true); if(el&&el.dataset.ok!=='1'){ el.dataset.ok='1'; el.textContent='Wirklich zurück zum Stand vor dem Import?'; return; }
   let d=null; try{ d=JSON.parse(localStorage.getItem(u.key)); }catch(e){} if(!d||!Array.isArray(d.customers)) return toast('Sicherung nicht lesbar',true);
   S=d; IMP.undo=null; audit(`Import rückgängig gemacht (Stand ${u.at})`); save(); closeDrawer(); render(); toast('Stand vor dem Import wiederhergestellt'); };
+/* ===== v.140 Neues Design (Punkt 15): Kalender mit Zeitraster (Desktop), Tages-Agenda (Handy), Termin-Formular mit Schnellauswahl ===== */
+const KIND_COL={'Fitting':'#e8620f','Quick-Fit':'#f59e0b','Werkstatt-Abgabe':'#2563eb','Werkstatt-Abholung':'#0891b2','Beratung':'#7c3aed','Nachkontrolle':'#16a34a'};
+const kindCol=k=>KIND_COL[k]||'#64748b';
+function tgHtml(days){ const cap=capCfg(); let o=Math.floor(hm(cap.open||'09:00')/60), c=Math.ceil(hm(cap.close||'18:00')/60);
+  days.forEach(d=>appts().filter(a=>a.date===d).forEach(a=>{ o=Math.min(o,Math.floor(hm(a.start)/60)); c=Math.max(c,Math.ceil((hm(a.start)+(Number(a.dur)||30))/60)); }));
+  o=Math.max(0,Math.min(o,8)); c=Math.min(24,Math.max(c,o+8)); const H=52, td=today(), now=new Date(), nowM=now.getHours()*60+now.getMinutes();
+  const hours=[]; for(let h=o;h<c;h++) hours.push(h);
+  const col=d=>{ const L=dayLoad(d), pct=L.capH?Math.round(L.used/L.capH*100):0, bar=!L.open?'var(--muted)':pct>100?'var(--bad)':pct>80?'var(--warn)':'var(--ok)';
+    const wd=new Date(d+'T12:00'); const ap=L.ap.map(a=>{ const top=(hm(a.start)-o*60)/60*H, ht=Math.max(22,(Number(a.dur)||30)/60*H-3), cl=kindCol(a.kind), who=a.customerId?cust(a.customerId).name:(a.name||'');
+      return `<button class="tg-ev${ht<40?' sm':''}" style="top:${top}px;height:${ht}px;--ev:${cl}" data-act="apptOpen" data-id="${a.id}" title="${esc(a.start+' '+a.kind+' · '+who)}"><span class="tg-t">${esc(a.start)}</span> <b>${esc(who||a.kind)}</b><span class="tg-k">${esc(a.kind)}${a.staff?' · '+esc(a.staff):''}</span></button>`; }).join('');
+    return `<div class="tg-col${d===td?' today':''}${L.open?'':' closed'}">
+      <div class="tg-head"><span class="tg-wd">${esc(wd.toLocaleDateString('de-DE',{weekday:'short'}))}</span><span class="tg-dn">${wd.getDate()}</span>
+        <div class="tg-cap" title="${L.open?`${fmtNum(Math.round(L.used*10)/10)} von ${fmtNum(L.capH)} Std. belegt`:'geschlossen'}"><i style="width:${Math.min(100,pct)}%;background:${bar}"></i></div>
+        ${L.wos.length?`<div class="tg-wos">${L.wos.map(w=>`<button class="tg-wo" data-act="openWO" data-id="${w.id}" title="${esc(w.title)}">🔧 ${esc(w.id)}</button>`).join('')}</div>`:''}</div>
+      <div class="tg-body" style="height:${hours.length*H}px" data-tgday="${d}">${hours.map(h=>`<div class="tg-slot" style="top:${(h-o)*H}px;height:${H}px" data-act="tgNew" data-d="${d}" data-s="${String(h).padStart(2,'0')}:00" aria-label="Termin ${esc(d)} ${h}:00 anlegen"></div>`).join('')}
+        ${d===td&&nowM>=o*60&&nowM<=c*60?`<div class="tg-now" style="top:${(nowM-o*60)/60*H}px"></div>`:''}${ap}</div></div>`; };
+  return `<div class="tg"><div class="tg-times"><div class="tg-head"></div><div class="tg-body" style="height:${hours.length*H}px">${hours.map(h=>`<span style="top:${(h-o)*H}px">${String(h).padStart(2,'0')}:00</span>`).join('')}</div></div>${days.map(col).join('')}</div>
+   <div class="tg-legend">${APPT_KINDS.map(k=>`<span><i style="background:${kindCol(k)}"></i>${esc(k)}</span>`).join('')}<span class="faint">Freie Fläche antippen = neuer Termin · 🔧 = fälliger Werkstattauftrag</span></div>`; }
+ACT.tgNew=function(el){ apptDrawer(null,{date:el.dataset.d,start:el.dataset.s}); };
+{ const Tg=VIEWS.termine; VIEWS.termine=function(){ let h=Tg.apply(this,arguments); try{ if(calMode()==='woche'){ const days=weekDays(ui.calStart||monday(today())); const i=h.indexOf('<div class="grid g2" style="margin-top:10px">'); if(i>=0) h=h.slice(0,i)+`<div class="tg-wrap">${tgHtml(days)}</div>`+h.slice(i).replace('<div class="grid g2" style="margin-top:10px">','<div class="grid g2 tg-cards" style="margin-top:10px">'); } }catch(e){} return h; }; }
+/* Termin-Formular: Schnellauswahl für Art, Tag, Uhrzeit, Dauer */
+{ const AD=apptDrawer; apptDrawer=function(id,pre){ const r=AD.apply(this,arguments); try{ const f=document.querySelector('#drawerBody form[data-form="apptSave"]'); if(!f||f.querySelector('.qp')) return r;
+  f.classList.add('form-pro'); const sel=f.querySelector('#ap_k'), d=f.querySelector('#ap_d'), st=f.querySelector('#ap_s'), du=f.querySelector('#ap_u');
+  const chips=(arr,cur,attr,lab)=>`<div class="qp" role="group" aria-label="${lab}">${arr.map(([v,l,c])=>`<button type="button" class="qp-b${String(cur)===String(v)?' on':''}" data-qp="${attr}" data-v="${esc(v)}"${c?` style="--qc:${c}"`:''}>${esc(l)}</button>`).join('')}</div>`;
+  const plus=n=>{ const x=new Date(); x.setDate(x.getDate()+n); return iso(x); };
+  sel.closest('.field').insertAdjacentHTML('afterbegin',''); sel.classList.add('qp-hide'); sel.insertAdjacentHTML('afterend',chips(APPT_KINDS.map(k=>[k,k,kindCol(k)]),sel.value,'kind','Art'));
+  d.insertAdjacentHTML('afterend',chips([[plus(0),'Heute'],[plus(1),'Morgen'],[plus(2),new Date(plus(2)+'T12:00').toLocaleDateString('de-DE',{weekday:'short'})],[plus(7),'+1 Woche']],d.value,'date','Tag'));
+  st.insertAdjacentHTML('afterend',chips(['09:00','10:00','11:00','14:00','15:00','16:00'].map(t=>[t,t]),st.value,'start','Uhrzeit'));
+  du.insertAdjacentHTML('afterend',chips([[30,'30 Min'],[60,'1 Std'],[90,'1,5 Std'],[120,'2 Std']],du.value,'dur','Dauer'));
+  const sec=(t,ids)=>{ const fs=ids.map(i=>f.querySelector('#'+i)).filter(Boolean).map(x=>x.closest('.field')); if(!fs.length) return; const h=document.createElement('div'); h.className='fsec wide'; h.textContent=t; fs[0].before(h); };
+  sec('Was & wann',['ap_k']); sec('Wer',['ap_c']); sec('Sonstiges',['ap_m']);
+  f.addEventListener('click',e=>{ const b=e.target.closest('[data-qp]'); if(!b) return; const k=b.dataset.qp, v=b.dataset.v; const t={kind:sel,date:d,start:st,dur:du}[k]; if(t){ t.value=v; t.dispatchEvent(new Event('change',{bubbles:true})); }
+    b.parentElement.querySelectorAll('.qp-b').forEach(x=>x.classList.toggle('on',x===b)); });
+  [d,st,du].forEach(inp=>inp.addEventListener('input',()=>{ const g=inp.nextElementSibling; if(g&&g.classList.contains('qp')) g.querySelectorAll('.qp-b').forEach(x=>x.classList.toggle('on',x.dataset.v===inp.value)); }));
+ }catch(e){} return r; }; }
+{ const st=document.createElement('style'); st.textContent=`
+.tg-wrap{margin-top:12px;overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.tg{display:grid;grid-template-columns:58px repeat(7,minmax(118px,1fr));min-width:900px}
+.tg-head{height:76px;padding:8px 8px 6px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:2;display:flex;flex-direction:column;gap:3px}
+.tg-wd{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.tg-dn{font-size:22px;font-weight:750;line-height:1}
+.tg-col.today .tg-dn{color:#fff;background:var(--accent);border-radius:99px;width:34px;height:34px;display:inline-grid;place-items:center;font-size:17px;align-self:flex-start}
+.tg-times .tg-body span:first-child{transform:translateY(2px)}
+.tg-cap{height:4px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:auto}.tg-cap i{display:block;height:100%}
+.tg-wos{display:flex;gap:3px;flex-wrap:wrap}.tg-wo{all:unset;cursor:pointer;font-size:10.5px;padding:1px 6px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line)}
+.tg-col{border-left:1px solid var(--line);position:relative}.tg-col.closed .tg-body{background:repeating-linear-gradient(135deg,transparent 0 8px,color-mix(in srgb,var(--line) 55%,transparent) 8px 9px)}
+.tg-body{position:relative}.tg-times .tg-body span{position:absolute;right:8px;transform:translateY(-6px);font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.tg-slot{position:absolute;left:0;right:0;border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent);cursor:pointer}
+.tg-slot:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.tg-ev{all:unset;box-sizing:border-box;position:absolute;left:4px;right:4px;border-radius:10px;padding:4px 7px;font-size:11.5px;line-height:1.25;cursor:pointer;overflow:hidden;z-index:1;
+ background:color-mix(in srgb,var(--ev) 16%,var(--surface));border-left:4px solid var(--ev);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.06);transition:transform .12s,box-shadow .12s}
+.tg-ev:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.12)}.tg-ev b{font-weight:700}.tg-t{font-variant-numeric:tabular-nums;color:var(--ev);font-weight:700}
+.tg-ev.sm{padding:2px 7px;white-space:nowrap}.tg-ev.sm .tg-k{display:none}
+.tg-k{display:block;color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tg-now{position:absolute;left:0;right:0;height:2px;background:#ef4444;z-index:2}.tg-now:before{content:'';position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:#ef4444}
+.tg-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin:10px 2px 0;align-items:center}.tg-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+@media(max-width:899px){.tg-wrap,.tg-legend{display:none}}@media(min-width:900px){.tg-cards{display:none!important}}
+.tg-cards>*{border-radius:16px!important;padding:12px!important;background:var(--surface)}
+.form-pro{gap:12px 14px}.fsec{font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:750;color:var(--accent);margin:6px 0 -4px;padding-top:6px;border-top:1px solid var(--line)}
+.form-pro .fsec:first-child{border-top:0;padding-top:0;margin-top:0}
+.qp-hide{position:absolute!important;opacity:0;pointer-events:none;height:1px!important;min-height:0!important;width:1px!important;padding:0!important}
+.qp{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.qp-b{all:unset;cursor:pointer;font-size:13.5px;font-weight:600;padding:8px 12px;border-radius:99px;border:1.5px solid var(--line);background:var(--surface);transition:all .12s;min-height:20px}
+.qp-b:hover{border-color:var(--qc,var(--accent))}.qp-b.on{background:var(--qc,var(--accent));border-color:var(--qc,var(--accent));color:#fff;box-shadow:0 4px 12px color-mix(in srgb,var(--qc,var(--accent)) 35%,transparent)}
+.qp-b:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.field label{font-size:12px;font-weight:650;letter-spacing:.02em;color:var(--muted)}
+.input,select.input,textarea.input{border-radius:12px;border:1.5px solid var(--line);background:var(--surface);transition:border-color .15s,box-shadow .15s;min-height:46px}
+.input:hover{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
+#drawerBody .form{background:var(--surface-2);border:1px solid var(--line);border-radius:18px;padding:16px}
+#drawerBody .form button[type=submit]{min-height:48px;padding:0 22px;font-size:15px}
+`; document.head.appendChild(st); }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();

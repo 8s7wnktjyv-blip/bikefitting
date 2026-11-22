@@ -18,5 +18,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t137.js` – Import aus altem System: Sicherung vorher, „Import rückgängig“
 - `t138.js` – Käufer-Link: erstellen im Verkaufswerkzeug, Käufer-Ansicht, Zurückziehen
 - `t139.js` – Pass auf Englisch (Stufe 1): Umschalten, Garage, Radseite, Service, Diebstahl, Teile, Belege ohne deutsche Reste, zurück auf Deutsch
+- `t140.js` – Kalender mit Zeitraster (Desktop), freie Fläche → Termin, Schnellauswahl im Formular, Handy-Tageskarten
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
