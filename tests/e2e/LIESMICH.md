@@ -21,5 +21,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t140.js` – Kalender mit Zeitraster (Desktop), freie Fläche → Termin, Schnellauswahl im Formular, Handy-Tageskarten
 - `t142.js` – Pass: Wert-Schätzung und Diebstahlschutz-Check oben bei „Mein Rad“, Preis geht in „Verkaufen“
 - `t144.js` – Pass: Zustand der Teile (Ampel), Schäden & Unfälle (nicht löschbar, Status-Verlauf), Tracker-Link, Umbau planen (Kosten/Gewicht)
+- `t145.js` – Pass: Zustandsbericht-Urteil (Wartungsstau, Risiko, fast verkaufsbereit) und Kopf in „Verkaufen“
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
