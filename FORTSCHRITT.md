@@ -58,6 +58,10 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 14. ◐ **Pass auf Englisch** – Stufe 1 fertig (v.139); offen: Stufe 2 (Kosten, Setups, Termin/Ersatzrad-Texte, Händlerfinder `finder.html`), Stufe 3 (Verkaufen, Kauf-Check, Hilfe). Plan `docs/PASS-ENGLISCH-PLAN.md`, alle Stufen freigegeben.: größer – erst Plan in `docs/`, dann bauen.
 Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Preise, nichts entfernen.
 
+### Neue Wünsche (Dominik, 22.11.2026) – freigegeben, VOR Englisch Stufe 2/3 bauen
+15. **Händlersoftware: Optik und Übersicht deutlich verbessern („muss richtig krass aussehen“)** – vor allem Kalender und alle Eingabeformulare (Felder, Abstände, Gruppierung, große Touch-Ziele, klare Hierarchie, schöne Datum-/Uhrzeit-Auswahl, Dark Mode). Schrittweise je Bereich (zuerst Kalender/Termin-Formular, dann Kunden-/Auftragsformulare, dann Dashboard), jeweils mit Vorher/Nachher-Bildschirmfotos im Bericht. Keine Funktion entfernen, alle Tests grün.
+16. **Pass-App: schöner (Vorbild Canyon/SRAM AXS, hell) und „für jeden etwas dabei“** – Service-Eintragen bleibt (wichtig), aber zusätzlich Funktionen, die auch Leute ohne Wartungs-Interesse anziehen. Erst kurzen Plan mit 5–8 Ideen in `docs/PASS-ATTRAKTIV-PLAN.md` (z. B. Diebstahlschutz/„Rad gefunden“-Seite, Tourenstatistik/Kilometer-Ziele aus Strava-Datei, Reifendruck-Rechner, Wert-/Verkaufspreis-Schätzung aus der Historie, Familien-Garage, Werkstatt-Bewertungen/Finder in der Nähe, Saison-Checkliste, Teile-Wunschliste), dann Design-Überarbeitung der Start-/Garage-/Radseite, dann die Ideen der Reihe nach. Keine bezahlten Dienste, KI nur regelbasiert.
+
 ## Wartet auf Dominik
 
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
@@ -77,4 +81,4 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
-Punkt 14: Englisch Stufe 2 (Kosten, Setups, Händlerfinder) – Texte wie in Stufe 1 automatisch sammeln (`/tmp`-Skript siehe v.139-Commit: sichtbare Texte je Seite), ins Wörterbuch, Test `t139.js` erweitern.
+Punkt 15 (Software-Optik, zuerst Kalender und Termin-Formular), danach Punkt 16 (Pass-Plan + Optik), dann Englisch Stufe 2/3.
