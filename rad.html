@@ -2434,6 +2434,13 @@ details.more[data-tmore]>summary{display:flex;align-items:center;gap:8px}details
 .bikecard .meta .status{color:#fff!important;font-size:13px!important}.bikecard .meta .status i{background:#4ade80!important}.bikecard .meta .status.warn i{background:#fbbf24!important}.bikecard .meta .status.bad i{background:#f87171!important}
 .bikecard .gchip{background:rgba(255,255,255,.16)!important;color:#fff!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}.bikecard .gchip.warn{background:rgba(251,191,36,.28)!important}.bikecard .gchip.new{background:rgba(232,98,15,.85)!important}`; document.head.appendChild(st); }
 
+// ---------- v.174 Unterseiten: Glas-Kopfleiste mit Zurück-Pille, kräftigerer Titel, Rad-Name als Untertitel ----------
+{ const PG=page; page=function(title,html,bind){ const el=PG(title,html,bind); try{ const code=window.__PC; const h=el.querySelector('h1'); if(h&&code&&!el.querySelector('.tp-kick')){ h.insertAdjacentHTML('beforebegin',`<div class="tp-kick">${esc(bikeName(code)||'')}</div>`); } }catch(e){} return el; }; }
+{ const st=document.createElement('style'); st.textContent=`.tp-top{background:color-mix(in srgb,var(--bg) 78%,transparent)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);margin:0 -18px;padding:8px 18px!important}
+.tp-back{background:var(--card)!important;border-radius:999px!important;padding:8px 14px 8px 10px!important;font-size:15px!important;font-weight:700!important;box-shadow:var(--sh)}
+.tp-kick{font-size:12px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--acc,#e8620f);margin:14px 2px 0}
+.tpage h1{font-size:32px!important;letter-spacing:-.03em;margin:2px 0 14px!important}`; document.head.appendChild(st); }
+
 window.addEventListener('hashchange',route); route();
 if(/(^|[#&])bestellt=1/.test(location.hash)) thanksSheet();
 if(!new URLSearchParams((location.hash||'').slice(1)).get('c')&&!new URLSearchParams((location.hash||'').slice(1)).get('k')) intro();
