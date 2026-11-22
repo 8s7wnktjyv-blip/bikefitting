@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.181** (APP_VER 2026-11-22.181), Service-Worker-Cache `fyf-app-v1-p112`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.182** (APP_VER 2026-11-22.182), Service-Worker-Cache `fyf-app-v1-p113`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.182 (22.11.) | Logo oben kleiner (58 px statt 86 px, Einführung 84 px) und ohne Unterstrich (Wunsch Dominik). |
 | v.181 (22.11.) | FYF-Logo (Edding-Tag, `logo-tag.svg`) oben auf allen Pass- und Händlerfinder-Seiten statt Punkt + Text, auch in der Einführung; passt sich hell/dunkel an (weiß/schwarz). Quelle der Zeichnung: `docs/app-icon-quelle.html`. |
 | v.180 (22.11.) | Neues App-Symbol (Wunsch Dominik): dunkler Nachtblau-Hintergrund, „FYF“ als weißer Edding-Tag mit Tropfen und Unterstrich-Schwung; alle Größen (512, 192, Apple 180, maskable); Pass-Manifest Hintergrund/Leiste dunkel. Gilt für Pass und Software (gemeinsame Symbol-Dateien). |
 | v.179 (22.11.) | Pass dunkel & modern (Entscheidung Dominik 22.11.: „dunkel als Standard, in Einstellungen änderbar, wie Strava“): neues `pass-theme.css` für Pass und Händlerfinder – Nachtblau-Verlauf, dunkle Karten mit feinem Rand, orange Hauptknöpfe, Glas-Leiste; Umschalter „Design: Dunkel · Hell · Automatisch“ unten in der Garage (gespeichert, Automatisch = iPhone-Einstellung); alle Pass-Seiten automatisch auf helle Reste/Kontrast geprüft. Test t179. |

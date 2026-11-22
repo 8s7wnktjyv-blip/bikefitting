@@ -33,5 +33,5 @@
 /* v.181 FYF-Logo (Edding-Tag) oben auf jeder Seite – hell und dunkel */
 .brand,main>p.muted.small:first-child{gap:10px!important;color:var(--muted)!important}
 .brand,main>p.muted.small:first-child{margin-top:10px!important}
-.brand::before,main>p.muted.small:first-child::before{width:86px!important;height:62px!important;flex:none;border-radius:0!important;background:var(--ink)!important;-webkit-mask:url(logo-tag.svg) center/contain no-repeat;mask:url(logo-tag.svg) center/contain no-repeat}
-.intro::before{content:"";display:block;width:120px;height:86px;margin:4px auto 2px;flex:none;background:var(--ink);-webkit-mask:url(logo-tag.svg) center/contain no-repeat;mask:url(logo-tag.svg) center/contain no-repeat}
+.brand::before,main>p.muted.small:first-child::before{width:58px!important;height:42px!important;flex:none;border-radius:0!important;background:var(--ink)!important;-webkit-mask:url(logo-tag.svg) center/contain no-repeat;mask:url(logo-tag.svg) center/contain no-repeat}
+.intro::before{content:"";display:block;width:84px;height:60px;margin:4px auto 2px;flex:none;background:var(--ink);-webkit-mask:url(logo-tag.svg) center/contain no-repeat;mask:url(logo-tag.svg) center/contain no-repeat}
