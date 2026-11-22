@@ -14,7 +14,7 @@ Teilen – Wartung bleibt voll erhalten, wird aber nicht zur Hürde.
 2. ✅ **Radseite neu ordnen:** oben „Mein Rad auf einen Blick“ – Kilometer, Pass-Vollständigkeit, Diebstahlschutz-Status, geschätzter Wert als 4 Kacheln; die beliebtesten Werkzeuge aus „Mehr Funktionen“ sichtbar machen.
 3. ✅ **„Was ist mein Rad wert?“** – regelbasierte Schätzung aus Neupreis (vom Besitzer), Alter, Kilometern, Zustand und dokumentierter Wartung (werkstattbestätigt zählt mehr). Ehrlicher Hinweis „Schätzung, kein Gutachten“. Mit Knopf „Verkaufen“ (Käufer-Link).
 4. ✅ **Kilometer-Ziele & Abzeichen** – Jahresziel mit Fortschrittsring, Meilensteine (1.000 km, 5.000 km, erster Werkstatt-Service, Pass 100 % …) aus vorhandenen km-Einträgen/Strava-Datei. Nur auf dem Gerät.
-5. **Rad-Karte zum Teilen** – schöne Bildkarte (Foto, Modell, km, Abzeichen) für WhatsApp/Instagram, erzeugt im Browser (html2canvas ist schon vorhanden), ohne Code und ohne persönliche Daten.
+5. ✅ **Rad-Karte zum Teilen** – schöne Bildkarte (Foto, Modell, km, Abzeichen) für WhatsApp/Instagram, erzeugt im Browser (html2canvas ist schon vorhanden), ohne Code und ohne persönliche Daten.
 6. ✅ **Diebstahlschutz-Check** – 5 Punkte (Rahmennummer, Foto, Merkmale, QR-Aufkleber, Versicherung) mit Ampel; Versicherungs-Checkliste als PDF.
 7. **Tour-Check vor der Ausfahrt** – 1-Minuten-Checkliste (Reifendruck aus Rechner, Bremsen, Licht, Werkzeug) mit „Alles ok“-Haken.
 8. **Upgrade-Planer / Wunschliste** – Teile merken, Kompatibilitätshinweise aus der eingetragenen Ausstattung (regelbasiert), Anfrage an die Werkstatt.

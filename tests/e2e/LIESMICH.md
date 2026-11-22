@@ -26,5 +26,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t148.js` – Software: Verlauf & Vergleich mit überlagerter Seitenansicht A/B und Differenzen
 - `t150.js` – Pass: Jahresziel (Fortschritt aus km-Verlauf), Abzeichen, Kachel aktualisiert sich
 - `t151.js` – Software: Kundenakte mit Kennzahlen-Kopf, eingeklappter Wiedervorlage, Zeitleiste mit Filter (Klick öffnet Fitting)
+- `t152.js` – Pass: Rad-Karte als Bild (1080×1350, JPG), Knopf auch auf der Ziel-Seite
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
