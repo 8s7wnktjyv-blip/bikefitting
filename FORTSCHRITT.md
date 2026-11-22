@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.186** (APP_VER 2026-11-22.186), Service-Worker-Cache `fyf-app-v1-p117`, Datenbank **Stand 30**, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.187** (APP_VER 2026-11-22.187), Service-Worker-Cache `fyf-app-v1-p118`, Datenbank **Stand 30**, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.187 (22.11.) | Pass: **Zustands-Check mit Fragen** für Gebrauchträder (Wunsch Dominik): 12 Fragen bei Ansicht/Probefahrt (Rahmen, Steuersatz, Tretlager, Kette, Schaltung, Bremsen, Laufräder, Reifen, Federung, Hinterbau, E-Bike, Geräusche), je mit „Weiß nicht“. Regelbasiertes Urteil (Gut / kleinere Arbeiten / Reparaturen nötig / nicht ohne Werkstatt kaufen) mit Punktzahl und Liste „Was zu tun ist“ als Verhandlungsargumente, **ohne Preise**. Hinweis „kein Gutachten“. Einstieg unter Rad prüfen (auch ohne Pass) und im Kauf-Check. Antworten nur auf dem Gerät. Garage-Karten: Studio-Foto/Grafik mit Text darunter statt darüber, Fahrer/in als Etikett oben links. Test t187. |
 | v.186 (22.11.) | Pass „Klarheit“ (Dominik: zu unübersichtlich im Dunkeln): Garage zeigt die Räder direkt unter der Überschrift; großer Kasten „Daten noch nicht sicher“ entfällt auf allen Seiten und steht stattdessen einmal als erster „Nächster Schritt“ (öffnet die Sicherung); Konto & Sicherung, Erinnerungen, Daten sichern als zusammengefasste aufklappbare Zeilen; Abschnitts-Titel klein/grau; Symbole getönt statt knallig; Wert-Kachel nicht mehr orange. Keine Funktion entfernt. **Eine Rahmennummer = ein Pass:** Datenbank Stand 30 (`stand30.sql`): auch Läden können keinen zweiten Pass für eine vorhandene Rahmennummer anlegen (FYF_FRAME_EXISTS), Sperre gegen gleichzeitige Doppel-Anmeldung, eindeutige DB-Regel (nur wenn heute keine Doppelten existieren). Test t186, DB-Test stand30_test.sql (lokal Postgres 16 grün). **Dominik muss einmal „Datenbank aktualisieren“ in GitHub Actions starten.** |
 | v.185 (22.11.) | Pass: „Studio-Look“ für Rad-Fotos – freigestelltes Rad (iPhone: im Foto lange drücken → Kopieren → im Pass „Freigestelltes Rad einfügen“) schwebt im Lichtkegel mit Bodenschatten und Spiegelung, auf Radseite und Garage, hell und dunkel. Bei normalem Foto Knopf „✨ Studio-Look“ mit Anleitung. Bestehende Fotos bleiben unverändert. Test t185. |
 | v.184 (22.11.) | Pass (Premium-Konzept, Roadmap 3): „Lebenslauf“ auf der Radseite – eine Zeitleiste aus Pass-Einträgen (Werkstatt grün / selbst blau), eigener Wartung, Teiletausch (violett), Schäden/Unfällen (rot), Kauf (gold), Pass angelegt; Farblegende, 6 neueste, „Alle anzeigen“. Test t184. |

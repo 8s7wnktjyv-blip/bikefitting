@@ -2547,6 +2547,9 @@ function clarityGarage(){ try{ if(/pruefen/.test(location.hash)) return; const g
   const cal=h.querySelector('[data-calg]'); if(cal){ const n=(cal.querySelector('p')||{}).textContent||''; const m=n.match(/^(\d+) Termine/); wrap(cal,'Erinnerungen',m?m[1]+' Termine':''); }
  }catch(e){} return r; }; }
 { const AFc=askForm; askForm=function(){ const r=AFc.apply(this,arguments); clarityGarage(); return r; }; }
+// v.187 Garage-Karten: kompakter, Rad größer, Fahrer/in als Etikett oben links statt „· Name“ unten
+function cardPolish(){ try{ document.querySelectorAll('a.bikecard [data-rd]').forEach(x=>{ if(x.dataset.pol) return; x.dataset.pol='1'; x.textContent=x.textContent.replace(/^·\s*/,''); const card=x.closest('a.bikecard'); x.classList.add('gc-rider'); card.appendChild(x); }); }catch(e){} }
+{ const AFp=askForm; askForm=function(){ const r=AFp.apply(this,arguments); cardPolish(); setTimeout(cardPolish,300); return r; }; }
 { const st=document.createElement('style'); const TC={parts:'#3b82f6',svc:'#f97316',theft:'#ef4444',docs:'#22c55e',eb:'#06b6d4',fit:'#8b5cf6',sus:'#14b8a6',tire:'#94a3b8',sell:'#ec4899',cost:'#eab308',help:'#0ea5e9',dmg:'#ef4444',trk:'#6366f1',build:'#a855f7',tour:'#10b981',card:'#ff6a1a',newpart:'#3b82f6',qr:'#94a3b8',nfc:'#3b82f6',book:'#f97316',bfit:'#22c55e'};
   st.textContent=`[data-setupb]{display:none!important}
 ${Object.entries(TC).map(([k,c])=>`.tool[data-tool="${k}"] .ti{background:color-mix(in srgb,${c} 16%,transparent)!important;color:${c}!important}`).join('\n')}
@@ -2558,11 +2561,83 @@ ${Object.entries(TC).map(([k,c])=>`.tool[data-tool="${k}"] .ti{background:color-
 details.more:has(+ details.more){border-bottom-left-radius:0!important;border-bottom-right-radius:0!important;margin-bottom:0!important;border-bottom-color:transparent!important}
 details.more + details.more{border-top-left-radius:0!important;border-top-right-radius:0!important;margin-top:0!important;border-top:1px solid rgba(127,127,127,.16)!important}
 .garage{margin-top:6px}
+.bikecard .bikepic{aspect-ratio:16/11!important}
+.bikecard .bikepic.studio .st-bike{top:5%!important;height:66%!important;left:4%!important;right:4%!important;width:92%!important}
+.bikecard .bikepic.studio .st-refl{display:none}.bikecard .bikepic.studio .st-floor{top:66%!important}
+.bikecard .meta{padding-top:44px!important}.bikecard .bk-name{font-size:22px!important}
+.bikecard .bikepic:not(.studio) svg{width:78%!important;opacity:.85;transform:translateY(-14%)}
+.bikecard:has(.studio) .meta,.bikecard:has(.bikepic > svg) .meta{position:static!important;background:none!important;padding:2px 18px 18px!important;color:inherit!important}
+.bikecard:has(.studio) .meta .status,.bikecard:has(.bikepic > svg) .meta .status{color:inherit!important}
+.bikecard:has(.studio) .bikepic,.bikecard:has(.bikepic > svg) .bikepic{aspect-ratio:16/9!important}
+.bikecard .bikepic.studio .st-bike{top:7%!important;height:84%!important}.bikecard .bikepic.studio .st-floor{top:84%!important}
+.bikecard .bikepic > svg{transform:none!important;width:70%!important}
+:root:not([data-theme="dark"]) .bikecard:has(.studio) .meta *,:root:not([data-theme="dark"]) .bikecard:has(.bikepic > svg) .meta *{color:#111416!important;text-shadow:none!important}
+:root:not([data-theme="dark"]) .bikecard:has(.studio) .gchip,:root:not([data-theme="dark"]) .bikecard:has(.bikepic > svg) .gchip{background:#eef0f3!important;border-color:transparent!important}
+:root:not([data-theme="dark"]) .bikecard:has(.studio) .gchip.warn,:root:not([data-theme="dark"]) .bikecard:has(.bikepic > svg) .gchip.warn{background:#fef3c7!important;color:#92400e!important}
+.gc-rider{position:absolute;top:12px;left:12px;z-index:3;font-size:12.5px!important;font-weight:700;color:#fff!important;background:rgba(10,13,18,.5);border:1px solid rgba(255,255,255,.18);padding:5px 11px;border-radius:999px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.gc-rider::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc,#ff6a1a);margin-right:6px;vertical-align:1px}
 .cl-grp>summary{display:flex;align-items:center;gap:8px}.cl-grp>summary b{margin-right:auto}.cl-note{font-size:13px;color:var(--muted,#8d99a8);font-weight:600}.cl-warn{color:#f59e0b}
 .card.cl-in{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important}.card.cl-in>b:first-child{display:none}.card.cl-in>p:first-of-type{margin-top:0!important}
 .qa-qr{background:color-mix(in srgb,#94a3b8 16%,transparent)!important;color:#cbd5e1!important}.qa-nfc{background:color-mix(in srgb,#3b82f6 16%,transparent)!important;color:#3b82f6!important}.qa-svc{background:color-mix(in srgb,#f97316 16%,transparent)!important;color:#f97316!important}.qa-fit{background:color-mix(in srgb,#22c55e 16%,transparent)!important;color:#22c55e!important}.qa-sticker{background:color-mix(in srgb,#8b5cf6 16%,transparent)!important;color:#8b5cf6!important}.qa-add{background:color-mix(in srgb,#94a3b8 16%,transparent)!important;color:#94a3b8!important}
 :root:not([data-theme="dark"]) .qa-qr{color:#334155!important}
 h2:has(+ .glance),h2:has(+ .tools){font-size:13px!important;font-weight:800!important;text-transform:uppercase;letter-spacing:.08em;color:var(--muted,#8d99a8)!important;margin:26px 4px 10px!important}`; document.head.appendChild(st); }
+
+// ---------- v.187 Zustands-Check mit Fragen (Gebrauchtrad): Probefahrt & Sichtprüfung → regelbasiertes Urteil, ohne Preise ----------
+// Funktioniert mit Pass (Kauf-Check) und ohne (Rad prüfen). Antworten bleiben nur auf dem Gerät. Ersetzt keine Werkstatt-Prüfung.
+const CQ=[
+ ['frame','Rahmen & Gabel','Risse, Dellen oder abgeplatzter Lack an Rohr-Verbindungen? Bei Carbon genau hinsehen und leicht abklopfen (dumpfer Klang = Vorsicht).',[['Nichts zu sehen',0],['Nur Kratzer im Lack',1],['Riss, Delle oder dumpfer Klang',3]],'Rahmen/Gabel in einer Werkstatt prüfen lassen – bei Riss nicht fahren'],
+ ['hs','Steuersatz','Vorderbremse ziehen und das Rad vor und zurück schieben. Klackt es oder hat der Lenker Spiel? Lenkt er sich rau oder rastet in der Mitte ein?',[['Kein Spiel, lenkt sauber',0],['Leichtes Spiel',1],['Deutliches Spiel oder rastet ein',2]],'Steuersatz einstellen oder Lager tauschen'],
+ ['bb','Tretlager & Kurbel','Kurbeln seitlich wackeln und kräftig antreten. Spiel oder Knacken?',[['Fest und leise',0],['Leises Knacken',1],['Spiel oder lautes Knacken',2]],'Tretlager reinigen/fetten oder tauschen'],
+ ['drive','Kette & Ritzel','Springt die Kette unter Last? Ist sie rostig, oder lässt sie sich vorn vom Kettenblatt abheben?',[['Läuft sauber',0],['Etwas rostig oder trocken',1],['Springt oder lässt sich abheben',2]],'Kette, meist auch Kassette und Kettenblatt, tauschen'],
+ ['shift','Schaltung','Alle Gänge durchschalten. Schaltet sie sauber, ohne Rattern? Ist das Schaltwerk gerade?',[['Alle Gänge sauber',0],['Rattert in einzelnen Gängen',1],['Springt oder Schaltwerk verbogen',2]],'Schaltung einstellen, Schaltauge richten oder tauschen'],
+ ['brake','Bremsen','Fester Druckpunkt? Kein Schleifen oder Quietschen? Beläge noch dicker als etwa 1,5 mm?',[['Bremst kräftig, leise',0],['Quietscht oder Beläge dünn',1],['Weicher Druckpunkt oder schwach',2]],'Beläge tauschen bzw. Bremse entlüften'],
+ ['wheel','Laufräder','Räder drehen: Laufen sie rund, ohne Seitenschlag? Sind die Speichen fest und die Naben ohne Spiel?',[['Rund und fest',0],['Leichter Schlag',1],['Starker Schlag, lose Speichen oder Spiel',2]],'Laufrad zentrieren, Nabe einstellen oder Laufrad tauschen'],
+ ['tire','Reifen','Gibt es genug Profil? Keine Risse an der Flanke, keine Beulen?',[['Gut',0],['Abgefahren',1],['Risse oder Beulen',2]],'Reifen tauschen'],
+ ['sus','Federung','Gabel und Dämpfer einfedern. Klackt oder schmatzt es? Gibt es Ölspuren oder Riefen am Standrohr? Sackt sie durch?',[['Unauffällig',0],['Leichte Geräusche oder Ölfilm',1],['Ölspuren, Riefen, Klacken oder sackt durch',2],['Keine Federung',-1]],'Federungs-Service (Dichtungen, Öl) oder Reparatur'],
+ ['pivot','Hinterbau-Lager','Nur bei Fullys: Das Hinterrad seitlich bewegen und einfedern. Gibt es Spiel oder Knarzen?',[['Kein Spiel',0],['Leises Knarzen',1],['Spürbares Spiel',2],['Kein Fully',-1]],'Hinterbau-Lager tauschen'],
+ ['ebike','E-Bike-Antrieb & Akku','Zeigt das Display Fehler? Gibt es Geräusche im Motor? Lass dir einen Akku-Bericht aus der Hersteller-App oder von einer Werkstatt zeigen.',[['Alles unauffällig, Bericht gezeigt',0],['Kein Bericht',1],['Fehlermeldung, Motorgeräusch oder Akku schwach',3],['Kein E-Bike',-1]],'Akku- und Motor-Diagnose in der Werkstatt'],
+ ['noise','Probefahrt allgemein','Knarzt es an Lenker, Vorbau oder Sattelstütze? Schleift etwas? Fährt das Rad freihändig geradeaus?',[['Ruhig und läuft gerade',0],['Leises Knarzen',1],['Zieht zur Seite oder lautes Geräusch',2]],'Kontaktstellen reinigen/fetten, bei Schiefzug Rahmen/Gabel prüfen']];
+const CQ_LV=['ok','klein','mittel','kritisch'];
+function cqEval(A){ let mi=0,ma=0,cr=0,un=0,open=0; const todo=[]; CQ.forEach(([k,t,,O,w])=>{ const a=A[k]; if(a==null){ open++; return; } if(a==='?'){ un++; todo.push({t,w:'Unklar – in der Werkstatt prüfen lassen',lv:1}); return; } const v=O[a]?O[a][1]:0; if(v<=0) return; if(v===1) mi++; if(v===2) ma++; if(v===3) cr++; todo.push({t,w,lv:v}); });
+  const score=Math.max(0,Math.min(100,100-mi*6-ma*15-cr*40-un*4)); let c,txt,sub;
+  if(cr){ c='bad'; txt='Nicht ohne Werkstatt-Prüfung kaufen'; sub='Mindestens ein kritischer Punkt.'; }
+  else if(ma){ c='warn'; txt='Reparaturen nötig – im Preis berücksichtigen'; sub=`${ma} größere${ma>1?'':'r'} Punkt${ma>1?'e':''}, ${mi} kleine${mi===1?'r':''}.`; }
+  else if(mi>=3||un>=3){ c='warn'; txt='Ordentlich, mit kleineren Arbeiten'; sub=`${mi} kleine Punkte${un?`, ${un} unklar`:''}.`; }
+  else { c='ok'; txt='Guter Zustand'; sub=mi||un?'Nur Kleinigkeiten.':'Keine Auffälligkeiten.'; }
+  return {score,c,txt,sub,todo:todo.sort((a,b)=>b.lv-a.lv),open,n:CQ.length}; }
+function condCheck(code,name){ const key='fyfpass:cq:'+(code||'frei'); const A=LS(key)||{};
+  page('Zustands-Check','',(r)=>{ const draw=()=>{ const R=cqEval(A); const done=R.n-R.open;
+    r.innerHTML=`<div class="cq-head cq-${R.open===R.n?'none':R.c}"><div class="cq-ring" style="--p:${done?R.score:0}"><b>${done?R.score:'–'}</b></div><div><span class="cq-k">${name?esc(name):'Gebrauchtrad'} · ${done} von ${R.n} beantwortet</span><b class="cq-v">${R.open===R.n?'Fragen beantworten':esc(R.txt)}</b><span class="cq-s">${R.open===R.n?'Beim Ansehen und bei der Probefahrt, etwa 10 Minuten.':esc(R.sub)+(R.open?` Noch ${R.open} offen.`:'')}</span></div></div>
+     ${R.todo.length?`<div class="card"><b>Was zu tun ist</b><ul class="cq-todo">${R.todo.map(x=>`<li class="lv${x.lv}"><span>${CQ_LV[x.lv]}</span><div><b>${esc(x.t)}</b><small>${esc(x.w)}</small></div></li>`).join('')}</ul><p class="muted small" style="margin:8px 0 0">Gute Argumente für die Preisverhandlung. Was eine Reparatur kostet, sagt dir eine Werkstatt.</p></div>`:''}
+     ${CQ.map(([k,t,q,O],i)=>`<div class="card cq-q${A[k]!=null?' cq-done':''}"><span class="cq-n">${i+1}</span><b>${esc(t)}</b><p class="muted small" style="margin:4px 0 10px">${esc(q)}</p><div class="cq-o">${O.map(([l,v],j)=>`<button type="button" class="cq-b${A[k]===j?' on':''}${v>=2?' hi':''}" data-q="${k}" data-a="${j}">${esc(l)}</button>`).join('')}<button type="button" class="cq-b${A[k]==='?'?' on':''}" data-q="${k}" data-a="?">Weiß nicht</button></div></div>`).join('')}
+     <button class="btn ghost block" type="button" data-cqreset>Antworten löschen</button>
+     <p class="muted small" style="margin:12px 2px">Regelbasierte Selbsteinschätzung, kein Gutachten – wir sind keine Gutachter. Sicherer ist ein Gebrauchtrad-Check in einer FYF-Werkstatt.</p>`;
+    r.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{ const k=b.dataset.q, a=b.dataset.a==='?'?'?':Number(b.dataset.a); if(A[k]===a) delete A[k]; else A[k]=a; LSset(key,A); const sc=r.closest('.tpage')||document.scrollingElement; const y=sc.scrollTop; draw(); try{ hit('zustandscheck'); }catch(e){} sc.scrollTop=y; });
+    r.querySelector('[data-cqreset]').onclick=()=>{ Object.keys(A).forEach(k=>delete A[k]); LSset(key,A); draw(); }; };
+   draw(); }); }
+// Einstieg 1: Kauf-Check (mit Pass)
+{ const BCq=buyCheck; buyCheck=function(code){ BCq.apply(this,arguments); try{ const pg=[...document.querySelectorAll('.tpage')].pop(), r=pg&&pg.querySelector('.tp-body'); if(!r||r.querySelector('[data-cqgo]')) return; const P=Pof(code); const R=cqEval(LS('fyfpass:cq:'+code)||{});
+  const c=document.createElement('button'); c.type='button'; c.className='cq-entry'; c.setAttribute('data-cqgo',''); c.innerHTML=`<span class="cq-ei">?</span><div><b>Zustand per Fragen prüfen</b><span>${R.open<R.n?esc(R.txt)+' · '+(R.n-R.open)+' von '+R.n:'12 Fragen zu Probefahrt, Federung, Geräuschen'}</span></div><span class="ns-go">›</span>`;
+  c.onclick=()=>condCheck(code,(P.bike||{}).name); const chk=[...r.querySelectorAll('.card')].find(x=>/^Checkliste/.test((x.querySelector('b')||{}).textContent||'')); if(chk) chk.before(c); else r.appendChild(c); }catch(e){} }; }
+// Einstieg 2: Rad prüfen (auch ohne Pass)
+{ const AFq=askForm; askForm=function(){ const r=AFq.apply(this,arguments); try{ if(!/pruefen/.test(location.hash)||document.querySelector('[data-cqfree]')) return r; const f=document.querySelector('.pc-feat'); if(!f) return r; const c=document.createElement('button'); c.type='button'; c.className='cq-entry'; c.setAttribute('data-cqfree','');
+  c.innerHTML=`<span class="cq-ei">?</span><div><b>Rad ohne Pass? Zustand per Fragen prüfen</b><span>12 Fragen bei Ansicht und Probefahrt → Urteil und Verhandlungs-Argumente</span></div><span class="ns-go">›</span>`; c.onclick=()=>condCheck(null,''); f.insertAdjacentElement('afterend',c); }catch(e){} return r; }; }
+{ const st=document.createElement('style'); st.textContent=`.cq-entry{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;background:var(--card,#12171e);border:1px solid rgba(127,127,127,.18);border-radius:20px;padding:14px 16px;margin:12px 0;cursor:pointer}
+.cq-entry>div{flex:1;display:flex;flex-direction:column;gap:2px}.cq-entry>div span{font-size:13px;color:var(--muted,#8d99a8)}
+.cq-ei{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-weight:900;font-size:19px;background:color-mix(in srgb,#8b5cf6 18%,transparent);color:#a78bfa;flex-shrink:0}
+.cq-head{display:flex;gap:16px;align-items:center;background:var(--card,#12171e);border-radius:24px;padding:18px;margin-bottom:12px;border:1px solid rgba(127,127,127,.16)}
+.cq-head>div:last-child{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cq-k{font-size:11.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted,#8d99a8)}.cq-v{font-size:19px;line-height:1.2;letter-spacing:-.01em}.cq-s{font-size:13px;color:var(--muted,#8d99a8)}
+.cq-ring{--c:#64748b;width:72px;height:72px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;background:conic-gradient(var(--c) calc(var(--p)*1%),rgba(127,127,127,.18) 0)}
+.cq-ring b{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:var(--card,#12171e);font-size:22px}
+.cq-ok .cq-ring{--c:#22c55e}.cq-warn .cq-ring{--c:#f59e0b}.cq-bad .cq-ring{--c:#ef4444}.cq-ok .cq-v{color:#22c55e}.cq-warn .cq-v{color:#f59e0b}.cq-bad .cq-v{color:#ef4444}
+.cq-q{position:relative;padding-left:52px!important}.cq-n{position:absolute;left:16px;top:16px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:800;background:rgba(127,127,127,.18)}
+.cq-done .cq-n{background:#22c55e;color:#06210f}
+.cq-o{display:flex;flex-wrap:wrap;gap:8px}.cq-b{font:inherit;font-size:13.5px;font-weight:650;padding:9px 13px;border-radius:999px;border:1px solid rgba(127,127,127,.3);background:transparent;color:inherit;cursor:pointer}
+.cq-b.on{background:#22c55e;border-color:#22c55e;color:#06210f}.cq-b.hi.on{background:#ef4444;border-color:#ef4444;color:#fff}.cq-b.on:not(.hi)[data-a="1"]{background:#f59e0b;border-color:#f59e0b;color:#241500}.cq-b.on[data-a="?"]{background:#64748b;border-color:#64748b;color:#fff}
+.cq-todo{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:10px}.cq-todo li{display:flex;gap:10px;align-items:flex-start}.cq-todo li>div{display:flex;flex-direction:column}.cq-todo small{color:var(--muted,#8d99a8);font-size:13px}
+.cq-todo li>span{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border-radius:999px;flex-shrink:0;margin-top:1px;min-width:56px;text-align:center}
+.cq-todo .lv1>span{background:color-mix(in srgb,#f59e0b 20%,transparent);color:#f59e0b}.cq-todo .lv2>span{background:color-mix(in srgb,#f97316 22%,transparent);color:#fb923c}.cq-todo .lv3>span{background:color-mix(in srgb,#ef4444 22%,transparent);color:#f87171}`; document.head.appendChild(st); }
 
 window.addEventListener('hashchange',route); route();
 if(/(^|[#&])bestellt=1/.test(location.hash)) thanksSheet();
