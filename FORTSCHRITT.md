@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.175** (APP_VER 2026-11-22.175), Service-Worker-Cache `fyf-app-v1-p106`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.176** (APP_VER 2026-11-22.176), Service-Worker-Cache `fyf-app-v1-p107`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.176 (22.11.) | Pass: einheitliche Aufklapp-Pfeile (› dreht beim Öffnen) statt +/– überall. |
 | v.175 (22.11.) | Pass „Mein Rad“: jedes Werkzeug mit eigener Symbolfarbe (Ausstattung blau, Service orange, Diebstahl rot, Belege grün, Tour-Check smaragd …), größere Symbole. |
 | v.174 (22.11.) | Pass-Unterseiten: Kopfleiste aus Glas mit Zurück-Pille, Rad-Name als orangefarbene Zeile über dem Titel, größerer Titel. |
 | v.173 (22.11.) | Pass-Garage im Stil der Radseite: Name, Status und Infos (km, Ziel, Schutz, Pass) weiß auf dem Foto mit Verlauf, Glas-Chips. |
