@@ -3,6 +3,7 @@
    Rechtstexte (Datenschutz, Impressum, Kaufvertrag) bleiben bewusst Deutsch. */
 (function(){
 const D={
+'✨ Studio-Look':'✨ Studio look',
 "Lebenslauf":"Life story","Selbst":"Self","Teil":"Part","Schaden":"Damage","Kauf":"Purchase","Start":"Start","Pass angelegt":"Pass created","Rad gekauft":"Bike purchased","selbst eingetragen":"self-entered","geprüft":"checked","noch nicht geprüft":"not checked yet",
 "Nächste Schritte":"Next steps","Alles erledigt":"All done","Nichts Dringendes – gute Fahrt!":"Nothing urgent \u2013 enjoy the ride!","laut Wartungsplan":"per maintenance plan","Reparatur oder Versicherung eintragen":"Add repair or insurance","rechtzeitig Termin machen":"book a slot in time","Je vollständiger, desto besser bei Diebstahl und Verkauf":"The more complete, the better for theft and selling","Offline – Einträge bleiben auf dem Handy":"Offline \u2013 entries stay on your phone","Wieder online":"Back online",
 "Design:":"Theme:","Dunkel":"Dark","Hell":"Light","Automatisch":"Automatic",

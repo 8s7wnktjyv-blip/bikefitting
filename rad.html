@@ -421,7 +421,7 @@ function photoMenu(code){ const has=!!photoGet(code), el=document.createElement(
   document.body.appendChild(el); const fi=el.querySelector('input'), close=()=>el.remove();
   el.onclick=async e=>{ if(e.target===el) return close(); const a=e.target.closest('[data-a]'); if(!a) return; const k=a.dataset.a;
     if(k==='x') return close(); if(k==='pick') return fi.click();
-    if(k==='del'){ try{ localStorage.removeItem('fyfpass:img:'+code); localStorage.removeItem(IMGO+code); }catch(x){} close(); return show(code); }
+    if(k==='del'){ try{ localStorage.removeItem('fyfpass:img:'+code); localStorage.removeItem(IMGO+code); localStorage.removeItem('fyfpass:imgt:'+code); }catch(x){} close(); return show(code); }
     if(k==='edit'){ const src=(()=>{ try{ return localStorage.getItem(IMGO+code)||photoGet(code); }catch(x){ return photoGet(code); } })(); close(); try{ photoEditor(code,await loadImg(src)); }catch(x){} return; }
     if(k==='paste'){ try{ const b=await pasteImg(); close(); photoEditor(code,await fileToImg(b),true); }catch(x){ a.textContent='Kein Bild in der Zwischenablage'; setTimeout(()=>a.textContent='Freigestelltes Rad einfügen',2200); } } };
   fi.onchange=async()=>{ const f=fi.files&&fi.files[0]; if(!f) return; close(); try{ photoEditor(code,await fileToImg(f),true); }catch(x){ alert('Bild konnte nicht geladen werden.'); } }; }
@@ -451,6 +451,7 @@ function photoEditor(code,img,isNew){ const N=normImg(img), src=N.cv, W=1200, H=
     if(k==='ok'){ draw(); let ok=false; for(const q of [.8,.6,.45]){ try{ localStorage.setItem('fyfpass:img:'+code,cv.toDataURL('image/jpeg',q)); ok=true; break; }catch(x){} }
       if(!ok){ alert('Speicher voll – Foto konnte nicht gespeichert werden.'); return; }
       if(isNew){ try{ localStorage.removeItem(IMGO+code); localStorage.setItem(IMGO+code,N.alpha?src.toDataURL('image/png'):src.toDataURL('image/jpeg',.8)); }catch(x){ try{ localStorage.removeItem(IMGO+code); }catch(y){} } }
+      if(N.alpha){ try{ const t=document.createElement('canvas'); t.width=W; t.height=H; t.getContext('2d').drawImage(src,ox,oy,src.width*s,src.height*s); localStorage.setItem('fyfpass:imgt:'+code,t.toDataURL('image/png')); }catch(x){ try{ localStorage.removeItem('fyfpass:imgt:'+code); }catch(y){} } } else { try{ localStorage.removeItem('fyfpass:imgt:'+code); }catch(x){} }
       el.remove(); show(code); } };
   fit(); }
 /* ===== v.93 Mein Rad: Service-Erinnerungen, Sitzposition, Fahrwerk, Reifendruck, Ausstattung, Belege, E-Bike & Akku, Verkaufen, Diebstahl-Notfall =====
@@ -2513,6 +2514,21 @@ function lifeHtml(code){ const E=lifeEvents(code); if(!E.length) return ''; cons
 .life-l li{position:relative;display:flex;flex-direction:column;gap:1px;padding:12px 0;border-bottom:1px solid var(--line)}.life-l li:last-child{border-bottom:0}.life-l li>i{position:absolute;left:-18px;top:17px;width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 3px var(--card)}
 .life-d{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}.life-l b{font-size:14.5px;line-height:1.35}
 .life .life-more{display:none}.life.life-open .life-more{display:flex}`; document.head.appendChild(st); }
+
+// ---------- v.185 Studio-Look: freigestelltes Rad schwebt im Lichtkegel (Spiegelung, Schatten), Text darunter statt darauf ----------
+function photoT(code){ try{ const t=localStorage.getItem('fyfpass:imgt:'+code); if(t) return t; const o=localStorage.getItem(IMGO+code); if(o&&/^data:image\/png/.test(o)) return o; }catch(e){} return null; }
+{ const BP=bikePic; bikePic=function(code,type){ const t=photoT(code); if(!t) return BP(code,type); return `<div class="bikepic studio"><span class="st-glow"></span><img class="st-bike" src="${t}" alt="Foto des Rads"><img class="st-refl" src="${t}" alt="" aria-hidden="true"><span class="st-floor"></span></div>`; }; }
+{ const SHs=show; show=async function(code){ const r=await SHs.apply(this,arguments); try{ if(!mine().some(m=>m.code===code)) return r; const h=document.querySelector('.hero'); if(h&&photoGet(code)&&!photoT(code)&&!h.querySelector('.st-nudge')){ const b=document.createElement('button'); b.className='st-nudge'; b.type='button'; b.innerHTML='✨ Studio-Look'; b.onclick=e=>{ e.stopPropagation(); photoMenu(code); setTimeout(()=>{ const d=document.querySelector('.sheet details'); if(d) d.open=true; },50); }; h.appendChild(b); } }catch(e){} return r; }; }
+{ const st=document.createElement('style'); st.textContent=`.bikepic.studio{position:relative;aspect-ratio:4/3.4!important;overflow:hidden;background:radial-gradient(70% 60% at 50% 38%,#2a3a4c 0%,#141b24 55%,#0a0d12 100%)!important}
+:root[data-theme="light"] .bikepic.studio,:root:not([data-theme]) .bikepic.studio{background:radial-gradient(70% 60% at 50% 38%,#ffffff 0%,#eef0f3 60%,#dfe3e8 100%)!important}
+.bikepic.studio .st-glow{position:absolute;left:10%;right:10%;top:-30%;height:80%;background:radial-gradient(closest-side,rgba(255,255,255,.18),rgba(255,255,255,0));pointer-events:none}
+.bikepic.studio .st-bike{position:absolute;left:6%;right:6%;top:3%;width:88%;height:54%;object-fit:contain;background:transparent!important;filter:drop-shadow(0 18px 22px rgba(0,0,0,.55));z-index:2}
+.bikepic.studio .st-refl{position:absolute;left:6%;right:6%;top:57%;width:88%;height:54%;object-fit:contain;background:transparent!important;transform:scaleY(-1);transform-origin:top;opacity:.22;-webkit-mask:linear-gradient(to bottom,rgba(0,0,0,.9),transparent 38%);mask:linear-gradient(to bottom,rgba(0,0,0,.9),transparent 38%);z-index:1}
+.bikepic.studio .st-floor{position:absolute;left:14%;right:14%;top:54%;height:7%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.55),rgba(0,0,0,0));z-index:1}
+.hero:has(.studio) .meta,.bikecard:has(.studio) .meta{background:linear-gradient(180deg,rgba(10,13,18,0) 0%,rgba(10,13,18,.85) 40%,rgba(10,13,18,.95) 100%)!important;padding-top:40px!important}
+:root[data-theme="light"] .hero:has(.studio) .meta *,:root[data-theme="light"] .bikecard:has(.studio) .meta *{color:#fff!important}
+.st-nudge{position:absolute;top:12px;left:12px;z-index:4;border:1px solid rgba(255,255,255,.25);background:rgba(10,13,18,.55);color:#fff;font:inherit;font-size:13px;font-weight:700;padding:7px 12px;border-radius:999px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer}
+.bikepic:not(.studio) img{filter:saturate(1.05) contrast(1.06)}`; document.head.appendChild(st); }
 
 window.addEventListener('hashchange',route); route();
 if(/(^|[#&])bestellt=1/.test(location.hash)) thanksSheet();

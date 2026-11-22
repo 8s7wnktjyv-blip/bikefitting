@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.184** (APP_VER 2026-11-22.184), Service-Worker-Cache `fyf-app-v1-p115`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.185** (APP_VER 2026-11-22.185), Service-Worker-Cache `fyf-app-v1-p116`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.185 (22.11.) | Pass: „Studio-Look“ für Rad-Fotos – freigestelltes Rad (iPhone: im Foto lange drücken → Kopieren → im Pass „Freigestelltes Rad einfügen“) schwebt im Lichtkegel mit Bodenschatten und Spiegelung, auf Radseite und Garage, hell und dunkel. Bei normalem Foto Knopf „✨ Studio-Look“ mit Anleitung. Bestehende Fotos bleiben unverändert. Test t185. |
 | v.184 (22.11.) | Pass (Premium-Konzept, Roadmap 3): „Lebenslauf“ auf der Radseite – eine Zeitleiste aus Pass-Einträgen (Werkstatt grün / selbst blau), eigener Wartung, Teiletausch (violett), Schäden/Unfällen (rot), Kauf (gold), Pass angelegt; Farblegende, 6 neueste, „Alle anzeigen“. Test t184. |
 | v.183 (22.11.) | Pass (Premium-Konzept `docs/PASS-PREMIUM-KONZEPT.md`, Roadmap 1): „Nächste Schritte“ in der Garage (alle Räder, max. 3, mit Radname) und auf der Radseite unter dem Cockpit – Service fällig, Teil tauschen, Schaden offen, bald fällig, Diebstahlschutz, Pass-Vollständigkeit; Antippen öffnet das passende Werkzeug; „Alles erledigt“ wenn nichts ansteht. Offline-Hinweis oben („Offline – Einträge bleiben auf dem Handy“), „Wieder online“-Meldung. Test t183. |
 | v.182 (22.11.) | Logo oben kleiner (58 px statt 86 px, Einführung 84 px) und ohne Unterstrich (Wunsch Dominik). |
