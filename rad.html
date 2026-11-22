@@ -2465,6 +2465,33 @@ details.more:not(.ck-det)>summary{font-size:16px}`; document.head.appendChild(st
 .pc-fi{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;color:#fff}`; document.head.appendChild(st); }
 
 document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-themeset]'); if(!b) return; const t=b.dataset.themeset; try{ localStorage.setItem('fyfpass:theme',t); }catch(x){} window.FYF_THEME=t; const d=t==='auto'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):t; document.documentElement.setAttribute('data-theme',d); const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content',d==='dark'?'#07090c':'#f3f3f1'); document.querySelectorAll('[data-themeset]').forEach(x=>x.style.fontWeight=x.dataset.themeset===t?'700':''); });
+// ---------- v.183 Nächste Schritte (Garage + Rad, max. 3, mit Knopf) und klarer Offline-Hinweis ----------
+function nextSteps(code){ const L=[]; try{ const P=Pof(code); if(P.stolen) return L; const S=svcSummary(code); if(S.due.length) L.push({p:1,c:'bad',t:`Service fällig: ${S.due[0].t}`,s:S.due.length>1?`und ${S.due.length-1} weitere Punkte`:'laut Wartungsplan',a:'svc'});
+  const C=compState(code).filter(c=>c.st==='bad'); if(C.length) L.push({p:2,c:'bad',t:`${C[0].l} tauschen`,s:`${num(C[0].d)} km seit Einbau (Richtwert ${num(C[0].life)} km)`,a:'comp'});
+  const D=(X(code).dmg||[]).filter(d=>!d.void&&d.st==='offen').length+(X(code).acc||[]).filter(a=>!a.void&&!a.closed).length; if(D) L.push({p:3,c:'warn',t:`${D} Schaden offen`,s:'Reparatur oder Versicherung eintragen',a:'dmg'});
+  if(S.soon.length&&!S.due.length) L.push({p:4,c:'warn',t:`Bald fällig: ${S.soon[0].t}`,s:'rechtzeitig Termin machen',a:'svc'});
+  const g=guardState(code); if(g.n<5) L.push({p:5,c:g.n<3?'warn':'info',t:`Diebstahlschutz ${g.n}/5`,s:`Noch: ${g.L.filter(z=>!z.ok).map(z=>z.t).slice(0,2).join(', ')}`,a:'guard'});
+  const ps=passScore(code); if(ps.pct<80) L.push({p:6,c:'info',t:`Pass ${ps.pct} % vollständig`,s:'Je vollständiger, desto besser bei Diebstahl und Verkauf',a:'pass'});
+ }catch(e){} return L.sort((a,b)=>a.p-b.p); }
+const NS_IC={bad:'!',warn:'!',info:'›'};
+function nextStepsHtml(items,withBike){ if(!items.length) return `<div class="ns ns-ok"><span class="ns-i ns-c-ok">✓</span><div><b>Alles erledigt</b><span>Nichts Dringendes – gute Fahrt!</span></div></div>`;
+  return `<div class="ns-list">${items.slice(0,3).map(x=>`<button class="ns" type="button" data-ns="${x.a}" data-nsc="${x.code||''}"><span class="ns-i ns-c-${x.c}">${NS_IC[x.c]}</span><div><b>${esc(x.t)}</b><span>${withBike?esc(x.bike)+' · ':''}${esc(x.s)}</span></div><span class="ns-go">›</span></button>`).join('')}</div>`; }
+function nsBind(root,codeFix){ root.querySelectorAll('[data-ns]').forEach(b=>b.onclick=()=>{ const code=codeFix||b.dataset.nsc, a=b.dataset.ns; if(!code) return; const run=()=>{ if(a==='pass'){ const d=document.querySelector('#scoreHost')&&document.querySelector('#scoreHost').closest('details'); if(d){ d.open=true; d.scrollIntoView({behavior:'smooth',block:'start'}); } return; } const fn=TOOLFN[a]; if(fn) fn(code); };
+  if(codeFix) run(); else { location.hash='#c='+code; setTimeout(run,1400); } }); }
+{ const SHn=show; show=async function(code){ const r=await SHn.apply(this,arguments); try{ const ck=document.querySelector('[data-cockpit]'); if(ck&&!document.querySelector('[data-ns-rad]')&&mine().some(m=>m.code===code)){ const box=document.createElement('section'); box.setAttribute('data-ns-rad',''); box.innerHTML=`<h2 class="ns-h">Nächste Schritte</h2>${nextStepsHtml(nextSteps(code),false)}`; ck.insertAdjacentElement('afterend',box); nsBind(box,code); } }catch(e){} return r; }; }
+{ const AFn=askForm; askForm=function(err){ const r=AFn.apply(this,arguments); try{ if(/pruefen/.test(location.hash)) return r; const l=mine(); const g=document.querySelector('.garage'); if(!l.length||!g||document.querySelector('[data-ns-gar]')) return r;
+  const all=[]; l.forEach(m=>nextSteps(m.code).forEach(x=>all.push({...x,code:m.code,bike:m.name||bikeName(m.code)}))); all.sort((a,b)=>a.p-b.p);
+  const box=document.createElement('section'); box.setAttribute('data-ns-gar',''); box.innerHTML=`<h2 class="ns-h">Nächste Schritte</h2>${nextStepsHtml(all,l.length>1)}`; g.insertAdjacentElement('beforebegin',box); nsBind(box,l.length===1?l[0].code:null); }catch(e){} return r; }; }
+{ const upd=()=>{ let b=document.getElementById('offBar'); if(navigator.onLine){ if(b) b.remove(); return; } if(!b){ b=document.createElement('div'); b.id='offBar'; b.setAttribute('role','status'); b.innerHTML='<span class="ob-dot"></span>Offline – Einträge bleiben auf dem Handy'; document.body.appendChild(b); } };
+  addEventListener('online',()=>{ upd(); toast('Wieder online'); }); addEventListener('offline',upd); if(document.body) upd(); else addEventListener('DOMContentLoaded',upd); }
+{ const st=document.createElement('style'); st.textContent=`.ns-h{font-size:20px;letter-spacing:-.02em;margin:18px 2px 10px}
+.ns-list{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.ns{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:12px;width:100%;background:var(--card);border-radius:18px;padding:12px 14px;box-shadow:var(--sh)}
+.ns>div{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}.ns b{font-size:15px}.ns>div>span{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.ns-i{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-weight:900;flex:none;color:#fff}.ns-c-bad{background:#dc2626}.ns-c-warn{background:#d97706}.ns-c-info{background:#2563eb}.ns-c-ok{background:#16a34a}
+.ns-go{color:var(--muted);font-size:22px}.ns-ok{cursor:default}
+#offBar{position:fixed;left:50%;top:calc(8px + env(safe-area-inset-top));transform:translateX(-50%);z-index:300;background:#1f2937;color:#fff;font-size:13px;font-weight:650;padding:8px 14px;border-radius:999px;box-shadow:0 10px 30px -10px rgba(0,0,0,.6);display:flex;align-items:center;gap:8px;max-width:calc(100% - 24px)}.ob-dot{width:8px;height:8px;border-radius:50%;background:#fbbf24}`; document.head.appendChild(st); }
+
 window.addEventListener('hashchange',route); route();
 if(/(^|[#&])bestellt=1/.test(location.hash)) thanksSheet();
 if(!new URLSearchParams((location.hash||'').slice(1)).get('c')&&!new URLSearchParams((location.hash||'').slice(1)).get('k')) intro();
