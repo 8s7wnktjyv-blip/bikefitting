@@ -2218,6 +2218,26 @@ TOOLFN.tour=toolTour;
   if(mot) add('esw','(Motor: '+mot+' – Diagnose mit dem Werkzeug des Herstellers in einer Fachwerkstatt.)',()=>{});
  }catch(e){} return L; }; }
 
+// ---------- v.159 Pass: Verkauf in 5 Schritten (Fortschritt oben in „Verkaufen“) ----------
+function sellSteps(code){ const x=X(code), o=x.sell||{}, V=healthVerdict(healthReport(code));
+  return [['zust','Zustand klären',!!V&&(V.k==='ready'||!!o.okCond),V?V.t:'',null],['preis','Preis festlegen',!!o.price,o.price?o.price+' €':'Wert schätzen lassen','#slP'],['anz','Anzeige teilen',!!o.shared,o.shared?'am '+fd(o.shared):'Text kopieren oder teilen','#slT'],['kv','Kaufvertrag',!!o.kv,o.kv?'erstellt '+fd(o.kv):'mit Rahmennummer','#slKv'],['ueb','Pass übergeben',!!o.handover,o.handover?'vorbereitet '+fd(o.handover):'Besitzer-Code & Teil II','#slVis']]; }
+function sellStepsHtml(code){ const L=sellSteps(code), n=L.filter(s=>s[2]).length;
+  return `<div class="card sst" data-sst><div style="display:flex;justify-content:space-between;align-items:baseline"><b>Verkauf in 5 Schritten</b><span class="muted small">${n} von 5</span></div><div class="sst-bar"><i style="width:${n*20}%"></i></div>
+   <ol class="sst-l">${L.map(([k,t,ok,sub,sel],i)=>`<li class="${ok?'ok':''}" ${sel?`data-sgo="${sel}"`:k==='zust'?'data-szust':''}><span class="sst-n">${ok?'✓':i+1}</span><span><b>${esc(t)}</b><span class="muted small">${esc(sub||'')}</span></span></li>`).join('')}</ol></div>`; }
+{ const TS5=toolSell; toolSell=function(code){ TS5(code); try{ const body=[...document.querySelectorAll('.tpage .tp-body')].pop(); if(!body) return;
+  const mark=(k)=>{ const o=X(code); o.sell={...(o.sell||{}),[k]:today()}; Xset(code,o); redraw(); };
+  const redraw=()=>{ const old=body.querySelector('[data-sst]'); const h=sellStepsHtml(code); if(old) old.outerHTML=h; else { const hv=body.querySelector('.hv-card'); hv?hv.insertAdjacentHTML('afterend',h):body.insertAdjacentHTML('afterbegin',h); } bind(); };
+  const bind=()=>{ body.querySelectorAll('[data-sgo]').forEach(li=>li.onclick=()=>{ const t=body.querySelector(li.dataset.sgo); if(t){ t.scrollIntoView({behavior:'smooth',block:'center'}); if(t.focus) t.focus({preventScroll:true}); } });
+   const z=body.querySelector('[data-szust]'); if(z) z.onclick=()=>{ const o=X(code); o.sell={...(o.sell||{}),okCond:today()}; Xset(code,o); redraw(); }; };
+  redraw();
+  const on=(sel,k)=>{ const b=body.querySelector(sel); if(b) b.addEventListener('click',()=>setTimeout(()=>mark(k),50)); };
+  on('#slCp','shared'); on('#slSh','shared'); on('#slKv','kv'); on('#slVis','handover');
+  const pr=body.querySelector('#slP'); if(pr) pr.addEventListener('change',()=>setTimeout(redraw,50));
+ }catch(e){} }; TOOLFN.sell=toolSell; }
+{ const st=document.createElement('style'); st.textContent=`.sst-bar{height:6px;border-radius:3px;background:var(--line);margin:10px 0 6px;overflow:hidden}.sst-bar i{display:block;height:100%;background:var(--ok)}
+.sst-l{list-style:none;margin:0;padding:0}.sst-l li{display:flex;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}.sst-l li:last-child{border-bottom:0}.sst-l li>span:last-child{display:flex;flex-direction:column}
+.sst-n{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--card2);flex:none}.sst-l li.ok .sst-n{background:var(--ok);color:#fff}.sst-l li.ok b{color:var(--ok)}`; document.head.appendChild(st); }
+
 // ---------- Garage: Fahrer/in auf den Karten und Filter ----------
 { const RTg=route; route=function(){ const r=RTg.apply(this,arguments); try{ const g=app.querySelector('.garage'); if(g&&!app.querySelector('[data-riders]')){ hit('garage');
    const cards=[...g.querySelectorAll('a.bikecard')]; const code=a=>(/#c=([A-Z0-9]{8})/.exec(a.getAttribute('href')||'')||[])[1]; const R={}; cards.forEach(a=>{ const c=code(a); const rd=c&&X(c).rider; if(rd){ (R[rd]=R[rd]||[]).push(a); const m=a.querySelector('.meta'); if(m&&!m.querySelector('[data-rd]')) m.insertAdjacentHTML('beforeend',`<span class="small muted" data-rd>· ${esc(rd)}</span>`); } });

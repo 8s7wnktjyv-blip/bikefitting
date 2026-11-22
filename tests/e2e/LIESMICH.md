@@ -33,5 +33,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t156.js` – Software: Live-Skizze im Fitting-Schritt „Anpassen“ aktualisiert sich bei Änderung
 - `t157.js` – Pass: Wartungsplan je nach Teilen (12-fach, SRAM/Shimano-Bremse, Carbon)
 - `t158.js` – Software: Rahmen-Finder-Kurzkarte im Fitting-Ergebnis, Knopf öffnet Reiter Größe & Sattel
+- `t159.js` – Pass: Verkauf in 5 Schritten (Zähler und Speicherung)
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.

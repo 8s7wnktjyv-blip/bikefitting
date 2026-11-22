@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.158** (APP_VER 2026-11-22.158), Service-Worker-Cache `fyf-app-v1-p89`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.159** (APP_VER 2026-11-22.159), Service-Worker-Cache `fyf-app-v1-p90`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.159 (22.11.) | Pass: „Verkauf in 5 Schritten“ oben in „Verkaufen“ – Zustand klären, Preis, Anzeige teilen, Kaufvertrag, Pass übergeben; Haken setzen sich beim Benutzen der Knöpfe, Antippen springt zum Feld. Test t159. |
 | v.158 (22.11.) | Software (Konzept 9): Geometrie-Bibliothek sichtbarer – im Fitting-Ergebnis (Vorher/Nachher) Kurzkarte „N Rahmen passen zu dieser Sitzposition“ mit bester Übereinstimmung (Vorbau/Spacer) und Knopf zum Rahmen-Finder. Test t158. |
 | v.157 (22.11.) | Pass: Wartungsplan abhängig von verbauten Teilen – 12-fach-Antrieb: Kette 15 % früher messen; SRAM/Avid/Hayes/Formula-Bremse (DOT): Flüssigkeit jährlich, Shimano/Magura/Tektro/TRP (Mineralöl): 2 Jahre; Carbon-Rahmen: jährliche Sichtprüfung/Drehmomente; E-Motor-Hersteller im Diagnose-Hinweis. Software: Dark-Mode-Rahmen der Hauptkachel korrigiert, alle 35 Bereiche ohne Fehler/Querscroll geprüft. Test t157. |
 | v.156 (22.11.) | Software (Konzept 5): Fitting-Schritt „Anpassen“ zeigt oben die Live-Skizze Ausgang ↔ aktuell mit Differenzen; Fehler behoben: Karten „Deine Position auf einen Blick“ waren verschoben (Wert links, Text rechts) – jetzt Name links, Wert rechts. Test t156. |
@@ -101,6 +102,6 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 ## Nächster Schritt
 
 1. Software-Konzept `docs/SOFTWARE-DESIGN-KONZEPT.md` ist umgesetzt (Punkte 1–9). Weiter: Feinschliff nach Rückmeldung von Dominik, Dashboard-Kacheln je Ladentyp verfeinern.
-2. Pass: Plan `docs/PASS-ATTRAKTIV-PLAN.md` umgesetzt bis auf Schritt 8 (Wunschliste/Kompatibilität – Umbau-Planer deckt Kosten/Gewicht ab). Übergabe-Checkliste beim Verkauf.
+2. Pass: Plan `docs/PASS-ATTRAKTIV-PLAN.md` umgesetzt bis auf Schritt 8 (Wunschliste/Kompatibilität – Umbau-Planer deckt Kosten/Gewicht ab).
 3. Wartet auf Freigabe: Werkstatt-Freigabe 7 Tage + Schadens-Einträge von Läden (`docs/PASS-WERKSTATT-FREIGABE-PLAN.md`), Entscheidungen in `docs/STRATEGIE.md` (Werbung, kein Endkunden-Abo, Station).
 4. Danach Englisch Stufe 2/3.
