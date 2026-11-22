@@ -2208,6 +2208,16 @@ TOOLFN.tour=toolTour;
   h=h.replace(/(<summary><b>Mehr Funktionen<\/b> <span class="muted small">\()(\d+)(\)<\/span><\/summary><div class="tools" style="margin-top:10px">)/,(m,a,c2,c)=>a+(+c2+1)+c+btn); }catch(e){} return h; }; }
 { const st=document.createElement('style'); st.textContent=`.tc-list{padding:4px 14px!important}.tc-i{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}.tc-i:last-child{border-bottom:0}.tc-i input{width:22px;height:22px;margin-top:2px;flex:none;accent-color:var(--ok)}.tc-i>span{display:flex;flex-direction:column}.tc-i.on b{color:var(--ok)}#tcOk[disabled]{opacity:.5}`; document.head.appendChild(st); }
 
+// ---------- v.157 Pass: Wartungsplan berücksichtigt verbaute Teile (12-fach-Kette, Bremsflüssigkeit SRAM/Shimano, Carbon, E-Motor) ----------
+{ const SP=svcPlan; svcPlan=function(type,code){ const L=SP(type,code); try{ const p=effParts(code).v||{}, x=X(code), all=[p.groupset,p.chain,p.rd,p.cassette].filter(Boolean).join(' '), br=String(p.brakes||''), mat=String(p.material||''), mot=String((x.eb||{}).m||'');
+  const add=(k,s,f)=>{ const i=L.find(z=>z.k===k); if(i){ f(i); i.h+=' '+s; } };
+  if(/12-?fach|12-?speed|\b12s\b|eagle|\baxs\b|\bxtr\b|m8100|m7100|m6100|\bgx\b|r8100|r9200|r7100|\brx8[12]\d/i.test(all)) add('chain','(Angepasst: 12-fach-Antrieb – schmalere Kette, früher messen.)',i=>{ if(i.km) i.km=Math.round(i.km*.85); });
+  if(/sram|avid|hayes|formula/i.test(br)) add('bleed','(Angepasst: '+br.split(' ')[0]+' nutzt DOT-Flüssigkeit, die Wasser aufnimmt – jährlich wechseln.)',i=>{ i.m=12; });
+  else if(/shimano|magura|tektro|trp/i.test(br)) add('bleed','(Angepasst: '+br.split(' ')[0]+' nutzt Mineralöl – alle 2 Jahre reicht meist.)',i=>{ i.m=24; });
+  if(/carbon/i.test(mat)&&!L.some(z=>z.k==='carbon')) L.push({k:'carbon',t:'Carbon: Sichtprüfung & Drehmomente',m:12,km:0,h:'Rahmen/Gabel auf Risse prüfen, Klemmungen nur mit Drehmomentschlüssel und Carbonpaste. Nach Stürzen sofort prüfen lassen.'});
+  if(mot) add('esw','(Motor: '+mot+' – Diagnose mit dem Werkzeug des Herstellers in einer Fachwerkstatt.)',()=>{});
+ }catch(e){} return L; }; }
+
 // ---------- Garage: Fahrer/in auf den Karten und Filter ----------
 { const RTg=route; route=function(){ const r=RTg.apply(this,arguments); try{ const g=app.querySelector('.garage'); if(g&&!app.querySelector('[data-riders]')){ hit('garage');
    const cards=[...g.querySelectorAll('a.bikecard')]; const code=a=>(/#c=([A-Z0-9]{8})/.exec(a.getAttribute('href')||'')||[])[1]; const R={}; cards.forEach(a=>{ const c=code(a); const rd=c&&X(c).rider; if(rd){ (R[rd]=R[rd]||[]).push(a); const m=a.querySelector('.meta'); if(m&&!m.querySelector('[data-rd]')) m.insertAdjacentHTML('beforeend',`<span class="small muted" data-rd>· ${esc(rd)}</span>`); } });

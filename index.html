@@ -831,6 +831,8 @@ input:focus,select:focus,textarea:focus{outline:none!important;border-color:var(
 .fsec{color:var(--muted)!important}
 .glance > .gl{display:flex!important;align-items:center;gap:12px;grid-template-columns:none}
 .glance > .gl .gv{margin-left:auto}
+:root[data-theme="dark"] .tile.main{border-color:#1f2a36!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tile.main{border-color:#1f2a36!important;background:#1f2a36!important}}
 </style>
 <!--praez-end-->
 </head>
@@ -2052,7 +2054,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.156';
+const APP_VER='2026-11-22.157';
 let loadIssue = null;
 function load(){
   let raw=null;
