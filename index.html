@@ -829,6 +829,8 @@ input:focus,select:focus,textarea:focus{outline:none!important;border-color:var(
 .qp-b.on:not([style*="--qc"]){background:var(--fg)!important;border-color:var(--fg)!important;color:var(--surface)!important;box-shadow:none!important}
 .qp-b{border-radius:8px!important}
 .fsec{color:var(--muted)!important}
+.glance > .gl{display:flex!important;align-items:center;gap:12px;grid-template-columns:none}
+.glance > .gl .gv{margin-left:auto}
 </style>
 <!--praez-end-->
 </head>
@@ -2050,7 +2052,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.155';
+const APP_VER='2026-11-22.156';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -9575,6 +9577,8 @@ document.addEventListener('drop',e=>{ const col=e.target.closest&&e.target.close
 .report td[style*="text-align:right"]{font-variant-numeric:tabular-nums;font-weight:600}
 .fov-rep{background:#f6f7f9!important;border-color:#e2e5ea!important;margin:6px 0 10px}.fov-rep .fov-t td:last-child{color:#1f5fae}
 @media print{.report>.rh{background:#0f1419!important}}`; document.head.appendChild(st); }
+/* v.156 Fitting-Ablauf: Live-Skizze im Schritt „Anpassen“ (Ausgang gestrichelt, aktuelle Einstellung blau) */
+{ const SA=SESSTAB.anpassung; if(SA) SESSTAB.anpassung=function(s,c,b){ let h=SA.apply(this,arguments); try{ if(ui.wIdx==null&&Object.keys(s.before||{}).length){ const has=Object.keys(s.after||{}).length; const ov=has?fitOverlaySvg(s.before,{...s.before,...s.after},'Ausgang','Aktuell'):''; h=(ov?`<div class="fit-live"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px"><b>Live-Vergleich</b><span class="faint" style="font-size:12px">aktualisiert sich mit jeder Änderung</span></div>${ov}</div>`:`<p class="faint" style="font-size:13px;margin:0">Sobald du die erste Änderung einträgst, erscheint hier die Skizze Ausgang ↔ aktuell.</p>`)+h; } }catch(e){} return h; }; }
 try{ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost') && window.self===window.top) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 window.__fitframe={invXml:i=>invXml(i),invoices:()=>invoices(),reminders:()=>reminders(),copilotItems:()=>copilotItems(),recallsD:()=>recallsD(),passPayload:b=>passPayload(b),storeVideoKnee,save,kneeOf,kneeRefH,saddleModel,computePlan,targetFit,simInputs,kneeMaxAt,kneeTarget,saddleAdvice,simCalc,simApply,simState,simUnits,trainerHtml,hoodTarget,leverAdvice,coords0,coordChecks,makerValues,stockBar,bikeParts,kpis,woMsg,offerBuild,passData,passLink,passImport,unb64u,exercisesFor,painAreas,frontFrame,frontTrack,frontResult,footAdvice,tilt,tiltHandler,tiltValue,bodyType,newBikeMatches,bodyTarget,frameSetup,bodySetupForSession,goalPreview,computePlan,targetFit,liveInfo,fitProfile,liveModel,fitCircle,fitHarm,transferPlan,coords,live,liveFrame,liveTrack,liveResult,saddleAdvice,kin,simInputs,sessionsCsv,partsAdvice,removeDemo,fitSuggestions,scan,scanCalc,SCAN,GEO,IL,measureRange,rangeFor,S:()=>S,ui,go,ACT,VIEWS,quality,sizeAdvice,geoById,sess,FORMS,CHG};
 })();

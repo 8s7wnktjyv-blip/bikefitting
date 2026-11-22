@@ -111,7 +111,7 @@ Empfehlungslogik: bleibt regelbasiert, mit Begründung und Zahl. Wir sind keine 
 4. Werkstatt-Tafel: Ziehen und Ablegen, Tablet-Querformat
 
 **Größere Schritte (mehrere Läufe):**
-5. Fitting-Ablauf mit Fortschrittsleiste und Live-Skizze
+5. ✅ Fitting-Ablauf: Fortschrittsleiste (gab es) + Live-Skizze im Schritt Anpassen (v.156)
 6. ◐ Sitzungsvergleich: Überlagerung fertig (v.148), Verlaufslinien gab es schon
 7. ✅ Kundenakte mit Kopf und gemeinsamer Zeitleiste (v.151)
 8. ✅ Fitting-Bericht (PDF) im neuen Stil mit Skizze (v.155)

@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.155** (APP_VER 2026-11-22.155), Service-Worker-Cache `fyf-app-v1-p86`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.156** (APP_VER 2026-11-22.156), Service-Worker-Cache `fyf-app-v1-p87`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.156 (22.11.) | Software (Konzept 5): Fitting-Schritt „Anpassen“ zeigt oben die Live-Skizze Ausgang ↔ aktuell mit Differenzen; Fehler behoben: Karten „Deine Position auf einen Blick“ waren verschoben (Wert links, Text rechts) – jetzt Name links, Wert rechts. Test t156. |
 | v.155 (22.11.) | Software (Konzept 8): Fitting-Bericht im Stil „Präzision“ – Graphit-Kopf mit Orange-Linie, nummerierte Abschnitte, ruhige Tabellen; im Vorher-Nachher-Vergleich die überlagerte Skizze mit Differenzen (auch im Druck/PDF). Test t155. |
 | v.154 (22.11.) | Pass (Plan-Schritt 7): „Tour-Check“ – 6–7 Punkte (Reifendruck mit eigenem Wert, Bremsen, Laufräder, Kette, Licht/Akku, Ausrüstung, fällige Wartung), Knopf erst nach allen Haken, Zähler auf der Kachel. Test t154. |
 | v.153 (22.11.) | Software (Konzept 4): Werkstatt-Tafel – Karten mit Maus/Stift ziehen; erlaubt sind nur dieselben Schritte wie der Weiter-Knopf (kein Überspringen von Kostenvoranschlag/Freigabe), „Wartet auf Teile“ hin und zurück; Tablet quer 4 Spalten. Test t153. |

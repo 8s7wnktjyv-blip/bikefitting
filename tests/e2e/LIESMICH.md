@@ -30,5 +30,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t153.js` – Software: Werkstatt-Tafel per Ziehen (nur erlaubte Schritte, Wartet auf Teile hin und zurück, kein Rücksprung)
 - `t154.js` – Pass: Tour-Check (Knopf erst nach allen Haken, Eintrag gespeichert)
 - `t155.js` – Software: Fitting-Bericht im neuen Stil mit Skizze vorher/nachher
+- `t156.js` – Software: Live-Skizze im Fitting-Schritt „Anpassen“ aktualisiert sich bei Änderung
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
