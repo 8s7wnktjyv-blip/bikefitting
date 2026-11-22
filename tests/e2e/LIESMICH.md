@@ -28,5 +28,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t151.js` – Software: Kundenakte mit Kennzahlen-Kopf, eingeklappter Wiedervorlage, Zeitleiste mit Filter (Klick öffnet Fitting)
 - `t152.js` – Pass: Rad-Karte als Bild (1080×1350, JPG), Knopf auch auf der Ziel-Seite
 - `t153.js` – Software: Werkstatt-Tafel per Ziehen (nur erlaubte Schritte, Wartet auf Teile hin und zurück, kein Rücksprung)
+- `t154.js` – Pass: Tour-Check (Knopf erst nach allen Haken, Eintrag gespeichert)
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
