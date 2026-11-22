@@ -15,7 +15,7 @@ const {chromium,devices}=require('playwright'); const BASE='http://localhost:876
  // Wünsch dir was
  await q.evaluate(()=>{ document.querySelectorAll('.tpage').forEach(x=>x.remove()); document.body.style.overflow=''; location.hash='#meine'; }); await q.waitForTimeout(1300);
  await q.click('[data-wish] summary'); await q.waitForTimeout(150); const nW=await q.evaluate(()=>document.querySelectorAll('[data-wish] [data-wk]').length); if(nW<5) bad('Wunschliste');
- await q.click('[data-wish] [data-wk="map"]'); await q.waitForTimeout(150);
- r=await q.evaluate(()=>({btn:document.querySelector('[data-wish] [data-wk="map"]').textContent,note:document.querySelector('[data-wish] summary .cl-note').textContent,ls:localStorage.getItem('fyfpass:wish'),hit:localStorage.getItem('fyfpass:hit:wunsch_map')})); log('Wunsch:',JSON.stringify(r));
- if(r.btn!=='✓ Gewünscht'||r.note!=='1 gewählt'||!/map/.test(r.ls||'')||!r.hit) bad('Wunsch zählt');
+ await q.click('[data-wish] [data-wk="tips"]'); await q.waitForTimeout(150);
+ r=await q.evaluate(()=>({btn:document.querySelector('[data-wish] [data-wk="tips"]').textContent,note:document.querySelector('[data-wish] summary .cl-note').textContent,ls:localStorage.getItem('fyfpass:wish'),hit:localStorage.getItem('fyfpass:hit:wunsch_tips')})); log('Wunsch:',JSON.stringify(r));
+ if(r.btn!=='✓ Gewünscht'||r.note!=='1 gewählt'||!/tips/.test(r.ls||'')||!r.hit) bad('Wunsch zählt');
  log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();
