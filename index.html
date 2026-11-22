@@ -840,6 +840,9 @@ input:focus,select:focus,textarea:focus{outline:none!important;border-color:var(
 .chip.c-acc{color:var(--accent-strong)!important;background:var(--accent-soft)!important;border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
 .chip.c-work{color:#6d28d9!important;background:rgba(109,40,217,.08)!important;border-color:rgba(109,40,217,.35)}
 :root[data-theme="dark"] .chip.c-work{color:#b79cf5!important}
+.tf-neu .tf-card{border-left:4px solid var(--info)!important}.tf-arbeit .tf-card{border-left:4px solid #6d28d9!important}.tf-teile .tf-card{border-left:4px solid var(--warn)!important}.tf-fertig .tf-card{border-left:4px solid var(--ok)!important}
+.tf-card.late{box-shadow:0 0 0 2px color-mix(in srgb,var(--bad) 55%,transparent)!important}
+.tf-arbeit h3{color:#6d28d9!important}:root[data-theme="dark"] .tf-arbeit h3{color:#b79cf5!important}
 </style>
 <!--praez-end-->
 </head>
@@ -2061,7 +2064,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.169';
+const APP_VER='2026-11-22.170';
 let loadIssue = null;
 function load(){
   let raw=null;
