@@ -18,6 +18,8 @@ const {chromium,devices}=require('playwright'); const BASE='http://localhost:876
  const delBtn=await q.locator('.tpage [data-del], .tpage [data-dmgdel]').count(); if(delBtn) bad('Löschen-Knopf vorhanden');
  await q.click('.tpage [data-dst="versichert"]'); await q.waitForTimeout(300); await q.click('.tpage [data-dst="repariert"]'); await q.waitForTimeout(300);
  dm=await q.evaluate(c=>X(c).dmg[0],code); log('5 Verlauf:',dm.st,JSON.stringify(dm.log)); if(dm.st!=='repariert'||dm.log.length!==2) bad('Status-Verlauf');
+ await q.click('.tpage [data-dins]'); await q.waitForTimeout(800); const ins=await q.evaluate(()=>{ const f=document.querySelector('.docv iframe'); try{ return f?f.contentDocument.body.innerText:document.querySelector('.docv')?.innerText||''; }catch(e){ return 'X'; } }); log('5b Versicherungs-Unterlage:',/Schadensmeldung/.test(ins)&&/Sturz/.test(ins)); if(!/Schadensmeldung/.test(ins)||!/Sturz/.test(ins)) bad('Versicherungs-PDF');
+ await q.evaluate(()=>{ document.querySelectorAll('.docv').forEach(t=>t.remove()); });
  await q.evaluate(()=>{ document.querySelectorAll('.tpage').forEach(t=>t.remove()); document.body.style.overflow=''; });
  await q.evaluate(()=>{ const d=document.querySelector('[data-tmore]'); if(d) d.open=true; }); await q.click('[data-tool="trk"]'); await q.waitForTimeout(400); await q.selectOption('.tpage #tkT','airtag'); await q.fill('.tpage #tkW','unter dem Flaschenhalter'); await q.click('.tpage #tkSave'); await q.waitForTimeout(300);
  const tk=await q.evaluate(()=>{ const a=[...document.querySelectorAll('.tpage a')].find(x=>/orten/.test(x.textContent)); return a?a.href:''; }); log('6 Tracker-Link:',tk); if(!/icloud\.com\/find/.test(tk)) bad('Tracker-Link');

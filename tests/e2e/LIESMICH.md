@@ -24,5 +24,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t145.js` – Pass: Zustandsbericht-Urteil (Wartungsstau, Risiko, fast verkaufsbereit) und Kopf in „Verkaufen“
 - `t147.js` – Software: Dashboard-Reihenfolge je Ladentyp (Werkstatt: Aufmerksamkeit zuerst), eigene Anpassung hat Vorrang
 - `t148.js` – Software: Verlauf & Vergleich mit überlagerter Seitenansicht A/B und Differenzen
+- `t150.js` – Pass: Jahresziel (Fortschritt aus km-Verlauf), Abzeichen, Kachel aktualisiert sich
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
