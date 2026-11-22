@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.159** (APP_VER 2026-11-22.159), Service-Worker-Cache `fyf-app-v1-p90`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.160** (APP_VER 2026-11-22.160), Service-Worker-Cache `fyf-app-v1-p91`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.160 (22.11.) | Offline (Wunschliste 22.11.): Fehler behoben – ein eigenes Rad, das noch nie online geöffnet wurde, zeigte offline nur „Gerade nicht erreichbar“. Jetzt erscheinen die eigenen Daten mit Hinweis „Werkstatt-Einträge laden, sobald wieder Internet da ist“; Diebstahl-Status wird offline nicht behauptet. Software startet offline (Service-Worker). Test t160. |
 | v.159 (22.11.) | Pass: „Verkauf in 5 Schritten“ oben in „Verkaufen“ – Zustand klären, Preis, Anzeige teilen, Kaufvertrag, Pass übergeben; Haken setzen sich beim Benutzen der Knöpfe, Antippen springt zum Feld. Test t159. |
 | v.158 (22.11.) | Software (Konzept 9): Geometrie-Bibliothek sichtbarer – im Fitting-Ergebnis (Vorher/Nachher) Kurzkarte „N Rahmen passen zu dieser Sitzposition“ mit bester Übereinstimmung (Vorbau/Spacer) und Knopf zum Rahmen-Finder. Test t158. |
 | v.157 (22.11.) | Pass: Wartungsplan abhängig von verbauten Teilen – 12-fach-Antrieb: Kette 15 % früher messen; SRAM/Avid/Hayes/Formula-Bremse (DOT): Flüssigkeit jährlich, Shimano/Magura/Tektro/TRP (Mineralöl): 2 Jahre; Carbon-Rahmen: jährliche Sichtprüfung/Drehmomente; E-Motor-Hersteller im Diagnose-Hinweis. Software: Dark-Mode-Rahmen der Hauptkachel korrigiert, alle 35 Bereiche ohne Fehler/Querscroll geprüft. Test t157. |
