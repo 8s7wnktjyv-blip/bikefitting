@@ -35,5 +35,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t158.js` – Software: Rahmen-Finder-Kurzkarte im Fitting-Ergebnis, Knopf öffnet Reiter Größe & Sattel
 - `t159.js` – Pass: Verkauf in 5 Schritten (Zähler und Speicherung)
 - `t160.js` – Pass und Software offline (eigenes Rad ohne frühere Online-Ansicht, kein Diebstahl-Status offline)
+- `t161.js` – Englisch Stufe 2/3: Händlerfinder englisch, neue Pass-Seiten englisch, Rückschalten auf Deutsch
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
