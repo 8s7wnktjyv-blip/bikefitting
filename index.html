@@ -740,6 +740,88 @@ body{background:radial-gradient(900px 500px at 85% -10%,color-mix(in srgb,var(--
 .illus.fig{background-image:none;padding:8px} .illus.fig svg{max-height:300px;margin:0 auto} .wiz .illus.fig svg{max-height:240px} .illus.fig.tall svg{max-height:380px}
 .bviz .bv-hs circle{stroke-width:8} .bviz .bv-hs.on circle,.bviz .bv-hs:hover circle{fill-opacity:.35;stroke-width:10}
 </style>
+<style id="design-praezision">
+/* ===== v.143 Design „Präzision“: kühles Grau, Graphit, ein Akzent (Orange nur für Hauptaktionen), technisches Blau für Messwerte ===== */
+:root{
+  --bg:#f3f4f6;--surface:#ffffff;--surface-2:#eef0f3;--line:#e2e5ea;--fg:#0f1419;--muted:#56606b;--faint:#8a929c;
+  --accent:#e8620f;--accent-ink:#ffffff;--accent-strong:#b84c0a;--accent-soft:#fff1e7;--accent-line:#f6c9a8;
+  --ok:#15803d;--ok-soft:#e8f5ec;--warn:#b45309;--warn-soft:#fdf3e3;--bad:#b91c1c;--bad-soft:#fdecec;--info:#1f5fae;--info-soft:#e8f0fa;
+  --side-bg:#0f1419;--side-fg:#e6e9ed;--side-mute:rgba(230,233,237,.55);
+  --warm-grad:linear-gradient(135deg,#0f1419 0%,#1d2733 100%);
+  --t1:var(--surface);--t1i:var(--fg);--t2:var(--surface);--t2i:var(--fg);--t3:var(--surface);--t3i:var(--fg);--t4:var(--surface);--t4i:var(--fg);
+  --hero-glow:none;--r:12px;
+  --shadow:0 1px 0 rgba(15,20,25,.04),0 1px 3px rgba(15,20,25,.06);--shadow-lg:0 16px 48px -12px rgba(15,20,25,.22);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c0f13;--surface:#151a20;--surface-2:#1c232b;--line:#28313b;--fg:#eef1f4;--muted:#a3acb6;--faint:#76808b;
+  --side-bg:#080a0d;--warm-grad:linear-gradient(135deg,#151a20 0%,#1f2a36 100%);--info:#6aa5ec;--info-soft:rgba(106,165,236,.14);
+  --t1:var(--surface);--t1i:var(--fg);--t2:var(--surface);--t2i:var(--fg);--t4:var(--surface);--t4i:var(--fg);--glass:rgba(21,26,32,.94)}}
+:root[data-theme="dark"]{
+  --bg:#0c0f13;--surface:#151a20;--surface-2:#1c232b;--line:#28313b;--fg:#eef1f4;--muted:#a3acb6;--faint:#76808b;
+  --side-bg:#080a0d;--warm-grad:linear-gradient(135deg,#151a20 0%,#1f2a36 100%);--info:#6aa5ec;--info-soft:rgba(106,165,236,.14);
+  --t1:var(--surface);--t1i:var(--fg);--t2:var(--surface);--t2i:var(--fg);--t4:var(--surface);--t4i:var(--fg);--glass:rgba(21,26,32,.94)}
+body{background:var(--bg)!important;font-feature-settings:"tnum" 1,"cv11" 1}
+/* Typografie: klare Stufen */
+h1,.pagehead h1{letter-spacing:-.025em}
+.pagehead h1{font-size:28px}
+.eyebrow,.navgroup .label,.panel-h small,.lbl-up{text-transform:uppercase;letter-spacing:.08em;font-size:11px!important;font-weight:700}
+/* Seitenleiste: ruhig, aktive Seite als heller Balken statt Verlauf */
+.side{background:var(--side-bg)!important;border-right:1px solid rgba(255,255,255,.04)}
+.side .navbtn{border-radius:8px!important;font-weight:550}
+.side .navbtn[aria-current="page"]{background:rgba(255,255,255,.08)!important;color:#fff!important;box-shadow:inset 3px 0 0 var(--accent)!important}
+.side .navbtn[aria-current="page"] svg{color:var(--accent)!important}
+.side .navgroup{margin-top:14px}
+/* Karten & Panels: flach, feine Linie */
+.panel,.card,.tile{border-radius:var(--r)!important;box-shadow:var(--shadow)!important;border:1px solid var(--line)!important}
+.panel-h{border-bottom:1px solid var(--line)}
+/* Tageskarte: Graphit statt Kupfer, ohne Schmuckkreise */
+.hero2{background:var(--warm-grad)!important;box-shadow:var(--shadow-lg)!important;border:0!important}
+.hero2::before,.hero2::after,.sesshead::after{display:none!important}
+.hero2 h1 span{color:#ffb07a!important}
+.hero2 .nextbox{background:rgba(255,255,255,.06)!important;border-color:rgba(255,255,255,.14)!important}
+.hero2 .nextbox .btn{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important}
+.sesshead{background:var(--warm-grad)!important}
+.pass-head{background:var(--warm-grad)!important}
+/* Kacheln: alle gleich ruhig, Farbe nur im Symbol */
+.tiles .tile:not(.main){background:var(--surface)!important}
+.tiles .tile:not(.main) .ti{background:var(--surface-2)!important;color:var(--fg)!important}
+.tiles .tile:nth-child(2) .ti{color:var(--info)!important}.tiles .tile:nth-child(3) .ti{color:var(--ok)!important}.tiles .tile:nth-child(4) .ti{color:var(--accent-strong)!important}
+.tile.main{background:var(--fg)!important;border-color:var(--fg)!important}
+.tile.main .ti{background:var(--accent)!important}
+:root[data-theme="dark"] .tile.main{background:#1f2a36!important}
+.tile{transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
+.tile:hover{transform:translateY(-1px);box-shadow:var(--shadow-lg)!important}
+.avatar{background:var(--surface-2)!important;color:var(--fg)!important;font-weight:700}
+.pagehead:not(.hero) h1::before{background:var(--accent)!important}
+/* Status: Punkt + Text, feiner Rand – schnell erfassbar */
+.chip{border-radius:6px!important;border:1px solid var(--line);background:var(--surface)!important;color:var(--fg)!important;font-weight:600}
+.chip.ok,.chip.st-i{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft)!important;color:var(--ok)!important}
+.chip.warn{border-color:color-mix(in srgb,var(--warn) 35%,transparent);background:var(--warn-soft)!important;color:var(--warn)!important}
+.chip.bad{border-color:color-mix(in srgb,var(--bad) 35%,transparent);background:var(--bad-soft)!important;color:var(--bad)!important}
+/* Buttons: Orange nur primär, sonst neutral */
+.btn{border-radius:8px!important;font-weight:650}
+.btn:not(.primary):not(.danger):not(.ghost){background:var(--surface);border-color:var(--line);color:var(--fg)}
+.btn.primary{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+/* Tabellen: dichter, Zahlen rechtsbündig-tauglich */
+table th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+table td{font-variant-numeric:tabular-nums}
+/* Eingabefelder: klare Fokuslinie in Blau (Messwerte-Farbe) */
+input:focus,select:focus,textarea:focus{outline:none!important;border-color:var(--info)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--info) 18%,transparent)!important}
+/* Werkstatt-Tafel: Spaltenköpfe ruhiger, Karten mit Statusleiste */
+.tf-col{background:var(--surface-2)!important;border-radius:12px!important}
+.tf-card{border-radius:10px!important;border:1px solid var(--line)!important;box-shadow:var(--shadow)!important}
+@media (hover:none) and (pointer:coarse){.tf-card .btn,[data-act="tafelNext"],[data-act="tafelParts"]{min-height:44px}}
+/* Dashboard: „Heute“ zuerst, Einrichtung danach (verschwindet nach Abschluss wie bisher) */
+#view:has(> .dgrid){display:flex;flex-direction:column}
+#view:has(> .dgrid) > .notice{order:-3}
+#view:has(> .dgrid) > .dgrid{order:-2}
+#view:has(> .dgrid) > .setup,#view:has(> .dgrid) > section.panel{order:1;margin-top:16px}
+#view:has(> .dgrid) > .row:has([data-act="dashEdit"]),#view:has(> .dgrid) > .row:last-child{order:2}
+.side .navbtn.small{padding-left:40px!important;color:var(--side-mute)!important}
+.side .navbtn.small svg{display:none}
+.side .navbtn.small[aria-current="page"]{color:#fff!important}
+</style>
+<!--praez-end-->
 </head>
 <body>
 
@@ -1959,7 +2041,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-22.142';
+const APP_VER='2026-11-22.143';
 let loadIssue = null;
 function load(){
   let raw=null;

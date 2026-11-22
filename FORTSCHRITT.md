@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.142** (APP_VER 2026-11-22.142), Service-Worker-Cache `fyf-app-v1-p73`, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.143** (APP_VER 2026-11-22.143), Service-Worker-Cache `fyf-app-v1-p74`, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.143 (22.11.) | Software: Design „Präzision“ (Wunsch 22.11.: weniger Pastell, technischer) – kühles Grau, Graphit-Seitenleiste mit Akzentbalken, Orange nur für Hauptaktionen, Blau für Messwerte/Fokus, ruhige Kacheln, Status als Rahmen-Chips, Tabellenköpfe, Dark Mode; Dashboard zeigt „Heute“ vor Einrichtung/Ladentyp. Alle Tests grün. |
 | v.142 (22.11.) | Punkt 16, Schritte 2/3/6 – Pass: „Mein Rad“ zeigt oben Wert heute (regelbasierte Schätzung: Neupreis/Kaufbeleg, Alter, km, Zustand, belegter Service, Pass-Vollständigkeit; „kein Gutachten“) und Diebstahlschutz 0–5 mit Ampel; Seite „Was ist mein Rad wert?“ mit Aufschlüsselung und „Mit diesem Preis verkaufen“; Seite „Diebstahlschutz“ mit 5 Punkten, Eintragen-Knöpfen und Notfall-Hilfe. Englisch-Wörterbuch ergänzt. Test t142. |
 | v.141 (22.11.) | Punkt 16, Teil 1 – Pass: Plan `docs/PASS-ATTRAKTIV-PLAN.md` (8 Schritte); Radseite: Schnellzugriff (QR, NFC, Service, Fitting) als farbige Icon-Kacheln. |
 | v.140 (22.11.) | Punkt 15, Teil 1 – Kalender & Formulare: Wochenansicht am großen Bildschirm als echtes Zeitraster (Spalten Mo–So, Stunden nach Öffnungszeit, Termine als farbige Blöcke je Art, Auslastungsbalken, fällige Aufträge als 🔧-Chips, Jetzt-Linie, geschlossene Tage schraffiert, freie Fläche antippen = neuer Termin mit Tag/Uhrzeit). Termin-Formular mit Abschnitten und Schnellauswahl (Art, Heute/Morgen, Uhrzeiten, Dauer). Alle Eingabefelder größer/klarer, Formulare in Fenstern als Karte. Handy: bisherige Tageskarten (nächster Schritt: Tages-Agenda). Test `t140.js`. |
