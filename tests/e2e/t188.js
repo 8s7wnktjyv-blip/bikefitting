@@ -1,0 +1,15 @@
+// v.188: Prüf-Ergebnis als Urteilskarte (fremdes Rad), Fahrer-Etikett und Foto-Knopf im Rad-Foto.
+const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
+(async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
+ const cfg=Buffer.from(JSON.stringify({u:BASE,k:'sb_publishable_TESTKEY_1234567890abc'})).toString('base64url');
+ const c=await b.newContext({...devices['iPhone 13'],locale:'de-DE'}); await c.addInitScript(()=>{ try{ localStorage.setItem('fyfpass:intro','1'); localStorage.setItem('fyfpass:setupLater',String(Date.now())); }catch(e){} });
+ const q=await c.newPage(); q.on('pageerror',e=>errs.push(e.message)); await q.goto(BASE+'/rad.html#meine&cfg='+cfg); await q.waitForTimeout(700);
+ await q.click('#regb'); await q.fill('#rb','Canyon'); await q.fill('#rm','Grail'); await q.fill('#rf','S'+Math.floor(Math.random()*1e6)); await q.check('#rx'); await q.click('#rg button.btn:not(#rfscan)'); await q.waitForTimeout(1300);
+ const code=await q.evaluate(()=>mine()[0].code); await q.evaluate(c=>{ const o=X(c); o.rider='Dominik'; Xset(c,o); location.hash='#c='+c; },code); await q.waitForTimeout(1800);
+ let r=await q.evaluate(()=>({rider:!!document.querySelector('.hero .ck-rider.hero-rider'),foto:(()=>{ const f=document.querySelector('.hero .photo-btn'); if(!f) return false; const a=f.getBoundingClientRect(), h=document.querySelector('.hero').getBoundingClientRect(); return a.top-h.top<40; })(),verdict:!!document.querySelector('[data-verdict]')})); log('eigenes Rad:',JSON.stringify(r));
+ if(!r.rider) bad('Fahrer-Etikett im Foto'); if(!r.foto) bad('Foto-Knopf oben'); if(r.verdict) bad('keine Urteilskarte beim eigenen Rad');
+ const c2=await b.newContext({...devices['iPhone 13'],locale:'de-DE'}); await c2.addInitScript(()=>{ localStorage.setItem('fyfpass:intro','1'); }); const p=await c2.newPage(); p.on('pageerror',e=>errs.push(e.message));
+ await p.goto(BASE+'/rad.html#c='+code+'&cfg='+cfg); await p.waitForTimeout(1800);
+ r=await p.evaluate(()=>{ const v=document.querySelector('[data-verdict]'); if(!v) return null; const hid=[...document.querySelectorAll('#app .card')].filter(c=>/^Geschichte nur für Werkstätten/.test((c.querySelector('b')||{}).textContent||'')&&c.offsetHeight>0).length; return {head:v.querySelector('.vd-h').textContent,n:v.querySelectorAll('li').length,ok:v.classList.contains('vd-ok'),first:v.querySelector('li b').textContent,dup:hid,next:v.previousElementSibling&&v.previousElementSibling.classList.contains('hero')}; });
+ log('fremdes Rad:',JSON.stringify(r)); if(!r) bad('Urteilskarte'); else { if(!/^Keine Diebstahlmeldung/.test(r.head)) bad('Urteil oben'); if(r.n!==4) bad('4 Prüfpunkte'); if(r.first!=='Keine Diebstahlmeldung in FYF') bad('Diebstahl zuerst'); if(r.dup) bad('doppelter Hinweis Geschichte'); if(!r.next) bad('direkt unter dem Foto'); }
+ log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();
