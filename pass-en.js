@@ -3,6 +3,7 @@
    Rechtstexte (Datenschutz, Impressum, Kaufvertrag) bleiben bewusst Deutsch. */
 (function(){
 const D={
+"Pass":"Pass","Schutz":"Protection","Einträge":"entries","bestätigt":"verified","Besitzer":"owner","Zustandsbericht – Details":"Condition report \u2013 details","Pass vervollständigen":"Complete the pass","vollständig":"complete",
 "＋ Foto":"＋ Photo","Foto gespeichert":"Photo saved",
 "Unfall oder Sturz mit Teile-Liste":"Crash or accident with parts list","Unfälle öffnen":"Open accidents","+ Unfall / Sturz ausführlich erfassen":"+ Record crash / accident in detail","+ Sonstigen Schaden kurz eintragen":"+ Quickly add other damage",
 "Regelbasierter Hinweis ohne Gewähr – im Zweifel die Werkstatt fragen.":"Rule-based hint without guarantee \u2013 if in doubt, ask a workshop.",
@@ -91,6 +92,7 @@ const D={
 "Sprache":"Language"
 };
 const P=[
+[/^(\d+) Angaben? fehlen$/,(m,a)=>`${a} item${a==='1'?'':'s'} missing`],
 [/^Ziel (\d+) %$/,(m,a)=>`Goal ${a} %`],
 [/^Schutz (\d)\/5$/,(m,a)=>`Protection ${a}/5`],
 [/^⚠︎ (\d+)-fach-Teil, dein Antrieb ist (\d+)-fach – Kette, Kassette, Schaltwerk und Hebel müssen zusammenpassen\.$/,(m,a,b)=>`⚠︎ ${a}-speed part, your drivetrain is ${b}-speed – chain, cassette, derailleur and shifters must match.`],

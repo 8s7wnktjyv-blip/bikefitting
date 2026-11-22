@@ -42,5 +42,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t167.js` – Software: Status-Chips der Werkstatt-Liste je Status eigene Farbe
 - `t169.js` – Software: Seitenfenster per Wischen nach rechts schließen (nicht in Feldern)
 - `t171.js` – Software: Kundenliste mit Handlungsbedarf am Namen
+- `t172.js` – Pass: neue Radseite (Foto-Kopf, Cockpit mit 3 Ringen, Details eingeklappt)
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.

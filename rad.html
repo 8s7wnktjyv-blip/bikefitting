@@ -2387,6 +2387,45 @@ async function buyerView(tok){ document.title='Fahrrad-Geschichte'; app.innerHTM
    <p class="muted small">Selbst eingetragene Angaben, Belege und Preise sind hier bewusst nicht enthalten. Gültig bis ${fd(String(v.expires_at).slice(0,10))}. Prüfe beim Kauf Rahmennummer und Ausweis des Verkäufers.</p>`; }
 { const RTk=route; route=function(){ const h=new URLSearchParams((location.hash||'').slice(1)); const k=String(h.get('k')||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if(k.length===20){ scrollTo(0,0); buyerView(k); return; } return RTk.apply(this,arguments); }; }
 document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-lang]'); if(!b) return; const l=b.dataset.lang; if(l===window.FYF_LANG) return; try{ localStorage.setItem('fyfpass:lang',l); }catch(x){} location.reload(); });
+// ---------- v.172 Radseite neu: Foto-Kopf, Cockpit (Zustand · Pass · Schutz), weniger Kästen ----------
+function cockpitHtml(code){ const R=healthReport(code), V=healthVerdict(R), ps=passScore(code), g=guardState(code), P=Pof(code), km=curKm(code), n=(P.entries||[]).filter(e=>e.kind!=='Registrierung').length, ver=(P.entries||[]).filter(e=>e.trust==='verified').length;
+  const ring=(k,pct,val,lab,col)=>`<button class="ck-r" type="button" data-ck="${k}"><span class="ck-ring" style="--p:${Math.max(0,Math.min(100,pct))};--c:${col}"><b>${val}</b></span><span class="ck-l">${lab}</span></button>`;
+  const hc=R.score==null?'var(--line)':R.score>=85?'#16a34a':R.score>=65?'#65a30d':R.score>=45?'#d97706':'#dc2626';
+  return `<section class="cockpit" data-cockpit>${V?`<div class="ck-top"><span class="hv hv-${V.k}">${esc(V.t)}</span><span class="ck-sub">${esc(V.s)}</span></div>`:''}
+   <div class="ck-rings">${ring('health',R.score||0,R.stolen?'!':R.score!=null?R.score:'–','Zustand',hc)}${ring('pass',ps.pct,ps.pct+'%','Pass',ps.pct>=80?'#16a34a':ps.pct>=50?'#d97706':'#dc2626')}${ring('guard',g.n*20,g.n+'/5','Schutz',g.st==='ok'?'#16a34a':g.st==='warn'?'#d97706':'#dc2626')}</div>
+   <div class="ck-stats"><span><b>${km!=null?num(km):'–'}</b> km</span><span><b>${n}</b> Einträge</span><span><b>${ver}</b> bestätigt</span><span><b>${P.owner_no||1}.</b> Besitzer</span></div></section>`; }
+function radRedesign(code){ try{ const app=document.getElementById('app')||document.querySelector('main'); if(!app||app.querySelector('[data-cockpit]')) return; const health=app.querySelector('details.health'), score=app.querySelector('#scoreHost'); if(!health&&!score) return;
+  const anchor=app.querySelector('.actions.qa')||app.querySelector('.actions'); const t4=app.querySelector('.tiles4');
+  const host=document.createElement('div'); host.innerHTML=cockpitHtml(code); const ck=host.firstElementChild; (anchor||health||score).insertAdjacentElement(anchor?'afterend':'beforebegin',ck);
+  if(t4) t4.style.display='none';
+  if(health){ health.classList.add('ck-det'); const s=health.querySelector('summary'); if(s) s.innerHTML='<b>Zustandsbericht – Details</b>'; ck.insertAdjacentElement('afterend',health); }
+  if(score){ const miss=score.querySelectorAll('[data-fix]').length; const d=document.createElement('details'); d.className='more ck-det'; d.innerHTML=`<summary><b>Pass vervollständigen</b> <span class="muted small">${miss?miss+' Angabe'+(miss>1?'n':'')+' fehlen':'vollständig'}</span></summary>`; score.parentNode.insertBefore(d,score); d.appendChild(score); (health||ck).insertAdjacentElement('afterend',d); }
+  ck.querySelectorAll('[data-ck]').forEach(b=>b.onclick=()=>{ const k=b.dataset.ck; if(k==='guard') return toolGuard(code); const d=k==='health'?health:score&&score.closest('details'); if(d){ d.open=true; d.scrollIntoView({behavior:'smooth',block:'start'}); } });
+  const fa=[...app.querySelectorAll('div.small')].find(x=>/^Fährt:/.test(x.textContent.trim())); if(fa) fa.classList.add('ck-rider');
+ }catch(e){} }
+{ const SHr=show; show=async function(code){ const r=await SHr.apply(this,arguments); try{ radRedesign(code); }catch(e){} return r; }; }
+{ const THr=toolsHtml; toolsHtml=function(code){ let h=THr(code); return h.replace(/<button class="gl-t gl-g [\s\S]*?<\/button>/,''); }; }
+{ const st=document.createElement('style'); st.textContent=`
+.hero{position:relative;border-radius:30px!important;box-shadow:0 20px 40px -24px rgba(15,20,25,.45)!important}
+.hero .bikepic{aspect-ratio:4/3.3!important}
+.hero .meta{position:absolute;left:0;right:0;bottom:0;padding:70px 20px 18px!important;background:linear-gradient(180deg,rgba(11,15,20,0) 0%,rgba(11,15,20,.55) 45%,rgba(11,15,20,.88) 100%);color:#fff}
+.hero .meta *{color:#fff!important}.hero .meta h1,.hero .meta .bk-name,.hero .meta b{text-shadow:0 1px 12px rgba(0,0,0,.35)}
+.hero .meta .status{background:rgba(255,255,255,.14);border-radius:999px;padding:4px 10px;display:inline-flex;align-items:center;gap:6px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-size:13px!important;margin-top:8px}
+.hero .meta .status i{background:#4ade80!important}.hero .meta .status.bad i{background:#f87171!important}
+.ck-rider{display:inline-flex;gap:6px;align-items:center;background:var(--card);border-radius:999px;padding:6px 12px;box-shadow:var(--sh);margin:0 0 12px}
+.actions.qa{gap:8px!important;margin-bottom:12px}.actions.qa>*{min-height:84px!important;padding:10px 4px!important;border-radius:20px!important;font-size:12.5px!important}.actions.qa .qa-i{width:40px!important;height:40px!important;border-radius:13px!important}
+.cockpit{background:linear-gradient(160deg,#111827 0%,#1e2a38 100%);color:#fff;border-radius:28px;padding:18px 16px 14px;margin:0 0 12px;box-shadow:0 20px 40px -24px rgba(15,20,25,.6)}
+.ck-top{display:flex;flex-direction:column;gap:6px;margin:0 2px 14px}.ck-top .hv{align-self:flex-start;margin:0;background:rgba(255,255,255,.1)!important}.ck-top .hv-ready{color:#4ade80;border-color:#4ade80}.ck-top .hv-almost{color:#93c5fd;border-color:#93c5fd}.ck-top .hv-stau{color:#fbbf24;border-color:#fbbf24}.ck-top .hv-risk{color:#f87171;border-color:#f87171}.ck-top .hv-unk{color:#cbd5e1;border-color:#cbd5e1}
+.ck-sub{font-size:13px;color:rgba(255,255,255,.72);line-height:1.4}
+.ck-rings{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.ck-r{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 0}
+.ck-ring{--p:0;--c:#16a34a;width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--c) calc(var(--p)*1%),rgba(255,255,255,.12) 0)}.ck-ring b{width:68px;height:68px;border-radius:50%;background:#162130;display:grid;place-items:center;font-size:21px;font-weight:800;letter-spacing:-.02em}
+.ck-l{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.7)}
+.ck-stats{display:grid;grid-template-columns:repeat(4,1fr);margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1);text-align:center;font-size:11.5px;color:rgba(255,255,255,.6)}.ck-stats b{display:block;font-size:17px;color:#fff;font-weight:800;margin-bottom:1px}
+details.ck-det{background:var(--card);border-radius:20px;padding:4px 16px;margin:0 0 10px;box-shadow:var(--sh)}details.ck-det>summary{padding:12px 0;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px}details.ck-det>summary::-webkit-details-marker{display:none}details.ck-det>summary::after{content:"›";font-size:22px;color:var(--muted);transition:transform .2s}details.ck-det[open]>summary::after{transform:rotate(90deg)}
+details.ck-det #scoreHost .card.score{box-shadow:none;padding:0 0 12px;margin:0;background:transparent}
+.glance{grid-template-columns:1fr 1fr!important}
+details.more[data-tmore]>summary{display:flex;align-items:center;gap:8px}details.more[data-tmore]>summary .muted{margin-right:auto}.glance .gl-val{grid-column:1/-1;min-height:96px}.glance .gl-comp{grid-column:auto!important}`; document.head.appendChild(st); }
+
 window.addEventListener('hashchange',route); route();
 if(/(^|[#&])bestellt=1/.test(location.hash)) thanksSheet();
 if(!new URLSearchParams((location.hash||'').slice(1)).get('c')&&!new URLSearchParams((location.hash||'').slice(1)).get('k')) intro();

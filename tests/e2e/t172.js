@@ -1,0 +1,13 @@
+// v.172: Radseite neu – Foto-Kopf mit Text auf dem Bild, Cockpit mit 3 Ringen + Kennzahlen, Details eingeklappt, Ring öffnet Details/Schutz.
+const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
+(async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
+ const cfg=Buffer.from(JSON.stringify({u:BASE,k:'sb_publishable_TESTKEY_1234567890abc'})).toString('base64url');
+ const c=await b.newContext({...devices['iPhone 13'],locale:'de-DE'}); await c.addInitScript(()=>{ try{ localStorage.setItem('fyfpass:intro','1'); localStorage.setItem('fyfpass:setupLater',String(Date.now())); }catch(e){} });
+ const q=await c.newPage(); q.on('pageerror',e=>errs.push('pass: '+e.message)); await q.goto(BASE+'/rad.html#meine&cfg='+cfg); await q.waitForTimeout(700);
+ await q.click('#regb'); await q.fill('#rb','Canyon'); await q.fill('#rm','Grail CF 7'); await q.fill('#rf','R'+Date.now()%100000); await q.check('#rx'); await q.click('#rg button.btn:not(#rfscan)'); await q.waitForTimeout(1300);
+ const code=await q.evaluate(()=>mine()[0].code); await q.evaluate(c=>{ const o=X(c); o.km=2450; Xset(c,o); location.hash='#c='+c; },code); await q.waitForTimeout(1600);
+ const r=await q.evaluate(()=>{ const k=document.querySelector('[data-cockpit]'); const m=document.querySelector('.hero .meta'); return {rings:k?k.querySelectorAll('[data-ck]').length:0,stats:k?k.querySelector('.ck-stats').innerText.replace(/\s+/g,' '):'',pos:m?getComputedStyle(m).position:'',dets:[...document.querySelectorAll('details.ck-det')].map(d=>d.open),guardTile:!!document.querySelector('.glance .gl-g'),ov:document.documentElement.scrollWidth>innerWidth+1}; });
+ log(JSON.stringify(r)); if(r.rings!==3) bad('Cockpit-Ringe'); if(!/2\.450 km/.test(r.stats)) bad('km im Cockpit'); if(r.pos!=='absolute') bad('Text nicht auf dem Foto'); if(r.dets.length<2||r.dets.some(Boolean)) bad('Details nicht eingeklappt'); if(r.guardTile) bad('Schutz doppelt (Kachel + Cockpit)'); if(r.ov) bad('Querscroll');
+ await q.click('[data-ck="health"]'); await q.waitForTimeout(300); const o=await q.evaluate(()=>document.querySelector('details.health').open); log('Ring Zustand öffnet Details:',o); if(!o) bad('Ring öffnet Details nicht');
+ await q.click('[data-ck="guard"]'); await q.waitForTimeout(400); const g=await q.evaluate(()=>[...document.querySelectorAll('.tpage h1')].pop()?.textContent); log('Ring Schutz öffnet:',g); if(g!=='Diebstahlschutz') bad('Ring Schutz');
+ log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();
