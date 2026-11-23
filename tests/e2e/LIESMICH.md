@@ -56,5 +56,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t192.js` – Pass: leere Garage (Nutzen-Chips, 1-Minuten-Knopf), Vibration beim Speichern, Ring-Animation
 - `t193.js` – Pass: Kurz erklärt (6 Ratgeber, E-Bike-Tipp nur bei E-Bikes)
 - `t194.js` – Pass: Laufräder säubern (Hintergrund-Pinsel entfernt Himmel zwischen Speichen, Speichen/Reifen/Rahmen bleiben, Original gesichert)
+- `t195.js` – Pass: Hell/Dunkel-Knopf oben rechts auf jeder Seite (umschalten, bleibt nach Neuladen, Fußzeile synchron)
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
