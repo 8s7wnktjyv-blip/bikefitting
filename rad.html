@@ -2656,7 +2656,7 @@ async function nearLocal(lat,lon,R){ const ix=await helferIdx(); if(!ix||!Array.
   const RH=Math.max(R,15000), dLa=RH/111000, dLo=RH/(111000*Math.cos(lat*Math.PI/180)), have=new Set(ix.tiles), keys=[];
   const open=new Set(ix.offen||[]); for(let a=Math.floor(lat-dLa); a<=Math.floor(lat+dLa); a++) for(let b=Math.floor(lon-dLo); b<=Math.floor(lon+dLo); b++){ const ch=(S+2*Math.floor((a-S)/2))+'_'+(W+2*Math.floor((b-W)/2)); if(open.has(ch)) return null; if(have.has(a+'_'+b)) keys.push(a+'_'+b); }
   const T=await Promise.all(keys.map(helferTile)); const out=[];
-  T.forEach(t=>(t.p||[]).forEach(([k,la,lo,name,addr,oh])=>{ const d=nearDist(lat,lon,la,lo); if(d<=(k==='hospital'?RH:R)) out.push({k,la,lo,d,name:name||'',addr:addr||'',oh:oh||'',ph:'',web:''}); }));
+  T.forEach(t=>(t.p||[]).forEach(([k,la,lo,name,addr,oh,ph,web])=>{ const d=nearDist(lat,lon,la,lo); if(d<=(k==='hospital'?RH:R)) out.push({k,la,lo,d,name:name||'',addr:addr||'',oh:oh||'',ph:ph||'',web:web||''}); }));
   out.sort((a,b)=>a.d-b.d); const lim={}; const res=out.filter(x=>{ lim[x.k]=(lim[x.k]||0)+1; return lim[x.k]<=40; }); res.stand=ix.stand; return res; }
 async function nearFetch(lat,lon,R){ try{ const loc=await nearLocal(lat,lon,R); if(loc) return loc; }catch(e){}
   return nearFetchLive(lat,lon,R); }

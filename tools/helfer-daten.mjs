@@ -22,7 +22,10 @@ for(let s=BBOX[0]; s<BBOX[2]; s+=2) for(let w=BBOX[1]; w<BBOX[3]; w+=2){ const n
   const T={}; for(let a=s;a<n;a++) for(let b=w;b<e;b++) T[`${a}_${b}`]=[];
   for(const x of el){ const t=x.tags||{}, k=kind(t), la=x.lat??x.center?.lat, lo=x.lon??x.center?.lon; if(!k||la==null) continue; const key=`${Math.floor(la)}_${Math.floor(lo)}`; if(!T[key]) continue;
     const adr=[t['addr:street']&&(t['addr:street']+(t['addr:housenumber']?' '+t['addr:housenumber']:'')),t['addr:city']].filter(Boolean).join(', ');
-    T[key].push([k,r5(la),r5(lo),(t.name||t.operator||'').slice(0,80),adr.slice(0,90),(t.opening_hours||'').slice(0,90)]); }
+    const row=[k,r5(la),r5(lo),(t.name||t.operator||'').slice(0,80),adr.slice(0,90),(t.opening_hours||'').slice(0,90)];
+    // v.209: Fahrradläden zusätzlich mit Telefon, Website und OSM-Kennung (für den Händlerfinder „Weitere Fahrradläden“; ältere Leser nutzen nur die ersten 6 Felder)
+    if(k==='shop'){ const ph=(t.phone||t['contact:phone']||'').slice(0,40), web=(t.website||t['contact:website']||'').slice(0,120); row.push(ph,web,(x.type||'n')[0]+x.id); }
+    T[key].push(row); }
   for(const [key,p] of Object.entries(T)){ const f=path.join(OUT,key+'.json'); if(p.length) fs.writeFileSync(f,JSON.stringify({v:1,stand,p})); else if(fs.existsSync(f)) fs.unlinkSync(f); }
   ok++; console.log(`  ${el.length} Orte`); await sleep(5000); }
 const tiles=fs.readdirSync(OUT).filter(f=>/^\d+_\d+\.json$/.test(f)).map(f=>f.replace('.json','')).sort();

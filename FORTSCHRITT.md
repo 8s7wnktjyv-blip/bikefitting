@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.194** (APP_VER 2026-11-23.210), Service-Worker-Cache `fyf-app-v1-p141`, Datenbank **Stand 30**, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.194** (APP_VER 2026-11-23.211), Service-Worker-Cache `fyf-app-v1-p142`, Datenbank **Stand 30**, Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.211 (23.11.) | **Punkt 17, Stufe 1 – alle Fahrradläden im Händlerfinder:** unter den FYF-Partnern Bereich „Weitere Fahrradläden in der Nähe“ (gestrichelt/grau abgesetzt). Start nur auf Knopfdruck: „Meinen Standort verwenden“ oder Ort/PLZ (Nominatim, im Browser zwischengespeichert). Quelle zuerst die wöchentlichen Kacheln `helfer/` (Standort bleibt auf dem Handy), sonst Overpass live. Je Laden: Entfernung, Adresse, Öffnungszeiten, Route (Apple Karten), Anrufen/Website wenn vorhanden, Kennzeichen „Kein FYF-Partner · Daten von OpenStreetMap“, kein Anfrage-Formular; Doppelte zu FYF-Partnern (Name + Ort) ausgeblendet; Umkreis 5/10/25 km; Quellenangabe © OSM + Stand. `tools/helfer-daten.mjs` speichert für Läden künftig Telefon, Website, OSM-Kennung (ab nächstem wöchentlichen Lauf; alte Kacheln funktionieren weiter). Datenschutz (Nominatim) und Englisch ergänzt. Test t209. |
 | v.203 (23.11.) | Pass und Händlerfinder öffnen beim allerersten Mal **hell** (Wunsch Dominik); danach gilt, was der Nutzer einstellt (Hell/Dunkel/Automatisch, gespeichert). Tests t179/t195 angepasst. |
 | v.198 (23.11.) | Werkstätten (Händlerfinder): Karte „Panne unterwegs?“ ganz oben öffnet „Helfer in der Nähe“ (Luft, Schlauch-Automaten, Werkstätten, Ladestationen) direkt im Pass – auch ohne angelegtes Rad (`rad.html#hilfe=1`). Wunsch Dominik: nicht erst über Garage. Test t198. |
 | v.194 (23.11.) | Pass: **Laufräder säubern** – beim iPhone-Freistellen bleibt Himmel/Boden zwischen den Speichen stehen. Neues Werkzeug (Knopf im Rad-Foto und im Foto-Menü): Hintergrund-Pinsel entfernt nur die Farbe, auf der man ansetzt (Speichen, Reifen, Rahmen bleiben), dazu Radierer, Zurückholen-Pinsel, Größe/Stärke, Zoomen mit zwei Fingern, Rückgängig (5 Schritte), „Original“ (Original in IndexedDB gesichert). Freigestellte Räder werden ohne leeren Rand gespeichert (auch einmalig für vorhandene Bilder) – das Rad füllt Karte und Kopfbild. Test t194. |
@@ -133,7 +134,7 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 16. ◐ **Pass-App: schöner (Plan `docs/PASS-ATTRAKTIV-PLAN.md`, Schritte 1–3 und 6 fertig v.141/142) (Vorbild Canyon/SRAM AXS, hell) und „für jeden etwas dabei“** – Service-Eintragen bleibt (wichtig), aber zusätzlich Funktionen, die auch Leute ohne Wartungs-Interesse anziehen. Erst kurzen Plan mit 5–8 Ideen in `docs/PASS-ATTRAKTIV-PLAN.md` (z. B. Diebstahlschutz/„Rad gefunden“-Seite, Tourenstatistik/Kilometer-Ziele aus Strava-Datei, Reifendruck-Rechner, Wert-/Verkaufspreis-Schätzung aus der Historie, Familien-Garage, Werkstatt-Bewertungen/Finder in der Nähe, Saison-Checkliste, Teile-Wunschliste), dann Design-Überarbeitung der Start-/Garage-/Radseite, dann die Ideen der Reihe nach. Keine bezahlten Dienste, KI nur regelbasiert.
 
 ### Neuer Wunsch (Dominik, 23.11.2026) – freigegeben
-17. **Alle Fahrradläden im Händlerfinder** nach `docs/LAEDEN-VERZEICHNIS-PLAN.md`: Stufe 1 (Läden aus OpenStreetMap, klar als „Kein FYF-Partner“ gekennzeichnet), danach Stufe 2 („Eintrag übernehmen“, Bestätigung von Hand durch Dominik, `stand31.sql`). Kein neuer Preis, kein automatischer Versand. Vorrang vor weiterem Feinschliff.
+17. ◐ **Alle Fahrradläden im Händlerfinder** (Stufe 1 fertig v.211; weiter: Stufe 2 „Eintrag übernehmen“/„Eintrag entfernen lassen“ mit `stand31.sql`) nach `docs/LAEDEN-VERZEICHNIS-PLAN.md`: Stufe 1 (Läden aus OpenStreetMap, klar als „Kein FYF-Partner“ gekennzeichnet), danach Stufe 2 („Eintrag übernehmen“, Bestätigung von Hand durch Dominik, `stand31.sql`). Kein neuer Preis, kein automatischer Versand. Vorrang vor weiterem Feinschliff.
 
 18. **„Wünsch dir was“: eigene Wünsche** (Dominik 23.11.2026): Nutzer können unter der Liste einen eigenen Wunsch eintippen (max. 200 Zeichen, ohne Konto). Speichern per RPC in neuer Tabelle (z. B. `wish_ideas`: Text, Zeitpunkt, Status neu/übernommen/abgelehnt, Stimmen); anon nur schreiben über RPC mit Grenzen (Länge, max. 3 pro Gerät und Tag), keine Links/E-Mail-Adressen/Telefonnummern im Text (Hinweis „keine persönlichen Daten“). Öffentlich sichtbar und abstimmbar erst, wenn Dominik im Plattform-Bereich freigibt. Datenbank-Erweiterung zusammen mit Punkt 17 Stufe 2 in einem Stand (stand31.sql) oder als stand32.sql – Nummern nicht doppelt vergeben.
 
@@ -145,6 +146,7 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Wartet auf Dominik
 
+- Hinweis 23.11. (12 Uhr): Es laufen **zwei** geplante Aufgaben gleichzeitig am selben Archiv (stündlich :05 und :07). Das klappt (jede holt vor dem Push den neuen Stand), führt aber zu Zusammenführungen und doppelten Versionsnummern. Empfehlung: eine der beiden Aufgaben abschalten.
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
 - Datenschutz: noch offen sind Vertrag zur Auftragsverarbeitung mit Supabase, Mailversand-Dienst und Speicherort der Sicherung; danach rechtlich prüfen lassen.
 - Test auf echtem iPhone/Android.
