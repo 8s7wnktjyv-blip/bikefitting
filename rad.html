@@ -2650,8 +2650,7 @@ async function nearFetch(lat,lon,R){ const body='data='+encodeURIComponent(nearQ
   /* v.201: nie endlos warten – je Server Zeitlimit, zwei Server gleichzeitig, dann Ausweich-Server */
   const one=(u,ms)=>{ const ac=window.AbortController?new AbortController():null; const tm=setTimeout(()=>{ try{ ac&&ac.abort(); }catch(e){} },ms); return fetch(u+'?'+body,{signal:ac?ac.signal:undefined}).then(res=>{ if(!res.ok) throw new Error('http '+res.status); return res.json(); }).then(x=>{ clearTimeout(tm); if(!x||!Array.isArray(x.elements)) throw new Error('leer'); return x; },e=>{ clearTimeout(tm); throw e; }); };
   const any=ps=>new Promise((ok,no)=>{ let n=ps.length, last; ps.forEach(p=>p.then(ok,e=>{ last=e; if(--n===0) no(last); })); });
-  try{ j=await any([one('https://overpass-api.de/api/interpreter',14000),one('https://overpass.private.coffee/api/interpreter',14000)]); }catch(e){ err=e; }
-  if(!j) try{ j=await one('https://overpass.kumi.systems/api/interpreter',12000); }catch(e){ err=e; }
+  try{ j=await any([one('https://overpass-api.de/api/interpreter',15000),one('https://overpass.private.coffee/api/interpreter',15000),one('https://overpass.kumi.systems/api/interpreter',15000)]); }catch(e){ err=e; }
   if(!j) throw err||new Error('offline');
   return (j.elements||[]).map(e=>{ const la=e.lat??(e.center&&e.center.lat), lo=e.lon??(e.center&&e.center.lon), t=e.tags||{}, k=nearKind(t); if(la==null||!k) return null; return {k,la,lo,d:nearDist(lat,lon,la,lo),name:t.name||t.operator||'',addr:[t['addr:street']&&(t['addr:street']+(t['addr:housenumber']?' '+t['addr:housenumber']:'')),t['addr:city']].filter(Boolean).join(', '),oh:t.opening_hours||'',ph:t.phone||t['contact:phone']||'',web:t.website||t['contact:website']||''}; }).filter(Boolean).sort((a,b)=>a.d-b.d); }
 function toolNear(){ page('Helfer in der Nähe','',(r)=>{ let L=null, f='', R=3000, pos=null;
@@ -2665,13 +2664,16 @@ function toolNear(){ page('Helfer in der Nähe','',(r)=>{ let L=null, f='', R=30
      <p class="muted small" style="margin:14px 2px 0">Daten © OpenStreetMap-Mitwirkende. Angaben ohne Gewähr, Öffnungszeiten bitte prüfen.</p>`;
     r.querySelectorAll('[data-nf]').forEach(b=>b.onclick=()=>{ f=b.dataset.nf; draw(); });
     const go=r.querySelector('[data-nr="go"]'); if(go) go.onclick=locate; const mo=r.querySelector('[data-nr="more"]'); if(mo) mo.onclick=()=>{ R=R<6000?6000:12000; load(); }; const mp=r.querySelector('[data-nrmap]'); if(mp&&L&&pos) nearMap(mp,pos,L.filter(x=>!f||x.k===f),R); };
-  const load=async()=>{ r.innerHTML=`<div class="nr-map" data-nrmap></div><div class="card nr-wait" style="text-align:center"><span class="nr-spin"></span><div class="muted small">Suche im Umkreis von ${R/1000} km … (bis zu 30 Sekunden)</div></div>`; const mp=r.querySelector('[data-nrmap]'); if(mp) nearMap(mp,pos,[],R);
+  const load=async()=>{ r.innerHTML=`<div class="nr-map" data-nrmap></div><div class="card nr-wait" style="text-align:center"><span class="nr-spin"></span><div class="muted small">Suche im Umkreis von ${R/1000} km … (bis zu 15 Sekunden)</div></div>`; const mp=r.querySelector('[data-nrmap]'); if(mp) nearMap(mp,pos,[],R);
     try{ L=await nearFetch(pos[0],pos[1],R); hit('helfer_karte'); draw(); }catch(e){ L=null; fail(); } };
   const fail=()=>{ const q=(t)=>`https://maps.apple.com/?q=${encodeURIComponent(t)}&sll=${pos[0]},${pos[1]}`;
-    r.innerHTML=`<div class="nr-map" data-nrmap></div><div class="card"><b>Der kostenlose Karten-Dienst antwortet gerade nicht.</b><p class="muted small" style="margin:6px 0 12px">Das liegt nicht an dir. Versuch es gleich nochmal – oder such direkt in Apple Karten:</p>
+    r.innerHTML=`<div class="nr-map" data-nrmap></div><div class="card"><b>Der kostenlose Karten-Dienst ist gerade überlastet.</b><p class="muted small" style="margin:6px 0 12px">Das liegt nicht an dir oder deinem Handy. Wir versuchen es gleich automatisch nochmal. Sofort weiter geht es mit Apple Karten:</p>
      <button class="btn block" type="button" data-nr="retry">Nochmal suchen</button>
      <div class="nr-alt">${[['Luftpumpe','Luftpumpe'],['Fahrradschlauch Automat','Schlauch-Automat'],['Fahrradwerkstatt','Fahrradwerkstatt'],['E-Bike Ladestation','E-Bike laden']].map(([t,l])=>`<a href="${q(t)}" target="_blank" rel="noopener">${l} ›</a>`).join('')}</div></div>`;
-    const mp=r.querySelector('[data-nrmap]'); if(mp) nearMap(mp,pos,[],R); r.querySelector('[data-nr="retry"]').onclick=load; };
+    const mp=r.querySelector('[data-nrmap]'); if(mp) nearMap(mp,pos,[],R); r.querySelector('[data-nr="retry"]').onclick=()=>{ tries=0; load(); };
+    /* v.202: Server überlastet → automatisch nach 20 s erneut (max. 3×), Apple-Karten-Knöpfe bleiben sofort nutzbar */
+    if(tries<3){ tries++; let n=20; const bt=r.querySelector('[data-nr="retry"]'); const tk=setInterval(()=>{ if(!bt.isConnected){ clearInterval(tk); return; } n--; bt.textContent=`Nochmal suchen (automatisch in ${n} s)`; if(n<=0){ clearInterval(tk); load(); } },1000); bt.textContent=`Nochmal suchen (automatisch in ${n} s)`; } };
+  let tries=0;
   const locate=()=>{ if(!navigator.geolocation) return toast('Standort wird nicht unterstützt'); const b=r.querySelector('[data-nr="go"]'); if(b){ b.disabled=true; b.textContent='Standort wird ermittelt …'; }
     navigator.geolocation.getCurrentPosition(p=>{ pos=[+p.coords.latitude.toFixed(3),+p.coords.longitude.toFixed(3)]; load(); },()=>{ toast('Standort nicht freigegeben'); draw(); },{enableHighAccuracy:false,timeout:12000,maximumAge:300000}); };
   draw(); }); }

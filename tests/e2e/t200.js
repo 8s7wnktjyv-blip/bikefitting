@@ -23,7 +23,7 @@ const {chromium,devices}=require('playwright'); const fs=require('fs'); const pa
  const p2=await c2.newPage(); p2.on('pageerror',e=>errs.push(e.message)); await p2.route(/overpass|kumi|coffee/,()=>{}); await p2.route(/cdnjs|openstreetmap/,r=>r.abort());
  await p2.goto(BASE+'/rad.html#hilfe=1&cfg='+cfg); await p2.waitForTimeout(1200); await p2.click('[data-nr="go"]'); await p2.waitForTimeout(3000);
  if(!(await p2.locator('.nr-spin').count())) bad('Lade-Anzeige während der Suche');
- await p2.waitForTimeout(28000); const t2=await p2.evaluate(()=>[...document.querySelectorAll('.tpage')].pop().innerText); log('nach Zeitlimit:',t2.slice(0,160).replace(/\n/g,' | '));
- if(!/antwortet gerade nicht/.test(t2)) bad('Zeitlimit: Hinweis statt endloser Suche'); if(!(await p2.locator('.nr-alt a[href*="maps.apple.com"]').count())) bad('Apple-Karten-Ausweich');
- if(!(await p2.locator('[data-nr="retry"]').count())) bad('Nochmal suchen');
+ await p2.waitForTimeout(16000); const t2=await p2.evaluate(()=>[...document.querySelectorAll('.tpage')].pop().innerText); log('nach Zeitlimit:',t2.slice(0,160).replace(/\n/g,' | '));
+ if(!/gerade überlastet/.test(t2)) bad('Zeitlimit: Hinweis statt endloser Suche'); if(!(await p2.locator('.nr-alt a[href*="maps.apple.com"]').count())) bad('Apple-Karten-Ausweich');
+ const rt=await p2.locator('[data-nr="retry"]').textContent().catch(()=>''); log('Knopf:',rt); if(!/automatisch in \d+ s/.test(rt)) bad('automatischer neuer Versuch');
  log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();
