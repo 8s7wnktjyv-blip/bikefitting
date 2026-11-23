@@ -10,7 +10,7 @@ const {chromium,devices}=require('playwright'); const BASE='http://localhost:876
    await c.route('**/helfer/index.json',r=>r.fulfill({contentType:'application/json',body:JSON.stringify(idx)})); await c.route('**/helfer/49_11.json',r=>r.fulfill({contentType:'application/json',body:JSON.stringify(tile)}));
    await c.route(/\/rest\/v1\/dealer_profiles/,r=>r.fulfill({contentType:'application/json',body:'[]'}));
    if(s31){ await c.route(/rpc\/shop_hidden_osm/,r=>r.fulfill({contentType:'application/json',body:JSON.stringify(['n3'])}));
-     await c.route(/rpc\/shop_claim_submit/,r=>{ sent.push(JSON.parse(r.request().postData()||'{}')); r.fulfill({contentType:'application/json',body:JSON.stringify({ok:true,id:1})}); }); }
+     await c.route(/rpc\/shop_claim_submit/,r=>{ sent.push(JSON.parse(r.request().postData()||'{}')); r.fulfill({contentType:'application/json',body:JSON.stringify({ok:true,id:1})}); }); } else await c.route(/rpc\/shop_hidden_osm/,r=>r.fulfill({status:404,contentType:'application/json',body:'{"code":"PGRST202"}'}));
    await q.goto(BASE+'/finder.html#w=1&cfg='+cfg); await q.waitForTimeout(1200); await q.click('[data-osm="geo"]'); await q.waitForTimeout(1300); return {c,q,sent}; };
  let {c,q,sent}=await run(true);
  const names=await q.evaluate(()=>[...document.querySelectorAll('#osm .osm-c b')].map(x=>x.textContent)); log('Läden:',JSON.stringify(names));
