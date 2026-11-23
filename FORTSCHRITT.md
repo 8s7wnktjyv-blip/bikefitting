@@ -130,6 +130,9 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 18. **„Wünsch dir was“: eigene Wünsche** (Dominik 23.11.2026): Nutzer können unter der Liste einen eigenen Wunsch eintippen (max. 200 Zeichen, ohne Konto). Speichern per RPC in neuer Tabelle (z. B. `wish_ideas`: Text, Zeitpunkt, Status neu/übernommen/abgelehnt, Stimmen); anon nur schreiben über RPC mit Grenzen (Länge, max. 3 pro Gerät und Tag), keine Links/E-Mail-Adressen/Telefonnummern im Text (Hinweis „keine persönlichen Daten“). Öffentlich sichtbar und abstimmbar erst, wenn Dominik im Plattform-Bereich freigibt. Datenbank-Erweiterung zusammen mit Punkt 17 Stufe 2 in einem Stand (stand31.sql) oder als stand32.sql – Nummern nicht doppelt vergeben.
 
+### Konkurrenz-Ausbau (Dominik 23.11.2026: „alles freigegeben … besser als die Konkurrenz“)
+19.–26. siehe `docs/KONKURRENZ-PLAN.md` (Differenzbesteuerung § 25a, Online-Buchung mit Kapazität/Express/Check-in, Leasing-Check, Kunden-Info ohne Kosten, Bestand mit Rahmennummer + Pass bei Verkauf, Veloconnect vorbereiten, Marken-/Modell-Datenbank, Einrichtung in 1 Stunde). Reihenfolge nach Punkt 17 und 18.
+
 ## Wartet auf Dominik
 
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
