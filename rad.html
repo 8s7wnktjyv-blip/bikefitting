@@ -2646,7 +2646,18 @@ const NEAR=[['shop','Fahrradläden & Werkstätten','#f97316','[shop=bicycle]','M
 function nearQuery(lat,lon,R){ const a=`(around:${R},${lat},${lon})`; return `[out:json][timeout:12];(${NEAR.map(n=>`nwr${n[0]==='hospital'?`(around:${Math.max(R,15000)},${lat},${lon})`:a}${n[3]};`).join('')});out center 150;`; }
 function nearKind(t){ t=t||{}; if(t.shop==='bicycle') return 'shop'; if(t.amenity==='bicycle_repair_station') return 'station'; if(t.amenity==='compressed_air') return 'air'; if(/bicycle_tube/.test(t.vending||'')) return 'tube'; if(t.amenity==='charging_station') return 'charge'; if(t.amenity==='police') return 'police'; if(t.amenity==='hospital') return 'hospital'; return ''; }
 function nearDist(a,b,c,d){ const R=6371e3, r=x=>x*Math.PI/180; const x=r(d-b)*Math.cos(r((a+c)/2)), y=r(c-a); return Math.sqrt(x*x+y*y)*R; }
-async function nearFetch(lat,lon,R){ const body='data='+encodeURIComponent(nearQuery(lat,lon,R)); let j=null, err=null;
+/* v.205: Helfer-Daten vorab (helfer/*.json, wöchentlich per GitHub-Aktion) – sucht zuerst auf dem Handy, Standort bleibt hier */
+let HLX=null; function helferIdx(){ if(!HLX) HLX=fetch('helfer/index.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).catch(()=>null).then(x=>{ if(!x) HLX=null; return x; }); return HLX; }
+const HLT={}; function helferTile(k){ if(!HLT[k]) HLT[k]=fetch('helfer/'+k+'.json').then(r=>{ if(!r.ok) throw new Error('kachel'); return r.json(); }).catch(e=>{ delete HLT[k]; throw e; }); return HLT[k]; }
+async function nearLocal(lat,lon,R){ const ix=await helferIdx(); if(!ix||!Array.isArray(ix.tiles)||!ix.bbox) return null; const [S,W,N,E]=ix.bbox; if(lat<S||lat>=N||lon<W||lon>=E) return null;
+  const RH=Math.max(R,15000), dLa=RH/111000, dLo=RH/(111000*Math.cos(lat*Math.PI/180)), have=new Set(ix.tiles), keys=[];
+  for(let a=Math.floor(lat-dLa); a<=Math.floor(lat+dLa); a++) for(let b=Math.floor(lon-dLo); b<=Math.floor(lon+dLo); b++) if(have.has(a+'_'+b)) keys.push(a+'_'+b);
+  const T=await Promise.all(keys.map(helferTile)); const out=[];
+  T.forEach(t=>(t.p||[]).forEach(([k,la,lo,name,addr,oh])=>{ const d=nearDist(lat,lon,la,lo); if(d<=(k==='hospital'?RH:R)) out.push({k,la,lo,d,name:name||'',addr:addr||'',oh:oh||'',ph:'',web:''}); }));
+  out.sort((a,b)=>a.d-b.d); const lim={}; const res=out.filter(x=>{ lim[x.k]=(lim[x.k]||0)+1; return lim[x.k]<=40; }); res.stand=ix.stand; return res; }
+async function nearFetch(lat,lon,R){ try{ const loc=await nearLocal(lat,lon,R); if(loc) return loc; }catch(e){}
+  return nearFetchLive(lat,lon,R); }
+async function nearFetchLive(lat,lon,R){ const body='data='+encodeURIComponent(nearQuery(lat,lon,R)); let j=null, err=null;
   /* v.201: nie endlos warten – je Server Zeitlimit, zwei Server gleichzeitig, dann Ausweich-Server */
   const one=(u,ms)=>{ const ac=window.AbortController?new AbortController():null; const tm=setTimeout(()=>{ try{ ac&&ac.abort(); }catch(e){} },ms); return fetch(u+'?'+body,{signal:ac?ac.signal:undefined}).then(res=>{ if(!res.ok) throw new Error('http '+res.status); return res.json(); }).then(x=>{ clearTimeout(tm); if(!x||!Array.isArray(x.elements)) throw new Error('leer'); return x; },e=>{ clearTimeout(tm); throw e; }); };
   const any=ps=>new Promise((ok,no)=>{ let n=ps.length, last; ps.forEach(p=>p.then(ok,e=>{ last=e; if(--n===0) no(last); })); });
@@ -2661,7 +2672,7 @@ function toolNear(){ page('Helfer in der Nähe','',(r)=>{ let L=null, f='', R=30
        ${V.length?`<div class="nr-list">${V.slice(0,60).map(x=>{ const n=NEAR.find(z=>z[0]===x.k); return `<a class="nr" href="https://maps.apple.com/?daddr=${x.la},${x.lo}&dirflg=w" target="_blank" rel="noopener"><span class="nr-i" style="--c:${n[2]}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="${n[4]}"/></svg></span><div><b>${esc(x.name||({shop:'Fahrradladen',station:'Reparatur-Station',air:'Luftpumpe',tube:'Schlauch-Automat',charge:'Ladestation',police:'Polizei',hospital:'Krankenhaus'})[x.k])}</b><span>${esc([n[1],x.addr].filter(Boolean).join(' · '))}</span>${x.oh?`<span class="nr-oh">${esc(x.oh.slice(0,60))}</span>`:''}</div><span class="nr-d">${fmtD(x.d)}<small>Route ›</small></span></a>`; }).join('')}</div>`:`<div class="card"><b>Nichts im Umkreis von ${R/1000} km gefunden</b><p class="muted small" style="margin:4px 0 0">OpenStreetMap kennt hier noch nichts. Größeren Umkreis versuchen.</p></div>`}
        ${R<10000?`<button class="btn ghost block" type="button" data-nr="more" style="margin-top:12px">Umkreis auf ${R<6000?6:12} km erweitern</button>`:''}`
      :`<div class="nr-start"><div class="nr-grid">${NEAR.map(n=>`<span style="--c:${n[2]}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="${n[4]}"/></svg>${n[1]}</span>`).join('')}</div><button class="btn block" type="button" data-nr="go">Meinen Standort verwenden</button><p class="muted small" style="margin:10px 0 0">Dein Standort wird nur jetzt und auf etwa 100 m gerundet an den kostenlosen OpenStreetMap-Dienst geschickt. Nichts wird gespeichert.</p></div>`}
-     <p class="muted small" style="margin:14px 2px 0">Daten © OpenStreetMap-Mitwirkende. Angaben ohne Gewähr, Öffnungszeiten bitte prüfen.</p>`;
+     <p class="muted small" style="margin:14px 2px 0">Daten © OpenStreetMap-Mitwirkende${L&&L.stand?', Stand '+L.stand.split('-').reverse().join('.'):''}. Angaben ohne Gewähr, Öffnungszeiten bitte prüfen.</p>`;
     r.querySelectorAll('[data-nf]').forEach(b=>b.onclick=()=>{ f=b.dataset.nf; draw(); });
     const go=r.querySelector('[data-nr="go"]'); if(go) go.onclick=locate; const mo=r.querySelector('[data-nr="more"]'); if(mo) mo.onclick=()=>{ R=R<6000?6000:12000; load(); }; const mp=r.querySelector('[data-nrmap]'); if(mp&&L&&pos) nearMap(mp,pos,L.filter(x=>!f||x.k===f),R); };
   const load=async()=>{ r.innerHTML=`<div class="nr-map" data-nrmap></div><div class="card nr-wait" style="text-align:center"><span class="nr-spin"></span><div class="muted small">Suche im Umkreis von ${R/1000} km … (bis zu 15 Sekunden)</div></div>`; const mp=r.querySelector('[data-nrmap]'); if(mp) nearMap(mp,pos,[],R);
@@ -2680,8 +2691,8 @@ function toolNear(){ page('Helfer in der Nähe','',(r)=>{ let L=null, f='', R=30
 TOOLFN.near=toolNear;
 /* v.200: Karte für „Helfer in der Nähe“ (Leaflet von cdnjs, Kacheln OpenStreetMap, kostenlos, ohne Konto) */
 let LEAF=null; function leafLoad(){ if(window.L&&window.L.map) return Promise.resolve(window.L); if(LEAF) return LEAF;
-  LEAF=new Promise((ok,no)=>{ const l=document.createElement('link'); l.rel='stylesheet'; l.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(l);
-    const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; sc.onload=()=>window.L&&window.L.map?ok(window.L):no(new Error('leaflet')); sc.onerror=()=>{ LEAF=null; no(new Error('leaflet')); }; document.head.appendChild(sc); }); return LEAF; }
+  LEAF=new Promise((ok,no)=>{ const l=document.createElement('link'); l.rel='stylesheet'; l.href='vendor/leaflet/leaflet.css'; document.head.appendChild(l);
+    const sc=document.createElement('script'); sc.src='vendor/leaflet/leaflet.js'; sc.onload=()=>window.L&&window.L.map?ok(window.L):no(new Error('leaflet')); sc.onerror=()=>{ LEAF=null; no(new Error('leaflet')); }; document.head.appendChild(sc); }); return LEAF; }
 function nearMap(el,pos,V,R){ el.innerHTML='<div class="nr-map-ld muted small">Karte wird geladen …</div>';
   leafLoad().then(Lf=>{ if(!el.isConnected) return; el.innerHTML=''; const m=Lf.map(el,{zoomControl:false,attributionControl:true,tap:true}); Lf.control.zoom({position:'bottomright'}).addTo(m);
     Lf.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(m);

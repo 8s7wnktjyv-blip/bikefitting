@@ -1,0 +1,43 @@
+# Lädt einmal pro Woche Luftpumpen, Schlauch-Automaten, Werkstätten, Reparatur-Stationen, E-Bike-Laden, Krankenhäuser und Polizei
+# für Deutschland, Österreich, Schweiz aus OpenStreetMap und legt sie in helfer/ ab. Die Pass-App sucht dann zuerst dort:
+# schnell, auch wenn die öffentlichen OSM-Server überlastet sind, und der Standort verlässt das Handy nicht.
+# Von Hand: Actions → „Helfer-Daten aktualisieren“ → Run workflow.
+name: Helfer-Daten aktualisieren
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 3 * * 1'
+  push:
+    branches: [main]
+    paths: ['.github/workflows/helfer-daten.yml', 'tools/helfer-daten.mjs']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: helfer-daten
+  cancel-in-progress: false
+
+jobs:
+  holen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Orte aus OpenStreetMap holen
+        run: node tools/helfer-daten.mjs
+      - name: Einchecken
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add helfer
+          if git diff --cached --quiet; then echo "Nichts Neues"; exit 0; fi
+          git commit -m "Helfer-Daten aus OpenStreetMap aktualisiert (Workflow)"
+          for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && exit 0; sleep 10; done
+          exit 1
