@@ -20,6 +20,7 @@
 @font-face{font-family:"Archivo";src:url(fonts/archivo.woff) format("woff");font-weight:100 900;font-stretch:62% 125%;font-display:swap}
 @font-face{font-family:"IBM Plex Mono";src:url(fonts/plexmono-400.woff) format("woff");font-weight:400;font-display:swap}
 @font-face{font-family:"IBM Plex Mono";src:url(fonts/plexmono-500.woff) format("woff");font-weight:500;font-display:swap}
+@media (max-width:520px){.savepill .sp-w{display:none}}
 </style>
 <style>
 /* Layout: freundliche Werkbank – helle Karten auf warmem Grund, 5 Hauptbereiche, Fitting als geführter Ablauf in Schritten */
@@ -2064,7 +2065,7 @@ const KEY = 'fitframe-demo-v3';
 const STORE={kind:'lokal im Browser (localStorage)',read(){ return localStorage.getItem(KEY); },write(json){ localStorage.setItem(KEY,json); return localStorage.getItem(KEY); }};
 let S;
 let storageOk = true;
-const APP_VER='2026-11-23.207';
+const APP_VER='2026-11-23.208';
 let loadIssue = null;
 function load(){
   let raw=null;
@@ -2095,7 +2096,7 @@ function mergeData(d){
 }
 let lastSave=null;
 function save(){ try{ const back=JSON.parse(STORE.write(JSON.stringify(S))); storageOk=!!(back&&back.customers&&back.customers.length===S.customers.length); lastSave=new Date(); }catch(e){ storageOk=false; } savePill(); cloudQueue(); }
-function savePill(){ const b=document.getElementById('savePill'); if(!b) return; b.className='savepill '+(storageOk?'ok':'bad'); b.textContent=storageOk?(lastSave?`✓ gespeichert ${lastSave.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`:'✓ Speicher bereit'):'⚠ Nicht gespeichert'; if(storageOk&&typeof cloudOn==='function'&&cloudOn()){ const tm=CL.lastSync?new Date(CL.lastSync).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):''; b.textContent=CL.status==='busy'?'☁ speichert …':CL.status==='conflict'||CL.status==='err'?'⚠ Cloud prüfen':`✓ Cloud ${tm}`; if(CL.status==='conflict'||CL.status==='err') b.className='savepill bad'; } }
+function savePill(){ const b=document.getElementById('savePill'); if(!b) return; b.className='savepill '+(storageOk?'ok':'bad'); b.textContent=storageOk?(lastSave?`✓ gespeichert ${lastSave.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`:'✓ Speicher bereit'):'⚠ Nicht gespeichert'; if(storageOk&&lastSave){ const t=lastSave.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}); b.innerHTML='✓ <span class="sp-w">gespeichert </span>'+t; b.title='Gespeichert um '+t; } if(storageOk&&typeof cloudOn==='function'&&cloudOn()){ const tm=CL.lastSync?new Date(CL.lastSync).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):''; b.textContent=CL.status==='busy'?'☁ speichert …':CL.status==='conflict'||CL.status==='err'?'⚠ Cloud prüfen':`✓ Cloud ${tm}`; if(CL.status==='conflict'||CL.status==='err') b.className='savepill bad'; } }
 /* ---------- Cloud-Speicherung (optional, Supabase) ----------
    Aus, bis der Laden unter Mehr → Deine Daten sichern eine Supabase-Adresse und den öffentlichen Schlüssel einträgt und sich anmeldet.
    Gespeichert wird der komplette Stand je Laden (docs/supabase/start.sql). Fotos/Videos liegen als Dateien im privaten Speicher „media“ unter <Laden>/<id> (docs/supabase/media.sql). */
