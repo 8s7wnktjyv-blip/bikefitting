@@ -5,7 +5,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 
 ## Stand
 
-- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.194** (APP_VER 2026-11-23.211), Service-Worker-Cache `fyf-app-v1-p142`, Datenbank **Stand 30**, Datenbank-Stand **29** (eingespielt 21.11.).
+- Live (GitHub Pages aus Branch **`main`**): Händlersoftware `index.html` **v.194** (APP_VER 2026-11-23.212), Service-Worker-Cache `fyf-app-v1-p143`, Datenbank **Stand 31** (vorbereitet, `DB_SCHEMA=31`), Datenbank-Stand **29** (eingespielt 21.11.).
 - Demo: https://8s7wnktjyv-blip.github.io/bikefitting/ · Pass: `rad.html` · Händlerfinder: `finder.html`
 - Browser-Tests: `sh tests/e2e/run.sh` (19 Tests, iPhone-13-Größe, gegen `mock.js`), laufen bei jedem Push als GitHub-Action „Tests“.
 - Weitere Branches: `plattform-neu` (Neubau, **nicht live**), `master-auftrag` (in `main` übernommen), `v59-cloud` (alt).
@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.212 (23.11.) | **Datenbank Stand 31 vorbereitet** (`docs/supabase/stand31.sql`, in `alles.sql`; Test `stand31_test.sql` lokal Postgres 16 grün, alles.sql 2× hintereinander fehlerfrei): Punkt 17 Stufe 2 – Tabelle `shop_claims` (OSM-ID, Ladenname, Art übernehmen/entfernen, Ansprechpartner, Kontakt, Status offen/bestätigt/abgelehnt), anon nur über `shop_claim_submit` (max. 3/Stunde je Laden, 200/Stunde gesamt), Liste/Entscheidung nur Plattform-Admin (`shop_claims_list`, `shop_claim_decide`), öffentlich nur `shop_hidden_osm()` (bestätigte Entfernungen). Punkt 18 – `wish_ideas`/`wish_votes`: `wish_submit` (3–200 Zeichen, keine Links/E-Mail/Telefonnummern, max. 3 je Gerät und Tag), öffentlich nur nach Freigabe (`wish_list_public`, `wish_vote` ohne Doppelstimme), Admin `wish_admin_list`/`wish_admin_set`. **Oberflächen dafür folgen (nächster Schritt).** App meldet bis zum Einspielen „Update fehlt (Stand 30, nötig 31)“. |
 | v.211 (23.11.) | **Punkt 17, Stufe 1 – alle Fahrradläden im Händlerfinder:** unter den FYF-Partnern Bereich „Weitere Fahrradläden in der Nähe“ (gestrichelt/grau abgesetzt). Start nur auf Knopfdruck: „Meinen Standort verwenden“ oder Ort/PLZ (Nominatim, im Browser zwischengespeichert). Quelle zuerst die wöchentlichen Kacheln `helfer/` (Standort bleibt auf dem Handy), sonst Overpass live. Je Laden: Entfernung, Adresse, Öffnungszeiten, Route (Apple Karten), Anrufen/Website wenn vorhanden, Kennzeichen „Kein FYF-Partner · Daten von OpenStreetMap“, kein Anfrage-Formular; Doppelte zu FYF-Partnern (Name + Ort) ausgeblendet; Umkreis 5/10/25 km; Quellenangabe © OSM + Stand. `tools/helfer-daten.mjs` speichert für Läden künftig Telefon, Website, OSM-Kennung (ab nächstem wöchentlichen Lauf; alte Kacheln funktionieren weiter). Datenschutz (Nominatim) und Englisch ergänzt. Test t209. |
 | v.203 (23.11.) | Pass und Händlerfinder öffnen beim allerersten Mal **hell** (Wunsch Dominik); danach gilt, was der Nutzer einstellt (Hell/Dunkel/Automatisch, gespeichert). Tests t179/t195 angepasst. |
 | v.198 (23.11.) | Werkstätten (Händlerfinder): Karte „Panne unterwegs?“ ganz oben öffnet „Helfer in der Nähe“ (Luft, Schlauch-Automaten, Werkstätten, Ladestationen) direkt im Pass – auch ohne angelegtes Rad (`rad.html#hilfe=1`). Wunsch Dominik: nicht erst über Garage. Test t198. |
@@ -146,6 +147,7 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Wartet auf Dominik
 
+- **Datenbank Stand 31 einspielen:** GitHub → Actions → „Datenbank aktualisieren“ → Run workflow (geht am iPhone, ggf. „Desktop-Website anfordern“).
 - Hinweis 23.11. (12 Uhr): Es laufen **zwei** geplante Aufgaben gleichzeitig am selben Archiv (stündlich :05 und :07). Das klappt (jede holt vor dem Push den neuen Stand), führt aber zu Zusammenführungen und doppelten Versionsnummern. Empfehlung: eine der beiden Aufgaben abschalten.
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
 - Datenschutz: noch offen sind Vertrag zur Auftragsverarbeitung mit Supabase, Mailversand-Dienst und Speicherort der Sicherung; danach rechtlich prüfen lassen.
@@ -165,6 +167,7 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 
 ## Nächster Schritt
 
+0. **Oberflächen zu Stand 31 bauen** (SQL fertig, v.212): (a) Händlerfinder – auf jeder OSM-Karte „Ist das Ihr Laden?“ → Formular übernehmen/entfernen lassen (`shop_claim_submit`), bestätigte Entfernungen ausblenden (`shop_hidden_osm`); Link/Formular nur zeigen, wenn die Funktion auf dem Server existiert. (b) Pass „Wünsch dir was“ – eigenes Feld + freigegebene Wünsche mit Abstimmen. (c) Software → Plattform: Listen „Laden-Anfragen“ und „Wünsche“ mit Bestätigen/Ablehnen/Freigeben. Mock-Endpunkte in `tests/e2e/mock.js` ergänzen. OSM-Kacheln enthalten die OSM-Kennung erst nach dem nächsten wöchentlichen Lauf der Helfer-Daten (oder Aktion von Hand starten) – bis dahin live per Overpass (liefert `type`+`id`).
 1. Software-Konzept `docs/SOFTWARE-DESIGN-KONZEPT.md` ist umgesetzt (Punkte 1–9). Weiter: Feinschliff nach Rückmeldung von Dominik, Dashboard-Kacheln je Ladentyp verfeinern.
 2. Pass: Plan `docs/PASS-ATTRAKTIV-PLAN.md` vollständig umgesetzt (v.141–v.162).
 3. Wartet auf Freigabe: Werkstatt-Freigabe 7 Tage + Schadens-Einträge von Läden (`docs/PASS-WERKSTATT-FREIGABE-PLAN.md`), Entscheidungen in `docs/STRATEGIE.md` (Werbung, kein Endkunden-Abo, Station).
