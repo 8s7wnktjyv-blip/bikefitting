@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.198 (23.11.) | Werkstätten (Händlerfinder): Karte „Panne unterwegs?“ ganz oben öffnet „Helfer in der Nähe“ (Luft, Schlauch-Automaten, Werkstätten, Ladestationen) direkt im Pass – auch ohne angelegtes Rad (`rad.html#hilfe=1`). Wunsch Dominik: nicht erst über Garage. Test t198. |
 | v.194 (23.11.) | Pass: **Laufräder säubern** – beim iPhone-Freistellen bleibt Himmel/Boden zwischen den Speichen stehen. Neues Werkzeug (Knopf im Rad-Foto und im Foto-Menü): Hintergrund-Pinsel entfernt nur die Farbe, auf der man ansetzt (Speichen, Reifen, Rahmen bleiben), dazu Radierer, Zurückholen-Pinsel, Größe/Stärke, Zoomen mit zwei Fingern, Rückgängig (5 Schritte), „Original“ (Original in IndexedDB gesichert). Freigestellte Räder werden ohne leeren Rand gespeichert (auch einmalig für vorhandene Bilder) – das Rad füllt Karte und Kopfbild. Test t194. |
 | v.195 (23.11.) | Pass: **Hell/Dunkel-Knopf oben rechts** auf jeder Seite (☀︎/☾, runder Glas-Knopf). Wahl bleibt gespeichert, Fußzeile „Design“ (inkl. Automatisch) bleibt. Test t195. |
 | v.196 (23.11.) | Pass-Optik: **Kopfbild mit freigestelltem Rad** neu – Rad deutlich größer, Name/Status stehen unter dem Bild statt darüber (kein dunkler Verlauf mehr, in Hell dunkle Schrift), „Fährt“ und „✨ Laufräder säubern“ als ruhige Chips in einer Zeile. Hell/Dunkel-Knopf scrollt mit (überdeckt beim Scrollen keine Kacheln). Test t196. |
