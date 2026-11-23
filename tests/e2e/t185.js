@@ -14,7 +14,7 @@ const {chromium,devices}=require('playwright'); const BASE='http://localhost:876
  // 2) freigestelltes Rad → Studio mit Spiegelung, Garage auch
  await q.evaluate(c=>{ const cv=document.createElement('canvas'); cv.width=400; cv.height=300; const g=cv.getContext('2d'); g.fillStyle='#456'; g.fillRect(100,100,200,100); localStorage.setItem('fyfpass:imgt:'+c,cv.toDataURL('image/png')); location.hash='#meine'; },code); await q.waitForTimeout(400);
  await q.evaluate(c=>{ location.hash='#c='+c; },code); await q.waitForTimeout(1500);
- r=await q.evaluate(()=>{ const p=document.querySelector('.hero .bikepic.studio'); const i=p&&p.querySelector('.st-bike'); return {studio:!!p,refl:!!(p&&p.querySelector('.st-refl')),bg:i&&getComputedStyle(i).backgroundColor,nudge:!!document.querySelector('.hero .st-nudge')}; }); log('studio:',JSON.stringify(r));
+ r=await q.evaluate(()=>{ const p=document.querySelector('.hero .bikepic.studio'); const i=p&&p.querySelector('.st-bike'); return {studio:!!p,refl:!!(p&&p.querySelector('.st-refl')),bg:i&&getComputedStyle(i).backgroundColor,nudge:!!document.querySelector('.hero .st-nudge:not(.st-wheel)')}; }); log('studio:',JSON.stringify(r));
  if(!r.studio||!r.refl) bad('Studio-Ansicht'); if(r.bg!=='rgba(0, 0, 0, 0)') bad('Hintergrund durchsichtig'); if(r.nudge) bad('Knopf soll bei Studio fehlen');
  await q.evaluate(()=>{ location.hash='#meine'; }); await q.waitForTimeout(1200); const g=await q.evaluate(()=>!!document.querySelector('.bikecard .bikepic.studio')); log('Garage:',g); if(!g) bad('Garage-Karte Studio');
  log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();
