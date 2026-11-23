@@ -138,6 +138,7 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 - Käuferschutz Marktplatz: nur extern (Kandidat Trustap).
 
 ## Entscheidungen (verbindlich)
+- **Pass-Design (Dominik, 23.11.2026, ersetzt „dunkel als Standard“):** Beim allerersten Öffnen **hell**; danach gilt die Wahl des Nutzers (Hell/Dunkel/Automatisch), gespeichert. Seit v.203 umgesetzt – nicht zurückdrehen. Dunkel und hell bleiben gleich hochwertig.
 
 - Preise: Händler 99 €/Standort/Monat ohne Fitting-Modul, 149 € mit; Einrichtung 99 €; Schulung 49 €/Mitarbeiter; Jahresvertrag mit Rabatt zusätzlich zum monatlich kündbaren Abo; Endkunden kostenlos; QR-Aufkleber 4,99 €, 2er-Set 7,99 €; Fitting 200 € bei FYF / 250 € im Laden (50 € an den Laden); Empfehlung 30 €. Alle zzgl. MwSt.
 - Rechte Weg A (Rollen-Filter auf dem Server, kein Tabellen-Umbau); Mitarbeiter sehen Körper-/Gesundheitsdaten der Fitting-Kunden.
