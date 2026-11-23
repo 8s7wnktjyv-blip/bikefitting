@@ -10,6 +10,8 @@ const {chromium,devices}=require('playwright'); const BASE='http://localhost:876
  const sv=await q.evaluate(()=>localStorage.getItem('fyfpass:theme')); if(sv!==t1) bad('Wahl gespeichert');
  await q.goto(BASE+'/rad.html#meine&cfg='+cfg); await q.waitForTimeout(800); if(await t()!==t1) bad('Pass übernimmt die Wahl');
  await q.goto(BASE+'/finder.html#w=1&cfg='+cfg); await q.waitForTimeout(1200); const txt=await q.locator('a.nr-help').innerText(); if(!/Krankenhaus/.test(txt)) bad('Panne-Karte nennt Krankenhaus');
+ // v.209: ohne FYF-Partner → Knopf „Werkstätten auf der Karte“ öffnet Helfer
+ await q.fill('#q','Hamburg'); await q.waitForTimeout(900); const kb=q.locator('.mk-empty a[href*="hilfe=1"], a.mk-map').first(); if(!(await kb.count())) bad('Werkstätten-Leer-Zustand mit Karten-Knopf'); else { await kb.click(); await q.waitForTimeout(1500); const tt=await q.evaluate(()=>{ const p=[...document.querySelectorAll('.tpage')].pop(); return p?p.innerText:''; }); if(!/Helfer in der Nähe/.test(tt)) bad('Karten-Knopf öffnet Helfer'); await q.goBack(); await q.waitForTimeout(800); }
  // v.207: leerer Marktplatz mit Hinweis, Suche zurücksetzen
  await q.goto(BASE+'/finder.html#markt=1&cfg='+cfg); await q.waitForTimeout(1500); if(!(await q.locator('.mk-empty').count())) bad('Marktplatz: schöner Leer-Zustand');
  await q.fill('#mq','xyzunbekannt'); await q.waitForTimeout(900); if(!(await q.locator('[data-mkreset]').count())) bad('Suche zurücksetzen sichtbar'); else { await q.click('[data-mkreset]'); await q.waitForTimeout(500); if(await q.inputValue('#mq')!=='') bad('Suche geleert'); }

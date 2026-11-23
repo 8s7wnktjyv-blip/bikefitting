@@ -1,4 +1,4 @@
-// v.205: Helfer-Daten vorab – liegt helfer/index.json vor und der Standort im Gebiet, sucht die App nur dort (keine Overpass-Anfrage, Standort bleibt auf dem Handy);
+// v.205/v.210: Helfer-Daten vorab – liegt helfer/index.json vor und der Standort im Gebiet, sucht die App nur dort (keine Overpass-Anfrage, Standort bleibt auf dem Handy);
 // Krankenhaus bis 15 km, andere im Suchkreis; Stand wird angezeigt; außerhalb des Gebiets weiter live. Leaflet kommt aus vendor/.
 const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
 (async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
@@ -12,9 +12,14 @@ const {chromium,devices}=require('playwright'); const BASE='http://localhost:876
    await q.route(/cdnjs/,r=>{ leafCdn++; r.abort(); }); await q.route(/tile\.openstreetmap\.org/,r=>r.fulfill({contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN4/w8AAn8B9kCw5qYAAAAASUVORK5CYII=','base64')}));
    await q.goto(BASE+'/rad.html#hilfe=1&cfg='+cfg); await q.waitForTimeout(1200); await q.click('[data-nr="go"]'); await q.waitForTimeout(2500);
    const r=await q.evaluate(()=>({names:[...document.querySelectorAll('.nr b')].map(x=>x.textContent),pins:document.querySelectorAll('.nr-map .nr-pin').length,txt:[...document.querySelectorAll('.tpage')].pop().innerText}));
-   await c.close(); return {...r,live,leafCdn}; };
+   let mf=null; if(lat>45&&lat<56&&!live){ await q.click('[data-nf="air"]'); await q.waitForTimeout(400); await q.click('[data-nf="tube"]'); await q.waitForTimeout(800);
+     mf=await q.evaluate(()=>({pins:document.querySelectorAll('.nr-map .nr-pin').length,list:document.querySelectorAll('.nr').length,on:[...document.querySelectorAll('[data-nf].on')].map(b=>b.dataset.nf),saved:localStorage.getItem('fyfpass:nearF')})); }
+   await c.close(); return {...r,live,leafCdn,mf}; };
  let r=await run(48.137,11.575); log('im Gebiet:',JSON.stringify({names:r.names,pins:r.pins,live:r.live,cdn:r.leafCdn}));
  if(r.live) bad('keine Live-Anfrage im Gebiet'); if(!r.names.includes('Schlauchomat')||!r.names.includes('Klinikum Test')) bad('Orte aus Vorab-Daten'); if(r.names.includes('Zu weit weg')) bad('Umkreis beachtet');
  if(r.pins!==4) bad('Karte mit 4 Pins (Leaflet aus vendor)'); if(r.leafCdn) bad('Leaflet nicht mehr von cdnjs'); if(!/Stand 23\.11\.2026/.test(r.txt)) bad('Stand der Daten');
+ log('Filter Luft+Schlauch:',JSON.stringify(r.mf)); if(!r.mf||r.mf.pins!==2||r.mf.list!==2) bad('Filter: mehrere Arten gleichzeitig (v.210)'); if(!r.mf||!/air/.test(r.mf.saved||'')||!/tube/.test(r.mf.saved||'')) bad('Filter wird gemerkt');
+ // fehlendes Gebiet (offen) → live statt leer
+ idx.offen=['47_11']; r=await run(48.137,11.575); log('Gebiet offen:',JSON.stringify({live:r.live})); if(!r.live) bad('offenes Gebiet → live'); delete idx.offen;
  r=await run(41.9,12.5); log('außerhalb (Rom):',JSON.stringify({names:r.names,live:r.live})); if(!r.live||!r.names.length) bad('außerhalb live');
  log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();

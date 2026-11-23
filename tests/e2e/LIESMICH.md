@@ -61,7 +61,7 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t197.js` – Pass: Nächste Schritte mit Symbolen (v.199); leere Kacheln „Zustand der Teile“/„Jahresziel“ ruhig (eine Zeile, gleich breit), Jahresziel öffnet
 - `t198.js` – Werkstätten: „Panne unterwegs?“ öffnet „Helfer in der Nähe“ im Pass, auch ohne angelegtes Rad
 - `t200.js` – Pass: Helfer in der Nähe mit Karte (Pins Luft/Schlauch-Automat/Laden/Krankenhaus, Notruf 112 (v.204), Filter wirkt auf Karte, Pin mit Route; v.201: hängender Dienst → nach Zeitlimit Hinweis, „Nochmal suchen“, Apple-Karten-Links)
-- `t205.js` – Pass: Helfer-Daten vorab (helfer/*.json): im Gebiet keine Live-Anfrage, Umkreis/Krankenhaus 15 km, Stand angezeigt, Leaflet aus vendor/; außerhalb live
-- `t206.js` – Werkstätten: Hell/Dunkel-Knopf oben rechts (gleiche Einstellung wie Pass), „Panne unterwegs?“ nennt Krankenhaus/Karte; Marktplatz-Leer-Zustand + Suche zurücksetzen (v.207)
+- `t205.js` – Pass: Helfer-Daten vorab (helfer/*.json): im Gebiet keine Live-Anfrage, Umkreis/Krankenhaus 15 km, Stand angezeigt, Leaflet aus vendor/; außerhalb und in fehlenden Gebieten live; Karten-Filter mehrere Arten + gemerkt (v.210)
+- `t206.js` – Werkstätten: Hell/Dunkel-Knopf oben rechts (gleiche Einstellung wie Pass), „Panne unterwegs?“ nennt Krankenhaus/Karte; Marktplatz-Leer-Zustand + Suche zurücksetzen (v.207); ohne FYF-Partner Knopf „Werkstätten auf der Karte“ (v.209)
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
