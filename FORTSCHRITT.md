@@ -148,6 +148,9 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 ### Freigegeben (Dominik 23.11.2026, 07:22) – direkt nach Punkt 17 bauen
 27. **Mehrere Filialen und Marken in einem Konto** (z. B. FYF + Marke Cunuma für Laufräder im Marktplatz): Plan `docs/FILIALEN-MARKEN-PLAN.md`. Für FYF selbst kostenlos, alle anderen zahlen je Auftritt (Filiale oder Marke) 99/149 €. Details nach bestem Urteil.
 
+### Freigegeben (Dominik 23.11.2026, 07:40) – nach Punkt 27
+28. **Marktplatz ausbauen**: Privatleute stellen Räder direkt aus der Pass-App ein, Händler/Marken stellen Räder, Teile und Zubehör ein; Kategorien, Filter, Detailseite, Kontakt ohne Datenleck, Melden, Diebstahl-Abgleich. Plan `docs/MARKTPLATZ-PLAN.md`.
+
 ## Wartet auf Dominik
 
 - **Datenbank Stand 31 einspielen:** GitHub → Actions → „Datenbank aktualisieren“ → Run workflow (geht am iPhone, ggf. „Desktop-Website anfordern“).
