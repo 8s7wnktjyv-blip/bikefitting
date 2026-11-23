@@ -60,6 +60,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t196.js` – Pass: Kopfbild mit freigestelltem Rad – Titel unter dem Bild, Fahrer + „Laufräder säubern“ als Zeile, Hell mit dunkler Schrift, Hell/Dunkel-Knopf scrollt mit
 - `t197.js` – Pass: Nächste Schritte mit Symbolen (v.199); leere Kacheln „Zustand der Teile“/„Jahresziel“ ruhig (eine Zeile, gleich breit), Jahresziel öffnet
 - `t198.js` – Werkstätten: „Panne unterwegs?“ öffnet „Helfer in der Nähe“ im Pass, auch ohne angelegtes Rad
-- `t200.js` – Pass: Helfer in der Nähe mit Karte (Pins Luft/Schlauch-Automat/Laden, Filter wirkt auf Karte, Pin mit Route; v.201: hängender Dienst → nach Zeitlimit Hinweis, „Nochmal suchen“, Apple-Karten-Links); Leaflet im Test aus `fixtures/leaflet`
+- `t200.js` – Pass: Helfer in der Nähe mit Karte (Pins Luft/Schlauch-Automat/Laden/Krankenhaus, Notruf 112 (v.203), Filter wirkt auf Karte, Pin mit Route; v.201: hängender Dienst → nach Zeitlimit Hinweis, „Nochmal suchen“, Apple-Karten-Links); Leaflet im Test aus `fixtures/leaflet`
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.

@@ -3,7 +3,7 @@
 Stand 23.11.2026. **Noch nicht umgesetzt, bitte freigeben.**
 
 ## Problem
-Die Orte (Luftpumpen, Schlauch-Automaten, Werkstätten …) kommen live von den kostenlosen OpenStreetMap-Servern (Overpass).
+Die Orte (Luftpumpen, Schlauch-Automaten, Werkstätten, Krankenhäuser …) kommen live von den kostenlosen OpenStreetMap-Servern (Overpass).
 Am 23.11. gegen 3:30 Uhr waren alle drei getesteten öffentlichen Server überlastet („at capacity“) oder gaben keine Antwort.
 Dann findet die App nichts, und es helfen nur die Apple-Karten-Knöpfe (seit v.201/v.202).
 
