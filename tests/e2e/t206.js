@@ -1,4 +1,4 @@
-// v.206: Werkstätten-Seite (Händlerfinder) hat den Hell/Dunkel-Knopf wie der Pass (gleiche Einstellung); „Panne unterwegs?“ nennt Krankenhaus/Karte.
+// v.206/v.207: Werkstätten-Seite (Händlerfinder) hat den Hell/Dunkel-Knopf wie der Pass (gleiche Einstellung); „Panne unterwegs?“ nennt Krankenhaus/Karte.
 const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
 (async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
  const cfg=Buffer.from(JSON.stringify({u:BASE,k:'sb_publishable_TESTKEY_1234567890abc'})).toString('base64url');
@@ -10,4 +10,7 @@ const {chromium,devices}=require('playwright'); const BASE='http://localhost:876
  const sv=await q.evaluate(()=>localStorage.getItem('fyfpass:theme')); if(sv!==t1) bad('Wahl gespeichert');
  await q.goto(BASE+'/rad.html#meine&cfg='+cfg); await q.waitForTimeout(800); if(await t()!==t1) bad('Pass übernimmt die Wahl');
  await q.goto(BASE+'/finder.html#w=1&cfg='+cfg); await q.waitForTimeout(1200); const txt=await q.locator('a.nr-help').innerText(); if(!/Krankenhaus/.test(txt)) bad('Panne-Karte nennt Krankenhaus');
+ // v.207: leerer Marktplatz mit Hinweis, Suche zurücksetzen
+ await q.goto(BASE+'/finder.html#markt=1&cfg='+cfg); await q.waitForTimeout(1500); if(!(await q.locator('.mk-empty').count())) bad('Marktplatz: schöner Leer-Zustand');
+ await q.fill('#mq','xyzunbekannt'); await q.waitForTimeout(900); if(!(await q.locator('[data-mkreset]').count())) bad('Suche zurücksetzen sichtbar'); else { await q.click('[data-mkreset]'); await q.waitForTimeout(500); if(await q.inputValue('#mq')!=='') bad('Suche geleert'); }
  log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();
