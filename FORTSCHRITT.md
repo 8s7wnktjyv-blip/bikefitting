@@ -137,6 +137,9 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 ### Konkurrenz-Ausbau (Dominik 23.11.2026: „alles freigegeben … besser als die Konkurrenz“)
 19.–26. siehe `docs/KONKURRENZ-PLAN.md` (Differenzbesteuerung § 25a, Online-Buchung mit Kapazität/Express/Check-in, Leasing-Check, Kunden-Info ohne Kosten, Bestand mit Rahmennummer + Pass bei Verkauf, Veloconnect vorbereiten, Marken-/Modell-Datenbank, Einrichtung in 1 Stunde). Reihenfolge nach Punkt 17 und 18.
 
+### Plan liegt – NICHT bauen, wartet auf Freigabe
+27. **Mehrere Filialen und Marken in einem Konto** (Wunsch Dominik 23.11.2026, z. B. FYF + Marke Cunuma für Laufräder im Marktplatz): Plan `docs/FILIALEN-MARKEN-PLAN.md`. Offen: Preis für Marken ohne Laden, Reihenfolge.
+
 ## Wartet auf Dominik
 
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
