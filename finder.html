@@ -120,6 +120,9 @@ main h2{font-size:20px!important}
 .osm-b{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0 45px}.osm-b a{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:650;text-decoration:none;color:var(--ink);padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card)}
 .osm-tag{margin:8px 0 0 45px;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--muted);text-transform:uppercase}
 .osm-empty{text-align:center;padding:14px 6px}.osm-load{display:flex;align-items:center;gap:10px;padding:16px 4px;color:var(--muted);font-size:14px}.osm-spin{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--acc);animation:osmSp .8s linear infinite}@keyframes osmSp{to{transform:rotate(360deg)}}
+.osm-claim{display:block;margin:6px 0 0 45px;padding:0;background:none!important;color:var(--muted)!important;font-size:12.5px;font-weight:650;border:0;text-decoration:underline;text-underline-offset:3px}
+.osm-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0 4px}.osm-seg label{display:flex;gap:6px;align-items:center;margin:0;padding:10px;border:1px solid var(--line);border-radius:12px;font-size:14px;font-weight:600}.osm-seg input{width:auto!important;padding:0!important}
+.osm-sheet>div{max-height:88vh;overflow:auto}
 .osm-src{margin:12px 0 0}.osm-src a{color:var(--muted)}
 :root[data-theme="dark"] .osm{background:rgba(255,255,255,.025);border-color:rgba(255,255,255,.1)}:root[data-theme="dark"] .osm-c{background:rgba(255,255,255,.04)!important;border-color:rgba(255,255,255,.07)}:root[data-theme="dark"] .osm-b a{background:transparent;color:var(--ink)}:root[data-theme="dark"] .osm-i{background:rgba(255,255,255,.06)}
 .mk-empty{text-align:center;padding:18px 8px}.mk-empty>span{display:grid;place-items:center;width:56px;height:56px;margin:0 auto 10px;border-radius:18px;background:color-mix(in srgb,#e8601c 14%,transparent);color:#e8601c}.mk-empty b{display:block;font-size:16px}
@@ -227,7 +230,9 @@ function list(){ setHash(''); tabs('werk'); document.title='FYF-Partner finden';
   app.querySelectorAll('[data-d]').forEach(a=>a.onclick=e=>{ e.preventDefault(); dealer(a.dataset.d); }); osmBind(); }
 // ---------- v.209 (Punkt 17, Stufe 1): weitere Fahrradläden aus OpenStreetMap – klar als „Kein FYF-Partner“ getrennt ----------
 // Quelle: zuerst vorab geladene Kacheln helfer/*.json (wöchentlich, Standort bleibt auf dem Handy), sonst Overpass live. Ort/PLZ → Nominatim (nur auf Knopfdruck, im Browser zwischengespeichert).
-const OSM={L:null,pos:null,label:'',R:5000,busy:'',err:''};
+const OSM={L:null,pos:null,label:'',R:5000,busy:'',err:'',claim:null,hidden:new Set()};
+// v.213 (Punkt 17, Stufe 2): „Ist das Ihr Laden?“ nur, wenn der Server die Funktion hat (Datenbank Stand 31)
+async function osmClaimProbe(){ if(OSM.claim!==null) return; try{ const h=await api('/rest/v1/rpc/shop_hidden_osm',{method:'POST',body:'{}'}); OSM.hidden=new Set((h||[]).map(x=>typeof x==='string'?x:(x&&x.shop_hidden_osm)||'').filter(Boolean)); OSM.claim=true; }catch(e){ OSM.claim=false; } }
 function osmDist(a,b,c,d){ const R=6371e3, r=x=>x*Math.PI/180; const x=r(d-b)*Math.cos(r((a+c)/2)), y=r(c-a); return Math.sqrt(x*x+y*y)*R; }
 const osmNorm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\b(fahrrad|fahrraeder|fahrrader|zweirad|zweiraeder|bikes?|rad|raeder|radsport|cycles?|cycling|shop|store|gmbh|e\.?\s?k\.?|ug|kg|ohg|und|the|der|die|das)\b/g,' ').replace(/[^a-z0-9]+/g,'');
 // Doppelte vermeiden: gleicher/enthaltener Name und gleicher Ort wie ein FYF-Partner → nur den Partner zeigen
@@ -239,17 +244,17 @@ async function osmLocal(lat,lon,R){ const ix=await osmIdx(); if(!ix||!Array.isAr
   const dLa=R/111000, dLo=R/(111000*Math.cos(lat*Math.PI/180)), have=new Set(ix.tiles), keys=[];
   for(let a=Math.floor(lat-dLa); a<=Math.floor(lat+dLa); a++) for(let b=Math.floor(lon-dLo); b<=Math.floor(lon+dLo); b++) if(have.has(a+'_'+b)) keys.push(a+'_'+b);
   const T=await Promise.all(keys.map(osmTile)); const out=[];
-  T.forEach(t=>(t.p||[]).forEach(p=>{ if(p[0]!=='shop') return; const d=osmDist(lat,lon,p[1],p[2]); if(d<=R) out.push({la:p[1],lo:p[2],d,name:p[3]||'',addr:p[4]||'',oh:p[5]||'',ph:p[6]||'',web:p[7]||''}); }));
+  T.forEach(t=>(t.p||[]).forEach(p=>{ if(p[0]!=='shop') return; const d=osmDist(lat,lon,p[1],p[2]); if(d<=R) out.push({la:p[1],lo:p[2],d,name:p[3]||'',addr:p[4]||'',oh:p[5]||'',ph:p[6]||'',web:p[7]||'',id:/^[nwr]\d{1,12}$/.test(p[8]||'')?p[8]:''}); }));
   out.stand=ix.stand; return out; }
 async function osmLive(lat,lon,R){ const q=`[out:json][timeout:12];nwr(around:${R},${lat},${lon})[shop=bicycle];out center 120;`, body='data='+encodeURIComponent(q);
   const one=(u,ms)=>{ const ac=window.AbortController?new AbortController():null; const tm=setTimeout(()=>{ try{ ac&&ac.abort(); }catch(e){} },ms); return fetch(u+'?'+body,{signal:ac?ac.signal:undefined}).then(r=>{ if(!r.ok) throw new Error('http '+r.status); return r.json(); }).then(x=>{ clearTimeout(tm); if(!x||!Array.isArray(x.elements)) throw new Error('leer'); return x; },e=>{ clearTimeout(tm); throw e; }); };
   const any=ps=>new Promise((ok,no)=>{ let n=ps.length, last; ps.forEach(p=>p.then(ok,e=>{ last=e; if(--n===0) no(last); })); });
   const j=await any(['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter','https://overpass.kumi.systems/api/interpreter'].map(u=>one(u,15000)));
   return j.elements.map(e=>{ const la=e.lat??(e.center&&e.center.lat), lo=e.lon??(e.center&&e.center.lon), t=e.tags||{}; if(la==null) return null;
-    return {la,lo,d:osmDist(lat,lon,la,lo),name:t.name||t.operator||'',addr:[t['addr:street']&&(t['addr:street']+(t['addr:housenumber']?' '+t['addr:housenumber']:'')),t['addr:city']].filter(Boolean).join(', '),oh:t.opening_hours||'',ph:t.phone||t['contact:phone']||'',web:t.website||t['contact:website']||''}; }).filter(Boolean); }
+    return {la,lo,d:osmDist(lat,lon,la,lo),name:t.name||t.operator||'',addr:[t['addr:street']&&(t['addr:street']+(t['addr:housenumber']?' '+t['addr:housenumber']:'')),t['addr:city']].filter(Boolean).join(', '),oh:t.opening_hours||'',ph:t.phone||t['contact:phone']||'',web:t.website||t['contact:website']||'',id:(e.type&&e.id)?String(e.type)[0]+e.id:''}; }).filter(Boolean); }
 async function osmLoad(){ if(!OSM.pos) return; OSM.busy='load'; OSM.err=''; osmDraw(); const [lat,lon]=OSM.pos; let L=null;
   try{ L=await osmLocal(lat,lon,OSM.R); }catch(e){ L=null; } if(!L){ try{ L=await osmLive(lat,lon,OSM.R); }catch(e){ OSM.err='Die Ladenliste von OpenStreetMap antwortet gerade nicht. Bitte gleich noch einmal versuchen.'; } }
-  OSM.busy=''; if(L){ const st=L.stand; OSM.L=L.filter(x=>x.name&&!osmIsPartner(x)).sort((a,b)=>a.d-b.d).slice(0,60); OSM.L.stand=st; } osmDraw(); }
+  await osmClaimProbe(); OSM.busy=''; if(L){ const st=L.stand; OSM.L=L.filter(x=>x.name&&!osmIsPartner(x)&&!(x.id&&OSM.hidden.has(x.id))).sort((a,b)=>a.d-b.d).slice(0,60); OSM.L.stand=st; } osmDraw(); }
 async function osmGeocode(q){ q=String(q||'').trim().slice(0,80); if(q.length<2) return null; const key='fyfpass:geo:'+q.toLowerCase();
   try{ const c=JSON.parse(localStorage.getItem(key)||'null'); if(c&&Array.isArray(c.p)) return c; }catch(e){}
   const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=de,at,ch,it,fr,nl,be,lu,dk,pl,cz,li&accept-language=de&q='+encodeURIComponent(q)); if(!r.ok) throw new Error('http '+r.status);
@@ -262,7 +267,7 @@ function osmCards(){ const PIN='<svg viewBox="0 0 24 24" width="15" height="15" 
   return OSM.L.map(x=>{ const ph=String(x.ph||'').split(/[;,]/)[0].replace(/[^\d+]/g,''), web=osmWeb(x.web);
     return `<div class="osm-c"><div class="osm-h"><span class="osm-i" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l1.5-5h13L20 10M5 10v9h14v-9M9 19v-5h6v5M4 10h16"/></svg></span><div style="flex:1;min-width:0"><b>${esc(x.name)}</b><span class="muted small osm-a">${esc(x.addr||'Adresse nicht angegeben')}</span>${x.oh?`<span class="muted small osm-a">${esc(x.oh.slice(0,70))}</span>`:''}</div><span class="osm-d">${osmKm(x.d)}</span></div>
      <div class="osm-b"><a href="https://maps.apple.com/?daddr=${x.la},${x.lo}&q=${encodeURIComponent(x.name)}" target="_blank" rel="noopener">${PIN} Route</a>${ph.length>5?`<a href="tel:${esc(ph)}">Anrufen</a>`:''}${web?`<a href="${esc(web)}" target="_blank" rel="noopener nofollow">Website</a>`:''}</div>
-     <p class="osm-tag">Kein FYF-Partner · Daten von OpenStreetMap</p></div>`; }).join(''); }
+     <p class="osm-tag">Kein FYF-Partner · Daten von OpenStreetMap</p>${OSM.claim&&x.id?`<button type="button" class="osm-claim" data-osmclaim="${esc(x.id)}" data-osmname="${esc(x.name)}">Ist das Ihr Laden? Eintrag übernehmen ›</button>`:''}</div>`; }).join(''); }
 function osmInner(){ const R=OSM.R;
   const head=`<div class="osm-top"><b>Weitere Fahrradläden in der Nähe</b><p class="muted small" style="margin:2px 0 0">Alle Läden aus OpenStreetMap – keine FYF-Partner, ohne Anfrage-Formular.</p></div>`;
   const ctl=`<div class="osm-ctl"><button type="button" class="btn ghost" data-osm="geo">${OSM.busy==='geo'?'Standort wird ermittelt …':'Meinen Standort verwenden'}</button><form class="osm-f" data-osm="form"><input id="osmq" placeholder="Ort oder PLZ" value="${esc(OSM.q||'')}" aria-label="Ort oder PLZ für weitere Läden" autocomplete="postal-code"><button type="submit" ${OSM.busy?'disabled':''}>${OSM.busy==='geocode'?'…':'Suchen'}</button></form></div>`;
@@ -281,7 +286,24 @@ function osmBind(){ const el=document.getElementById('osm'); if(!el) return;
     let r=null; try{ r=await osmGeocode(q); }catch(er){ OSM.busy=''; OSM.err='Ortssuche gerade nicht erreichbar. Bitte „Meinen Standort verwenden“ oder später noch einmal.'; return osmDraw(); }
     OSM.busy=''; if(!r||!r.p){ OSM.err='Ort „'+String(q).trim().slice(0,40)+'“ nicht gefunden. Bitte anders schreiben, z. B. PLZ.'; OSM.L=null; return osmDraw(); } OSM.pos=r.p; OSM.label=r.n; osmLoad(); };
   const rt=el.querySelector('[data-osm="retry"]'); if(rt) rt.onclick=()=>osmLoad();
-  el.querySelectorAll('[data-osmr]').forEach(b=>b.onclick=()=>{ OSM.R=+b.dataset.osmr; osmLoad(); }); }
+  el.querySelectorAll('[data-osmr]').forEach(b=>b.onclick=()=>{ OSM.R=+b.dataset.osmr; osmLoad(); });
+  el.querySelectorAll('[data-osmclaim]').forEach(b=>b.onclick=()=>osmClaimSheet(b.dataset.osmclaim,b.dataset.osmname)); }
+function osmClaimSheet(id,name){ const sh=document.createElement('div'); sh.className='sheet osm-sheet'; sh.setAttribute('role','dialog'); sh.setAttribute('aria-label','Eintrag übernehmen');
+  sh.innerHTML=`<div style="text-align:left"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><b style="font-size:19px">Ist das Ihr Laden?</b><button type="button" class="btn ghost" data-x style="padding:8px 14px">Schließen</button></div>
+   <p class="muted small" style="margin:6px 0 10px">${esc(name)} · kostenlos. Wir rufen Sie unter der öffentlichen Nummer des Ladens zurück und schalten den Eintrag dann frei. Wir verschicken nichts automatisch.</p>
+   <form data-cf><div class="osm-seg" role="radiogroup"><label><input type="radio" name="k" value="uebernehmen" checked> Übernehmen</label><label><input type="radio" name="k" value="entfernen"> Entfernen lassen</label></div>
+   <label for="cfn">Ihr Name</label><input id="cfn" required minlength="2" maxlength="100" autocomplete="name">
+   <label for="cfc">E-Mail oder Telefon</label><input id="cfc" required minlength="5" maxlength="120" autocomplete="email">
+   <label for="cfm">Hinweis (optional)</label><textarea id="cfm" rows="2" maxlength="500"></textarea>
+   <label style="display:flex;gap:8px;align-items:flex-start;font-size:14px;margin-top:10px"><input type="checkbox" required style="width:auto;margin-top:4px"><span>Ich bin berechtigt, für diesen Laden zu sprechen. Meine Angaben werden nur zur Prüfung genutzt (<a href="${LEGAL.datenschutz}">Datenschutz</a>).</span></label>
+   <p style="margin:12px 0 0"><button type="submit" style="width:100%">Anfrage senden</button></p><p class="small" data-cmsg style="margin:8px 0 0"></p></form></div>`;
+  document.body.appendChild(sh); const close=()=>sh.remove(); sh.querySelector('[data-x]').onclick=close; sh.onclick=e=>{ if(e.target===sh) close(); };
+  sh.querySelector('[data-cf]').onsubmit=async e=>{ e.preventDefault(); const f=e.target, msg=sh.querySelector('[data-cmsg]'), btn=f.querySelector('button[type=submit]'); btn.disabled=true; msg.textContent='Wird gesendet …';
+    const k=(f.querySelector('input[name=k]:checked')||{}).value||'uebernehmen';
+    try{ const r=await api('/rest/v1/rpc/shop_claim_submit',{method:'POST',body:JSON.stringify({p_osm:id,p_name:String(name).slice(0,120),p_kind:k,p_contact_name:f.querySelector('#cfn').value,p_contact:f.querySelector('#cfc').value,p_note:f.querySelector('#cfm').value})});
+      if(r&&r.ok){ f.innerHTML=`<p style="margin:10px 0 0"><b>Danke – Ihre Anfrage ist angekommen.</b></p><p class="muted small" style="margin:4px 0 12px">${k==='entfernen'?'Nach unserem Rückruf blenden wir den Eintrag aus.':'Nach unserem Rückruf schalten wir Ihren Eintrag frei.'}</p><button type="button" class="btn ghost" data-x2 style="width:100%">Schließen</button>`; f.querySelector('[data-x2]').onclick=close; return; }
+      msg.textContent=r&&r.error==='FYF_RATE'?'Für diesen Laden sind gerade schon Anfragen eingegangen. Bitte später noch einmal.':'Bitte Angaben prüfen (Name mind. 2, Kontakt mind. 5 Zeichen).'; }
+    catch(er){ msg.textContent='Gerade nicht erreichbar. Bitte später noch einmal.'; } btn.disabled=false; }; }
 // ---------- Marktplatz: Gebrauchträder mit Pass und Angebote aller FYF-Läden (gleiche Produktdaten wie in den Profilen) ----------
 let MKT=null, MQ={q:'',c:''};
 async function market(){ setHash('',1); tabs('markt'); document.title='FYF Marktplatz'; scrollTo(0,0);

@@ -1,0 +1,26 @@
+// v.213 (Punkt 17, Stufe 2, Oberfläche): „Ist das Ihr Laden? Eintrag übernehmen“ auf OSM-Läden – nur wenn der Server Stand 31 hat;
+// bestätigte Entfernungen ausgeblendet; Formular übernehmen/entfernen sendet an shop_claim_submit; ohne Stand 31 kein Link.
+const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
+(async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
+ const cfg=Buffer.from(JSON.stringify({u:BASE,k:'sb_publishable_TESTKEY_1234567890abc'})).toString('base64url');
+ const idx={v:1,stand:'2026-11-23',bbox:[45,5,56,18],tiles:['49_11']};
+ const tile={v:1,stand:'2026-11-23',p:[['shop',49.59,11.005,'Radhaus Erlangen','Hauptstr. 1, Erlangen','','+49 9131 123456','','n1'],['shop',49.592,11.006,'Ausgeblendet Rad','Weg 9, Erlangen','','','','n3'],['shop',49.6,11.02,'Alter Eintrag','Weg 2, Erlangen','']]};
+ const run=async(s31)=>{ const c=await b.newContext({...devices['iPhone 13'],locale:'de-DE',geolocation:{latitude:49.5912,longitude:11.0034},permissions:['geolocation']});
+   await c.addInitScript(()=>{ try{ localStorage.setItem('fyfpass:intro','1'); }catch(e){} }); const q=await c.newPage(); q.on('pageerror',e=>errs.push(e.message)); const sent=[];
+   await c.route('**/helfer/index.json',r=>r.fulfill({contentType:'application/json',body:JSON.stringify(idx)})); await c.route('**/helfer/49_11.json',r=>r.fulfill({contentType:'application/json',body:JSON.stringify(tile)}));
+   await c.route(/\/rest\/v1\/dealer_profiles/,r=>r.fulfill({contentType:'application/json',body:'[]'}));
+   if(s31){ await c.route(/rpc\/shop_hidden_osm/,r=>r.fulfill({contentType:'application/json',body:JSON.stringify(['n3'])}));
+     await c.route(/rpc\/shop_claim_submit/,r=>{ sent.push(JSON.parse(r.request().postData()||'{}')); r.fulfill({contentType:'application/json',body:JSON.stringify({ok:true,id:1})}); }); }
+   await q.goto(BASE+'/finder.html#w=1&cfg='+cfg); await q.waitForTimeout(1200); await q.click('[data-osm="geo"]'); await q.waitForTimeout(1300); return {c,q,sent}; };
+ let {c,q,sent}=await run(true);
+ const names=await q.evaluate(()=>[...document.querySelectorAll('#osm .osm-c b')].map(x=>x.textContent)); log('Läden:',JSON.stringify(names));
+ if(names.includes('Ausgeblendet Rad')) bad('bestätigte Entfernung ausgeblendet'); if(!names.includes('Radhaus Erlangen')) bad('andere Läden bleiben');
+ const links=await q.locator('[data-osmclaim]').count(); if(links!==1) bad('Link nur bei Läden mit OSM-Kennung ('+links+')');
+ await q.click('[data-osmclaim="n1"]'); await q.waitForTimeout(300); if(!(await q.locator('.osm-sheet').count())) bad('Formular öffnet');
+ await q.screenshot({path:'/tmp/t213-form.png'});
+ await q.click('.osm-sheet input[value="entfernen"]'); await q.fill('#cfn','Max Muster'); await q.fill('#cfc','0911 123456'); await q.check('.osm-sheet input[type=checkbox]'); await q.click('.osm-sheet button[type=submit]'); await q.waitForTimeout(600);
+ log('gesendet:',JSON.stringify(sent)); if(!sent.length||sent[0].p_osm!=='n1'||sent[0].p_kind!=='entfernen'||sent[0].p_contact_name!=='Max Muster'||sent[0].p_name!=='Radhaus Erlangen') bad('Anfrage an Server');
+ if(!/Danke/.test(await q.locator('.osm-sheet').innerText())) bad('Bestätigung'); await q.click('.osm-sheet [data-x2]'); if(await q.locator('.osm-sheet').count()) bad('Schließen');
+ await c.close();
+ ({c,q,sent}=await run(false)); if(await q.locator('[data-osmclaim]').count()) bad('ohne Stand 31 kein Link'); if((await q.locator('#osm .osm-c').count())!==3) bad('ohne Stand 31 alle Läden'); await c.close();
+ log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();
