@@ -2804,6 +2804,9 @@ html body .hero.hero-st .hero-acts .ck-rider button,html body .hero.hero-st .her
 html body .hero-acts .st-wheel{cursor:pointer;font:inherit}
 html body .hero-acts>*{flex:0 0 auto;width:auto!important;max-width:100%!important}
 html body .hero.hero-st .meta .status{background:rgba(127,127,127,.12)!important;border:0!important}`; document.head.appendChild(st); }
+/* v.197: Kacheln ohne Daten ruhiger (kleinere Zeile, kein Punkt, kein Zeilenumbruch) */
+{ const THe=toolsHtml; toolsHtml=function(code){ let h=THe.apply(this,arguments); try{ h=h.replace(/class="gl-t gl-comp gl-ok"([^>]*)><span class="gl-l">([^<]*)<\/span><span class="gl-v"><span class="gl-dot"><\/span>Teile eintragen/,'class="gl-t gl-comp gl-ok gl-empty"$1><span class="gl-l">$2</span><span class="gl-v"><span class="gl-dot"></span>Teile eintragen').replace(/class="gl-t gl-goal"([^>]*)><span class="gl-l">([^<]*)<\/span><span class="gl-v">Ziel setzen/,'class="gl-t gl-goal gl-empty"$1><span class="gl-l">$2</span><span class="gl-v">Ziel setzen'); }catch(e){} return h; }; }
+{ const st=document.createElement('style'); st.textContent=`.glance{grid-template-columns:repeat(2,minmax(0,1fr))!important}.gl-t{min-width:0}.gl-t.gl-empty .gl-v{font-size:19px!important;white-space:nowrap;margin-top:8px!important}.gl-t.gl-empty{justify-content:flex-start}.gl-t.gl-empty .gl-dot{display:none}.gl-t.gl-empty .gl-v::after{content:'›';font-weight:600;color:var(--acc);margin-left:2px}`; document.head.appendChild(st); }
 /* Hell/Dunkel-Knopf scrollt mit (überdeckt beim Scrollen nichts) */
 { const st=document.createElement('style'); st.textContent=`html body .thm-tg{position:absolute!important}`; document.head.appendChild(st); }
 { const AFp=askForm; askForm=function(){ const r=AFp.apply(this,arguments); cardPolish(); setTimeout(cardPolish,300); return r; }; }
