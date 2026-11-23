@@ -120,6 +120,9 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 15. ◐ **Händlersoftware: Optik (Teil 1 Kalender/Termin-Formular fertig v.140; weiter: Handy-Tagesagenda, Kunden-/Auftragsformulare, Dashboard) und Übersicht deutlich verbessern („muss richtig krass aussehen“)** – vor allem Kalender und alle Eingabeformulare (Felder, Abstände, Gruppierung, große Touch-Ziele, klare Hierarchie, schöne Datum-/Uhrzeit-Auswahl, Dark Mode). Schrittweise je Bereich (zuerst Kalender/Termin-Formular, dann Kunden-/Auftragsformulare, dann Dashboard), jeweils mit Vorher/Nachher-Bildschirmfotos im Bericht. Keine Funktion entfernen, alle Tests grün.
 16. ◐ **Pass-App: schöner (Plan `docs/PASS-ATTRAKTIV-PLAN.md`, Schritte 1–3 und 6 fertig v.141/142) (Vorbild Canyon/SRAM AXS, hell) und „für jeden etwas dabei“** – Service-Eintragen bleibt (wichtig), aber zusätzlich Funktionen, die auch Leute ohne Wartungs-Interesse anziehen. Erst kurzen Plan mit 5–8 Ideen in `docs/PASS-ATTRAKTIV-PLAN.md` (z. B. Diebstahlschutz/„Rad gefunden“-Seite, Tourenstatistik/Kilometer-Ziele aus Strava-Datei, Reifendruck-Rechner, Wert-/Verkaufspreis-Schätzung aus der Historie, Familien-Garage, Werkstatt-Bewertungen/Finder in der Nähe, Saison-Checkliste, Teile-Wunschliste), dann Design-Überarbeitung der Start-/Garage-/Radseite, dann die Ideen der Reihe nach. Keine bezahlten Dienste, KI nur regelbasiert.
 
+### Neuer Wunsch (Dominik, 23.11.2026) – freigegeben
+17. **Alle Fahrradläden im Händlerfinder** nach `docs/LAEDEN-VERZEICHNIS-PLAN.md`: Stufe 1 (Läden aus OpenStreetMap, klar als „Kein FYF-Partner“ gekennzeichnet), danach Stufe 2 („Eintrag übernehmen“, Bestätigung von Hand durch Dominik, `stand31.sql`). Kein neuer Preis, kein automatischer Versand. Vorrang vor weiterem Feinschliff.
+
 ## Wartet auf Dominik
 
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
