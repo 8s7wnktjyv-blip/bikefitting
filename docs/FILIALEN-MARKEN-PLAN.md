@@ -2,7 +2,7 @@
 
 Stand 23.11.2026 · Wunsch Dominik: „Verschiedene Filialen in einem Account verwalten, darunter eigene Marken führen oder eine andere Filiale, die in der App trotzdem einzeln angezeigt wird. Z. B. Hauptaccount für Fitting und darin Cunuma, wo ich Laufräder über den Marktplatz anbiete.“
 
-**Status: wartet auf Freigabe (2 Entscheidungen unten).**
+**Status: freigegeben (Dominik 23.11.2026, 07:22).**
 
 ## Ziel
 Ein Login, ein Konto (Betrieb) – darunter beliebig viele **Auftritte**:
@@ -34,6 +34,7 @@ Kunden sehen jeden Auftritt einzeln. Der Betrieb sieht alles in einer Software u
 - Marktplatz bleibt wie festgelegt: FYF verwahrt kein Geld, Kauf direkt beim Anbieter.
 - Für Laufräder als Neuware gelten Widerrufsrecht und Gewährleistung beim Online-Verkauf – Texte vor dem Start prüfen lassen.
 
-## Entscheidungen für Dominik
-1. **Preis für Marken ohne eigenen Laden.** Vorschlag: im Abo des Standorts enthalten (bis zu 2 Marken je Standort), weil sie keine eigene Werkstatt-Software brauchen. Filialen kosten wie bisher 99/149 € je Standort.
-2. **Reihenfolge.** Vorschlag: nach Punkt 17 (alle Läden im Händlerfinder), vor dem Konkurrenz-Plan, weil du Cunuma selbst nutzen willst.
+## Entscheidungen (Dominik 23.11.2026)
+1. **Preis:** Für FYF selbst (Dominiks eigenes Konto, Plattform-Admin) sind alle Filialen und Marken **kostenlos**. **Alle anderen Betriebe zahlen je Auftritt wie je Standort: 99 € ohne / 149 € mit Fitting-Modul** – das gilt für jede Filiale und auch für jede Marke (kein neuer Preis). In der Software beim Anlegen klar anzeigen: „Jeder weitere Auftritt kostet 99 €/149 € im Monat“ (bei FYF selbst: „kostenlos“).
+2. **Reihenfolge:** direkt nach Punkt 17 (alle Läden im Händlerfinder), vor Punkt 18 ff.
+3. **Sonst:** „so umsetzen, dass es Sinn macht“ – Details nach bestem Urteil im Rahmen dieses Plans und der festen Regeln (keine Daten verlieren, keine Funktionen entfernen, Datenbank-Update mit Test, Dominik spielt es ein).
