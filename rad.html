@@ -2525,8 +2525,8 @@ function photoT(code){ try{ const t=localStorage.getItem('fyfpass:imgt:'+code); 
 .bikepic.studio .st-bike{position:absolute;left:5%;right:5%;top:6%;width:90%;height:58%;object-fit:contain;background:transparent!important;filter:drop-shadow(0 18px 22px rgba(0,0,0,.55));z-index:2}
 .bikepic.studio .st-refl{position:absolute;left:5%;right:5%;top:64%;width:90%;height:58%;object-fit:contain;background:transparent!important;transform:scaleY(-1);transform-origin:top;opacity:.22;-webkit-mask:linear-gradient(to bottom,rgba(0,0,0,.9),transparent 38%);mask:linear-gradient(to bottom,rgba(0,0,0,.9),transparent 38%);z-index:1}
 .bikepic.studio .st-floor{position:absolute;left:14%;right:14%;top:60.5%;height:7%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.55),rgba(0,0,0,0));z-index:1}
-.hero:has(.studio) .meta,.bikecard:has(.studio) .meta{background:linear-gradient(180deg,rgba(10,13,18,0) 0%,rgba(10,13,18,.85) 40%,rgba(10,13,18,.95) 100%)!important;padding-top:40px!important}
-:root[data-theme="light"] .hero:has(.studio) .meta *,:root[data-theme="light"] .bikecard:has(.studio) .meta *{color:#fff!important}
+.hero:not(.hero-st):has(.studio) .meta,.bikecard:has(.studio) .meta{background:linear-gradient(180deg,rgba(10,13,18,0) 0%,rgba(10,13,18,.85) 40%,rgba(10,13,18,.95) 100%)!important;padding-top:40px!important}
+:root[data-theme="light"] .hero:not(.hero-st):has(.studio) .meta *,:root[data-theme="light"] .bikecard:has(.studio) .meta *{color:#fff!important}
 .st-nudge{position:absolute;top:12px;left:12px;z-index:4;border:1px solid rgba(255,255,255,.25);background:rgba(10,13,18,.55);color:#fff;font:inherit;font-size:13px;font-weight:700;padding:7px 12px;border-radius:999px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer}
 .bikepic:not(.studio) img{filter:saturate(1.05) contrast(1.06)}`; document.head.appendChild(st); }
 
@@ -2783,6 +2783,29 @@ async function wheelClean(code){ const cur=photoT(code); if(!cur) return toast('
   document.addEventListener('click',e=>{ if(e.target.closest&&e.target.closest('[data-themeset]')) setTimeout(()=>{ sync(); try{ navigator.vibrate&&navigator.vibrate(8); }catch(x){} },0); });
   if(window.matchMedia) try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{ if(window.FYF_THEME==='auto'){ document.documentElement.setAttribute('data-theme',matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'); sync(); } }); }catch(x){}
 }
+/* v.196: Kopfbild mit freigestelltem Rad – Rad groß, Text darunter statt darüber, Knöpfe ruhig */
+{ const SHk=show; show=async function(code){ const r=await SHk.apply(this,arguments); try{ const h=document.querySelector('.hero'); if(!h||!h.querySelector('.bikepic.studio')) return r; h.classList.add('hero-st'); const meta=h.querySelector('.meta'); if(!meta) return r;
+  const mv=()=>{ if(!h.isConnected) return; let row=meta.querySelector('.hero-acts'); if(!row){ row=document.createElement('div'); row.className='hero-acts'; meta.appendChild(row); }
+    const rd=document.querySelector('[data-rider]'); if(rd&&rd.parentElement!==row){ rd.classList.remove('hero-rider'); rd.classList.add('ck-rider'); row.insertBefore(rd,row.firstChild); }
+    const wb=h.querySelector('.st-wheel'); if(wb&&wb.parentElement!==row) row.appendChild(wb); };
+  mv(); [150,500,1200].forEach(t=>setTimeout(mv,t)); }catch(e){} return r; }; }
+{ const st=document.createElement('style'); st.textContent=`html body .hero.hero-st .meta{position:static!important;background:none!important;padding:14px 20px 18px!important;color:inherit!important}
+html body .hero.hero-st .meta,html body .hero.hero-st .meta *{color:var(--ink)!important;text-shadow:none!important}
+html body .hero.hero-st .meta .muted,html body .hero.hero-st .meta .muted *{color:var(--muted)!important}
+html body .hero.hero-st .bikepic{aspect-ratio:4/3!important}
+html body .hero.hero-st .bikepic.studio .st-bike{top:7%!important;height:74%!important;left:4%!important;right:4%!important;width:92%!important}
+html body .hero.hero-st .bikepic.studio .st-floor{top:76%!important;left:12%!important;right:12%!important}
+html body .hero.hero-st .bikepic.studio .st-refl{top:81%!important;height:74%!important;left:4%!important;right:4%!important;width:92%!important;opacity:.16!important}
+html body .hero.hero-st .photo-btn{padding:7px 12px!important;font-size:12.5px!important}
+.hero-acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px}
+html body .hero-acts .ck-rider,html body .hero-acts .st-wheel{position:static!important;margin:0!important;display:inline-flex!important;align-items:center;gap:5px;padding:6px 11px!important;border-radius:999px!important;font-size:12.5px!important;line-height:1.2!important;background:rgba(127,127,127,.12)!important;border:1px solid rgba(127,127,127,.2)!important;color:inherit!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;font-weight:600!important}
+html body .hero-acts .ck-rider .muted{color:var(--muted)!important}html body .hero-acts .ck-rider{min-height:0!important;height:auto!important}
+html body .hero.hero-st .hero-acts .ck-rider button,html body .hero.hero-st .hero-acts .ck-rider a{color:var(--acc)!important;font-weight:700;padding:0!important;min-height:0!important;background:none!important}
+html body .hero-acts .st-wheel{cursor:pointer;font:inherit}
+html body .hero-acts>*{flex:0 0 auto;width:auto!important;max-width:100%!important}
+html body .hero.hero-st .meta .status{background:rgba(127,127,127,.12)!important;border:0!important}`; document.head.appendChild(st); }
+/* Hell/Dunkel-Knopf scrollt mit (überdeckt beim Scrollen nichts) */
+{ const st=document.createElement('style'); st.textContent=`html body .thm-tg{position:absolute!important}`; document.head.appendChild(st); }
 { const AFp=askForm; askForm=function(){ const r=AFp.apply(this,arguments); cardPolish(); setTimeout(cardPolish,300); return r; }; }
 { const st=document.createElement('style'); const TC={parts:'#3b82f6',svc:'#f97316',theft:'#ef4444',docs:'#22c55e',eb:'#06b6d4',fit:'#8b5cf6',sus:'#14b8a6',tire:'#94a3b8',sell:'#ec4899',cost:'#eab308',help:'#0ea5e9',dmg:'#ef4444',trk:'#6366f1',build:'#a855f7',tour:'#10b981',card:'#ff6a1a',newpart:'#3b82f6',qr:'#94a3b8',nfc:'#3b82f6',book:'#f97316',bfit:'#22c55e'};
   st.textContent=`[data-setupb]{display:none!important}
