@@ -14,6 +14,7 @@ Bei jedem Lauf „Stand“ und „Nächster Schritt“ aktualisieren.
 ### Zuletzt erledigt
 | Version | Inhalt |
 |---|---|
+| v.203 (23.11.) | Pass und Händlerfinder öffnen beim allerersten Mal **hell** (Wunsch Dominik); danach gilt, was der Nutzer einstellt (Hell/Dunkel/Automatisch, gespeichert). Tests t179/t195 angepasst. |
 | v.198 (23.11.) | Werkstätten (Händlerfinder): Karte „Panne unterwegs?“ ganz oben öffnet „Helfer in der Nähe“ (Luft, Schlauch-Automaten, Werkstätten, Ladestationen) direkt im Pass – auch ohne angelegtes Rad (`rad.html#hilfe=1`). Wunsch Dominik: nicht erst über Garage. Test t198. |
 | v.194 (23.11.) | Pass: **Laufräder säubern** – beim iPhone-Freistellen bleibt Himmel/Boden zwischen den Speichen stehen. Neues Werkzeug (Knopf im Rad-Foto und im Foto-Menü): Hintergrund-Pinsel entfernt nur die Farbe, auf der man ansetzt (Speichen, Reifen, Rahmen bleiben), dazu Radierer, Zurückholen-Pinsel, Größe/Stärke, Zoomen mit zwei Fingern, Rückgängig (5 Schritte), „Original“ (Original in IndexedDB gesichert). Freigestellte Räder werden ohne leeren Rand gespeichert (auch einmalig für vorhandene Bilder) – das Rad füllt Karte und Kopfbild. Test t194. |
 | v.195 (23.11.) | Pass: **Hell/Dunkel-Knopf oben rechts** auf jeder Seite (☀︎/☾, runder Glas-Knopf). Wahl bleibt gespeichert, Fußzeile „Design“ (inkl. Automatisch) bleibt. Test t195. |
@@ -128,6 +129,8 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 ### Neuer Wunsch (Dominik, 23.11.2026) – freigegeben
 17. **Alle Fahrradläden im Händlerfinder** nach `docs/LAEDEN-VERZEICHNIS-PLAN.md`: Stufe 1 (Läden aus OpenStreetMap, klar als „Kein FYF-Partner“ gekennzeichnet), danach Stufe 2 („Eintrag übernehmen“, Bestätigung von Hand durch Dominik, `stand31.sql`). Kein neuer Preis, kein automatischer Versand. Vorrang vor weiterem Feinschliff.
 
+18. **„Wünsch dir was“: eigene Wünsche** (Dominik 23.11.2026): Nutzer können unter der Liste einen eigenen Wunsch eintippen (max. 200 Zeichen, ohne Konto). Speichern per RPC in neuer Tabelle (z. B. `wish_ideas`: Text, Zeitpunkt, Status neu/übernommen/abgelehnt, Stimmen); anon nur schreiben über RPC mit Grenzen (Länge, max. 3 pro Gerät und Tag), keine Links/E-Mail-Adressen/Telefonnummern im Text (Hinweis „keine persönlichen Daten“). Öffentlich sichtbar und abstimmbar erst, wenn Dominik im Plattform-Bereich freigibt. Datenbank-Erweiterung zusammen mit Punkt 17 Stufe 2 in einem Stand (stand31.sql) oder als stand32.sql – Nummern nicht doppelt vergeben.
+
 ## Wartet auf Dominik
 
 - Neubau `plattform-neu`: Freigabe/Weiterführung offen (großer Umbau, nicht eigenmächtig).
@@ -136,6 +139,7 @@ Regeln dafür: keine bezahlten Dienste, kein Versand durch FYF, keine neuen Prei
 - Käuferschutz Marktplatz: nur extern (Kandidat Trustap).
 
 ## Entscheidungen (verbindlich)
+- **Pass-Design (Dominik, 23.11.2026, ersetzt „dunkel als Standard“):** Beim allerersten Öffnen **hell**; danach gilt die Wahl des Nutzers (Hell/Dunkel/Automatisch), gespeichert. Seit v.203 umgesetzt – nicht zurückdrehen. Dunkel und hell bleiben gleich hochwertig.
 
 - Preise: Händler 99 €/Standort/Monat ohne Fitting-Modul, 149 € mit; Einrichtung 99 €; Schulung 49 €/Mitarbeiter; Jahresvertrag mit Rabatt zusätzlich zum monatlich kündbaren Abo; Endkunden kostenlos; QR-Aufkleber 4,99 €, 2er-Set 7,99 €; Fitting 200 € bei FYF / 250 € im Laden (50 € an den Laden); Empfehlung 30 €. Alle zzgl. MwSt.
 - Rechte Weg A (Rollen-Filter auf dem Server, kein Tabellen-Umbau); Mitarbeiter sehen Körper-/Gesundheitsdaten der Fitting-Kunden.
