@@ -4,7 +4,7 @@ const {chromium,devices}=require('playwright'); const BASE='http://localhost:876
  const cfg=Buffer.from(JSON.stringify({u:BASE,k:'sb_publishable_TESTKEY_1234567890abc'})).toString('base64url');
  const c=await b.newContext({...devices['iPhone 13'],locale:'de-DE',geolocation:{latitude:49.59876,longitude:11.00412},permissions:['geolocation']}); await c.addInitScript(()=>{ try{ localStorage.setItem('fyfpass:intro','1'); localStorage.setItem('fyfpass:setupLater',String(Date.now())); }catch(e){} });
  let sent='';
- await c.route('https://overpass-api.de/**',async rt=>{ sent=decodeURIComponent((rt.request().postData()||'').replace(/^data=/,'')); await rt.fulfill({status:200,contentType:'application/json',body:JSON.stringify({elements:[
+ await c.route('https://overpass-api.de/**',async rt=>{ sent=decodeURIComponent((rt.request().postData()||(new URL(rt.request().url())).search.slice(1)).replace(/^data=/,'')); await rt.fulfill({status:200,contentType:'application/json',body:JSON.stringify({elements:[
   {type:'node',lat:49.6000,lon:11.0050,tags:{shop:'bicycle',name:'Radladen Test','addr:street':'Hauptstraße','addr:housenumber':'1',opening_hours:'Mo-Fr 10:00-18:00'}},
   {type:'node',lat:49.5990,lon:11.0045,tags:{amenity:'compressed_air'}},
   {type:'way',center:{lat:49.6100,lon:11.0200},tags:{amenity:'police',name:'Polizeiinspektion Test'}},

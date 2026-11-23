@@ -1,4 +1,4 @@
-// v.200: „Helfer in der Nähe“ mit Karte (Leaflet/OSM): Pins für Luft, Schlauch-Automat, Laden; Filter wirkt auf Karte; „Panne unterwegs?“ aus Werkstätten öffnet direkt die Helfer.
+// v.200/v.201: „Helfer in der Nähe“ mit Karte (Leaflet/OSM): Pins für Luft, Schlauch-Automat, Laden; Filter wirkt auf Karte; „Panne unterwegs?“ aus Werkstätten öffnet direkt die Helfer.
 // Leaflet kommt im Test aus tests/e2e/fixtures/leaflet (Netz gesperrt), Kacheln als graue Fläche.
 const {chromium,devices}=require('playwright'); const fs=require('fs'); const path=require('path'); const BASE='http://localhost:8765';
 (async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
@@ -18,4 +18,12 @@ const {chromium,devices}=require('playwright'); const fs=require('fs'); const pa
  await q.screenshot({path:'/tmp/t200.png'});
  await q.click('[data-nf="tube"]'); await q.waitForTimeout(800); r=await q.evaluate(()=>({pins:document.querySelectorAll('.nr-map .nr-pin').length,list:document.querySelectorAll('.nr').length})); log('Filter Schlauch:',JSON.stringify(r)); if(r.pins!==1||r.list!==1) bad('Filter wirkt auf Karte');
  await q.click('.nr-map .nr-pin'); await q.waitForTimeout(500); const pop=await q.evaluate(()=>{ const p=document.querySelector('.leaflet-popup-content'); return p?p.innerText:''; }); log('Popup:',pop.replace(/\n/g,' | ')); if(!/Schlauch-Automat/.test(pop)||!/Route/.test(pop)) bad('Pin zeigt Name und Route');
+ // v.201: Dienst hängt → nach Zeitlimit Hilfe statt endloser Suche
+ const c2=await b.newContext({...devices['iPhone 13'],locale:'de-DE',geolocation:{latitude:48.137,longitude:11.575},permissions:['geolocation']}); await c2.addInitScript(()=>{ try{ localStorage.setItem('fyfpass:intro','1'); localStorage.setItem('fyfpass:setupLater',String(Date.now())); }catch(e){} });
+ const p2=await c2.newPage(); p2.on('pageerror',e=>errs.push(e.message)); await p2.route(/overpass|kumi|coffee/,()=>{}); await p2.route(/cdnjs|openstreetmap/,r=>r.abort());
+ await p2.goto(BASE+'/rad.html#hilfe=1&cfg='+cfg); await p2.waitForTimeout(1200); await p2.click('[data-nr="go"]'); await p2.waitForTimeout(3000);
+ if(!(await p2.locator('.nr-spin').count())) bad('Lade-Anzeige während der Suche');
+ await p2.waitForTimeout(28000); const t2=await p2.evaluate(()=>[...document.querySelectorAll('.tpage')].pop().innerText); log('nach Zeitlimit:',t2.slice(0,160).replace(/\n/g,' | '));
+ if(!/antwortet gerade nicht/.test(t2)) bad('Zeitlimit: Hinweis statt endloser Suche'); if(!(await p2.locator('.nr-alt a[href*="maps.apple.com"]').count())) bad('Apple-Karten-Ausweich');
+ if(!(await p2.locator('[data-nr="retry"]').count())) bad('Nochmal suchen');
  log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();
