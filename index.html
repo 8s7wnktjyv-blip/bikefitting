@@ -2323,7 +2323,7 @@ const NAV_AREAS0=[
   ['Produktempfehlungen',[['preise','Produkte & Preise','tag','Fitting-Pakete, deine Produkte, Gutscheine'],['rechnungen','Rechnungen','doc','Rechnungen, E-Rechnung, offen und bezahlt'],['lager','Angebote & Lager','box','Angebote aus dem Fitting, Bestand'],['werkstatt','Werkstatt','wrench','Aufträge, Kunden benachrichtigen, Wartung'],['termine','Kalender','history','Termine, Kapazität und Werkstatt-Auslastung'],['erinnerung','Service-Erinnerung','loop','Kunden per WhatsApp an den Service erinnern, Service-Intervall und Leasing']]],
   ['Berichte',[['berichte','Berichte','doc','Alle Fitting-Berichte öffnen und drucken'],['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht (Textvorlagen)'],['portal','Kundenportal','portal','So sehen Kunden ihre Berichte (Vorschau)']]],
   ['Datenbanken',[['geometrie','Geometrie-Bibliothek','grid','Rahmenmaße nach Hersteller, Größenberatung'],['messmittel','Messmittel','ruler','Geräte, Genauigkeit, Prüfdatum'],['produktdb','Produktdatenbank','tag','Sättel, Einlagen, Cleats mit Quelle'],['wissen','Wissen','book','Fachbegriffe, Messverfahren, Tests']]],
-  ['Händlernetzwerk',[['netz','Händlerprofil & Anfragen','users','Öffentliches Profil, Anfragen von Kunden, QR-Code'],['boerse','Händlerbörse','box','Restposten unter geprüften Händlern (B2B)'],['academy','Academy','book','Lernpfade fürs Team, Teilnahmebestätigung']]],
+  ['Händlernetzwerk',[['netz','Händlerprofil & Anfragen','users','Öffentliches Profil, Anfragen von Kunden, QR-Code'],['auftritte','Filialen & Marken','grid','Zweite Filiale und eigene Marke im selben Konto – ein Dashboard für alle Anfragen'],['boerse','Händlerbörse','box','Restposten unter geprüften Händlern (B2B)'],['academy','Academy','book','Lernpfade fürs Team, Teilnahmebestätigung']]],
   ['Einstellungen',[['mehr','Einstellungen & Daten','gear','Laden, Sicherung, Darstellung'],['betrieb','Zahlen & Team','ops','Kennzahlen pro Monat, Team'],['qualitaet','Messdaten & Qualität','quality','Herkunft und Vollständigkeit aller Werte'],['hardware','Hardware Lab','hw','Geplante eigene Messhilfen (Konzept)'],['module','Stand aller Funktionen','grid','Was fertig ist, was teilweise, was fehlt']]]
 ];
 // Neuordnung: Werkstatt und Kunden vorn, Bikefitting als ein Bereich unter mehreren. Keine Funktion entfällt.
@@ -9465,6 +9465,40 @@ Object.assign(ACT,{
     const en=svcEveryNext(b); if(en&&!L.some(x=>x.task==='Service'||x.task==='Leasing-Inspektion')) L.push({task:(b.svc&&b.svc.incl)?'Leasing-Inspektion':'Service',next:en,last:String((b.svc&&b.svc.from)||'').slice(0,10),interval:'alle '+((b.svc&&b.svc.every)||12)+' Monate'});
     if(L.length) p.plan=L; } }catch(e){} return p; }; }
 VIEWS.erinnerung=()=>`${head('Service-Erinnerung','Kunden mit Fahrradpass per WhatsApp erinnern und Service-Intervalle setzen – besonders für Leasingräder, bei denen der Service enthalten ist.')}${svcmailHtml()}`;
+/* ===== v.223 Auftritte: zweite Filiale und eigene Marke im selben Konto (Plan docs/FILIALEN-MARKEN-PLAN.md) =====
+   Ein Konto, ein Dashboard. Filialen erscheinen auch im Händlerfinder, Marken nur im Marktplatz (dort mit Markenname). */
+function acts(){ S.acts=S.acts||[]; return S.acts; }
+function actsHtml(){ const L=acts(), P=products();
+  return `<div class="stack">
+    <p class="muted" style="margin:0;font-size:13.5px">Ein Konto, ein Dashboard: Anfragen aus Händlerfinder und Marktplatz landen zusammen hier. <b>Filialen</b> erscheinen zusätzlich im Händlerfinder, <b>Marken</b> nur im Marktplatz – dort steht dann der Markenname statt deines Firmennamens.</p>
+    ${L.length?`<div class="tw"><table><thead><tr><th>Name</th><th>Art</th><th>Ort</th><th>Marktplatz</th><th></th></tr></thead><tbody>${L.map(a=>`<tr><td><b>${esc(a.name)}</b>${a.note?`<div class="faint" style="font-size:12px">${esc(a.note)}</div>`:''}</td><td>${a.kind==='marke'?'Marke':'Filiale'}</td><td>${esc(a.city||'')}</td><td>${a.def?'<span class="chip c-ok nodot">Standard</span>':`<button class="btn sm ghost" data-act="actDef" data-id="${esc(a.id)}">Als Standard</button>`}</td><td class="r"><button class="btn sm ghost" data-act="actEdit" data-id="${esc(a.id)}">Bearbeiten</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">${ic('grid')}<span>Noch keine Filiale oder Marke – bisher gibt es nur dein Hauptkonto.</span></div>`}
+    <div class="row"><button class="btn primary" data-act="actNew">${ic('plus')}Filiale oder Marke anlegen</button></div>
+    <p class="faint" style="font-size:12.5px;margin:0">Jeder weitere Auftritt kostet wie ein Standort 99 €/Monat ohne, 149 €/Monat mit Fitting-Modul (bei FYF selbst kostenlos). Eine Marke braucht keine Adresse.</p>
+    ${P.length?`<div><div class="label">Marktplatz: welcher Name steht beim Produkt?</div><div class="tw"><table><thead><tr><th>Produkt</th><th>Preis</th><th>sichtbar</th><th>Anbieter im Marktplatz</th></tr></thead><tbody>${P.map(p=>`<tr><td>${esc(p.name)}<div class="faint" style="font-size:12px">${esc(p.cat||'')}</div></td><td class="num">${eur(p.price)}</td><td>${p.pub?'<span class="chip c-ok nodot">ja</span>':'<span class="faint">nein</span>'}</td><td><select class="input" data-change="prodAct" data-id="${esc(p.id)}"><option value="">– wie Konto (${esc(shopName()||'Laden')}) –</option>${L.map(a=>`<option value="${esc(a.id)}" ${p.act===a.id?'selected':''}>${esc(a.name)}${a.kind==='marke'?' (Marke)':''}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div><p class="faint" style="font-size:12.5px;margin:6px 0 0">Sichtbar wird der gewählte Name im öffentlichen Marktplatz, sobald das Datenbank-Update (Stand 32) eingespielt ist – bis dahin bleibt dort alles wie bisher.</p></div>`:''}
+  </div>`; }
+VIEWS.auftritte=()=>`${head('Filialen & Marken','Zweite Filiale oder eigene Marke im selben Konto – ein Dashboard für alle Anfragen. Filialen erscheinen im Händlerfinder, Marken nur im Marktplatz.')}${actsHtml()}`;
+Object.assign(ACT,{
+  actNew(){ ACT.actEdit({dataset:{id:''}}); },
+  actEdit(el){ const id=el.dataset.id||'', a=acts().find(x=>x.id===id)||{kind:'filiale',name:'',city:'',note:'',def:!acts().length};
+    openDrawer(id?'Auftritt bearbeiten':'Auftritt anlegen',`<div class="stack">
+      <div class="field wide"><label for="acName">Name</label><input class="input" id="acName" maxlength="40" value="${esc(a.name)}" placeholder="z. B. carbo Laufräder"></div>
+      <div class="field wide"><label for="acKind">Art</label><select class="input" id="acKind"><option value="filiale" ${a.kind!=='marke'?'selected':''}>Filiale – im Händlerfinder und im Marktplatz</option><option value="marke" ${a.kind==='marke'?'selected':''}>Marke – nur im Marktplatz</option></select></div>
+      <div class="field wide"><label for="acCity">Ort (nur bei Filiale)</label><input class="input" id="acCity" maxlength="40" value="${esc(a.city||'')}"></div>
+      <div class="field wide"><label for="acNote">Kurzbeschreibung (optional)</label><input class="input" id="acNote" maxlength="120" value="${esc(a.note||'')}" placeholder="z. B. Laufräder, handgebaut"></div>
+      <div class="row"><button class="btn primary" data-act="actSave" data-id="${esc(id)}">Speichern</button>${id?`<button class="btn ghost" data-act="actDel" data-id="${esc(id)}">Löschen</button>`:''}</div></div>`); },
+  actSave(el){ const id=el.dataset.id||'', name=String((document.getElementById('acName')||{}).value||'').trim().slice(0,40), kind=(document.getElementById('acKind')||{}).value==='marke'?'marke':'filiale', city=String((document.getElementById('acCity')||{}).value||'').trim().slice(0,40), note=String((document.getElementById('acNote')||{}).value||'').trim().slice(0,120);
+    if(!name) return toast('Bitte einen Namen eingeben',true); const L=acts();
+    if(id){ const a=L.find(x=>x.id===id); if(a){ a.name=name; a.kind=kind; a.city=city; a.note=note; } }
+    else L.push({id:'ac'+Date.now().toString(36),kind,name,city,note,def:!L.length});
+    audit(`Auftritt gespeichert: ${name} (${kind==='marke'?'Marke':'Filiale'})`); save(); closeDrawer(); render(); toast('Gespeichert'); },
+  async actDel(el){ const id=el.dataset.id||'', a=acts().find(x=>x.id===id); if(!a) return;
+    if(!(await fyfAsk('Auftritt löschen?','Produkte, die diesem Auftritt zugeordnet sind, stehen danach wieder unter dem Konto.','Löschen'))) return;
+    S.acts=acts().filter(x=>x.id!==id); products().forEach(p=>{ if(p.act===id) delete p.act; });
+    audit(`Auftritt gelöscht: ${a.name}`); save(); closeDrawer(); render(); toast('Gelöscht'); },
+  actDef(el){ const id=el.dataset.id||''; acts().forEach(a=>{ a.def=(a.id===id); }); save(); render(); toast('Als Standard für den Marktplatz gesetzt'); },
+  prodAct(el){ const p=products().find(x=>x.id===el.dataset.id); if(!p) return; const a=acts().find(x=>x.id===el.value);
+    if(el.value&&a) p.act=a.id; else delete p.act;
+    audit(`Marktplatz-Anbieter für ${p.name}: ${a?a.name:'Konto'}`); save(); toast('Gespeichert'); } });
 if(typeof TITLES==='object') TITLES.tafel='Werkstatt-Tafel';
 /* ===== v.131 Saison-Check (Freigabe 21.11.2026): Kunden mit Einwilligung vor der Saison erinnern – der Laden verschickt selbst ===== */
 function seasonKey(d){ const x=new Date((d||today())+'T12:00'), y=x.getFullYear(), m=x.getMonth()+1; return m>=10?`Frühjahr ${y+1}`:m<=4?`Frühjahr ${y}`:`Herbst ${y}`; }
