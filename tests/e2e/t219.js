@@ -7,9 +7,10 @@ const {chromium,devices}=require('playwright'); const BASE='http://localhost:876
     const b=S.bikes.find(x=>x.customerId===c.id)||S.bikes[0]; if(!b) return false; b.customerId=c.id; b.qr={code:'ABCD2345',vis:'public',at:'2026-11-20'}; b.svc={every:12,from:'2024-01-10',incl:true};
     save(); render(); return true; });
   if(!set) bad('Demodaten fehlen'); await q.waitForTimeout(400);
-  await q.evaluate(()=>{ const n=document.querySelector('[data-nav="werkstatt"]'); if(n) n.click(); }); await q.waitForTimeout(800);
-  const txt=await q.evaluate(()=>document.body.innerText.replace(/\s+/g,' ')); log('1 Werkstatt:',txt.slice(0,120));
-  if(!/Service-Erinnerung per WhatsApp/.test(txt)) bad('Panel Service-Erinnerung fehlt');
+  await q.evaluate(()=>{ try{ go('erinnerung'); }catch(e){ const n=document.querySelector('[data-nav="erinnerung"]'); if(n) n.click(); } }); await q.waitForTimeout(800);
+  const txt=await q.evaluate(()=>document.body.innerText.replace(/\s+/g,' ')); log('1 Seite:',txt.slice(0,120));
+  if(!/Service-Erinnerung/.test(txt)) bad('Seite Service-Erinnerung fehlt');
+  if(!/Rundmail per WhatsApp/.test(txt)) bad('Rundmail fehlt');
   if(!/Service-Intervall \(auch Leasing\)/.test(txt)) bad('Panel Service-Intervall fehlt');
   const href=await q.evaluate(()=>{ const L=[...document.querySelectorAll('a[href^="https://wa.me/"]')].map(a=>a.getAttribute('href')); return L.find(h=>/ABCD2345/.test(decodeURIComponent(h)))||''; });
   log('2 WhatsApp-Link:',href.slice(0,90));

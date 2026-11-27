@@ -2320,7 +2320,7 @@ const NAV_AREAS0=[
   ['Bike-Vermessung',[['vermessung','Bike-Vermessung','ruler','Aktuelle Sitzposition je Fahrrad'],['quickfit','Quick-Fit Übergabe','handover','Neues Rad in 10 Minuten einstellen und übergeben']]],
   ['Fahrwerk',[['fahrwerk','Fahrwerk','susp','Gabel und Dämpfer: Sag, Druck, Klicks je Rad']]],
   ['Bewegungsanalyse',[['motion','Bewegung & Video','motion','Winkel aus Video messen, Live-Analyse (Beta)']]],
-  ['Produktempfehlungen',[['preise','Produkte & Preise','tag','Fitting-Pakete, deine Produkte, Gutscheine'],['rechnungen','Rechnungen','doc','Rechnungen, E-Rechnung, offen und bezahlt'],['lager','Angebote & Lager','box','Angebote aus dem Fitting, Bestand'],['werkstatt','Werkstatt','wrench','Aufträge, Kunden benachrichtigen, Wartung'],['termine','Kalender','history','Termine, Kapazität und Werkstatt-Auslastung']]],
+  ['Produktempfehlungen',[['preise','Produkte & Preise','tag','Fitting-Pakete, deine Produkte, Gutscheine'],['rechnungen','Rechnungen','doc','Rechnungen, E-Rechnung, offen und bezahlt'],['lager','Angebote & Lager','box','Angebote aus dem Fitting, Bestand'],['werkstatt','Werkstatt','wrench','Aufträge, Kunden benachrichtigen, Wartung'],['termine','Kalender','history','Termine, Kapazität und Werkstatt-Auslastung'],['erinnerung','Service-Erinnerung','loop','Kunden per WhatsApp an den Service erinnern, Service-Intervall und Leasing']]],
   ['Berichte',[['berichte','Berichte','doc','Alle Fitting-Berichte öffnen und drucken'],['ki','Schreibhilfe','ai','Zusammenfassung, Kundennachricht (Textvorlagen)'],['portal','Kundenportal','portal','So sehen Kunden ihre Berichte (Vorschau)']]],
   ['Datenbanken',[['geometrie','Geometrie-Bibliothek','grid','Rahmenmaße nach Hersteller, Größenberatung'],['messmittel','Messmittel','ruler','Geräte, Genauigkeit, Prüfdatum'],['produktdb','Produktdatenbank','tag','Sättel, Einlagen, Cleats mit Quelle'],['wissen','Wissen','book','Fachbegriffe, Messverfahren, Tests']]],
   ['Händlernetzwerk',[['netz','Händlerprofil & Anfragen','users','Öffentliches Profil, Anfragen von Kunden, QR-Code'],['boerse','Händlerbörse','box','Restposten unter geprüften Händlern (B2B)'],['academy','Academy','book','Lernpfade fürs Team, Teilnahmebestätigung']]],
@@ -2329,7 +2329,7 @@ const NAV_AREAS0=[
 // Neuordnung: Werkstatt und Kunden vorn, Bikefitting als ein Bereich unter mehreren. Keine Funktion entfällt.
 const NAV_AREAS=(()=>{ const all=Object.fromEntries(NAV_AREAS0.flatMap(([,it])=>it).map(m=>[m[0],m])), used=new Set();
   const take=ks=>ks.filter(k=>all[k]&&!used.has(k)).map(k=>(used.add(k),all[k]));
-  const out=[['Dashboard',take(['dashboard'])],['Werkstatt & Termine',take(['werkstatt','termine','fahrwerk'])],['Kunden & Räder',take(['kunden','fahrraeder','passport'])],
+  const out=[['Dashboard',take(['dashboard'])],['Werkstatt & Termine',take(['werkstatt','erinnerung','termine','fahrwerk'])],['Kunden & Räder',take(['kunden','fahrraeder','passport'])],
     ['Verkauf & Rechnungen',take(['rechnungen','lager','preise'])],
     ['Bikefitting',take(['sitzung','koerper','vermessung','quickfit','motion','verlauf','followup','berichte','ki','portal'])]];
   const rest=NAV_AREAS0.map(([g,it])=>[g,it.filter(m=>!used.has(m[0]))]).filter(([,it])=>it.length);
@@ -9412,8 +9412,7 @@ setInterval(()=>{ try{ if(ui.route==='tafel'&&!document.querySelector('.drawer.o
 .tf-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;overflow:hidden}.tf-card.late{border-color:var(--bad)}
 .tf-main{all:unset;display:flex;flex-direction:column;gap:3px;padding:10px 12px;cursor:pointer;width:100%;box-sizing:border-box}.tf-main:focus-visible{outline:2px solid var(--info)}
 .tf-t{font-weight:650;font-size:16px;overflow-wrap:anywhere}.tf-s{font-size:13px;color:var(--muted);overflow-wrap:anywhere}.tf-b{padding:0 12px 10px}.tf-b .btn{width:100%;justify-content:center}`; document.head.appendChild(st); }
-{ const WT=VIEWS.werkstatt; VIEWS.werkstatt=function(){ const h=WT.apply(this,arguments); return h.replace('<button class="btn primary" data-act="newWO">','<button class="btn" data-nav="tafel">Werkstatt-Tafel</button><button class="btn primary" data-act="newWO">'); }; }
-/* ===== v.221 Service-Erinnerung per WhatsApp + Service-Intervall (auch Leasing) =====
+{ const WT=VIEWS.werkstatt; VIEWS.werkstatt=function(){ const h=WT.apply(this,arguments); return h.replace('<button class="btn primary" data-act="newWO">','<button class="btn" data-nav="tafel">Werkstatt-Tafel</button><button class="btn" data-nav="erinnerung">Service-Erinnerung</button><button class="btn primary" data-act="newWO">'); }; }
    Der Laden schickt selbst: WhatsApp öffnet sich mit fertigem Text und Buchungslink, FYF versendet nichts.
    Nur Kunden mit Einwilligung (Kundenakte → Einwilligung) und nur Räder mit Fahrradpass. */
 function svcEveryNext(b){ const s=b&&b.svc; if(!s||!s.every||!s.from) return ''; return addMonths(String(s.from).slice(0,10),Number(s.every)||12); }
@@ -9465,7 +9464,7 @@ Object.assign(ACT,{
 { const PL11=passPayload; passPayload=function(b){ const p=PL11(b); try{ if(p&&b){ const L=(S.services||[]).filter(x=>x.bikeId===b.id&&x.next).slice(0,8).map(x=>({task:String(x.task||'Service').slice(0,60),next:String(x.next).slice(0,10),last:String(x.last||'').slice(0,10),interval:String(x.interval||'').slice(0,30)}));
     const en=svcEveryNext(b); if(en&&!L.some(x=>x.task==='Service'||x.task==='Leasing-Inspektion')) L.push({task:(b.svc&&b.svc.incl)?'Leasing-Inspektion':'Service',next:en,last:String((b.svc&&b.svc.from)||'').slice(0,10),interval:'alle '+((b.svc&&b.svc.every)||12)+' Monate'});
     if(L.length) p.plan=L; } }catch(e){} return p; }; }
-{ const WS3=VIEWS.werkstatt; VIEWS.werkstatt=function(){ const h=WS3.apply(this,arguments); const x=svcmailHtml(); const i=h.indexOf('<div class="grid g2">'); return i>0?h.slice(0,i)+x+h.slice(i):h+x; }; }
+VIEWS.erinnerung=()=>`${head('Service-Erinnerung','Kunden mit Fahrradpass per WhatsApp erinnern und Service-Intervalle setzen – besonders für Leasingräder, bei denen der Service enthalten ist.')}${svcmailHtml()}`;
 if(typeof TITLES==='object') TITLES.tafel='Werkstatt-Tafel';
 /* ===== v.131 Saison-Check (Freigabe 21.11.2026): Kunden mit Einwilligung vor der Saison erinnern – der Laden verschickt selbst ===== */
 function seasonKey(d){ const x=new Date((d||today())+'T12:00'), y=x.getFullYear(), m=x.getMonth()+1; return m>=10?`Frühjahr ${y+1}`:m<=4?`Frühjahr ${y}`:`Herbst ${y}`; }
