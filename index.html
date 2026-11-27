@@ -4465,14 +4465,14 @@ SESSTAB.vergleich = s => {
 };
 SESSTAB.qualitaet = s => {
   const q=quality(s); const sc=qScore(s);
-  return `<div class="stack"><div class="row" style="justify-content:space-between"><div><h3>FitQuality</h3><p class="muted">Prüft Vollständigkeit, Messherkunft und Vergleichbarkeit nach festen Regeln.</p></div>${st('s')}</div>
+  return `<div class="stack"><div class="row" style="justify-content:space-between"><div><h3>FitQuality</h3><p class="muted">Prüft Vollständigkeit, Messherkunft und Vergleichbarkeit nach festen Regeln.</p></div>${st('i')}</div>
   ${sc!==null?`<div><div class="row" style="justify-content:space-between"><span class="label">Datenqualität</span><span class="num">${sc} %</span></div><div class="bar"><i style="width:${sc}%"></i></div></div>`:'<div class="notice">'+ic('info')+'Sitzung ist noch geplant. Die Prüfung startet mit der ersten Messung.</div>'}
   ${q.length?`<div class="list">${q.map(([l,t,src])=>`<div class="li" style="padding:9px 0;flex-wrap:wrap"><span class="chip ${l==='bad'?'c-bad':l==='warn'?'c-warn':'c-info'}">${l==='bad'?'kritisch':l==='warn'?'Hinweis':'Info'}</span><div class="grow" style="min-width:0">${esc(t)}<div class="sub">${esc(src)}</div></div>${l!=='bad'?`<button class="btn sm ghost" data-act="qAck" data-id="${s.id}" data-t="${esc(t)}">Ist korrekt</button>`:''}</div>`).join('')}</div>`:'<div class="notice acc">'+ic('quality')+'Keine Hinweise. Alle Pflichtwerte sind vorhanden.</div>'}
   ${Object.keys(s.qAck||{}).length?`<details class="more"><summary>Vom Fitter bestätigt (${Object.keys(s.qAck).length})</summary><div class="list" style="margin-top:6px">${Object.entries(s.qAck).map(([t,a])=>`<div class="li" style="padding:6px 0"><div class="grow" style="min-width:0">${esc(t)}<div class="sub">bestätigt ${esc(a.time||'')} · ${esc(a.who||'')}</div></div><button class="btn sm ghost" data-act="qAck" data-id="${s.id}" data-t="${esc(t)}" data-undo="1">Zurücknehmen</button></div>`).join('')}</div></details>`:''}
   <p class="faint" style="font-size:12px">FYF ändert keine Werte automatisch. Du entscheidest, ob ein auffälliger Wert stimmt.</p></div>`;
 };
 SESSTAB.bericht = s => `<div class="stack"><div class="row" style="justify-content:space-between"><p class="muted" style="max-width:60ch">Der Bericht wird aus den erfassten Daten erzeugt. Freigegebene Berichte erscheinen im Kundenportal.</p>
-  <div class="row"><button class="btn primary" data-act="genReport" data-id="${s.id}">${ic('doc')}Bericht erzeugen</button>${st('s')}</div></div>
+  <div class="row"><button class="btn primary" data-act="genReport" data-id="${s.id}">${ic('doc')}Bericht erzeugen</button>${st('i')}</div></div>
   ${portalHtml(s)}
   <div id="reportBox">${ui.reportFor===s.id?reportHtml(s):'<div class="empty">Noch kein Bericht erzeugt.</div>'}</div></div>`;
 SESSTAB.ergebnis = s => {
@@ -6094,7 +6094,9 @@ const MODULES = [
   ['Workshop','Werkstatt','Aufträge, Positionen, Status, Übergabe','i','werkstatt'],
   ['Service','Werkstatt','Wartungsintervalle, Erinnerungen','s','werkstatt'],
   ['Workshop AI','Werkstatt','Vorschläge für Arbeitspositionen aus Fahrradakte','k','werkstatt'],
-  ['WearPredict','Werkstatt','Verschleißhinweise aus Kilometerstand','s','werkstatt'],
+  ['WearPredict','Werkstatt','Verschleißhinweise aus Kilometerstand und gemessener Kettenlängung','i','werkstatt'],
+  ['Service-Erinnerung','Werkstatt','Rundmail per WhatsApp, Service-Intervall je Rad (auch Leasing), Termin im Fahrradpass','i','erinnerung'],
+  ['Filialen & Marken','Konto','Zweite Filiale und eigene Marke in einem Konto, Marktplatz-Name je Produkt (Anzeige je Auftritt folgt mit Stand 32)','i','auftritte'],
   ['Stock','Lager','Bestand, Mindestbestand, Artikelpflege','i','lager'],
   ['Retail','Verkauf','Verkaufsaufträge, Garantie und Reklamation','i','lager'],
   ['Capacity','Betrieb','Auslastung Fitter und Werkstatt','s','betrieb'],
@@ -9499,6 +9501,14 @@ Object.assign(ACT,{
   prodAct(el){ const p=products().find(x=>x.id===el.dataset.id); if(!p) return; const a=acts().find(x=>x.id===el.value);
     if(el.value&&a) p.act=a.id; else delete p.act;
     audit(`Marktplatz-Anbieter für ${p.name}: ${a?a.name:'Konto'}`); save(); toast('Gespeichert'); } });
+/* ===== v.225 Service in der App im Dashboard: nächste Fälligkeit je Rad, mit Pass und Einwilligung ===== */
+function serviceDashHtml(){ let L=[]; try{ L=svcList(); }catch(e){ L=[]; }
+  const withPass=S.bikes.filter(b=>b.qr&&b.qr.code).length, overdue=L.filter(x=>x.due.next<today()).length, soon=L.filter(x=>x.due.next>=today()).length;
+  return panelFlush('Service in der App',`<p class="muted" style="margin:0 0 10px;font-size:13.5px">Der Kunde sieht den nächsten Service im Fahrradpass und bucht den Termin dort. FYF erinnert ihn über die App; die WhatsApp-Erinnerung schickst du selbst.</p>
+    ${L.length?`<div class="list">${L.slice(0,6).map(x=>`<div class="li click" data-nav="erinnerung"><div class="grow"><div class="t">${esc(bikeName(x.b))} · ${esc(x.due.task)}</div><div class="sub">${esc(x.c.name)} · fällig ${esc(fmtDate(x.due.next))}${x.ok?'':' · keine Einwilligung'}${x.rem?' · erinnert '+esc(fmtDate(x.rem)):''}</div></div>${x.due.next<today()?'<span class="chip c-bad">fällig</span>':'<span class="chip c-warn">bald</span>'}</div>`).join('')}</div>${L.length>6?`<p class="faint" style="font-size:12.5px;margin:6px 0 0">und ${L.length-6} weitere – alle unter „Service-Erinnerung“.</p>`:''}`
+    :`<div class="empty">${ic('loop')}<span>Kein Service fällig. Intervall je Rad unter „Service-Erinnerung“ setzen, dann erscheint es beim Kunden in der App.</span></div>`}
+    <div class="row" style="margin-top:10px"><button class="btn sm primary" data-nav="erinnerung">Service-Erinnerung öffnen</button><button class="btn sm ghost" data-nav="werkstatt">Wartungsintervalle</button></div>${withPass?`<p class="faint" style="font-size:12.5px;margin:8px 0 0">${withPass} Rad/Räder mit Fahrradpass · ${overdue?overdue+' überfällig':''}${overdue&&soon?' · ':''}${soon?soon+' bald fällig':''}${!overdue&&!soon?'alles im Plan':''}</p>`:`<p class="faint" style="font-size:12.5px;margin:8px 0 0">Noch kein Rad mit Fahrradpass – im Rad einen QR-Fahrradpass anlegen.</p>`}`,st('i'))}
+{ const VDASH=VIEWS.dashboard; VIEWS.dashboard=function(){ const h=VDASH.apply(this,arguments); try{ const a=h.indexOf('class="hero2"'), i=a>=0?h.indexOf('</section>',a):-1; const box=serviceDashHtml(); return i>0?(h.slice(0,i+10)+box+h.slice(i+10)):(h+box); }catch(e){ return h; } }; }
 if(typeof TITLES==='object') TITLES.tafel='Werkstatt-Tafel';
 /* ===== v.131 Saison-Check (Freigabe 21.11.2026): Kunden mit Einwilligung vor der Saison erinnern – der Laden verschickt selbst ===== */
 function seasonKey(d){ const x=new Date((d||today())+'T12:00'), y=x.getFullYear(), m=x.getMonth()+1; return m>=10?`Frühjahr ${y+1}`:m<=4?`Frühjahr ${y}`:`Herbst ${y}`; }
