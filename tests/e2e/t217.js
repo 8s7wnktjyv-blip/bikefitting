@@ -1,0 +1,25 @@
+// v.216: Paket 1 (Grundlage) – gemeinsames Stylesheet, eigener Bestätigungs-Dialog im Pass und in der Werkstatt-Software.
+const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
+(async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
+  const cfg=Buffer.from(JSON.stringify({u:BASE,k:'sb_publishable_TESTKEY_1234567890abc'})).toString('base64url');
+  const c=await b.newContext({...devices['iPhone 13'],locale:'de-DE'}); await c.addInitScript(()=>{ try{ localStorage.setItem('fyfpass:intro','1'); }catch(e){} });
+  const q=await c.newPage(); q.on('pageerror',e=>errs.push('pass: '+e.message)); await q.goto(BASE+'/rad.html#meine&cfg='+cfg); await q.waitForTimeout(900);
+  const hasCss=async p=>await p.evaluate(()=>[...document.styleSheets].some(s=>/fyf-basis\.css/.test(s.href||'')));
+  if(!(await hasCss(q))) bad('fyf-basis.css fehlt im Pass');
+  if(!(await q.evaluate(()=>typeof askYes==='function'))) bad('askYes fehlt im Pass');
+  await q.evaluate(()=>{ window.__a=null; askYes('Testfrage?','Nur ein Test.').then(v=>window.__a=v); }); await q.waitForTimeout(300);
+  let n=await q.locator('[role="dialog"] [data-ok]').count(); log('1 Rückfrage offen:',n); if(!n) bad('Rückfrage öffnet nicht');
+  await q.click('[role="dialog"] [data-ok]'); await q.waitForTimeout(300);
+  const yes=await q.evaluate(()=>window.__a); log('2 Ja →',yes); if(yes!==true) bad('Ja gibt kein true');
+  await q.evaluate(()=>{ window.__a=null; askYes('Testfrage?').then(v=>window.__a=v); }); await q.waitForTimeout(300);
+  await q.click('[role="dialog"] [data-a="x"]'); await q.waitForTimeout(300);
+  const no=await q.evaluate(()=>window.__a); log('3 Abbrechen →',no); if(no!==false) bad('Abbrechen gibt kein false');
+  if(await q.locator('[role="dialog"] [data-ok]').count()) bad('Rückfrage bleibt offen');
+  const s=await c.newPage(); s.on('pageerror',e=>errs.push('software: '+e.message)); await s.goto(BASE+'/index.html'); await s.waitForTimeout(2200);
+  if(!(await hasCss(s))) bad('fyf-basis.css fehlt in der Software');
+  if(!(await s.evaluate(()=>typeof fyfAsk==='function'))) bad('fyfAsk fehlt in der Software');
+  await s.evaluate(()=>{ window.__a=null; fyfAsk('Testfrage?','Nur ein Test.').then(v=>window.__a=v); }); await s.waitForTimeout(300);
+  n=await s.locator('[role="dialog"] [data-ok]').count(); log('4 Software Rückfrage offen:',n); if(!n) bad('Software: Rückfrage öffnet nicht');
+  await s.click('[role="dialog"] [data-ok]'); await s.waitForTimeout(300);
+  const yes2=await s.evaluate(()=>window.__a); log('5 Software Ja →',yes2); if(yes2!==true) bad('Software: Ja gibt kein true');
+  log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();

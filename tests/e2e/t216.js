@@ -1,0 +1,32 @@
+// v.215: Pass – Service: das Dringendste oben, Terminschätzung aus der Fahrleistung, „Erledigt“ zurücknehmen.
+const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
+(async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
+  const cfg=Buffer.from(JSON.stringify({u:BASE,k:'sb_publishable_TESTKEY_1234567890abc'})).toString('base64url');
+  const c=await b.newContext({...devices['iPhone 13'],locale:'de-DE'}); await c.addInitScript(()=>{ try{ localStorage.setItem('fyfpass:intro','1'); }catch(e){} });
+  const q=await c.newPage(); q.on('pageerror',e=>errs.push('pass: '+e.message)); await q.goto(BASE+'/rad.html#meine&cfg='+cfg); await q.waitForTimeout(700);
+  await q.click('#regb'); await q.fill('#rb','Rose'); await q.fill('#rm','Backroad'); await q.fill('#rf','S'+Date.now()%100000); await q.check('#rx'); await q.click('#rg button.btn:not(#rfscan)'); await q.waitForTimeout(1300);
+  const code=await q.evaluate(()=>mine()[0].code), jahr=new Date().getFullYear()-1;
+  const vorMonaten=n=>{ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-n); return d.toISOString().slice(0,10); };
+  // Fahrleistung: 1.400 km im letzten vollen Jahr → Schätzung möglich; Kette vor 1 Monat bei 2.400 km erledigt, Inspektion vor 15 Monaten
+  const kmLog=[{d:jahr+'-01-10',km:800},{d:jahr+'-12-20',km:2200},{d:new Date().getFullYear()+'-02-01',km:2500}];
+  const svc={chain:{d:vorMonaten(1),km:2400},insp:{d:vorMonaten(15),km:1500}};
+  await q.evaluate(([c,kmLog,svc])=>{ const o=X(c); o.km=2500; o.kmAt=new Date().toISOString().slice(0,10); o.kmLog=kmLog; o.svc=svc; Xset(c,o); },[code,kmLog,svc]);
+  await q.evaluate(c=>{ location.hash='#c='+c; },code); await q.waitForTimeout(1500);
+  await q.click('[data-tool="svc"]'); await q.waitForTimeout(600);
+  const body=async()=>await q.evaluate(()=>{ const p=[...document.querySelectorAll('.tpage .tp-body')].pop(); return p?p.innerText.replace(/\s+/g,' '):''; });
+  const firstCard=async()=>await q.evaluate(()=>{ const L=[...document.querySelectorAll('.tpage .card.svc')]; return L.length?L[0].innerText.replace(/\s+/g,' '):''; });
+  let t=await body(); log('1 Service:',t.slice(0,180));
+  if(!/Das Dringendste steht oben/.test(t)) bad('Hinweis zur Reihenfolge fehlt');
+  if(!/≈ fällig am \d\d\.\d\d\.\d{4}/.test(t)) bad('Schätzung „≈ fällig am“ fehlt (Kette)');
+  if(!/≈ [\d.]+ km bis dahin/.test(t)) bad('Schätzung „km bis dahin“ fehlt (Reifen)');
+  let f=await firstCard(); log('2 Erste Karte:',f.slice(0,120));
+  if(!/^Inspektion in der Werkstatt/.test(f)) bad('überfällige Inspektion steht nicht oben');
+  const n=await q.locator('.tpage [data-undo="insp"]').count(); log('3 Rückgängig-Knopf:',n);
+  if(!n) bad('Rückgängig fehlt bei selbst eingetragenem Punkt');
+  await q.click('.tpage [data-undo="insp"]'); await q.waitForTimeout(500);
+  f=await firstCard(); log('4 Danach oben:',f.slice(0,120));
+  if(await q.locator('.tpage [data-undo="insp"]').count()) bad('Rückgängig ist nach dem Zurücknehmen noch da');
+  if(/^Inspektion in der Werkstatt/.test(f)) bad('Inspektion steht nach dem Zurücknehmen weiter oben');
+  if(!/Reifen prüfen/.test(f)) bad('nächster Punkt (Reifen) steht nicht oben');
+  const ov=await q.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1); if(ov) bad('Querscroll');
+  log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();

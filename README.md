@@ -177,6 +177,10 @@ Kamera seitlich aufs Rad richten: Google MediaPipe erkennt Schulter, Hüfte, Kni
 
 FYF – Fit your Frame stellt keine Diagnosen. Alle Zahlen und Faustregeln sind Demonstrationswerte.
 
+## Umbau der Pass-App (geplant)
+
+`docs/UEBERARBEITUNG-PLAN.md` – „Überarbeite alles“ (26.11.2026): acht Pakete für ein einheitliches Auftreten der Pass-App – Seitenkopf und Zurück, „auf einen Blick“ je Werkzeug mit einer Hauptaktion, Texte/Zahlen/Einheiten, eigener Bestätigungs-Dialog statt `confirm()`, Dark Mode ohne `!important`-Kaskade, Radseite, Garage, Drucken/PDF. Je Paket ein Browser-Test, alle vorhandenen Tests bleiben grün. Die Werkstatt-Software (`index.html`) wird erst nach eigener Freigabe umgebaut. Bereits gebaut (v.215): Service-Plan mit dem Dringendsten oben, Terminschätzung aus der Fahrleistung, „Erledigt“ zurücknehmen (`tests/e2e/t216.js`).
+
 ## Fehlt für eine echte Version
 
 - Backend mit Anmeldung, Rollen, Trennung zwischen Betrieben

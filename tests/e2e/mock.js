@@ -16,6 +16,7 @@ http.createServer((req,res)=>{
     if(u.pathname==='/__setth'){ const c=u.searchParams.get('c'), t=u.searchParams.get('t'); if(db.pass[c]) db.pass[c].th=require('crypto').createHash('sha256').update(t).digest('hex'); return send(res,200,{ok:!!db.pass[c]}); }
     if(u.pathname==='/__pass') return send(res,200,{pass:db.pass||{},ent:db.pent||[],st:db.st||{}});
     if(u.pathname==='/pass-en.js'){ res.writeHead(200,{'Content-Type':'text/javascript'}); return res.end(fs.readFileSync(ROOT+'/pass-en.js')); }
+    if(u.pathname==='/fyf-basis.css'){ res.writeHead(200,{'Content-Type':'text/css'}); return res.end(fs.readFileSync(ROOT+'/fyf-basis.css')); }
     if(u.pathname==='/pass-theme.css'){ res.writeHead(200,{'Content-Type':'text/css'}); return res.end(fs.readFileSync(ROOT+'/pass-theme.css')); }
     if(u.pathname==='/logo-tag.svg'){ res.writeHead(200,{'Content-Type':'image/svg+xml'}); return res.end(fs.readFileSync(ROOT+'/logo-tag.svg')); }
     if(u.pathname==='/data/rueckrufe.json'){ res.writeHead(200,{'Content-Type':'application/json'}); return res.end(fs.readFileSync(ROOT+'/data/rueckrufe.json')); }

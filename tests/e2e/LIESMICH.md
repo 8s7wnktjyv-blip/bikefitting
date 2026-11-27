@@ -63,5 +63,8 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t200.js` – Pass: Helfer in der Nähe mit Karte (Pins Luft/Schlauch-Automat/Laden/Krankenhaus, Notruf 112 (v.204), Filter wirkt auf Karte, Pin mit Route; v.201: hängender Dienst → nach Zeitlimit Hinweis, „Nochmal suchen“, Apple-Karten-Links)
 - `t205.js` – Pass: Helfer-Daten vorab (helfer/*.json): im Gebiet keine Live-Anfrage, Umkreis/Krankenhaus 15 km, Stand angezeigt, Leaflet aus vendor/; außerhalb und in fehlenden Gebieten live; Karten-Filter mehrere Arten + gemerkt (v.210)
 - `t206.js` – Werkstätten: Hell/Dunkel-Knopf oben rechts (gleiche Einstellung wie Pass), „Panne unterwegs?“ nennt Krankenhaus/Karte; Marktplatz-Leer-Zustand + Suche zurücksetzen (v.207); ohne FYF-Partner Knopf „Werkstätten auf der Karte“ (v.209)
+- `t216.js` – Pass: Service – das Dringendste oben, Terminschätzung aus der Fahrleistung („≈ fällig am …“, „≈ … km bis dahin“), „Erledigt“ zurücknehmen
+- `t217.js` – Paket 1 (Grundlage): `fyf-basis.css` in Pass und Software geladen, eigener Bestätigungs-Dialog (`askYes`/`fyfAsk`) gibt Ja und Abbrechen richtig zurück
+- `t218.js` – Paket 2 (Seitenkopf): jedes Werkzeug im Pass zeigt unter dem Titel einen Untertitel; in der Software kein `confirmDel` mehr
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.

@@ -1,0 +1,48 @@
+/* FYF Basis – gemeinsamer Feinschliff für Pass (rad.html, finder.html) und Werkstatt-Software (index.html).
+   Paket 1 aus docs/UEBERARBEITUNG-PLAN.md. Nur Ergänzungen – Farben, Abstände und Bausteine des
+   bestehenden Designs bleiben, wie sie sind. Wird vor pass-theme.css geladen, damit das dunkle Design
+   weiter Vorrang hat. */
+
+/* 1) Tastatur, Stift, Schalter: immer sichtbar, wo man gerade ist */
+:focus-visible{outline:3px solid var(--acc,#e8620f);outline-offset:2px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:1px}
+summary:focus-visible{outline-offset:4px}
+[tabindex]:focus-visible{outline:3px solid var(--acc,#e8620f);outline-offset:2px}
+
+/* 2) Antippen: kein grauer Blitz, kein Doppeltipp-Zoom auf Knöpfen */
+button,.btn,a,[role="button"],summary,label{-webkit-tap-highlight-color:transparent}
+button,.btn,[role="button"],summary{touch-action:manipulation}
+
+/* 3) Tap-Ziele am Finger: kleine Knöpfe und Chips werden treffbar, ohne größer auszusehen */
+@media (pointer:coarse){
+  .sm2{min-height:38px}
+  .chip,.gchip,.miss .chip{min-height:34px}
+  .linkbtn{min-height:34px;padding:6px 2px!important}
+  button.btn,.btn,.tool{min-height:44px}
+}
+
+/* 4) Zahlen stehen untereinander – km, mm, bar, Datum, Beträge */
+.tile .v,.tp2 .v,.tiles3 .v,.goal-big,.ring span,.kv b,table td,table th,.adtext{font-variant-numeric:tabular-nums}
+
+/* 5) Lange Namen und Nummern brechen nicht aus dem Kasten */
+h1,h2,h3{text-wrap:balance}
+.kv b,.kv span,.gchip,.chip,.tb,.list-row{overflow-wrap:anywhere}
+
+/* 6) Markieren sieht aus wie die App, nicht wie das System */
+::selection{background:color-mix(in srgb,var(--acc,#e8620f) 26%,transparent)}
+
+/* 7) Drucken: das Blatt, nicht die Bedienoberfläche */
+@media print{
+  .tabs,.tabbar,.side,.drawer,.sheet,.scanner,nav[aria-label]{display:none!important}
+  html,body{background:#fff!important;color:#111!important}
+  .card,.tool,details.more{box-shadow:none!important;border:1px solid #ddd!important;break-inside:avoid}
+  a{color:#111!important;text-decoration:none!important}
+  h1,h2{break-after:avoid}
+}
+
+/* 8) Systemwünsche achten: weniger Bewegung, mehr Kontrast (nur im hellen Design) */
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}}
+@media (prefers-contrast:more){
+  :root:not([data-theme="dark"]){--line:#b9b4ab;--muted:#4a5054}
+  :root:not([data-theme="dark"]) .card{border:1px solid #b9b4ab!important}
+}

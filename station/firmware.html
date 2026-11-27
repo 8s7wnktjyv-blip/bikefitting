@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<title>FYF Station – Firmware</title>
+<link rel="stylesheet" href="../fyf-basis.css">
+<style>
+:root{--bg:#f3f3f1;--card:#fff;--ink:#111416;--muted:#6c7176;--line:#e6e6e2;--acc:#e8601c;--ok:#1c9b5a;--bad:#d2352a;--r:22px;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#14191b;--card:#1c2326;--ink:#e8eef0;--muted:#9aa7ac;--line:#2c3539;--acc:#f07a45;--ok:#6fcf8f;--bad:#ff8a73;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:640px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom))}
+h1{font-size:30px;line-height:1.1;margin:6px 0 6px;letter-spacing:-.02em}.muted{color:var(--muted)}.small{font-size:13.5px}
+.card{background:var(--card);border-radius:var(--r);padding:18px;margin:12px 0;box-shadow:0 1px 2px rgba(17,20,22,.04),0 12px 32px -18px rgba(17,20,22,.22)}
+button,.btn{font:inherit;font-weight:650;border:0;border-radius:999px;padding:15px 20px;background:var(--ink);color:var(--card);cursor:pointer;text-decoration:none;display:inline-block;width:100%;text-align:center}
+.btn.acc{background:var(--acc);color:#fff}.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+a{color:var(--acc)}ul{padding-left:20px;margin:6px 0 0}li{margin:3px 0}
+.ok{color:var(--ok);font-weight:650}.bad{color:var(--bad);font-weight:650}
+</style>
+</head>
+<body>
+<main>
+  <p class="muted small" style="font-weight:700;letter-spacing:.12em">FYF STATION · M5STACK TAB5</p>
+  <h1>Firmware</h1>
+  <p class="muted" style="margin:0 0 4px">Version v0.4.6 (21.11.2026) – fertig geschnürt als ZIP-Datei, genau wie bisher.</p>
+
+  <div class="card">
+    <button class="btn acc" id="zip" type="button">FYF-Station-v0.4.6.zip herunterladen</button>
+    <p class="muted small" id="st" style="margin:10px 0 0">Die ZIP-Datei wird auf deinem Handy aus dem Quelltext gebaut – ohne Server und ohne Konto.</p>
+    <a class="btn ghost" id="raw" href="FYF_Station/FYF_Station.ino" download style="margin-top:10px">Nur die .ino-Datei</a>
+  </div>
+
+  <div class="card">
+    <b>In der Arduino IDE</b>
+    <ul class="small muted">
+      <li>ZIP entpacken – es entsteht der Ordner <b>FYF_Station</b> mit <b>FYF_Station.ino</b>.</li>
+      <li>Board <b>M5Stack Tab5</b> wählen, Bibliotheken laut <a href="ANLEITUNG.md">ANLEITUNG.md</a> einrichten.</li>
+      <li>Hochladen. WLAN und FYF-Kopplung werden erst am Gerät eingegeben und bleiben dort.</li>
+    </ul>
+  </div>
+  <p class="muted small"><a href="LIESMICH.md">LIESMICH</a> · <a href="../index.html">Zur Software</a> · <a href="../rad.html">Zum Fahrradpass</a></p>
+</main>
+<script>
+"use strict";
+const VERSION='v0.4.6', FILE='FYF_Station/FYF_Station.ino', NAME='FYF-Station-'+VERSION+'.zip';
+function crc32(b){ let crc=0xFFFFFFFF; for(let i=0;i<b.length;i++){ let c=(crc^b[i])&0xFF; for(let k=0;k<8;k++) c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); crc=(crc>>>8)^c; } return (crc^0xFFFFFFFF)>>>0; }
+/* ZIP ohne Fremdbibliothek: eine Datei, unkomprimiert gespeichert (Arduino IDE liest das ohne Probleme) */
+function makeZip(fileName,text){ const enc=new TextEncoder(), name=enc.encode(fileName), data=enc.encode(text), crc=crc32(data), size=data.length, now=new Date();
+  const u16=v=>[v&255,(v>>8)&255], u32=v=>[v&255,(v>>8)&255,(v>>16)&255,(v>>24)&255];
+  const time=((now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1))&0xFFFF, date=(((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate())&0xFFFF;
+  const local=new Uint8Array([0x50,0x4b,0x03,0x04,...u16(20),...u16(0),...u16(0),...u16(time),...u16(date),...u32(crc),...u32(size),...u32(size),...u16(name.length),...u16(0)]);
+  const cd=new Uint8Array([0x50,0x4b,0x01,0x02,...u16(20),...u16(20),...u16(0),...u16(0),...u16(time),...u16(date),...u32(crc),...u32(size),...u32(size),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(0)]);
+  const off=local.length+name.length+data.length;
+  const eocd=new Uint8Array([0x50,0x4b,0x05,0x06,...u16(0),...u16(0),...u16(1),...u16(1),...u32(cd.length+name.length),...u32(off),...u16(0)]);
+  return new Blob([local,name,data,cd,name,eocd],{type:'application/zip'}); }
+const st=document.getElementById('st');
+document.getElementById('zip').onclick=async()=>{ const b=document.getElementById('zip'); b.disabled=true; const old=b.textContent; b.textContent='Wird gebaut …';
+  try{ const r=await fetch(new URL(FILE,location.href),{cache:'no-store'}); if(!r.ok) throw 0; const text=await r.text();
+    const blob=makeZip('FYF_Station/FYF_Station.ino',text), u=URL.createObjectURL(blob);
+    try{ const f=new File([blob],NAME,{type:'application/zip'}); if(navigator.canShare&&navigator.canShare({files:[f]})&&window.navigator.standalone){ await navigator.share({files:[f],title:NAME}); URL.revokeObjectURL(u); st.className='ok'; st.textContent='Geteilt – in „Dateien“ sichern.'; return; } }catch(e){ if(e&&e.name==='AbortError'){ URL.revokeObjectURL(u); return; } }
+    const a=document.createElement('a'); a.href=u; a.download=NAME; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),60000);
+    st.className='ok'; st.textContent='Gespeichert: '+NAME+' ('+Math.round(blob.size/1024)+' kB).'; }
+  catch(e){ st.className='bad'; st.textContent='Der Quelltext war nicht erreichbar – bitte Internet prüfen und noch einmal tippen.'; }
+  b.disabled=false; b.textContent=old; };
+</script>
+</body>
+</html>
