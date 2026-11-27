@@ -9413,8 +9413,8 @@ setInterval(()=>{ try{ if(ui.route==='tafel'&&!document.querySelector('.drawer.o
 .tf-main{all:unset;display:flex;flex-direction:column;gap:3px;padding:10px 12px;cursor:pointer;width:100%;box-sizing:border-box}.tf-main:focus-visible{outline:2px solid var(--info)}
 .tf-t{font-weight:650;font-size:16px;overflow-wrap:anywhere}.tf-s{font-size:13px;color:var(--muted);overflow-wrap:anywhere}.tf-b{padding:0 12px 10px}.tf-b .btn{width:100%;justify-content:center}`; document.head.appendChild(st); }
 { const WT=VIEWS.werkstatt; VIEWS.werkstatt=function(){ const h=WT.apply(this,arguments); return h.replace('<button class="btn primary" data-act="newWO">','<button class="btn" data-nav="tafel">Werkstatt-Tafel</button><button class="btn" data-nav="erinnerung">Service-Erinnerung</button><button class="btn primary" data-act="newWO">'); }; }
-   Der Laden schickt selbst: WhatsApp öffnet sich mit fertigem Text und Buchungslink, FYF versendet nichts.
-   Nur Kunden mit Einwilligung (Kundenakte → Einwilligung) und nur Räder mit Fahrradpass. */
+/* Service-Erinnerung: Der Laden schickt selbst – WhatsApp öffnet sich mit fertigem Text und Buchungslink,
+   FYF versendet nichts. Nur Kunden mit Einwilligung (Kundenakte → Einwilligung) und nur Räder mit Fahrradpass. */
 function svcEveryNext(b){ const s=b&&b.svc; if(!s||!s.every||!s.from) return ''; return addMonths(String(s.from).slice(0,10),Number(s.every)||12); }
 function svcList(){ const lim=dayOff(30), out=[];
   S.bikes.forEach(b=>{ const code=b.qr&&b.qr.code; if(!code) return; const c=cust(b.customerId); if(!c||!c.id) return;
