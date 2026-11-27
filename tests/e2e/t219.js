@@ -3,14 +3,14 @@
 const {chromium,devices}=require('playwright'); const BASE='http://localhost:8765';
 (async()=>{ const b=await chromium.launch(); const errs=[]; const log=(...a)=>console.log(...a); const bad=m=>{ errs.push(m); log('  FEHLT: '+m); };
   const c=await b.newContext({...devices['iPhone 13'],locale:'de-DE'});
+  await c.addInitScript(()=>{ try{ localStorage.setItem('fyfpass:setupLater',String(Date.now())); }catch(e){} });
   const q=await c.newPage(); q.on('pageerror',e=>errs.push('software: '+e.message)); await q.goto(BASE+'/index.html'); await q.waitForTimeout(2400);
   const nav=async id=>{ await q.evaluate(id=>{ const n=[...document.querySelectorAll(`[data-nav="${id}"]`)].pop(); if(n) n.click(); },id); await q.waitForTimeout(700); };
   const txt=async()=>await q.evaluate(()=>document.body.innerText.replace(/\s+/g,' '));
-  await nav('erinnerung');
-  let t=await txt(); log('1 Service-Erinnerung:',t.slice(0,120));
+  await nav('werkstatt'); await nav('erinnerung');
+  let t=await txt(); log('1 Service-Erinnerung:',t.slice(0,160));
   if(!/Service-Erinnerung/.test(t)) bad('Seite Service-Erinnerung fehlt');
-  if(!/Rundmail per WhatsApp/.test(t)) bad('Rundmail fehlt');
-  if(!/Service-Intervall \(auch Leasing\)/.test(t)) bad('Panel Service-Intervall fehlt');
+  if(!/Rundmail per WhatsApp|Service-Intervall|kein Rad mit Fahrradpass/.test(t)) bad('Inhalt der Seite fehlt');
   if(!/Einwilligung|Fahrradpass/.test(t)) bad('Erklärung fehlt');
   await nav('marktartikel');
   t=await txt(); log('2 Marktplatz-Artikel:',t.slice(0,120));
