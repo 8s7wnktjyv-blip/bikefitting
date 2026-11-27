@@ -66,5 +66,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t216.js` – Pass: Service – das Dringendste oben, Terminschätzung aus der Fahrleistung („≈ fällig am …“, „≈ … km bis dahin“), „Erledigt“ zurücknehmen
 - `t217.js` – Paket 1 (Grundlage): `fyf-basis.css` in Pass und Software geladen, eigener Bestätigungs-Dialog (`askYes`/`fyfAsk`) gibt Ja und Abbrechen richtig zurück
 - `t218.js` – Paket 2 (Seitenkopf): jedes Werkzeug im Pass zeigt unter dem Titel einen Untertitel; in der Software kein `confirmDel` mehr
+- `t219.js` – Software: Service-Erinnerung per WhatsApp (Rundmail + einzeln) mit Buchungslink, Service-Intervall fürs Leasing steht im Pass-Plan
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.

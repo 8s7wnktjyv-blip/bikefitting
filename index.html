@@ -9413,6 +9413,59 @@ setInterval(()=>{ try{ if(ui.route==='tafel'&&!document.querySelector('.drawer.o
 .tf-main{all:unset;display:flex;flex-direction:column;gap:3px;padding:10px 12px;cursor:pointer;width:100%;box-sizing:border-box}.tf-main:focus-visible{outline:2px solid var(--info)}
 .tf-t{font-weight:650;font-size:16px;overflow-wrap:anywhere}.tf-s{font-size:13px;color:var(--muted);overflow-wrap:anywhere}.tf-b{padding:0 12px 10px}.tf-b .btn{width:100%;justify-content:center}`; document.head.appendChild(st); }
 { const WT=VIEWS.werkstatt; VIEWS.werkstatt=function(){ const h=WT.apply(this,arguments); return h.replace('<button class="btn primary" data-act="newWO">','<button class="btn" data-nav="tafel">Werkstatt-Tafel</button><button class="btn primary" data-act="newWO">'); }; }
+/* ===== v.221 Service-Erinnerung per WhatsApp + Service-Intervall (auch Leasing) =====
+   Der Laden schickt selbst: WhatsApp öffnet sich mit fertigem Text und Buchungslink, FYF versendet nichts.
+   Nur Kunden mit Einwilligung (Kundenakte → Einwilligung) und nur Räder mit Fahrradpass. */
+function svcEveryNext(b){ const s=b&&b.svc; if(!s||!s.every||!s.from) return ''; return addMonths(String(s.from).slice(0,10),Number(s.every)||12); }
+function svcList(){ const lim=dayOff(30), out=[];
+  S.bikes.forEach(b=>{ const code=b.qr&&b.qr.code; if(!code) return; const c=cust(b.customerId); if(!c||!c.id) return;
+    const cand=[];
+    (S.services||[]).forEach((x,i)=>{ if(x.bikeId===b.id&&x.next&&x.next<=lim) cand.push({task:String(x.task||'Service'),next:String(x.next).slice(0,10),interval:String(x.interval||''),i}); });
+    const ln=leaseNext(b); if(ln&&ln<=lim&&!cand.some(x=>/Leasing|Inspektion/i.test(x.task))) cand.push({task:'Jahresinspektion'+(b.lease&&b.lease.provider?' ('+b.lease.provider+')':''),next:ln,interval:'alle 12 Monate',i:-1});
+    const en=svcEveryNext(b); if(en&&en<=lim&&!cand.length) cand.push({task:'Service',next:en,interval:'alle '+(Number(b.svc.every)||12)+' Monate',i:-1});
+    if(!cand.length) return; cand.sort((a,x)=>a.next.localeCompare(x.next));
+    const rem=b.qr.remInd&&b.qr.remInd>=dayOff(-14);
+    out.push({b,c,code,ok:!!(c.consentInfo&&c.consentInfo.remind),phone:String(c.phone||'').replace(/[^\d+]/g,''),due:cand[0],n:cand.length,rem:rem?b.qr.remInd:''});
+  });
+  return out.sort((a,b)=>a.due.next.localeCompare(b.due.next)); }
+function svcMailText(x){ const first=String(x.c.name||'').trim().split(/\s+/)[0]||'', link=pageUrl('finder.html','pass='+x.code+'&want=service');
+  return `Hallo ${first},\n\nfür dein ${bikeName(x.b)} ist ${x.due.task} fällig (${fmtDate(x.due.next)}).\nTermin aussuchen kannst du direkt hier: ${link}\n\nIm Fahrradpass siehst du alles, was gemacht wurde: ${passUrl(x.code)}\n\nViele Grüße\n${shopName()||'Deine Werkstatt'}\n\n(Antworte „Stopp“, dann erinnern wir dich nicht mehr.)`; }
+function waLink(text,c){ const ph=String((c&&c.phone)||'').replace(/[^\d+]/g,''), wa=ph?ph.replace(/^\+/,'').replace(/^0/,'49'):''; return 'https://wa.me/'+wa+'?text='+encodeURIComponent(text); }
+function svcmailHtml(){ const kh=b=>String(b.customerId||'');
+  if(!S.bikes.some(b=>b.qr&&b.qr.code)) return panel('Service-Erinnerung per WhatsApp',`<p class="muted" style="margin:0">Noch kein Rad mit Fahrradpass. Im Rad einen QR-Fahrradpass anlegen – dann kann FYF erinnern und der Kunde bucht den Termin in der App.</p>`);
+  const L=svcList(), ready=L.filter(x=>x.ok&&x.phone), noC=L.filter(x=>!x.ok).length, noP=L.filter(x=>x.ok&&!x.phone).length;
+  return `<div class="grid g2">
+   ${panelFlush('Rundmail per WhatsApp',`<p class="muted" style="margin:0 0 10px;font-size:13.5px">Für Kunden mit Fahrradpass, die der Service-Erinnerung zugestimmt haben. Antippen öffnet WhatsApp mit fertigem Text und Buchungslink – <b>du schickst selbst</b>, FYF versendet nichts.</p>
+    ${ready.length?`<div class="tw"><table><thead><tr><th>Kunde</th><th>Rad</th><th>Anlass</th><th>fällig</th><th></th></tr></thead><tbody>${ready.map(x=>`<tr><td>${esc(x.c.name)}<div class="faint" style="font-size:12px">${esc(x.c.phone||'')} · Pass ${esc(x.code)}${x.rem?' · erinnert '+esc(fmtDate(x.rem)):''}</div></td><td>${esc(bikeName(x.b))}<div class="faint" style="font-size:12px">${esc(x.due.interval||'')}</div></td><td>${esc(x.due.task)}${x.n>1?` <span class="chip c-warn nodot">+${x.n-1}</span>`:''}</td><td>${x.due.next<today()?`<span class="chip c-bad">${esc(fmtDate(x.due.next))}</span>`:esc(fmtDate(x.due.next))}</td><td class="r"><a class="btn sm" href="${esc(waLink(svcMailText(x),x.c))}" target="_blank" rel="noopener">WhatsApp</a> <button class="btn sm ghost" data-act="svcMailOne" data-id="${esc(x.b.id)}">Nur dieser Kunde</button></td></tr>`).join('')}</tbody></table></div><div class="row" style="margin-top:8px"><button class="btn sm ghost" data-act="svcCsv">Liste als Tabelle (CSV)</button></div>`:'<div class="empty">'+ic('check')+'<span>Keine fällige Erinnerung – nichts zu tun.</span></div>'}
+    ${noC?`<p class="faint" style="font-size:12.5px;margin:8px 0 0">${noC} Rad/Räder ohne Einwilligung – bitte nicht anschreiben. Einwilligung in der Kundenakte eintragen.</p>`:''}${noP?`<p class="faint" style="font-size:12.5px;margin:4px 0 0">${noP} ohne Mobilnummer – dort SMS oder E-Mail über „Nur dieser Kunde“.</p>`:''}`)}
+   ${panelFlush('Service-Intervall (auch Leasing)',`<p class="muted" style="margin:0 0 10px;font-size:13.5px">Intervall je Rad festlegen. FYF zeigt es dem Kunden im Fahrradpass, er bucht den Termin in der App. Beim Leasing ist der Service meist enthalten – dann anhaken.</p>
+    <div class="tw"><table><thead><tr><th>Rad</th><th>Kunde</th><th>Intervall</th><th>fällig</th><th></th></tr></thead><tbody>${S.bikes.filter(b=>b.qr&&b.qr.code).map(b=>{ const n=svcEveryNext(b); return `<tr><td>${esc(bikeName(b))}<div class="faint" style="font-size:12px">Pass ${esc(b.qr.code)}</div></td><td>${esc(cust(b.customerId).name)}</td><td>${b.svc&&b.svc.every?`alle ${Number(b.svc.every)} Monate${b.svc.incl?'<div class="faint" style="font-size:12px">im Leasing enthalten</div>':''}`:'<span class="faint">nicht gesetzt</span>'}</td><td>${n?esc(fmtDate(n)):'–'}</td><td class="r"><button class="btn sm ghost" data-act="svcInterval" data-id="${esc(b.id)}">Einstellen</button></td></tr>`; }).join('')}</tbody></table></div>`)}
+  </div>`; }
+Object.assign(ACT,{
+  svcMailOne(el){ const x=svcList().find(z=>z.b.id===el.dataset.id); if(!x) return; openDrawer('Service-Erinnerung · '+(x.c.name||''),`<div class="stack"><p><b>${esc(bikeName(x.b))}</b> · ${esc(x.due.task)} · fällig ${esc(fmtDate(x.due.next))}</p>${msgButtons(svcMailText(x),x.c)}<div class="row"><button class="btn sm" data-act="svcSent" data-id="${esc(x.b.id)}">Als erinnert vermerken</button></div></div>`); },
+  svcSent(el){ const b=bike(el.dataset.id); if(!b) return; b.qr=b.qr||{}; b.qr.remInd=today(); audit(`Service-Erinnerung geöffnet: ${bikeName(b)}`); save(); closeDrawer(); render(); toast('Vermerkt'); },
+  svcInterval(el){ const b=bike(el.dataset.id); if(!b) return; const s=b.svc||{};
+    openDrawer('Service-Intervall · '+bikeName(b),`<div class="stack"><div class="field wide"><label for="siEvery">Intervall</label><select class="input" id="siEvery">${[['0','ohne Intervall'],['6','alle 6 Monate'],['12','alle 12 Monate'],['24','alle 24 Monate']].map(([v,t])=>`<option value="${v}" ${String(s.every||'')===v?'selected':''}>${t}</option>`).join('')}</select></div>
+      <div class="field wide"><label for="siFrom">Gezählt ab (letzte Inspektion / Übergabe)</label><input class="input" id="siFrom" type="date" value="${esc(s.from||(b.lease&&b.lease.lastInsp)||today())}"></div>
+      <label class="row" style="gap:8px;align-items:center"><input type="checkbox" id="siIncl" ${s.incl?'checked':''} style="width:20px;height:20px;accent-color:var(--accent)"><span>Im Leasing enthalten – der Kunde zahlt den Service nicht</span></label>
+      <p class="faint" style="font-size:12.5px;margin:0">FYF zeigt das Intervall im Fahrradpass; der Kunde bucht den Termin dort. Beim Leasing setzt FYF die letzte Inspektion beim Abschluss des Auftrags auf den Übergabetag.</p>
+      <div class="row"><button class="btn primary" data-act="svcIntervalSave" data-id="${esc(b.id)}">Speichern &amp; in den Pass</button></div></div>`); },
+  async svcIntervalSave(el){ const b=bike(el.dataset.id); if(!b) return;
+    const every=Number(String((document.getElementById('siEvery')||{}).value||'0')), from=String((document.getElementById('siFrom')||{}).value||today()), incl=!!((document.getElementById('siIncl')||{}).checked);
+    if(every) b.svc={every,from,incl}; else delete b.svc;
+    S.services=S.services||[]; const task=incl?'Leasing-Inspektion':'Service', i=S.services.findIndex(x=>x.bikeId===b.id&&x.task===task);
+    if(every){ const rec={bikeId:b.id,task,interval:'alle '+every+' Monate',last:from,next:addMonths(from,every)}; if(i>=0) S.services[i]={...S.services[i],...rec}; else S.services.push(rec); }
+    else if(i>=0) S.services.splice(i,1);
+    audit(`Service-Intervall ${bikeName(b)}: ${every?every+' Monate':'aus'}${incl?' (im Leasing enthalten)':''}`); save();
+    if(every&&cloudReady()&&b.qr&&b.qr.code){ try{ await passPush(b,true); }catch(e){} }
+    closeDrawer(); render(); toast(every?'Gespeichert – im Fahrradpass sichtbar':'Intervall entfernt'); },
+  svcCsv(){ const q=v=>{ let t=String(v==null?'':v); if(/^[=+\-@\t\r]/.test(t)) t="'"+t; return '"'+t.replace(/"/g,'""')+'"'; };
+    const rows=[['Kunde','Telefon','Pass-Code','Rad','Anlass','Faellig'],...svcList().filter(x=>x.ok&&x.phone).map(x=>[x.c.name,x.c.phone||'',x.code,bikeName(x.b),x.due.task,x.due.next])];
+    try{ download('service-erinnerung-'+today()+'.csv','\ufeff'+rows.map(r=>r.map(q).join(';')).join('\r\n'),'text/csv;charset=utf-8'); toast('Tabelle erstellt'); }catch(e){ toast('Export nicht möglich',true); } } });
+{ const PL11=passPayload; passPayload=function(b){ const p=PL11(b); try{ if(p&&b){ const L=(S.services||[]).filter(x=>x.bikeId===b.id&&x.next).slice(0,8).map(x=>({task:String(x.task||'Service').slice(0,60),next:String(x.next).slice(0,10),last:String(x.last||'').slice(0,10),interval:String(x.interval||'').slice(0,30)}));
+    const en=svcEveryNext(b); if(en&&!L.some(x=>x.task==='Service'||x.task==='Leasing-Inspektion')) L.push({task:(b.svc&&b.svc.incl)?'Leasing-Inspektion':'Service',next:en,last:String((b.svc&&b.svc.from)||'').slice(0,10),interval:'alle '+((b.svc&&b.svc.every)||12)+' Monate'});
+    if(L.length) p.plan=L; } }catch(e){} return p; }; }
+{ const WS3=VIEWS.werkstatt; VIEWS.werkstatt=function(){ const h=WS3.apply(this,arguments); const x=svcmailHtml(); const i=h.indexOf('<div class="grid g2">'); return i>0?h.slice(0,i)+x+h.slice(i):h+x; }; }
 if(typeof TITLES==='object') TITLES.tafel='Werkstatt-Tafel';
 /* ===== v.131 Saison-Check (Freigabe 21.11.2026): Kunden mit Einwilligung vor der Saison erinnern – der Laden verschickt selbst ===== */
 function seasonKey(d){ const x=new Date((d||today())+'T12:00'), y=x.getFullYear(), m=x.getMonth()+1; return m>=10?`Frühjahr ${y+1}`:m<=4?`Frühjahr ${y}`:`Herbst ${y}`; }
