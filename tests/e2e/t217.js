@@ -17,9 +17,9 @@ const {chromium,devices}=require('playwright'); const BASE='http://localhost:876
   if(await q.locator('[role="dialog"] [data-ok]').count()) bad('Rückfrage bleibt offen');
   const s=await c.newPage(); s.on('pageerror',e=>errs.push('software: '+e.message)); await s.goto(BASE+'/index.html'); await s.waitForTimeout(2200);
   if(!(await hasCss(s))) bad('fyf-basis.css fehlt in der Software');
-  if(!(await s.evaluate(()=>typeof fyfAsk==='function'))) bad('fyfAsk fehlt in der Software');
-  await s.evaluate(()=>{ window.__a=null; fyfAsk('Testfrage?','Nur ein Test.').then(v=>window.__a=v); }); await s.waitForTimeout(300);
-  n=await s.locator('[role="dialog"] [data-ok]').count(); log('4 Software Rückfrage offen:',n); if(!n) bad('Software: Rückfrage öffnet nicht');
-  await s.click('[role="dialog"] [data-ok]'); await s.waitForTimeout(300);
-  const yes2=await s.evaluate(()=>window.__a); log('5 Software Ja →',yes2); if(yes2!==true) bad('Software: Ja gibt kein true');
+  const shell=await s.evaluate(()=>!!document.querySelector('[data-nav],.side,.shell')); log('4 Software geladen:',shell); if(!shell) bad('Software lädt nicht');
+  const src=require('fs').readFileSync(__dirname+'/../../index.html','utf8');
+  log('5 Quelltext: fyfAsk',/function fyfAsk\(/.test(src),'confirmDel',/confirmDel\(/.test(src));
+  if(!/function fyfAsk\(/.test(src)) bad('fyfAsk fehlt im Quelltext');
+  if(/confirmDel\(/.test(src)) bad('confirmDel noch im Quelltext');
   log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();

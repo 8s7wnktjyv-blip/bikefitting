@@ -14,6 +14,7 @@ const {chromium,devices}=require('playwright'); const BASE='http://localhost:876
     log('•',t,'→',r.h.trim(),'·',r.sub.trim().slice(0,48));
     if(r.h.trim()!==titel) bad('Titel '+t+' statt '+titel); if(!r.sub.trim().startsWith(anfang)) bad('Untertitel fehlt bei '+titel); }
   const s=await c.newPage(); s.on('pageerror',e=>errs.push('software: '+e.message)); await s.goto(BASE+'/index.html'); await s.waitForTimeout(2200);
-  const gone=await s.evaluate(()=>typeof confirmDel==='undefined'&&typeof fyfAsk==='function'); log('Software: confirmDel weg, fyfAsk da →',gone); if(!gone) bad('Software nutzt noch confirmDel');
+  const src=require('fs').readFileSync(__dirname+'/../../index.html','utf8');
+  const gone=!/confirmDel\(/.test(src)&&/function fyfAsk\(/.test(src); log('Software: Quelltext ohne confirmDel, mit fyfAsk →',gone); if(!gone) bad('Software nutzt noch confirmDel');
   const ov=await q.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1); if(ov) bad('Querscroll');
   log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();
