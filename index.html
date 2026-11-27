@@ -9504,8 +9504,8 @@ Object.assign(ACT,{
     S.acts=acts().filter(x=>x.id!==id); products().forEach(p=>{ if(p.act===id) delete p.act; });
     audit(`Auftritt gelöscht: ${a.name}`); save(); closeDrawer(); render(); toast('Gelöscht'); },
   actDef(el){ const id=el.dataset.id||''; acts().forEach(a=>{ a.def=(a.id===id); }); save(); render(); toast('Als Standard für den Marktplatz gesetzt'); },
-  prodAct(el){ const p=products().find(x=>x.id===el.dataset.id); if(!p) return; const a=acts().find(x=>x.id===el.value);
-    if(el.value&&a) p.act=a.id; else delete p.act;
+  prodAct(el){ const p=products().find(x=>x.id===el.dataset.id); if(!p) return; const a=allActs().find(x=>x.id===el.value);
+    if(el.value&&a){ p.act=a.id; p.actName=a.name; } else { delete p.act; delete p.actName; }
     audit(`Marktplatz-Anbieter für ${p.name}: ${a?a.name:'Konto'}`); save(); toast('Gespeichert'); } });
 /* ===== v.225 Service in der App im Dashboard: nächste Fälligkeit je Rad, mit Pass und Einwilligung ===== */
 function serviceDashHtml(){ let L=[]; try{ L=svcList(); }catch(e){ L=[]; }
@@ -9536,6 +9536,7 @@ Object.assign(ACT,{
     openDrawer(id?'Artikel bearbeiten':'Artikel anlegen',`<div class="stack">
       <div class="field wide"><label for="arN">Name</label><input class="input" id="arN" maxlength="60" value="${esc(p.name||'')}" placeholder="z. B. carbo Laufradsatz AR40"></div>
       <div class="field wide"><label for="arC">Kategorie</label><select class="input" id="arC">${(p.cat&&!MARKT_CATS.includes(p.cat)?[p.cat,...MARKT_CATS]:MARKT_CATS).map(c=>`<option ${p.cat===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+      <div class="field wide"><label for="arAct">Anbieter im Marktplatz</label><select class="input" id="arAct"><option value="">– wie Konto (${esc(shopName()||'Laden')}) –</option>${allActs().map(a=>`<option value="${esc(a.id)}" ${p.act===a.id?'selected':''}>${esc(a.name)}${a.kind==='marke'?' (Marke)':''}</option>`).join('')}</select></div>
       <div class="field"><label for="arP">Preis (€, inkl. MwSt.)</label><input class="input" id="arP" type="number" min="0" step="0.01" value="${p.price!=null?p.price:''}"></div>
       <div class="field"><label for="arS">Bestand</label><input class="input" id="arS" type="number" min="0" step="1" value="${p.stock!=null?p.stock:''}"></div>
       <div class="field wide"><label for="arT">Zustand</label><select class="input" id="arT"><option value="neu" ${p.cond!=='gebraucht'?'selected':''}>neu</option><option value="gebraucht" ${p.cond==='gebraucht'?'selected':''}>gebraucht</option></select></div>
@@ -9547,7 +9548,9 @@ Object.assign(ACT,{
   },
   artSave(el){ const id=el.dataset.id||'', name=String((document.getElementById('arN')||{}).value||'').trim().slice(0,60);
     if(!name) return toast('Bitte einen Namen eingeben',true);
-    const o={name,cat:String((document.getElementById('arC')||{}).value||'Zubehör'),price:Number((document.getElementById('arP')||{}).value||0)||0,stock:Number((document.getElementById('arS')||{}).value||0)||0,cond:(document.getElementById('arT')||{}).value==='gebraucht'?'gebraucht':'neu',note:String((document.getElementById('arNote')||{}).value||'').trim().slice(0,160),img:ui.artImg||null,pub:!!((document.getElementById('arPub')||{}).checked),market:true};
+    const actV=String((document.getElementById('arAct')||{}).value||''), actA=allActs().find(x=>x.id===actV);
+    const shown=actA&&actA.name&&String(name).indexOf(actA.name+' · ')!==0?(actA.name+' · '+name):name;
+    const o={name:shown,act:actA?actA.id:null,actName:actA?actA.name:'',cat:String((document.getElementById('arC')||{}).value||'Zubehör'),price:Number((document.getElementById('arP')||{}).value||0)||0,stock:Number((document.getElementById('arS')||{}).value||0)||0,cond:(document.getElementById('arT')||{}).value==='gebraucht'?'gebraucht':'neu',note:String((document.getElementById('arNote')||{}).value||'').trim().slice(0,160),img:ui.artImg||null,pub:!!((document.getElementById('arPub')||{}).checked),market:true};
     const L=products();
     if(id){ const p=L.find(x=>x.id===id); if(p) Object.assign(p,o); }
     else L.push({id:'m'+Date.now().toString(36),cost:null,width:null,use:'',arch:[],system:'',float:null,release:'',src:'',...o});
