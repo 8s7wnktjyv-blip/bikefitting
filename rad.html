@@ -527,6 +527,8 @@ function svcBook(code){ const N=nextService(code), P=Pof(code)||{}, sh=P.shop||{
   el.querySelector('[data-x]').onclick=()=>el.remove();
   el.onclick=e=>{ if(e.target===el) el.remove(); };
 }
+function bookCard(code){ const s=bookShop(code), name=(s&&s.name)||((Pof(code)||{}).shop||{}).name||'';
+  return `<div class="card" data-bookcard="1"><b>Service buchen</b><p class="muted small" style="margin:2px 0 10px">${name?'Deine Werkstatt: <b>'+esc(name)+'</b>. Termin dort anfragen – oder eine andere Werkstatt wählen.':'Noch keine Werkstatt im Pass – wähle eine in der Nähe.'}</p><button class="btn block" type="button" data-svcbook="1">Service buchen</button></div>`; }
 document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-book]'); if(!b||!window.__PC) return; e.preventDefault(); svcBook(window.__PC); });
 { const GL=glanceHtml; glanceHtml=function(code){ let h=GL(code); try{ const tile=nextSvcTile(code), i=h.indexOf('data-tool="val"'); if(tile&&i>=0){ const j=h.indexOf('</button>',i); if(j>i) h=h.slice(0,j+9)+tile+h.slice(j+9); } }catch(e){} return h; }; }
 function svcIntCard(code){ const s=X(code).svcInt||{}; const on=s.months!==0;
@@ -535,6 +537,7 @@ function svcIntCard(code){ const s=X(code).svcInt||{}; const on=s.months!==0;
    <button class="btn ghost block" id="siSave" type="button" style="margin-top:10px">Speichern</button><p class="muted small" style="margin:8px 0 0">Nächster Service: <b>${fd(nextService(code).date)}</b></p></div>`; }
 setTimeout(()=>{ const TSV=TOOLFN.svc; TOOLFN.svc=function(code){ TSV(code); try{ const pg=[...document.querySelectorAll('.tpage')].pop(), body=pg&&pg.querySelector('.tp-body'); if(!body||body.querySelector('#svcIntCard')) return;
     const box=document.createElement('div'); box.innerHTML=svcIntCard(code); const el=box.firstElementChild; body.insertBefore(el,body.children[1]||null);
+    if(!body.querySelector('[data-svcbook]')){ const bb=document.createElement('div'); bb.innerHTML=bookCard(code); const be=bb.firstElementChild; const sb=be.querySelector('[data-svcbook]'); if(sb) sb.onclick=()=>svcBook(code); body.insertBefore(be,el); }
     el.querySelector('#siSave').onclick=()=>{ const o=X(code), m=Number(val(el,'siM')), f=val(el,'siF'); if(m===0) delete o.svcInt; else o.svcInt={months:m,from:f||today()}; Xset(code,o); toast('Gespeichert'); try{ reTool(TOOLFN.svc,code); }catch(e){} }; }catch(e){} }; },0);
 /* Druck-/Dokumentansicht IN der App (statt neuem Fenster): immer mit „‹ Zurück“; PDF wird im Gerät erzeugt (iPhone: Teilen → In Dateien sichern / Drucken) */
 const DV_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
