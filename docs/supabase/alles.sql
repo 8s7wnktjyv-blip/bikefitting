@@ -3391,3 +3391,49 @@ grant execute on function wish_admin_set(bigint,text,boolean) to authenticated;
 -- ===================== Stand der Datenbank (für die Prüfung in der App) =====================
 create or replace function fyf_schema() returns int language sql immutable as $$ select 31 $$;
 grant execute on function fyf_schema() to anon, authenticated;
+
+
+-- =====================================================================================
+-- FYF – Stand 32 (26.11.2026): Marktplatz zeigt Auftritt (Filiale/Marke) und Bild je Artikel
+-- Pläne: docs/FILIALEN-MARKEN-PLAN.md (Punkt 27), docs/MARKTPLATZ-PLAN.md (Punkt 28)
+-- =====================================================================================
+alter table fyf_products add column if not exists img text;
+alter table fyf_products add column if not exists seller text check (length(seller) <= 80);
+alter table fyf_products add column if not exists seller_ref text check (length(seller_ref) <= 60);
+
+create or replace function fyf_project() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare t uuid := new.tenant_id; d jsonb := new.data;
+begin
+  delete from fyf_customers where tenant_id = t;
+  insert into fyf_customers select t, e->>'id', e->>'name', e->>'email', e->>'phone', fyf_d(e->>'since')
+    from jsonb_array_elements(coalesce(d->'customers', '[]')) e where e->>'id' is not null on conflict do nothing;
+  delete from fyf_bikes where tenant_id = t;
+  insert into fyf_bikes select t, e->>'id', e->>'customerId', e->>'brand', e->>'model', e->>'type', e->>'size', e->>'frameNo', fyf_n(e->>'km')
+    from jsonb_array_elements(coalesce(d->'bikes', '[]')) e where e->>'id' is not null on conflict do nothing;
+  delete from fyf_sessions where tenant_id = t;
+  insert into fyf_sessions select t, e->>'id', e->>'customerId', e->>'bikeId', fyf_d(e->>'date'), e->>'type', e->>'status', e->>'fitter'
+    from jsonb_array_elements(coalesce(d->'sessions', '[]')) e where e->>'id' is not null on conflict do nothing;
+  delete from fyf_invoices where tenant_id = t;
+  insert into fyf_invoices select t, e->>'id', e->>'no', fyf_d(e->>'date'), e->>'type', e->>'status', e->>'customerId'
+    from jsonb_array_elements(coalesce(d->'invoices', '[]')) e where e->>'id' is not null on conflict do nothing;
+  delete from fyf_products where tenant_id = t;
+  insert into fyf_products select t, e->>'id', e->>'cat', left(e->>'name', 200), fyf_n(e->>'price'),
+      coalesce((e->>'pub')::boolean, false), left(e->>'note', 300),
+      left(nullif(e->>'img', ''), 300000),
+      left(nullif(e->>'actName', ''), 80),
+      left(nullif(e->>'act', ''), 60)
+    from jsonb_array_elements(coalesce(d->'products', '[]')) e where e->>'id' is not null on conflict do nothing;
+  return new;
+end $$;
+
+drop trigger if exists fyf_project_t on tenant_state;
+create trigger fyf_project_t after insert or update of data on tenant_state for each row execute function fyf_project();
+
+create or replace view public_products with (security_invoker = false) as
+  select d.slug, p.id, p.cat, p.name, p.price, p.note, p.img, p.seller, p.seller_ref
+  from fyf_products p join dealer_profiles d on d.tenant_id = p.tenant_id
+  where p.pub and d.published and p.price is not null;
+grant select on public_products to anon, authenticated;
+
+update tenant_state set data = data;
