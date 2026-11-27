@@ -5714,6 +5714,64 @@ function sellerInfo(){ const p=S.shop||{}; const m=String(p.addr||'').match(/^(.
   return {name:p.name||'',owner:p.owner||'',street:m?m[1].trim():String(p.addr||'').trim(),zip:m?m[2]:'',city:m?m[3].trim():'',phone:p.phone||'',email:p.email||'',web:p.web||'',taxNo:p.taxNo||'',vatId:p.vatId||'',iban:String(p.iban||'').replace(/\s+/g,'').toUpperCase(),bic:String(p.bic||'').replace(/\s+/g,'').toUpperCase(),bank:p.bank||'',logo:p.logo||''}; }
 function sellerMissing(){ const s=sellerInfo(), m=[]; if(!s.name) m.push('Name'); if(!s.zip||!s.city) m.push('Adresse im Format „Straße, PLZ Ort“'); if(!s.phone) m.push('Telefon'); if(!s.email) m.push('E-Mail'); if(!s.taxNo&&!s.vatId) m.push('Steuernummer oder USt-ID'); if(!s.iban) m.push('IBAN'); return m; }
 function buyerMissingX(b){ const m=[]; if(!b.name) m.push('Name'); if(!b.street) m.push('Straße'); if(!b.zip) m.push('PLZ'); if(!b.city) m.push('Ort'); if(!b.email) m.push('E-Mail'); return m; }
+/* ---------- Rechnungs-Prüfung (eigene Regeln, v.244) ----------
+   Prüft Pflichtangaben, Positionen, Summen und den Storno-Bezug einer Rechnung nach festen Regeln.
+   Kein offizielles Prüfprogramm (kein ZUGFeRD-/XRechnung-Validator) und keine Steuerberatung. */
+function invCheck(inv){
+  const R=[], add=(lv,text)=>R.push({lv,text});
+  const s=inv.seller||{}, b=inv.buyer||{}, c=invCalc(inv), cn=inv.type==='storno';
+  // Kopf der Rechnung
+  if(!inv.no) add('bad','Rechnungsnummer fehlt');
+  else if(!/^RE-\d{4}-\d{4}$/.test(inv.no)) add('warn','Rechnungsnummer nicht im Muster RE-Jahr-0000');
+  else if(invoices().filter(x=>x.no===inv.no).length>1) add('bad','Rechnungsnummer kommt doppelt vor');
+  if(!inv.date) add('bad','Rechnungsdatum fehlt');
+  else if(inv.date>today()) add('bad','Rechnungsdatum liegt in der Zukunft');
+  if(!inv.serviceDate) add('warn','Leistungsdatum fehlt');
+  else if(inv.date&&inv.serviceDate>inv.date) add('warn','Leistungsdatum liegt nach dem Rechnungsdatum');
+  if(!cn&&!inv.due) add('bad','Zahlungsziel (zahlbar bis) fehlt');
+  // Verkäufer (steht auf jeder Rechnung)
+  [['Name',s.name],['Straße',s.street],['PLZ',s.zip],['Ort',s.city],['Telefon',s.phone],['E-Mail',s.email]].forEach(([t,v])=>{ if(!v) add('bad','Verkäufer: '+t+' fehlt'); });
+  if(!s.owner) add('warn','Verkäufer: Inhaber (Vor- und Nachname) fehlt');
+  if(s.zip&&!/^\d{5}$/.test(String(s.zip))) add('bad','Verkäufer: PLZ ist nicht 5-stellig');
+  if(!s.taxNo&&!s.vatId) add('bad','Verkäufer: Steuernummer oder USt-ID fehlt');
+  if(s.vatId&&!/^[A-Z]{2}[A-Z0-9]{8,14}$/.test(String(s.vatId).replace(/\s+/g,''))) add('warn','USt-ID sieht nicht richtig aus (Muster DE123456789)');
+  if(!s.iban) add('bad','Verkäufer: IBAN fehlt');
+  else if(!ibanOk(s.iban)) add('bad','IBAN ist falsch (Prüfziffer stimmt nicht)');
+  // Käufer
+  buyerMissingX(b).forEach(t=>add('bad','Käufer: '+t+' fehlt'));
+  if(b.zip&&!/^\d{5}$/.test(String(b.zip))) add('bad','Käufer: PLZ ist nicht 5-stellig');
+  // Positionen und Summen (aus den Positionen nachgerechnet)
+  const it=inv.items||[], brutto=inv.mode!=='netto';
+  if(!it.length) add('bad','Keine Position auf der Rechnung');
+  it.forEach((x,i)=>{ const l=c.lines[i]||{};
+    if(!String(x.name||'').trim()) add('bad',`Position ${i+1}: Bezeichnung fehlt`);
+    if(!(Number(x.qty)>0)) add('bad',`Position ${i+1}: Menge muss größer als 0 sein`);
+    if(!(Number(x.price)>=0)) add('bad',`Position ${i+1}: Preis fehlt oder ist negativ`);
+    const want=brutto?r4((Number(x.price)||0)/(1+VAT_RATE/100)):r4(Number(x.price)||0);
+    if(l.unit!=null&&Math.abs(l.unit-want)>0.0002) add('bad',`Position ${i+1}: Einzelpreis netto passt nicht zur Preiseingabe`);
+    if(l.net!=null&&Math.abs(l.net-r2((Number(x.qty)||0)*want))>0.011) add('bad',`Position ${i+1}: Betrag netto passt nicht zu Menge mal Preis`);
+  });
+  if(!(c.total>0)) add('bad','Rechnungsbetrag ist 0,00 €');
+  if(Math.abs(c.total-r2(c.basis+c.tax))>0.011) add('bad','Summen: netto plus MwSt ergibt nicht den Rechnungsbetrag');
+  // E-Rechnung: Firmenkunden brauchen eine E-Mail-Adresse
+  if(!cn&&b.company&&!b.email) add('bad','Firmenkunde ohne E-Mail: E-Rechnung (XML) nicht möglich');
+  // Storno
+  if(cn){ const o=inv.ref&&invoices().find(x=>x.no===inv.ref);
+    if(!inv.ref) add('bad','Storno ohne Bezug auf eine Rechnung');
+    else if(!o) add('bad','Storno zeigt auf eine Rechnung, die es nicht gibt');
+    else { if(o.type==='storno') add('bad','Storno zeigt auf eine Stornorechnung'); if(Math.abs(invCalc(o).total-c.total)>0.011) add('warn','Storno und Ursprungsrechnung haben unterschiedliche Beträge'); } }
+  const bad=R.filter(x=>x.lv==='bad').length;
+  return {list:R,bad,warn:R.length-bad,ok:!R.length};
+}
+function invCheckChip(r){ if(r.ok) return '<span class="chip nodot c-ok">in Ordnung</span>'; return r.bad?`<span class="chip nodot c-bad">${r.bad} Fehler</span>`:`<span class="chip nodot c-warn">${r.warn} Hinweis${r.warn===1?'':'e'}</span>`; }
+function invCheckList(R){ if(!R.length) return '<p class="muted" style="margin:0;font-size:13.5px">Alle Pflichtangaben, Positionen und Summen sind vorhanden.</p>';
+  const o={bad:0,warn:1};
+  return `<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px;font-size:13.5px">${R.slice().sort((a,b)=>o[a.lv]-o[b.lv]).map(x=>`<li${x.lv==='bad'?' style="color:var(--bad,#c0392b)"':' class="muted"'}>${esc(x.text)}</li>`).join('')}</ul>`; }
+function invCheckPanel(){ const L=invoices(), C=ui.invCheck;
+  const sum=C?`<div class="row" style="gap:6px;flex-wrap:wrap"><span class="chip nodot">${C.n} ${C.n===1?'Rechnung':'Rechnungen'} geprüft</span>${C.bad?`<span class="chip nodot c-bad">${C.bad} mit Fehlern</span>`:''}${C.warn?`<span class="chip nodot c-warn">${C.warn} mit Hinweisen</span>`:''}${C.bad||C.warn?'':'<span class="chip nodot c-ok">alles in Ordnung</span>'}<span class="faint" style="font-size:12px">Stand ${esc(C.at)}</span></div>`:'';
+  const list=C&&C.list.length?`<div class="stack" style="gap:0">${C.list.slice(0,40).map(x=>`<div class="row" style="justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--line,#e5e0d8);flex-wrap:wrap"><span><b style="font-weight:600">${esc(x.no)}</b> <span class="muted" style="font-size:13px">${esc(x.who)}</span></span><span class="row" style="gap:6px"><span class="chip nodot ${x.bad?'c-bad':'c-warn'}">${x.bad?x.bad+' Fehler':x.warn+(x.warn===1?' Hinweis':' Hinweise')}</span><button class="btn sm ghost" data-act="invOpen" data-id="${esc(x.id)}">Öffnen</button></span></div>`).join('')}</div>`:'';
+  const hint=!C?'<p class="muted" style="margin:0;font-size:13.5px">Prüft jede Rechnung auf Pflichtangaben (Nummer, Datum, Verkäufer, Käufer), Positionen und Summen.</p>':(C.list.length?'':'<p class="muted" style="margin:0;font-size:13.5px">Keine Fehler und keine Hinweise gefunden.</p>');
+  return panel('Rechnungs-Prüfung',`<div class="stack" style="gap:8px">${sum}${list}${hint}<div class="row"><button class="btn sm primary" data-act="invCheckAll" ${L.length?'':'disabled'}>Alle Rechnungen prüfen</button></div><p class="faint" style="font-size:12px;margin:0">Eigene Prüfung mit festen Regeln – kein offizielles Prüfprogramm (ZUGFeRD/XRechnung) und keine Steuerberatung.</p></div>`); }
 const fmtIban=i=>String(i||'').replace(/(.{4})/g,'$1 ').trim();
 const xesc=t=>String(t??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const d102=d=>`<udt:DateTimeString format="102">${String(d||'').replace(/-/g,'')}</udt:DateTimeString>`;
@@ -5759,6 +5817,7 @@ VIEWS.rechnungen = () => { const L=invoices().slice().sort((a,b)=>(b.date+b.no).
   ${miss.length?`<div class="notice warn">${ic('warn')}<div><b>Für Rechnungen fehlt noch:</b> ${esc(miss.join(', '))}. <button class="btn sm" data-act="goShop">Jetzt unter „Dein Laden“ eintragen</button></div></div>`:''}
   <div class="kpis"><div class="kpi"><b class="num">${open.length}</b><span>offen</span><i>${eur(open.reduce((a,i)=>a+invCalc(i).total,0))}</i></div><div class="kpi"><b class="num">${paidY.length}</b><span>bezahlt ${y}</span><i>${eur(paidY.reduce((a,i)=>a+invCalc(i).total,0))}</i></div></div>
   ${panelFlush('',L.length?`<div class="list">${L.map(i=>`<button class="li click" data-act="invOpen" data-id="${i.id}"><div class="grow" style="min-width:0"><div class="t">${esc(i.no)} · ${esc(i.buyer.company||i.buyer.name)}</div><div class="sub">${fmtDate(i.date)}${i.ref?' · zu '+esc(i.ref):''}</div></div><b class="num">${eur((i.type==='storno'?-1:1)*invCalc(i).total)}</b>${invStatusChip(i)}</button>`).join('')}</div>`:`<div class="empty">${ic('doc')}<span>Noch keine Rechnung. Im Fitting unter Ergebnis → Angebot auf „Rechnung erstellen“ tippen oder hier eine neue anlegen.</span></div>`)}
+  ${invCheckPanel()}
   <p class="faint" style="font-size:12.5px">Rechnungen 10 Jahre aufbewahren. Die E-Rechnung (XML) ist ab 2028 für Rechnungen an Firmen Pflicht. Keine Steuerberatung.</p>`; };
 function invFormHtml(pre){ const C=S.customers.slice().sort((a,b)=>a.name.localeCompare(b.name)); const b=pre.buyer||{}; const rows=[...(pre.items||[]),{},{},{}];
   const f=(n,l,v,t,ph,w)=>`<div class="field${w?' wide':''}"><label for="iv_${n}">${l}</label><input class="input${t==='number'?' num':''}" id="iv_${n}" name="${n}" ${t?`type="${t}"`:''} ${t==='number'?'step="any"':''} value="${esc(v??'')}" ${ph?`placeholder="${esc(ph)}"`:''}></div>`;
@@ -5779,6 +5838,7 @@ function invOpenHtml(inv){ const miss=buyerMissingX(inv.buyer); const hasStorno=
   ${inv.type!=='storno'&&!hasStorno?`<button class="btn ghost" data-act="invStorno" data-id="${inv.id}">Stornieren</button>`:''}</div>
   ${miss.length?`<p class="faint" style="font-size:12.5px;margin:0">E-Rechnung nicht möglich, es fehlt beim Kunden: ${esc(miss.join(', '))}. Für Endkunden reicht das PDF.</p>`:`<p class="faint" style="font-size:12.5px;margin:0">Für Firmenkunden die XML-Datei (E-Rechnung) per E-Mail senden, das PDF zur Ansicht dazu.</p>`}
   ${inv.paidAt?`<p class="faint" style="font-size:12.5px;margin:0">Bezahlt am ${fmtDate(inv.paidAt)}</p>`:''}
+  ${(()=>{ const R=invCheck(inv); return `<div class="stack" style="gap:6px"><div class="row" style="gap:6px;flex-wrap:wrap"><b style="font-size:14px">Prüfung</b>${invCheckChip(R)}</div>${invCheckList(R.list)}</div>`; })()}
   <div class="inv-preview">${invDoc(inv)}</div></div>`; }
 
 function shopHtml(){ const p=S.shop||{};
@@ -6068,15 +6128,16 @@ VIEWS.betrieb = () => {
   const rev=S.workshop.reduce((a,w)=>a+w.positions.reduce((x,p)=>x+p.qty*p.price,0),0); const lab=S.workshop.reduce((a,w)=>a+w.positions.filter(p=>p.kind==='Arbeit').reduce((x,p)=>x+p.qty*p.price,0),0);
   const fitRev=S.sessions.filter(s=>s.status==='abgeschlossen').length*249;
   return `${kpiHtml()}<hr>
-  ${head('Team & Auswertung','Rollen, Standorte, Kapazität, Kennzahlen, Flotten und Anbindungen. Großteils Konzept mit Beispieldaten.')}
-  <div class="grid g4"><div class="panel kpi"><span class="label">Umsatz Fittings (Demo)</span><span class="v" style="font-size:26px">${eur(fitRev)}</span><span class="s">${S.sessions.filter(s=>s.status==='abgeschlossen').length} × 249 € Annahme</span></div><div class="panel kpi"><span class="label">Werkstatt-Volumen</span><span class="v" style="font-size:26px">${eur(rev)}</span><span class="s">davon Arbeit ${eur(lab)}</span></div><div class="panel kpi"><span class="label">Material-Anteil</span><span class="v">${Math.round((rev-lab)/Math.max(rev,1)*100)} %</span><span class="s">Profit ${st('s')}</span></div><div class="panel kpi"><span class="label">Standorte</span><span class="v">2</span><span class="s">MultiShop ${st('k')}</span></div></div>
+  ${head('Team & Auswertung','Rollen, Standorte, Kapazität, Kennzahlen, Firmenflotten und Anbindungen.')}
+  <div class="grid g4"><div class="panel kpi"><span class="label">Umsatz Fittings (Demo)</span><span class="v" style="font-size:26px">${eur(fitRev)}</span><span class="s">${S.sessions.filter(s=>s.status==='abgeschlossen').length} × 249 € Annahme</span></div><div class="panel kpi"><span class="label">Werkstatt-Volumen</span><span class="v" style="font-size:26px">${eur(rev)}</span><span class="s">davon Arbeit ${eur(lab)}</span></div><div class="panel kpi"><span class="label">Material-Anteil</span><span class="v">${Math.round((rev-lab)/Math.max(rev,1)*100)} %</span><span class="s">Profit ${st('s')}</span></div><div class="panel kpi"><span class="label">Standorte</span><span class="v">2</span><span class="s">MultiShop ${st('i')}</span></div></div>
   ${panel('Capacity – Auslastung nächste 5 Tage',`<div class="tw"><div class="cal"><div></div>${days.map(d=>`<div class="label">${new Date(d+'T12:00').toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'})}</div>`).join('')}
     ${fitters.map(t=>`<div style="padding:6px 0"><div>${esc(t.name)}</div><div class="faint" style="font-size:11px">${esc(t.role)}</div></div>${days.map(d=>{const h=load(t.name,d);const cap=t.hours/5;return `<div class="cell ${h>cap?'over':''}"><span class="num">${fmtNum(h)} h</span><div class="bar" style="margin-top:6px"><i style="width:${Math.min(100,h/cap*100)}%;background:${h>cap?'var(--bad)':'var(--accent)'}"></i></div></div>`;}).join('')}`).join('')}</div></div><p class="faint" style="font-size:12px;margin-top:8px">Fitting = 2 h, Werkstatt = Arbeitspositionen. Rot = über Tageskapazität.</p>`,st('s'))}
   <div class="grid g2">
     ${panelFlush('Team & Rollen',`<div class="tw"><table><thead><tr><th>Name</th><th>Rolle</th><th>Standort</th><th>Rechte</th></tr></thead><tbody>${S.team.map(t=>`<tr><td>${esc(t.name)}</td><td>${esc(t.role)}</td><td>${esc(t.loc)}</td><td style="font-size:12px" class="muted">${/Inhaber/.test(t.role)?'alles, inkl. Auswertung':/fitter/i.test(t.role)?'Kunden, Sitzungen, Berichte':'Werkstatt, Lager'}</td></tr>`).join('')}</tbody></table></div>`,st('k'))}
-    ${panelFlush('Fleet – Flotten',`<div class="tw"><table><thead><tr><th>Flotte</th><th class="r">Räder</th><th>Nächster Service</th></tr></thead><tbody><tr><td>Firmenräder Stadtwerke (Demo)</td><td class="r num">12</td><td>${fmtDate(dayOff(14))}</td></tr><tr><td>Lieferdienst Velo-Kurier (Demo)</td><td class="r num">6</td><td>${fmtDate(dayOff(3))}</td></tr></tbody></table></div>`,st('k'))}
+    ${panelFlush('Fleet – Firmenflotten',(()=>{ let rows=''; try{ rows=S.customers.filter(c=>custKind(c)==='firma').map(c=>{ const bs=fleetBikes(c.id)||[]; const nx=bs.map(b=>leaseNext(b)).filter(Boolean).sort()[0]||''; return `<tr><td>${esc(c.company||c.name)}</td><td class="r num">${bs.length}</td><td>${nx?fmtDate(nx):'–'}</td></tr>`; }).join(''); }catch(e){ rows=''; }
+      return `<div class="tw"><table><thead><tr><th>Flotte</th><th class="r">Räder</th><th>Nächste Inspektion</th></tr></thead><tbody>${rows||'<tr><td colspan="3" class="muted">Noch keine Firma mit Rädern. In der Kundenakte den Typ „Firma“ wählen und die Räder zuordnen.</td></tr>'}</tbody></table></div>`; })(),st('i'))}
   </div>
-  ${panelFlush('OpenLink – Anbindungen',`<div class="tw"><table><thead><tr><th>System</th><th>Zweck</th><th>Status</th></tr></thead><tbody>${[['Kalender','Termine synchronisieren'],['E-Mail / SMS','Erinnerungen, Berichte versenden'],['Buchhaltung','Rechnungen übergeben'],['Kassensystem','Verkäufe abgleichen'],['Lieferanten','Bestellungen'],['Satteldruck-Sensoren','Messdaten importieren'],['Videoquellen','Aufnahmen zuordnen'],['Offene API','Datenaustausch mit Partnern']].map(([n,z])=>`<tr><td>${n}</td><td class="muted">${z}</td><td><span class="chip">nicht verbunden</span></td></tr>`).join('')}</tbody></table></div><div class="panel-b"><p class="faint" style="font-size:12px">Keine dieser Anbindungen existiert. Jede braucht eine echte Schnittstelle ${st('x')}. Network (Datenaustausch zwischen Betrieben) und Academy (Schulungen) sind Konzepte ${st('k')}.</p></div>`)}`;
+  ${panelFlush('OpenLink – Anbindungen',`<div class="tw"><table><thead><tr><th>System</th><th>Zweck</th><th>Status</th></tr></thead><tbody>${[['Kalender','Termine synchronisieren'],['E-Mail / SMS','Erinnerungen, Berichte versenden'],['Buchhaltung','Rechnungen übergeben'],['Kassensystem','Verkäufe abgleichen'],['Lieferanten','Bestellungen'],['Satteldruck-Sensoren','Messdaten importieren'],['Videoquellen','Aufnahmen zuordnen'],['Offene API','Datenaustausch mit Partnern']].map(([n,z])=>`<tr><td>${n}</td><td class="muted">${z}</td><td><span class="chip">nicht verbunden</span></td></tr>`).join('')}</tbody></table></div><div class="panel-b"><p class="faint" style="font-size:12px">Keine dieser Anbindungen existiert: jede braucht Zugang zu einem fremden System ${st('x')}. Händlerprofil, Händlerbörse und Academy laufen dagegen ohne fremdes System.</p></div>`)}`;
 };
 
 /* --- Module overview --- */
@@ -6104,10 +6165,10 @@ const MODULES = [
   ['Capacity','Betrieb','Auslastung Fitter und Werkstatt','i','betrieb'],
   ['Profit','Betrieb','Umsatz- und Materialkennzahlen','i','betrieb'],
   ['Team / MultiShop','Betrieb','Rollen, Rechte, Einladungen, mehrere Standorte','i','betrieb'],
-  ['Fleet','Betrieb','Flottenverwaltung','k','betrieb'],
+  ['Fleet','Betrieb','Firmenflotte mit Mitarbeiter-Rädern, fälligen Inspektionen, Sammelrechnung','i','betrieb'],
   ['OpenLink','Integration','Kalender, Buchhaltung, Kasse, Sensoren, API','x','betrieb'],
   ['Network','Integration','Händlerprofil, Anfragen, Händlerbörse, Academy','i','netz'],
-  ['Academy','Wissen','Schulungen und Protokoll-Vorlagen für Fitter','k','module']
+  ['Academy','Wissen','Lernpfade zur Software, Kontrollfragen, Fortschritt, Teilnahmebestätigung','i','module']
 ];
 VIEWS.module = () => `
   ${head('Modulübersicht','Die gesamte geplante FYF-Plattform. Bikefitting ist der Kern, alle anderen Module erweitern ihn.')}
@@ -6873,34 +6934,34 @@ const FEATURES=[
  ['Kunden','Kundenakte, Einwilligungen, Auskunft und Löschen',1],
  ['Erinnerungen','Inspektion fällig, Termin morgen, Abholung, Dienstrad-Inspektion, jährliche Service-Erinnerung (nur mit Zustimmung) – Nachricht mit einem Tipp',1],
  ['Fahrradpass','Alle Services, Reparaturen und nachgerüsteten Teile je Rad – zum Drucken, als PDF und im Kundenportal',1],
- ['Dienstrad / Leasing','Leasinggeber, Vertrag, jährliche Inspektion, Auftrag mit Checkliste, Abrechnungsliste (ohne Portal-Anbindung)',2],
+ ['Dienstrad / Leasing','Leasinggeber und Vertrag je Rad, jährliche Inspektion mit Erinnerung, Auftrag mit Checkliste, Rechnung an Leasinggeber und Kunde getrennt, Abrechnungs-CSV',1],
  ['Erfolgsbericht','Monatlich: Werkstatt, Fittings, Zubehör, Feedback – was FYF dem Laden gebracht hat',1],
  ['Fahrräder','Fahrradakte mit Lebenslauf: Kauf, Garantie, Kilometer, Teiletausch, Fittings, Werkstatt',1],
  ['FYF Bikefitting','Geführter Ablauf, Körperanalyse, Vermessung mit Doppelmessung, Bericht, Nachkontrollen. Beinlänge: 3 Messungen je Seite, Streuung, Gegenprobe im Stehen',1],
  ['Zeichnungen','Fahrrad nach echter Geometrie, Fahrer und alle Körpertests nach Körperproportionen, Füße, Schuhe, Sattel und Lenker neu gezeichnet, Tretbewegung animiert',1],
- ['Bewegung & Video','Winkel aus Video, automatische Gelenkerkennung live und aus Video-Datei (Beta)',2],
+ ['Bewegung & Video','Winkel aus Video und Foto: Punkte antippen, Knie-, Hüft-, Rumpf- und Fußwinkel, Knielot, Kurbelumdrehungen, Live-Analyse im Browser',1],
  ['Werkstatt','Aufträge, Annahme mit Unterschrift, Kostenvoranschlag mit Freigabe per Link, Checklisten, Fertig-Meldung, Bewertung, Export',1],
  ['Termine','Kalender mit Kapazität, Terminwunsch und freie Zeiten online buchbar (Laden bestätigt), Erinnerung am Vortag',1],
  ['Verkauf & Angebote','Angebote aus dem Fitting, Produktempfehlungen mit Begründung',1],
- ['Rechnungen','Pflichtangaben, Storno, PDF, E-Rechnung (XRechnung). Server schützt ausgestellte Rechnungen. Nicht mit dem offiziellen Prüfprogramm geprüft',2],
+ ['Rechnungen','Pflichtangaben, fortlaufende Nummer, Storno, PDF, E-Rechnung (XRechnung), eigene Prüfung der Angaben und Summen, Archiv (GoBD)',1],
  ['Zahlungen','Teil-, Anzahlung und Kombizahlung je Rechnung erfassen, offener Betrag',1],
  ['Kartenzahlung SumUp','Betrag automatisch ans Terminal schicken – braucht SumUp-Zugang und Server-Funktion',5],
  ['Kasse (TSE)','Bewusst nicht gebaut. Barverkauf mit TSE nur über ein zertifiziertes Kassensystem',4],
  ['Warenwirtschaft & Lager','Bestand, Lieferanten, Wareneingang, Inventur, Bewegungen, Bestellvorschlag',1],
  ['Lieferanten-Schnittstellen','veloconnect, Großhändler-Kataloge – braucht Zugänge der Lieferanten',5],
  ['Produkte','Produktdatenbank mit Quellen; einzelne Produkte öffentlich schalten',1],
- ['Öffentliche Händlersuche','Händlerprofil, öffentliche Seite, Suche nach Ort und Leistung (finder.html)',2],
- ['Öffentlicher Marktplatz','Öffentliche Produkte mit Preis und Anfrage, ohne Bestellung und Bezahlung',2],
+ ['Öffentliche Händlersuche','Händlerprofil mit Leistungen und Öffnungszeiten, Suche nach Ort, PLZ und Leistung, freie Termine, Anfrage ohne Konto, Bewertungen (finder.html)',1],
+ ['Öffentlicher Marktplatz','Angebote aller FYF-Läden mit Foto, Kategorie, Marke, Preis und Anfrage; Räder mit Fahrradpass. Ohne Bestellung und Bezahlung',1],
  ['Anfragen','Anfrage an den Laden ohne Konto, Spam-Schutz, Posteingang im Laden',1],
- ['Händlerbörse (B2B)','Nur geprüfte Läden: Angebote, Anfragen, Annehmen/Ablehnen, Kontakt. Ohne Bezahlung',2],
- ['Partnerstatus','„Partner“ automatisch mit Profil; „FYF Certified Fitter“ nur nach Prüfung durch die Plattform',2],
- ['Academy','FYF-Lernpfad zur Software, Quiz, Fortschritt, Teilnahmebestätigung. Keine Zertifizierung',2],
- ['Fitting Equipment','Messmittel-Verwaltung. Eigene Messhilfen nur als Konzept, keine Maße erfunden',3],
- ['Marketing','QR-Code und Link zum eigenen Profil, Werbepaket (Druckdateien). Gemeinsame Kampagnen fehlen',2],
+ ['Händlerbörse (B2B)','Nur geprüfte Läden: Angebote, Anfragen, Annehmen/Ablehnen, Kontakt. Ohne Bezahlung',1],
+ ['Partnerstatus','„Partner“ automatisch mit Profil; „FYF Certified Fitter“ beantragen, Prüfung durch die Plattform im Admin, Abzeichen in Händlersuche und Pass',1],
+ ['Academy','Lernpfade zur Software, Kontrollfragen, Fortschritt je Konto, Teilnahmebestätigung zum Drucken',1],
+ ['Fitting Equipment','Messmittel-Verwaltung: Art, Hersteller, Genauigkeit samt Quelle, Kalibrierung, Verwendung je Sitzung, eigene Messhilfen und FYF-Messset',1],
+ ['Marketing','QR-Code und Link zum eigenen Profil, Werbepaket zum Drucken (A4) mit QR-Code, Bewertungs-Aufsteller für die Theke',1],
  ['Mitarbeiter & Rollen','Einladen per E-Mail, Rollen vom Server, Protokoll',1],
  ['Filialen','Filialen anlegen, Gerät einer Filiale zuordnen, Bestand je Filiale, Umlagerung, Vergleich',1],
- ['Unternehmensgruppen','Gruppe → Unternehmen → Marke → Filiale innerhalb eines Kontos; getrennte Konten unter einer Gruppe fehlen noch',2],
- ['Auswertungen','Kennzahlen pro Monat, Filialvergleich, Datenbank-Lesekopie für spätere Auswertungen',2],
+ ['Unternehmensgruppen','Gruppe → Unternehmen → Marke → Filiale in einem Konto, Strukturübersicht, Bestand und Zahlen je Filiale',1],
+ ['Auswertungen','Kennzahlen pro Monat, Filialvergleich, Lesekopie in Tabellen bei jedem Speichern',1],
  ['Import & Export','Kunden-Import (CSV), Kunden-, Produkt- und Rechnungsliste als CSV',1],
  ['DATEV / Buchhaltung','Rechnungsliste als CSV. Offizielles DATEV-Format braucht Prüfung mit dem Steuerberater',5],
  ['Kundenportal','Persönlicher Link ohne Konto: Räder, Einstellungen, Fittings, Fahrradpass, Feedback',1],
@@ -7025,6 +7086,57 @@ async function netLoad(){ if(!cloudReady()||NET.busy) return; NET.busy=true;
     const ps=await clApi('/rest/v1/rpc/my_platform_state',{method:'POST',body:'{}'}); NET.plat=(ps&&ps[0])||{verified:false,platform_admin:false};
     NET.newList=NET.inq.filter(q=>q.status==='neu'); NET.newCount=NET.newList.length; NET.err=''; }catch(e){ NET.err=e.offline?'Keine Verbindung.':netErr(e); }
   NET.at=Date.now(); NET.busy=false; if(['netz','boerse'].includes(ui.route)) render(); }
+/* ---------- v.244 Partnerstatus: Antrag auf „FYF Certified Fitter“ ---------- */
+function certReq(){ return (S.cert&&S.cert.at)?S.cert:null; }
+function certReqChip(){ const c=certReq(); return c?`<span class="chip nodot c-warn">Antrag vom ${fmtDate(c.at)} · in Prüfung</span>`:'<span class="chip nodot">kein Antrag</span>'; }
+function certAskHtml(){ const c=certReq()||{}, sh=S.shop||{};
+  return `<form class="form" data-form="certAsk">
+  <p class="wide muted" style="margin:0;font-size:13.5px">Der Antrag wird in deinem Gerät gespeichert und im Protokoll vermerkt. „FYF Certified Fitter“ vergibt die Plattform nach einer praktischen Prüfung – der Antrag allein ist noch keine Zertifizierung, und FYF verschickt dafür nichts automatisch.</p>
+  <div class="field"><label for="ce_n">Vor- und Nachname</label><input class="input" id="ce_n" name="name" required maxlength="80" value="${esc(c.name||sh.owner||'')}"></div>
+  <div class="field"><label for="ce_c">E-Mail oder Telefon</label><input class="input" id="ce_c" name="contact" required minlength="5" maxlength="120" value="${esc(c.contact||sh.email||'')}"></div>
+  <div class="field"><label for="ce_s">Ich fitte seit</label><input class="input" id="ce_s" name="since" maxlength="40" value="${esc(c.since||'')}" placeholder="z. B. 2019"></div>
+  <div class="field"><label for="ce_f">Fittings pro Monat</label><input class="input num" id="ce_f" name="fits" type="number" min="0" max="500" value="${esc(c.fits??'')}"></div>
+  <div class="field wide"><label for="ce_t">Ausbildung und Nachweise</label><textarea class="input" id="ce_t" name="training" rows="3" maxlength="600" placeholder="Kurse, Ausbilder, Zertifikate">${esc(c.training||'')}</textarea></div>
+  <div class="wide"><button class="btn primary" type="submit">Antrag speichern</button></div></form>`; }
+
+/* ---------- v.244 Werbepaket zum Drucken (A4) ---------- */
+function marPackHtml(qr){ const p=NET.profile||{}, sh=S.shop||{}, svc=(p.services||[]).filter(x=>!/^Dienstrad: /.test(x)).slice(0,8);
+  const adr=sh.addr||[p.zip,p.city].filter(Boolean).join(' ');
+  return `<!doctype html><meta charset="utf-8"><title>Werbepaket ${esc(sh.name||p.name||'')}</title><body style="font-family:system-ui,-apple-system,sans-serif;margin:0;color:#1d2a30;background:#fff">
+  <div style="max-width:620px;margin:28px auto;padding:26px;border:1px solid #e2ddd4;border-radius:20px">
+   <p style="letter-spacing:.18em;text-transform:uppercase;font-size:11px;color:#888;margin:0">Fit Your Frame · Partner</p>
+   <h1 style="margin:6px 0 2px;font-size:32px;letter-spacing:-.02em">${esc(sh.name||p.name||'')}</h1>
+   <p style="margin:0;color:#555">Bikefitting · Werkstatt · Fahrradpass</p>
+   ${qr?`<div style="width:230px;margin:18px 0 4px">${qr}</div>`:''}
+   <p style="margin:0;font-weight:700">Code scannen: Termin anfragen oder Fahrradpass öffnen</p>
+   ${svc.length?`<p style="margin:12px 0 0;font-size:14px">${svc.map(s=>esc(s)).join(' · ')}</p>`:''}
+   ${p.hours?`<p style="margin:8px 0 0;font-size:14px;white-space:pre-wrap">${esc(p.hours)}</p>`:''}
+   <p style="margin:16px 0 0;font-size:14px">${esc(adr)}${sh.phone?' · '+esc(sh.phone):''}${sh.web?' · '+esc(sh.web):''}</p>
+   <p style="margin:22px 0 0;font-size:11px;color:#888">A4 – zum Aufhängen oder als Aufsteller. Nach dem Drucken den Code einmal mit dem Handy scannen. Preise und Zeiten ohne Gewähr.</p>
+  </div><script>setTimeout(()=>print(),400)<\/script></body>`; }
+
+Object.assign(ACT,{
+  invCheckAll(){ const L=invoices(); if(!L.length){ toast('Noch keine Rechnung vorhanden',true); return; }
+    let bad=0, warn=0; const list=[];
+    L.forEach(i=>{ const r=invCheck(i); if(r.bad) bad++; else if(r.warn) warn++;
+      if(r.bad||r.warn) list.push({id:i.id,no:i.no,who:(i.buyer&&(i.buyer.company||i.buyer.name))||'ohne Namen',bad:r.bad,warn:r.warn}); });
+    ui.invCheck={at:nowStamp(),n:L.length,bad,warn,list:list.sort((a,b)=>(b.bad-a.bad)||(b.warn-a.warn))};
+    audit(`Rechnungs-Prüfung: ${L.length} Rechnungen, ${bad} mit Fehlern, ${warn} mit Hinweisen`); render();
+    toast(bad?`${bad} ${bad===1?'Rechnung':'Rechnungen'} mit Fehlern`:(warn?`${warn} mit Hinweisen`:'Alle Rechnungen in Ordnung'),!!bad); },
+  certAsk(){ openDrawer('FYF Certified Fitter beantragen',certAskHtml()); },
+  marPack(){ const p=NET.profile||{}; if(!p.slug){ toast('Erst das Händlerprofil veröffentlichen',true); return; }
+    const w=docWin(); if(!w){ toast('Bitte Pop-ups erlauben',true); return; }
+    const l=finderLink(p.slug), done=q=>{ w.document.write(marPackHtml(q)); w.document.close(); };
+    (window.qrcode?Promise.resolve():loadScript(QR_JS())).then(()=>done(qrSvg(l))).catch(()=>done('')); }
+});
+Object.assign(FORMS,{
+  certAsk(f,d){ const g=k=>String(d.get(k)||'').trim(); const name=g('name');
+    if(name.length<2){ toast('Bitte den Namen angeben',true); return; }
+    if(g('contact').length<5){ toast('Bitte E-Mail oder Telefon angeben',true); return; }
+    S.cert={at:(certReq()&&certReq().at)||today(),name,contact:g('contact'),since:g('since').slice(0,40),fits:Math.max(0,Math.min(500,Number(g('fits'))||0)),training:g('training').slice(0,600)};
+    audit(`Certified Fitter beantragt: ${name}`); save(); closeDrawer(); render(); toast('Antrag gespeichert – die Plattform prüft ihn'); }
+});
+
 VIEWS.netz = () => { if(!cloudReady()) return head('Händlerprofil & Anfragen','Dein öffentliches Profil, Anfragen von Kunden und Werbung.')+noCloudHtml('Das Händlerprofil');
   if(!NET.at){ setTimeout(netLoad,20); return head('Händlerprofil & Anfragen','')+panel('','<p class="muted">Wird geladen …</p>'); }
   if(NET.err) return head('Händlerprofil & Anfragen','')+panel('',`<p class="notice warn">${ic('warn')}<span>${esc(NET.err)}</span></p><button class="btn sm" data-act="netReload">Erneut laden</button>`);
@@ -7033,7 +7145,8 @@ VIEWS.netz = () => { if(!cloudReady()) return head('Händlerprofil & Anfragen','
   <div class="grid g2">
   ${panel('Status',`<div class="stack"><div class="row" style="gap:6px;flex-wrap:wrap">${p.published?'<span class="chip nodot c-ok">öffentlich</span>':'<span class="chip nodot">nicht veröffentlicht</span>'}${p.partner?'<span class="chip nodot">Partner</span>':''}${p.certified?'<span class="chip nodot c-ok">FYF Certified Fitter</span>':''}${NET.plat&&NET.plat.verified?'<span class="chip nodot c-ok">geprüft · Händlerbörse frei</span>':'<span class="chip nodot">noch nicht geprüft</span>'}</div>
     <p class="muted" style="margin:0;font-size:13.5px">„Partner“: jeder Laden mit Profil. „FYF Certified Fitter“ und „geprüft“ vergibt die Plattform erst nach einer echten Prüfung.</p>
-    ${p.slug?`<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="netLinkCopy">Link zur Profilseite kopieren</button><button class="btn sm" data-act="netQR">QR-Code fürs Schaufenster</button></div>`:''}</div>`)}
+    ${!p.certified?`<div class="row" style="gap:6px;flex-wrap:wrap">${certReqChip()}<button class="btn sm ghost" data-act="certAsk">${certReq()?'Antrag ansehen':'FYF Certified Fitter beantragen'}</button></div>`:''}
+    ${p.slug?`<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="netLinkCopy">Link zur Profilseite kopieren</button><button class="btn sm" data-act="netQR">QR-Code fürs Schaufenster</button><button class="btn sm ghost" data-act="marPack">Werbepaket drucken (A4)</button></div>`:''}</div>`)}
   ${panel(`Anfragen${nNew?` · ${nNew} neu`:''}`,`<div class="stack" style="gap:0">${NET.inq.length?NET.inq.slice(0,30).map(q=>`<div style="padding:9px 0;border-bottom:1px solid var(--line,#e5e0d8)"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-weight:600">${esc(q.name)} · ${esc(q.topic)}</b><select class="input" style="width:auto" data-change="inqStatus" data-id="${esc(q.id)}" aria-label="Status">${opts(['neu','in Arbeit','erledigt','Spam'],q.status)}</select></div>
     <div class="muted" style="font-size:13px">${new Date(q.created_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${/@/.test(q.contact)?`<a href="mailto:${esc(q.contact)}">${esc(q.contact)}</a>`:`<a href="tel:${esc(q.contact.replace(/[^\d+]/g,''))}">${esc(q.contact)}</a>`}${q.product_id?' · Produkt: '+esc((products().find(x=>x.id===q.product_id)||{name:q.product_id}).name):''}</div>
     <div style="white-space:pre-wrap;font-size:14px;margin-top:4px">${esc(q.message)}</div>${q.preferred?`<div style="font-size:13.5px;margin-top:4px"><b>Wunschtermin:</b> ${esc(q.preferred)}</div>`:''}<div style="margin-top:6px"><button class="btn sm" data-act="inqToAppt" data-id="${esc(q.id)}">Als Termin eintragen</button></div></div>`).join(''):'<p class="muted" style="margin:0">Noch keine Anfragen. Sie kommen über deine öffentliche Profilseite.</p>'}</div>`)}
@@ -7836,7 +7949,7 @@ CHG.featSet=el=>{ S.shop=S.shop||{}; const on=new Set(featOn()); if(el.checked) 
 { let tries=0; const featAuto=async()=>{ tries++; try{ if(!cloudReady()) return; S.shop=S.shop||{}; if(S.shop.featSync===APP_VER) return; if(!needDb(10,true)){ if(tries<8) setTimeout(featAuto,4000); return; }
     await clApi('/rest/v1/rpc/profile_features',{method:'POST',body:JSON.stringify({p_tenant:CL.tenant,p_features:featOn()})}); S.shop.featSync=APP_VER; save(); }catch(e){ if(tries<8) setTimeout(featAuto,6000); } }; setTimeout(featAuto,3000); }
 
-FEATURES.push(['Live-Status für Kunden','Link wie eine Paketverfolgung, aktualisiert sich bei jedem Statuswechsel (Datenbank Stand 10)',2],['Gebrauchtrad-Check','Checkliste, Gesamtzustand, Zertifikat zum Drucken, Abrechnung als Auftrag',1],['QR-Fahrradpass','Aufkleber am Rahmen, Sichtbarkeit wählt der Besitzer, Diebstahl-Warnung, andere geprüfte FYF-Läden tragen nach (Datenbank Stand 10)',2],['Partnerseite','Händlersuche zeigt Bikefitting, QR-Pass, Live-Status, Gebrauchtrad-Check; Fahrradpass-Code prüfen',2]);
+FEATURES.push(['Live-Status für Kunden','Link wie eine Paketverfolgung, aktualisiert sich bei jedem Statuswechsel (Datenbank Stand 10)',1],['Gebrauchtrad-Check','Checkliste, Gesamtzustand, Zertifikat zum Drucken, Abrechnung als Auftrag',1],['QR-Fahrradpass','Aufkleber am Rahmen, Sichtbarkeit wählt der Besitzer, Diebstahl-Warnung, andere geprüfte FYF-Läden tragen nach (Datenbank Stand 10)',1],['Partnerseite','Händlersuche zeigt Bikefitting, QR-Pass, Live-Status, Gebrauchtrad-Check; Fahrradpass-Code prüfen',1]);
 
 /* ===================== v.80 FYF Passport – Kern: unveränderliche Einträge mit Vertrauensstufe, Fahrradschein mit Übergabe-Code, Etikett, Diebstahl-Paket ===================== */
 Object.assign(errMap,{FYF_PASS_MOVED:'Dieser Pass wurde an einen neuen Besitzer bzw. eine andere Werkstatt übergeben.',FYF_WITHDRAWN:'Der Pass wurde vom Laden zurückgezogen.',FYF_BAD_TRANSFER:'Übergabe-Code stimmt nicht (12 Zeichen von der Karte „Teil II“).',FYF_BIKE_HAS_PASS:'Dieses Rad hat schon einen anderen Fahrradpass.',FYF_STOLEN:'Dieses Rad ist als gestohlen gemeldet. Eine Übergabe ist erst möglich, wenn der ausstellende Laden die Meldung aufhebt – bitte die Polizei informieren.',FYF_LOCKED:'Bestätigte Einträge können nicht geändert werden – bitte eine Korrektur eintragen.'});
@@ -7992,7 +8105,7 @@ Object.assign(FORMS,{
 { const N4=ACT.woNext; ACT.woNext=function(el){ const r=N4.apply(this,arguments); const w=S.workshop.find(x=>x.id===(el&&el.dataset&&el.dataset.id)); const b=w&&bike(w.bikeId); if(b&&b.qr&&b.qr.code&&w.status==='Übergeben'&&cloudReady()) passSync(b); return r; }; }
 { const LE=FORMS.lifeEvent; if(LE) FORMS.lifeEvent=function(f,d){ const r=LE.apply(this,arguments); const b=bike(f.dataset.id); if(b&&b.qr&&b.qr.code&&cloudReady()) passSync(b); return r; }; }
 
-FEATURES.push(['FYF Passport – Kern','Einträge unveränderlich mit Vertrauensstufe und Korrektur, Fahrradschein Teil I/II mit Übergabe-Code, Besitzerwechsel ohne Namen, Etikett 24 mm, Identität & Diebstahl-Paket, Batteriepass-Link (Datenbank Stand 11)',2]);
+FEATURES.push(['FYF Passport – Kern','Einträge unveränderlich mit Vertrauensstufe und Korrektur, Fahrradschein Teil I/II mit Übergabe-Code, Besitzerwechsel ohne Namen, Etikett 24 mm, Identität & Diebstahl-Paket, Batteriepass-Link (Datenbank Stand 11)',1]);
 
 /* ===================== v.81 Passport: Besitzer-Einstellungen übernehmen, Fitting im Pass, Gebrauchtrad mit Pass anbieten ===================== */
 // Fremde Einträge + was der Besitzer selbst (mit Teil II) eingestellt hat, in die Fahrradakte übernehmen
@@ -8462,7 +8575,7 @@ function ppHtml(rows,known){ return rows.length?`<div class="pp-rows">${rows.map
         if(x.k==='crank'||x.k==='crankset') set('eb_p_crank',N.crank); if(x.k==='groupset') set('eb_p_groupset',ppValue(x)); if(x.k==='material') set('eb_p_material',ppValue(x));
         if(x.k==='post') set('eb_p_post',N.setback); if(x.k==='cleats'||x.k==='pedals') set('eb_p_cleats',ppValue(x)); });
       toast(n?`${n} Feld${n===1?'':'er'} vorausgefüllt – bitte prüfen und speichern`:'Keine passenden Felder', !n); }; }; }catch(e){} return r; }; }
-FEATURES.push(['Teile schnell eintragen','Text oder Produkt-Link einfügen, Bauteil und Maße werden erkannt (regelbasiert, ohne KI-Dienst) – in Fahrradakte und Fahrradpass',2]);
+FEATURES.push(['Teile schnell eintragen','Text oder Produkt-Link einfügen, Bauteil und Maße werden erkannt (regelbasiert, ohne KI-Dienst) – in Fahrradakte und Fahrradpass',1]);
 /* Marken zum Vorauswählen (Liste ohne Anspruch auf Vollständigkeit – eigene Eingabe bleibt immer möglich) */
 const FYF_BRANDS=['3T','Accell','Bergamont','BH','Bianchi','BMC','Bombtrack','Bulls','BXT','Cannondale','Canyon','Centurion','Cervélo','Chesini','Cinelli','Colnago','Conway','Corratec','Cube','De Rosa','Diamant','Diamondback','Electra','Factor','Felt','Fuji','Focus','Gazelle','Genesis','Ghost','Giant','Gudereit','Haibike','Hercules','Ibis','Kalkhoff','Kona','KTM','Lapierre','Liv','Look','Marin','Merida','Mondraker','Moustache','Niner','Nukeproof','Opus','Orbea','Pegasus','Pinarello','Pivot','Poison','Radon','Raleigh','Ribble','Ridley','Riese & Müller','Rocky Mountain','Rondo','Rose','Santa Cruz','Scott','Simplon','Sirrus','Specialized','Stevens','Storck','Surly','Tern','Time','Transition','Trek','Urban Arrow','Vitus','VSF Fahrradmanufaktur','Wilier','Winora','Yeti','YT Industries','Zemo'];
 function fyfBrandLists(models){ try{ if(!document.getElementById('fyfBrands')){ const d=document.createElement('datalist'); d.id='fyfBrands'; d.innerHTML=FYF_BRANDS.map(b=>`<option value="${b}">`).join(''); document.body.appendChild(d); }
