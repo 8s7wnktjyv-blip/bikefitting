@@ -20,4 +20,13 @@ const {chromium,devices}=require('playwright'); const BASE='http://localhost:876
     if(!/Kategorie/.test(t)||!/Laufräder/.test(t)) bad('Kategorien im Formular fehlen');
     if(!/Anbieter im Marktplatz/.test(t)) bad('Anbieter-Feld im Formular fehlt'); }
   const ov=await q.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1); if(ov) bad('Querscroll');
+  // Rundgang durch die Software: jede Seite muss ohne JS-Fehler aufgehen und Inhalt zeigen
+  for(const id of ['dashboard','werkstatt','kunden','fitting','geometrie','preise','lager','rechnungen','termine','portal','berichte','koerper','vermessung','fahrwerk','motion','verlauf','followup','qualitaet','produktdb','wissen','messmittel','netz','boerse','academy','betrieb','auftritte','erinnerung','marktartikel','mehr']){
+    const before=errs.length;
+    await nav(id);
+    const p=await q.evaluate(()=>{ const t=(document.body.innerText||'').replace(/\s+/g,' ').trim(); return {len:t.length,txt:t.slice(0,60)}; });
+    if(errs.length>before) bad('JS-Fehler auf '+id);
+    if(p.len<40) bad('Seite '+id+' bleibt leer');
+  }
+  log('4 Rundgang fertig, Seiten geprüft: 29');
   log('Fehler:',errs.length?errs:'keine'); await b.close(); process.exit(errs.length?1:0); })();
