@@ -492,6 +492,27 @@ function askYes(title,text,okLabel){ return new Promise(resolve=>{ let done=fals
   el.onclick=e=>{ if(e.target===el) fin(false); };
   const mo=new MutationObserver(()=>{ if(!el.isConnected) fin(false); }); mo.observe(document.body,{childList:true}); });
 }
+/* ===== v.226 Nächster Service direkt unter „Wert heute“ – Standard: 1× im Jahr, vom Kunden änderbar ===== */
+function nextService(code){ const s=X(code).svcInt||{};
+  if(s.from&&s.months!==0){ const m=Number(s.months)||12; return {date:addMonths(String(s.from).slice(0,10),m),months:m,src:'eigenes Intervall'}; }
+  try{ const sp=shopPlan(code).slice().sort((a,b)=>String(a.next).localeCompare(String(b.next))); if(sp.length) return {date:sp[0].next,months:12,src:'Plan der Werkstatt'}; }catch(e){}
+  try{ const st=svcState(code).slice().sort((a,b)=>String(a.due).localeCompare(String(b.due))); if(st.length) return {date:st[0].due,months:Number(st[0].m)||12,src:'Wartungsplan'}; }catch(e){}
+  const start=(mine().find(m=>m.code===code)||{}).at||today();
+  return {date:addMonths(start,12),months:12,src:'Standard: 1× im Jahr'};
+}
+function nextSvcTile(code){ const N=nextService(code); if(!N||!N.date) return '';
+  const days=Math.round((new Date(N.date)-new Date(today()))/864e5), mm=Math.max(0,Math.round(days/30.44));
+  const rel=days<0?'überfällig':days<=31?'diesen Monat':mm<=1?'in 1 Monat':`in ${mm} Monaten`;
+  return `<button class="gl-t gl-svc" data-tool="svc" type="button"><span class="gl-l">Nächster Service</span><span class="gl-v">${fd(N.date)}</span><span class="gl-s">${rel} · alle ${N.months} Monate</span></button>`;
+}
+{ const GL=glanceHtml; glanceHtml=function(code){ let h=GL(code); try{ const tile=nextSvcTile(code), i=h.indexOf('data-tool="val"'); if(tile&&i>=0){ const j=h.indexOf('</button>',i); if(j>i) h=h.slice(0,j+9)+tile+h.slice(j+9); } }catch(e){} return h; }; }
+function svcIntCard(code){ const s=X(code).svcInt||{}; const on=s.months!==0;
+  return `<div class="card" id="svcIntCard"><b>Service-Intervall</b><p class="muted small" style="margin:2px 0 8px">Standard ist 1× im Jahr. Ändere es nur, wenn du es anders möchtest.</p>
+   <div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:1">${sel('siM','Wie oft?',[['12','12 Monate (Standard)'],['6','6 Monate'],['24','24 Monate'],['0','kein Intervall']],String(on?(Number(s.months)||12):0))}</div><div style="flex:1">${inp('siF','Letzter Service',String(s.from||''),'type="date"')}</div></div>
+   <button class="btn ghost block" id="siSave" type="button" style="margin-top:10px">Speichern</button><p class="muted small" style="margin:8px 0 0">Nächster Service: <b>${fd(nextService(code).date)}</b></p></div>`; }
+setTimeout(()=>{ const TSV=TOOLFN.svc; TOOLFN.svc=function(code){ TSV(code); try{ const pg=[...document.querySelectorAll('.tpage')].pop(), body=pg&&pg.querySelector('.tp-body'); if(!body||body.querySelector('#svcIntCard')) return;
+    const box=document.createElement('div'); box.innerHTML=svcIntCard(code); const el=box.firstElementChild; body.insertBefore(el,body.children[1]||null);
+    el.querySelector('#siSave').onclick=()=>{ const o=X(code), m=Number(val(el,'siM')), f=val(el,'siF'); if(m===0) delete o.svcInt; else o.svcInt={months:m,from:f||today()}; Xset(code,o); toast('Gespeichert'); try{ reTool(TOOLFN.svc,code); }catch(e){} }; }catch(e){} }; },0);
 /* Druck-/Dokumentansicht IN der App (statt neuem Fenster): immer mit „‹ Zurück“; PDF wird im Gerät erzeugt (iPhone: Teilen → In Dateien sichern / Drucken) */
 const DV_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const DV_LIB={h2c:new URL('vendor/html2canvas-1.4.1.min.js',location.href).href};
