@@ -503,8 +503,31 @@ function nextService(code){ const s=X(code).svcInt||{};
 function nextSvcTile(code){ const N=nextService(code); if(!N||!N.date) return '';
   const days=Math.round((new Date(N.date)-new Date(today()))/864e5), mm=Math.max(0,Math.round(days/30.44));
   const rel=days<0?'überfällig':days<=31?'diesen Monat':mm<=1?'in 1 Monat':`in ${mm} Monaten`;
-  return `<button class="gl-t gl-svc" data-tool="svc" type="button"><span class="gl-l">Nächster Service</span><span class="gl-v">${fd(N.date)}</span><span class="gl-s">${rel} · alle ${N.months} Monate</span></button>`;
+  return `<button class="gl-t gl-svc" data-book="1" type="button"><span class="gl-l">Nächster Service</span><span class="gl-v">${fd(N.date)}</span><span class="gl-s">${rel} · alle ${N.months} Monate</span></button>`;
 }
+/* Werkstatt für den Termin: zuletzt angefragt → Werkstatt im Pass (letzter Service) → keine (dann wählen) */
+function bookShop(code){ const P=Pof(code)||{}, sh=P.shop||{}, own=(X(code)||{}).bookShop||null;
+  if(own&&own.slug) return {slug:own.slug,name:own.name||'',at:own.at||''};
+  if(sh&&sh.slug) return {slug:sh.slug,name:sh.name||'',at:''};
+  return null; }
+function bookLink(code,useShop){ const s=bookShop(code), slug=useShop&&s?s.slug:''; return 'finder.html#'+(slug?'d='+encodeURIComponent(slug)+'&':'')+'pass='+code+'&want=service'+(CF?'&cfg='+esc(CF):''); }
+function svcBook(code){ const N=nextService(code), P=Pof(code)||{}, sh=P.shop||{}, s=bookShop(code), name=(s&&s.name)||sh.name||'';
+  const el=document.createElement('div'); el.className='sheet'; el.setAttribute('role','dialog'); el.setAttribute('aria-label','Service buchen');
+  el.innerHTML=`<div><div style="font-size:21px;font-weight:800">Service buchen</div><p class="muted small" style="margin:6px 0 12px">Nächster Service: <b>${fd(N.date)}</b> · ${esc(bikeName(code))}</p>
+   ${name?`<div class="card" style="box-shadow:none;background:var(--card2);margin:0 0 12px;text-align:left"><div class="muted small" style="font-weight:700;letter-spacing:.06em;text-transform:uppercase">Deine Werkstatt</div><b style="font-size:17px">${esc(name)}</b>${sh.addr?`<div class="muted small">${esc(sh.addr)}</div>`:''}${sh.phone?`<div class="muted small"><a href="tel:${esc(String(sh.phone).replace(/[^\d+]/g,''))}">${esc(sh.phone)}</a></div>`:''}${s&&s.at?`<div class="muted small">zuletzt angefragt ${fd(s.at)}</div>`:''}</div>
+     <a class="btn block" href="${bookLink(code,true)}" id="bkGo">Termin anfragen</a>`
+   :`<p class="muted small" style="margin:0 0 12px">Noch keine Werkstatt im Pass – wähle eine in der Nähe. Sobald eine Werkstatt den Service einträgt, ist sie hier deine Werkstatt.</p>`}
+   <a class="btn ghost block" href="${bookLink(code,false)}" style="margin-top:10px">Andere Werkstatt wählen</a>
+   <button class="btn ghost block" type="button" data-svc="1" style="margin-top:10px">Service-Punkte ansehen</button>
+   <p class="muted small" style="margin:12px 0 0">Der Laden bestätigt den Termin – FYF bucht nichts automatisch.</p>
+   <button class="btn ghost block" type="button" data-x="1" style="margin-top:10px">Schließen</button></div>`;
+  document.body.appendChild(el);
+  const go=el.querySelector('#bkGo'); if(go&&s&&s.slug) go.onclick=()=>{ try{ const o=X(code); o.bookShop={slug:s.slug,name:s.name||'',at:today()}; Xset(code,o); }catch(e){} };
+  el.querySelector('[data-svc]').onclick=()=>{ el.remove(); toolService(code); };
+  el.querySelector('[data-x]').onclick=()=>el.remove();
+  el.onclick=e=>{ if(e.target===el) el.remove(); };
+}
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-book]'); if(!b||!window.__PC) return; e.preventDefault(); svcBook(window.__PC); });
 { const GL=glanceHtml; glanceHtml=function(code){ let h=GL(code); try{ const tile=nextSvcTile(code), i=h.indexOf('data-tool="val"'); if(tile&&i>=0){ const j=h.indexOf('</button>',i); if(j>i) h=h.slice(0,j+9)+tile+h.slice(j+9); } }catch(e){} return h; }; }
 function svcIntCard(code){ const s=X(code).svcInt||{}; const on=s.months!==0;
   return `<div class="card" id="svcIntCard"><b>Service-Intervall</b><p class="muted small" style="margin:2px 0 8px">Standard ist 1× im Jahr. Ändere es nur, wenn du es anders möchtest.</p>
@@ -648,7 +671,7 @@ function toolService(code){ const name=bikeName(code);
      ${s.map(i=>`<div class="card svc svc-${i.st}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><b>${esc(i.t)}</b><div class="small ${i.st==='due'?'bad':i.st==='soon'?'warn':'muted'}" style="margin-top:2px">${i.st==='due'?'Fällig':'Nächstes Mal'} ${i.st==='due'?'seit':'am'} ${fd(i.due)}${i.kmLeft!=null?` · ${i.kmLeft<=0?'km erreicht':'noch '+num(Math.round(i.kmLeft))+' km'}`:i.km?` · alle ${num(i.km)} km`:''}</div><div class="muted small">${i.last?'Zuletzt '+fd(i.last)+(i.lastKm!=null?' bei '+num(i.lastKm)+' km':'')+(i.src?' · '+(/^von dir/.test(i.src)?esc(i.src):'durchgeführt laut '+esc(i.src)):''):'Noch nicht als erledigt eingetragen'}</div><div class="muted small">Allgemeine Empfehlung: alle ${i.m} Monate${i.km?' oder '+num(i.km)+' km':''}</div>${i.eta?`<div class="muted small">≈ fällig am ${fd(i.eta)}</div>`:i.kmByDue?`<div class="muted small">≈ ${num(i.kmByDue)} km bis dahin</div>`:''}</div><span class="dot ${i.st}"></span></div>
        <details class="help"><summary>Worauf achten?</summary><div class="small">${esc(i.h)}</div></details>
        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn ghost sm2" data-done="${i.k}" type="button">Erledigt</button><button class="btn ghost sm2" data-cal="${i.k}" type="button">In Kalender</button>${own.svc&&own.svc[i.k]?`<button class="btn ghost sm2" data-undo="${i.k}" type="button">Rückgängig</button>`:''}</div></div>`).join('')}
-     <div style="display:grid;gap:10px;margin-top:14px"><button class="btn" id="calAll" type="button">Alle Erinnerungen in den Kalender</button>${android()?'<p class="muted small" style="margin:-4px 2px 0;text-align:center">Android: Die Datei öffnen und mit deiner Kalender-App importieren.</p>':''}<a class="btn ghost" href="finder.html#pass=${code}&want=service${CF?'&cfg='+esc(CF):''}">Termin bei FYF-Werkstatt buchen</a></div>
+     <div style="display:grid;gap:10px;margin-top:14px"><button class="btn" id="calAll" type="button">Alle Erinnerungen in den Kalender</button>${android()?'<p class="muted small" style="margin:-4px 2px 0;text-align:center">Android: Die Datei öffnen und mit deiner Kalender-App importieren.</p>':''}<a class="btn ghost" href="${bookLink(code,true)}">Termin bei FYF-Werkstatt buchen</a></div>
      <p class="muted small" style="margin:12px 2px">Richtwerte – Herstellerangaben gehen vor. Fragen? Die Werkstatt hilft.</p>`;
     r.querySelector('#skb').onclick=()=>{ const v=dnum(val(r,'sk')); if(v==null||v<0) return toast('Bitte km eingeben'); const o=X(code); o.km=Math.round(v); o.kmAt=today(); o.kmLog=(o.kmLog||[]).concat([{d:today(),km:o.km,src:'manuell'}]).slice(-300); Xset(code,o); toast('Gespeichert'); render(r); };
     r.querySelectorAll('[data-done]').forEach(b=>b.onclick=()=>{ const o=X(code); o.svc=o.svc||{}; o.svc[b.dataset.done]={d:today(),km:curKm(code)}; Xset(code,o); toast('Erledigt eingetragen'); render(r); });
