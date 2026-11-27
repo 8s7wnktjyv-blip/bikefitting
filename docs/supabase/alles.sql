@@ -1,4 +1,4 @@
--- FYF – Fit your Frame · KOMPLETTE Datenbank (Stand 31). Automatisch erzeugt aus: start.sql media.sql team.sql netz.sql freigabe.sql pair.sql ausbau.sql feedback.sql werkstatt.sql pass.sql passport.sql funde.sql besitz.sql plattform.sql plattform2.sql stand18.sql stand19.sql stand20.sql stand21.sql stand22.sql stand23.sql stand24.sql stand25.sql station.sql stand26.sql stand27.sql stand28.sql stand29.sql stand30.sql stand31.sql
+-- FYF – Fit your Frame · KOMPLETTE Datenbank (Stand 32). Automatisch erzeugt aus: start.sql media.sql team.sql netz.sql freigabe.sql pair.sql ausbau.sql feedback.sql werkstatt.sql pass.sql passport.sql funde.sql besitz.sql plattform.sql plattform2.sql stand18.sql stand19.sql stand20.sql stand21.sql stand22.sql stand23.sql stand24.sql stand25.sql station.sql stand26.sql stand27.sql stand28.sql stand29.sql stand30.sql stand31.sql stand32.sql
 -- Nicht von Hand ändern – stattdessen die Einzeldatei ändern und tools/build-alles.sh ausführen.
 -- Mehrfach ausführen schadet nicht: es wird nur ergänzt und ersetzt, keine Daten gelöscht.
 -- Normal läuft das über GitHub → Actions → „Datenbank aktualisieren“ → Run workflow.
@@ -3432,6 +3432,8 @@ grant select on public_products to anon, authenticated;
 
 update tenant_state set data = data;
 
+-- Hinweis: Die Pass-App liest die neuen Spalten erst, wenn sie sie abfragt – das tut sie mit
+-- Ausweich-Abfrage (alte Spalten), solange dieser Stand fehlt. Nichts geht kaputt.
 
 -- ===================== Stand der Datenbank (für die Prüfung in der App) =====================
 create or replace function fyf_schema() returns int language sql immutable as $$ select 32 $$;
