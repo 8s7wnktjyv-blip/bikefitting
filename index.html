@@ -2570,6 +2570,7 @@ VIEWS.dashboard = () => {
   openWO.filter(w=>w.status==='Abholbereit').forEach(w=>att.push({icon:'wrench',t:`${w.title} ist fertig`,sub:`${cust(w.customerId).name} kann abholen`,a:`data-act="openWO" data-id="${w.id}"`,chip:'<span class="chip c-ok">abholbereit</span>'}));
   S.inventory.filter(x=>x.stock<x.min).forEach(x=>att.push({icon:'box',t:`${x.name} nachbestellen`,sub:`noch ${x.stock}, Minimum ${x.min}`,a:'data-nav="lager"',chip:'<span class="chip c-warn">knapp</span>'})); }
   try{ copilotItems().filter(x=>/^(Teil fehlt|Rechnung überfällig|Garantiefall offen)$/.test(x.k)).forEach(x=>att.push({icon:x.k==='Teil fehlt'?'box':'loop',t:x.t,sub:x.sub,a:x.act?`data-act="${x.act}" data-id="${esc(x.id)}"`:`data-nav="${x.nav}"`,chip:`<span class="chip ${x.p===1?'c-bad':'c-warn'}">${esc(x.k)}</span>`})); }catch(e){}
+  const attRank=x=>/c-bad/.test(x.chip)?0:/c-warn/.test(x.chip)?1:2; att.sort((a,b)=>attRank(a)-attRank(b));
   const appt=s=>{const c=cust(s.customerId),b=bike(s.bikeId);return `<div class="li"><span class="time">${esc(s.time)}</span><div class="avatar">${initials(c.name)}</div><div class="grow"><div class="t">${esc(c.name)}</div><div class="sub">${esc(s.type)} · ${esc(b.brand+' '+b.model)}</div></div>${sessChip(s.status)}${s.status==='geplant'||s.status==='eingetroffen'?`<button class="btn sm primary" data-act="startSession" data-id="${s.id}">Starten</button>`:`<button class="btn sm" data-act="openSession" data-id="${s.id}">Öffnen</button>`}</div>`;};
   return `
   ${!storageOk||inAppBrowser?`<div class="notice warn">${ic('warn')}<div><b>${!storageOk?'Achtung: Hier wird nichts gespeichert.':'Achtung: eingebetteter Browser.'}</b> ${!storageOk?'Wahrscheinlich privater Modus.':'Daten können verloren gehen.'} Öffne den Link direkt in Safari. <button class="btn sm" data-act="saveInfo">Mehr dazu</button></div></div>`:''}
@@ -2577,7 +2578,7 @@ VIEWS.dashboard = () => {
   ${backupNudge()}
   ${setupHtml()}
   ${!(S.settings||{}).shopType&&!(S.settings||{}).shopAsked?panel('Ladentyp wählen',shopTypeHtml(true),`<button class="btn sm ghost" data-act="shopTypeLater">Später</button>`):''}
-  ${dashWidgets({hero:heroHtml(greet,todays,upcoming),kpis:kpiTiles(),tiles:`  <div class="tiles">
+  ${dashWidgets({hero:heroHtml(greet,todays,upcoming,att.length),kpis:kpiTiles(),tiles:`  <div class="tiles">
     ${modOn('fitting')?`<button class="tile main" data-act="newSession"><span class="ti">${ic('plus')}</span><b>Neues Fitting</b><span>Kunde wählen und loslegen</span></button>`:''}
     ${modOn('quickfit')?`<button class="tile ${modOn('fitting')?'':'main'}" data-nav="quickfit"><span class="ti">${ic('handover')}</span><b>Quick-Fit Übergabe</b><span>Neues Rad einstellen</span></button>`:''}
     ${modOn('fahrwerk')?`<button class="tile" data-nav="fahrwerk"><span class="ti">${ic('susp')}</span><b>Fahrwerk</b><span>Gabel und Dämpfer</span></button>`:''}
@@ -2592,14 +2593,14 @@ VIEWS.dashboard = () => {
     </section>`})}`;
 };
 
-function heroHtml(greet,todays,upcoming){
+function heroHtml(greet,todays,upcoming,attN){
   const nowT=new Date().toTimeString().slice(0,5);
   const nxt=todays.find(s=>s.status!=='abgeschlossen'&&s.status!=='abgesagt'&&(s.time>=nowT||s.status==='in Arbeit'||s.status==='eingetroffen'))||null;
   const n=nxt||upcoming[0]||null; const c=n?cust(n.customerId):null;
   const box=n?`<div class="nextbox"><div class="grow"><small>${nxt?'Als Nächstes · '+esc(n.time)+' Uhr':'Nächster Termin · '+fmtDate(n.date).slice(0,6)+', '+esc(n.time)}</small><b>${esc(c.name)} · ${esc(n.type)}</b></div>${nxt&&(n.status==='geplant'||n.status==='eingetroffen')?`<button class="btn sm primary" data-act="startSession" data-id="${n.id}">Starten</button>`:`<button class="btn sm" data-act="openSession" data-id="${n.id}">Öffnen</button>`}</div>`
     :`<div class="nextbox"><div class="grow"><small>Als Nächstes</small><b>Kein Termin geplant</b></div><button class="btn sm primary" data-act="newSession">Neues Fitting</button></div>`;
   const art=`<svg class="art" viewBox="0 0 170 110" aria-hidden="true"><circle class="ln wh" cx="38" cy="74" r="28"/><circle class="ln wh" cx="132" cy="74" r="28"/><path class="ln path" d="M38 74 L68 40 L112 40 L132 74 M68 40 L84 74 L112 40 M84 74 L38 74 M62 30 L76 30 M68 40 L64 30 M112 40 L108 24 L120 22"/></svg>`;
-  return `<section class="hero2"><div><div class="eyebrow">${new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})}</div><h1>${greet}<span>.</span></h1><p>${todays.length?`Heute ${todays.length===1?'steht 1 Fitting':'stehen '+todays.length+' Fittings'} an.`:'Heute ist kein Fitting geplant.'}</p>${box}</div>${art}</section>`;
+  return `<section class="hero2"><div><div class="eyebrow">${new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})}</div><h1>${greet}<span>.</span></h1><p>${todays.length?`Heute ${todays.length===1?'steht 1 Fitting':'stehen '+todays.length+' Fittings'} an.`:'Heute ist kein Fitting geplant.'}${attN?` ${attN===1?'1 Punkt braucht':' '+attN+' Punkte brauchen'} deine Aufmerksamkeit.`:''}</p>${box}</div>${art}</section>`;
 }
 VIEWS.geometrie = () => {
   const q=(ui.geoSearch||'').toLowerCase(); const list=geoAll().filter(g=>!q||(g.brand+' '+g.model+' '+g.type).toLowerCase().includes(q));
@@ -7767,7 +7768,7 @@ function passStickerBox(b){ const q=b.qr; return `<div class="row" style="gap:14
 function fyfAsk(title,text,okLabel){ return new Promise(resolve=>{ let done=false; const el=document.createElement('div');
   el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true'); el.setAttribute('aria-label',String(title||''));
   el.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(15,20,25,.45);display:flex;align-items:flex-end';
-  el.innerHTML=`<div style="background:#fff;color:#111416;width:100%;max-width:520px;margin:0 auto;border-radius:22px 22px 0 0;padding:22px 22px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -20px 50px -20px rgba(0,0,0,.5)"><div style="font-size:19px;font-weight:750;line-height:1.25">${esc(title||'')}</div>${text?`<p style="margin:8px 0 0;color:#6c7176;font-size:14px;line-height:1.5">${esc(text)}</p>`:''}<div style="display:grid;gap:10px;margin-top:18px"><button type="button" data-ok style="font:inherit;font-weight:650;border:0;border-radius:999px;padding:14px;background:#111416;color:#fff">${esc(okLabel||'Ja')}</button><button type="button" data-no style="font:inherit;font-weight:650;border:1px solid #e6e6e2;border-radius:999px;padding:14px;background:#fff;color:#111416">Abbrechen</button></div></div>`;
+  el.innerHTML=`<div style="background:var(--surface,#fff);color:var(--fg,#111416);width:100%;max-width:520px;margin:0 auto;border-radius:22px 22px 0 0;padding:22px 22px calc(22px + env(safe-area-inset-bottom));border:1px solid var(--line,#e6e6e2);border-bottom:0;box-shadow:0 -20px 50px -20px rgba(0,0,0,.5)"><div style="font-size:19px;font-weight:750;line-height:1.25">${esc(title||'')}</div>${text?`<p style="margin:8px 0 0;color:var(--muted,#5c626a);font-size:14px;line-height:1.5">${esc(text)}</p>`:''}<div style="display:grid;gap:10px;margin-top:18px"><button type="button" data-ok style="font:inherit;font-weight:650;border:0;border-radius:999px;padding:14px;background:var(--accent,#e8620f);color:var(--accent-ink,#fff)">${esc(okLabel||'Ja')}</button><button type="button" data-no style="font:inherit;font-weight:650;border:1px solid var(--line,#e6e6e2);border-radius:999px;padding:14px;background:transparent;color:var(--fg,#111416)">Abbrechen</button></div></div>`;
   const fin=v=>{ if(done) return; done=true; try{ el.remove(); }catch(e){} resolve(v); };
   el.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-ok],[data-no]'); if(!b){ if(e.target===el) fin(false); return; } fin(b.hasAttribute('data-ok')); });
   document.body.appendChild(el);
