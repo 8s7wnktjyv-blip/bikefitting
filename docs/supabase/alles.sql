@@ -3388,15 +3388,9 @@ grant execute on function wish_vote(bigint,text) to anon, authenticated;
 grant execute on function wish_admin_list() to authenticated;
 grant execute on function wish_admin_set(bigint,text,boolean) to authenticated;
 
--- ===================== Stand der Datenbank (für die Prüfung in der App) =====================
-create or replace function fyf_schema() returns int language sql immutable as $$ select 31 $$;
-grant execute on function fyf_schema() to anon, authenticated;
-
-
--- =====================================================================================
+-- ===================== stand32.sql =====================
 -- FYF – Stand 32 (26.11.2026): Marktplatz zeigt Auftritt (Filiale/Marke) und Bild je Artikel
 -- Pläne: docs/FILIALEN-MARKEN-PLAN.md (Punkt 27), docs/MARKTPLATZ-PLAN.md (Punkt 28)
--- =====================================================================================
 alter table fyf_products add column if not exists img text;
 alter table fyf_products add column if not exists seller text check (length(seller) <= 80);
 alter table fyf_products add column if not exists seller_ref text check (length(seller_ref) <= 60);
@@ -3437,3 +3431,8 @@ create or replace view public_products with (security_invoker = false) as
 grant select on public_products to anon, authenticated;
 
 update tenant_state set data = data;
+
+
+-- ===================== Stand der Datenbank (für die Prüfung in der App) =====================
+create or replace function fyf_schema() returns int language sql immutable as $$ select 32 $$;
+grant execute on function fyf_schema() to anon, authenticated;
