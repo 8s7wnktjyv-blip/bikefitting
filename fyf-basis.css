@@ -40,6 +40,20 @@ h1,h2,h3{text-wrap:balance}
   h1,h2{break-after:avoid}
 }
 
+/* 9) Tabellen in der Händler-Software: ruhiger, lesbarer, am Finger treffbar */
+.tw{overflow:auto;-webkit-overflow-scrolling:touch;border-radius:14px}
+.tw table{border-collapse:separate;border-spacing:0}
+.tw thead th{position:sticky;top:0;z-index:1;background:var(--surface,#fff);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted,#5c626a);font-weight:700}
+.tw tbody tr:nth-child(odd){background:color-mix(in srgb,var(--fg,#111416) 3%,transparent)}
+.tw td,.tw th{padding:10px 12px}
+@media (pointer:coarse){
+  .tw td .input{padding:10px 12px!important}
+  .tw .btn.sm,.tw .btn{min-height:40px}
+  .tw input[type="checkbox"]{width:22px!important;height:22px!important}
+}
+/* 10) Bilder nie über den Rand, immer mit runden Ecken */
+.tool img,table img,.card img,.panel img{max-width:100%;border-radius:10px}
+
 /* 8) Systemwünsche achten: weniger Bewegung, mehr Kontrast (nur im hellen Design) */
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}}
 @media (prefers-contrast:more){
