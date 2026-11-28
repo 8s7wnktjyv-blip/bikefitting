@@ -67,5 +67,6 @@ Prüfen die wichtigsten Abläufe in iPhone-Größe gegen `mock.js` (Nachbau der 
 - `t217.js` – Paket 1 (Grundlage): `fyf-basis.css` in Pass und Software geladen, eigener Bestätigungs-Dialog (`askYes`/`fyfAsk`) gibt Ja und Abbrechen richtig zurück
 - `t218.js` – Paket 2 (Seitenkopf): jedes Werkzeug im Pass zeigt unter dem Titel einen Untertitel; in der Software kein `confirmDel` mehr
 - `t219.js` – Software: Service-Erinnerung per WhatsApp (Rundmail + einzeln) mit Buchungslink, Service-Intervall fürs Leasing steht im Pass-Plan
+- `t220.js` – Pass: mehrere Bilder je Rad (erstes = Titelbild, Galerie mit Zuschneiden/Titelbild/Löschen), fertige Anzeige für eBay Kleinanzeigen (Titel höchstens 65 Zeichen, gespeichert), Bilder und Verkaufsunterlage als JPG (v.246)
 
 Läuft automatisch bei jedem Push (GitHub → Actions → „Tests“). Lokal: `sh tests/e2e/run.sh`.
